@@ -1,6 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
+import Link from "next/link";
 import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 export default async function HistoryPage() {
   await auth();
@@ -8,14 +11,61 @@ export default async function HistoryPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
-      <main className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-2xl font-bold text-white mb-6">History</h1>
+      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-white mb-1">History</h1>
+            <p className="text-zinc-400 text-sm">Your saved listings and Guard checks.</p>
+          </div>
+          <div className="flex gap-2">
+            <Link href="/studio/new">
+              <Button size="sm" className="bg-cyan-600 hover:bg-cyan-500">New listing</Button>
+            </Link>
+            <Link href="/guard/new">
+              <Button size="sm" variant="outline" className="border-violet-700 text-violet-300 hover:bg-violet-950/40">New check</Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Listings section */}
         <Card>
-          <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <span>📸</span> Studio Listings
+            </CardTitle>
+            <Badge variant="secondary">0 listings</Badge>
           </CardHeader>
           <CardContent>
-            <p className="text-zinc-400">No activity yet. Create your first listing with Studio or check a listing with Guard.</p>
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
+              <p className="text-zinc-500 text-sm">No listings yet.</p>
+              <p className="text-zinc-600 text-xs max-w-xs text-center">
+                Create a listing in Studio. After analysis, your drafts will appear here.
+              </p>
+              <Link href="/studio/new">
+                <Button size="sm" variant="outline">Create first listing</Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Guard checks section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <span>🛡️</span> Guard Checks
+            </CardTitle>
+            <Badge variant="secondary">0 checks</Badge>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
+              <p className="text-zinc-500 text-sm">No Guard checks yet.</p>
+              <p className="text-zinc-600 text-xs max-w-xs text-center">
+                Check a listing before you buy. Saved reports will appear here.
+              </p>
+              <Link href="/guard/new">
+                <Button size="sm" variant="outline">Check a listing</Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </main>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { stripe } from "@/lib/stripe";
+import { requireStripe } from "@/lib/stripe";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -9,7 +9,8 @@ export async function POST(req: NextRequest) {
   const priceId = body?.get("priceId") as string | null;
   if (!priceId) return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
 
-  const session = await stripe.checkout.sessions.create({
+  const stripeClient = requireStripe();
+  const session = await stripeClient.checkout.sessions.create({
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     success_url: `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/billing?success=1`,

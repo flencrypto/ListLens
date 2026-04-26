@@ -1,13 +1,14 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY) {
-  if (process.env.NODE_ENV === "production") {
+// Defer validation to runtime — allows build without secrets
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder");
+
+export function requireStripe(): Stripe {
+  if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("STRIPE_SECRET_KEY environment variable is not set");
   }
-  console.warn("STRIPE_SECRET_KEY is not set — Stripe calls will fail at runtime");
+  return stripe;
 }
-
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder");
 
 export const PLANS = {
   studio_starter: {

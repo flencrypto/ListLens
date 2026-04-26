@@ -2,7 +2,10 @@
   "name": "listlens",
   "version": "0.1.0",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
@@ -10,6 +13,7 @@
     "type-check": "turbo run type-check"
   },
   "devDependencies": {
+    "prisma": "^5.22.0",
     "turbo": "^2.0.0",
     "typescript": "^5.4.5"
   },
