@@ -1,5 +1,9 @@
 import Stripe from "stripe";
 
+if (!process.env.STRIPE_SECRET_KEY && process.env.NODE_ENV === "production") {
+  throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+}
+
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
 
 export const PLANS = {
