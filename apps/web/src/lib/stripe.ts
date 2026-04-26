@@ -1,10 +1,13 @@
 import Stripe from "stripe";
 
-if (!process.env.STRIPE_SECRET_KEY && process.env.NODE_ENV === "production") {
-  throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+if (!process.env.STRIPE_SECRET_KEY) {
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("STRIPE_SECRET_KEY environment variable is not set");
+  }
+  console.warn("STRIPE_SECRET_KEY is not set — Stripe calls will fail at runtime");
 }
 
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "");
+export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder");
 
 export const PLANS = {
   studio_starter: {
