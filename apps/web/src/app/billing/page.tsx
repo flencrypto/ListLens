@@ -4,19 +4,30 @@ import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { PLANS as STRIPE_PLANS } from "@/lib/stripe";
 
-const PLANS = [
+interface PlanDisplay {
+  key: string;
+  name: string;
+  price: string;
+  period: string;
+  desc: string;
+  features: string[];
+  credits: string;
+  cta: string;
+  highlight: boolean;
+  disabled: boolean;
+  priceId?: string;
+}
+
+const PLANS: PlanDisplay[] = [
   {
     key: "free",
     name: "Free Trial",
     price: "£0",
     period: "",
     desc: "Get started",
-    features: [
-      "3 Studio listings",
-      "ShoeLens",
-      "Vinted export",
-    ],
+    features: ["3 Studio listings", "ShoeLens", "Vinted export"],
     credits: "3 listings",
     cta: "Current plan",
     highlight: false,
@@ -24,8 +35,8 @@ const PLANS = [
   },
   {
     key: "studio_starter",
-    name: "Studio Starter",
-    price: "£9.99",
+    name: STRIPE_PLANS.studio_starter.name,
+    price: `£${(STRIPE_PLANS.studio_starter.price / 100).toFixed(2)}`,
     period: "/month",
     desc: "For casual sellers",
     features: [
@@ -39,12 +50,12 @@ const PLANS = [
     cta: "Subscribe",
     highlight: true,
     disabled: false,
-    priceId: process.env.STRIPE_STUDIO_STARTER_PRICE_ID ?? "",
+    priceId: STRIPE_PLANS.studio_starter.priceId,
   },
   {
     key: "studio_reseller",
-    name: "Studio Reseller",
-    price: "£24.99",
+    name: STRIPE_PLANS.studio_reseller.name,
+    price: `£${(STRIPE_PLANS.studio_reseller.price / 100).toFixed(2)}`,
     period: "/month",
     desc: "For power sellers",
     features: [
@@ -58,7 +69,7 @@ const PLANS = [
     cta: "Subscribe",
     highlight: false,
     disabled: false,
-    priceId: process.env.STRIPE_STUDIO_RESELLER_PRICE_ID ?? "",
+    priceId: STRIPE_PLANS.studio_reseller.priceId,
   },
 ];
 
@@ -139,7 +150,7 @@ export default async function BillingPage() {
                   <Button disabled variant="secondary" className="w-full">{plan.cta}</Button>
                 ) : (
                   <form action="/api/billing/checkout" method="POST">
-                    <input type="hidden" name="priceId" value={(plan as { priceId?: string }).priceId ?? ""} />
+                    <input type="hidden" name="priceId" value={plan.priceId ?? ""} />
                     <Button
                       type="submit"
                       className={`w-full ${plan.highlight ? "bg-gradient-to-r from-cyan-500 to-violet-600 border-0" : ""}`}

@@ -12,11 +12,16 @@ interface ListingEditorProps {
   onReset?: () => void;
 }
 
+function getInitialTitle(ebay: Record<string, unknown>, analysis: StudioOutput): string {
+  if (typeof ebay.title === "string" && ebay.title) return ebay.title;
+  return `${analysis.identity.brand ?? ""} ${analysis.identity.model ?? ""}`.trim();
+}
+
 export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps) {
   const ebay = analysis.marketplace_outputs.ebay;
   const vinted = analysis.marketplace_outputs.vinted;
 
-  const [title, setTitle] = useState<string>((ebay.title as string) ?? `${analysis.identity.brand ?? ""} ${analysis.identity.model ?? ""}`.trim());
+  const [title, setTitle] = useState<string>(() => getInitialTitle(ebay, analysis));
   const [description, setDescription] = useState<string>((ebay.description as string) ?? "");
   const [price, setPrice] = useState<number>(analysis.pricing.recommended);
 
