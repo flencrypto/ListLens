@@ -30,25 +30,35 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   const [publishing, setPublishing] = useState(false);
   const [published, setPublished] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   const needsConfirmation =
     analysis.identity.confidence < 0.7 || analysis.pricing.confidence < 0.6;
 
   async function handleVintedExport() {
+    setActionError(null);
     setExporting(true);
     try {
-      const res = await fetch(`/api/items/${itemId}/export/vinted`, { method: "POST" });
-      if (res.ok) {
-        // trigger CSV download
-        const blob = await res.blob();
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `vinted-${itemId}.csv`;
-        a.click();
-        URL.revokeObjectURL(url);
-        setExported(true);
+      const res = await fetch(`/api/items/${itemId}/export/vinted`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, price }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error((errData as { error?: string }).error ?? `Vinted export failed (${res.status})`);
       }
+      // trigger CSV download
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `vinted-${itemId}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setExported(true);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "Vinted export failed.");
     } finally {
       setExporting(false);
     }
@@ -61,11 +71,22 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
       );
       if (!ok) return;
     }
+    setActionError(null);
     setPublishing(true);
     try {
-      const res = await fetch(`/api/items/${itemId}/publish/ebay-sandbox`, { method: "POST" });
+      const res = await fetch(`/api/items/${itemId}/publish/ebay-sandbox`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, price }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error((errData as { error?: string }).error ?? `eBay sandbox draft failed (${res.status})`);
+      }
       const data = await res.json();
       if (data.sandboxListingId) setPublished(data.sandboxListingId);
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : "eBay sandbox draft failed.");
     } finally {
       setPublishing(false);
     }
@@ -207,6 +228,13 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
             </ul>
           </CardContent>
         </Card>
+      )}
+
+      {/* Action error display */}
+      {actionError && (
+        <div className="rounded-lg border border-red-900/50 bg-red-950/20 px-4 py-3 text-sm text-red-300">
+          ⚠ {actionError}
+        </div>
       )}
 
       {/* Vinted copy section */}

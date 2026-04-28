@@ -45,6 +45,7 @@ export default function NewGuardPage() {
     }
     setError(null);
     setLoading(true);
+    let navigated = false;
     try {
       const res = await fetch("/api/guard/checks", {
         method: "POST",
@@ -60,10 +61,13 @@ export default function NewGuardPage() {
         throw new Error((errData as { error?: string }).error ?? "Something went wrong");
       }
       const data = await res.json();
+      navigated = true;
       router.push(`/guard/${data.id}`);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
-      setLoading(false);
+    } finally {
+      // Keep the spinner during the navigation transition; otherwise always clear.
+      if (!navigated) setLoading(false);
     }
   }
 

@@ -12,20 +12,27 @@ function csvEscape(value: string | number | null | undefined): string {
   return `"${sanitised.replace(/"/g, '""')}"`;
 }
 
-export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
   if (!userOwnsItem(id, userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   const analysis = analysisStore.get(id);
   if (!analysis) return NextResponse.json({ error: "No analysis found for this item" }, { status: 404 });
+
+  // Allow client-side edits (title/description/price) to override AI defaults.
+  const overrides = await req.json().catch(() => ({}));
   const draft = buildVintedDraft(analysis);
+  const title = typeof overrides.title === "string" ? overrides.title : draft.title;
+  const description = typeof overrides.description === "string" ? overrides.description : draft.description;
+  const price = typeof overrides.price === "number" ? overrides.price : draft.price;
+
   const csv = [
     "title,description,price,brand",
     [
-      csvEscape(draft.title),
-      csvEscape(draft.description),
-      csvEscape(draft.price),
+      csvEscape(title),
+      csvEscape(description),
+      csvEscape(price),
       csvEscape(draft.brand ?? ""),
     ].join(","),
   ].join("\r\n");

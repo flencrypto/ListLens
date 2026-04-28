@@ -7,6 +7,13 @@ export const guardStore = new Map<string, GuardOutput>();
 export const itemOwner = new Map<string, string>();
 export const guardOwner = new Map<string, string>();
 
+export interface ItemMeta {
+  lens?: string;
+  marketplace?: string;
+}
+/** Per-item metadata (lens/marketplace) carried from creation through analysis. */
+export const itemMeta = new Map<string, ItemMeta>();
+
 export interface GuardCheckMeta {
   url?: string;
   screenshotUrls?: string[];
