@@ -15,7 +15,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const overrides = await req.json().catch(() => ({}));
   const merged = {
     ...analysis,
-    pricing: typeof overrides.price === "number"
+    pricing: typeof overrides.price === "number" && Number.isFinite(overrides.price) && overrides.price >= 0
       ? { ...analysis.pricing, recommended: overrides.price }
       : analysis.pricing,
     marketplace_outputs: {

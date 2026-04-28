@@ -25,7 +25,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   const draft = buildVintedDraft(analysis);
   const title = typeof overrides.title === "string" ? overrides.title : draft.title;
   const description = typeof overrides.description === "string" ? overrides.description : draft.description;
-  const price = typeof overrides.price === "number" ? overrides.price : draft.price;
+  const price = typeof overrides.price === "number" && Number.isFinite(overrides.price) && overrides.price >= 0
+    ? overrides.price
+    : draft.price;
 
   const csv = [
     "title,description,price,brand",
