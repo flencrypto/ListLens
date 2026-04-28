@@ -3,7 +3,14 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"],
+      "env": [
+        "NODE_ENV",
+        "VERCEL_ENV",
+        "LISTLENS_ENV",
+        "LISTLENS_ALLOW_PLACEHOLDER_CLERK_KEY",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"
+      ]
     },
     "dev": {
       "cache": false,
