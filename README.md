@@ -110,4 +110,14 @@ npm run build         # builds all packages and apps via Turbo
 ## CI
 
 GitHub Actions workflow at `.github/workflows/ci.yml` runs on push to `main` and all PRs:
-`install → typecheck → lint → test → build`
+`install → typecheck → lint → test → migrate-diff → build`
+
+## Production
+
+See [`docs/deploy.md`](docs/deploy.md) for the operator-facing deploy guide
+and [`docs/production-readiness.md`](docs/production-readiness.md) for the
+tracked follow-up work that is not yet shipped.
+
+The web app validates required environment variables at boot via
+`apps/web/src/lib/env.ts`; the build refuses to ship the placeholder Clerk
+key whenever `LISTLENS_ENV=production` (or `VERCEL_ENV=production`).
