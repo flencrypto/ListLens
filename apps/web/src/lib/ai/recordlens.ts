@@ -20,12 +20,15 @@ import {
 const DISCLAIMER =
   "AI-assisted release identification — confirm pressing details before listing or buying." as const;
 
-/** Phrases that imply unsupported certainty about pressing/originality. */
+/** Phrases that imply unsupported certainty about pressing/originality or collectible status. */
 const OVERCONFIDENT_PHRASES: Array<[RegExp, string]> = [
   [/\bfirst pressing\b/gi, "early pressing family (unconfirmed)"],
   [/\boriginal pressing\b/gi, "early pressing family (unconfirmed)"],
   [/\b(definitely|certainly|guaranteed)\b/gi, "likely"],
   [/\bauthentic signed\b/gi, "claimed signed"],
+  [/\bauthentic\b/gi, "claimed authentic"],
+  [/\boriginal\b/gi, "earlier-era"],
+  [/\brare\b/gi, "hard-to-find"],
   [/\bmint\b/gi, "appears clean (grading not verified)"],
 ];
 
@@ -33,14 +36,19 @@ function softenLanguage(text: string): string {
   return OVERCONFIDENT_PHRASES.reduce((t, [re, replacement]) => t.replace(re, replacement), text);
 }
 
+function softenMatch<T extends { likely_release: string; evidence: string[] }>(m: T): T {
+  return {
+    ...m,
+    likely_release: softenLanguage(m.likely_release),
+    evidence: m.evidence.map(softenLanguage),
+  };
+}
+
 function sanitise(raw: RecordReleaseIdentification): RecordReleaseIdentification {
   return {
     ...raw,
-    top_match: { ...raw.top_match, likely_release: softenLanguage(raw.top_match.likely_release) },
-    alternate_matches: raw.alternate_matches.map((m) => ({
-      ...m,
-      likely_release: softenLanguage(m.likely_release),
-    })),
+    top_match: softenMatch(raw.top_match),
+    alternate_matches: raw.alternate_matches.map(softenMatch),
     warnings: raw.warnings.map(softenLanguage),
     disclaimer: DISCLAIMER,
   };

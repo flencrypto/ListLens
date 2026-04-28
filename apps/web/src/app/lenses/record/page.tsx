@@ -212,10 +212,11 @@ export default function RecordLensIdentifyPage() {
                     .filter(Boolean)
                     .join(" — ") || "Artist/title not yet identified"}
                 </p>
-                {result.top_match.label && (
+                {(result.top_match.label || result.top_match.catalogue_number) && (
                   <p className="text-xs text-zinc-500">
-                    {result.top_match.label}
-                    {result.top_match.catalogue_number ? ` · ${result.top_match.catalogue_number}` : ""}
+                    {[result.top_match.label, result.top_match.catalogue_number]
+                      .filter(Boolean)
+                      .join(" · ")}
                   </p>
                 )}
                 {result.top_match.evidence.length > 0 && (

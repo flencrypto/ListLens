@@ -1,12 +1,16 @@
 /**
- * Central registry of all ListLens specialist Lenses.
+ * Package-level registry of all ListLens specialist Lenses.
  *
  * Each entry declares whether the Lens is currently `live` (wired up to the
- * Studio/Guard pipelines) or `planned` (scaffolded in the product surface but
- * not yet implemented). Pages such as `/lenses` and the Studio Lens picker
- * read from this registry so a single source of truth controls what users see.
+ * Studio/Guard pipelines), `planned` (scaffolded in product surfaces but not
+ * yet implemented) or `deprecated` (back-compat alias retained for older
+ * integrations). Product surfaces such as `/lenses` and the Studio Lens
+ * picker are driven by mirrored registry data in the web app
+ * (`apps/web/src/lib/lenses-registry.ts`), which keeps this package registry
+ * as the canonical definition without importing it at runtime. The two must
+ * be kept in sync.
  */
-export type LensStatus = "live" | "planned";
+export type LensStatus = "live" | "planned" | "deprecated";
 
 export interface LensRegistryEntry {
   id: string;
@@ -116,6 +120,14 @@ export const LENS_REGISTRY: readonly LensRegistryEntry[] = [
       "Vehicles, parts and campers. Image + dimension-based part fitment with MotorMeasureLens.",
     icon: "🚗",
     status: "planned",
+  },
+  {
+    id: "LPLens",
+    name: "LPLens",
+    category: "Music Media",
+    description: "Legacy alias for RecordLens. Use RecordLens for new integrations.",
+    icon: "💿",
+    status: "deprecated",
   },
 ];
 

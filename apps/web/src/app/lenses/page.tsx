@@ -29,8 +29,13 @@ export default function LensesPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {live.map((lens) => {
-              const cardInner = (
-                <Card className="h-full hover:border-zinc-600 transition-colors cursor-pointer">
+              const interactive = Boolean(lens.href);
+              const card = (
+                <Card
+                  className={`h-full transition-colors ${
+                    interactive ? "hover:border-zinc-600 cursor-pointer" : ""
+                  }`}
+                >
                   <CardHeader className="flex flex-row items-center gap-3">
                     <div className="text-3xl">{lens.icon}</div>
                     <div>
@@ -43,10 +48,10 @@ export default function LensesPage() {
               );
               return lens.href ? (
                 <Link key={lens.id} href={lens.href}>
-                  {cardInner}
+                  {card}
                 </Link>
               ) : (
-                <div key={lens.id}>{cardInner}</div>
+                <div key={lens.id}>{card}</div>
               );
             })}
           </div>
