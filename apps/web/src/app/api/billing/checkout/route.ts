@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { requireStripe, PLANS } from "@/lib/stripe";
+import { enforceRateLimit, rateLimitIdentifier } from "@/lib/rate-limit";
 
 /** Allow-list of price IDs derived from configured PLANS — protects against arbitrary subscriptions. */
 function getAllowedPriceIds(): Set<string> {
@@ -14,6 +15,12 @@ function getAllowedPriceIds(): Set<string> {
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const limited = await enforceRateLimit(rateLimitIdentifier(userId, req), {
+    key: "billing:checkout",
+    limit: 10,
+    windowMs: 60_000,
+  });
+  if (limited) return limited;
   const body = await req.formData().catch(() => null);
   const priceId = body?.get("priceId") as string | null;
   if (!priceId) return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
