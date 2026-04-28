@@ -61,23 +61,35 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
-  // Persist a Payment row keyed to this workspace + customer (idempotent upsert).
-  await prisma.payment.upsert({
-    where: { id: `${workspaceId}:${customerId ?? "no-customer"}` },
-    create: {
-      id: `${workspaceId}:${customerId ?? "no-customer"}`,
-      workspaceId,
-      stripeCustomerId: customerId ?? undefined,
-      subscriptionId: subscriptionId ?? undefined,
-      plan: "active",
-      status: "active",
-    },
-    update: {
-      stripeCustomerId: customerId ?? undefined,
-      subscriptionId: subscriptionId ?? undefined,
-      status: "active",
-    },
+  // Persist a Payment row for this workspace + customer. We use findFirst +
+  // update/create to avoid synthesising surrogate ids and to tolerate cases
+  // where the customer id is initially missing.
+  const existing = await prisma.payment.findFirst({
+    where: customerId
+      ? { workspaceId, stripeCustomerId: customerId }
+      : { workspaceId, stripeCustomerId: null },
+    select: { id: true },
   });
+  if (existing) {
+    await prisma.payment.update({
+      where: { id: existing.id },
+      data: {
+        stripeCustomerId: customerId ?? undefined,
+        subscriptionId: subscriptionId ?? undefined,
+        status: "active",
+      },
+    });
+  } else {
+    await prisma.payment.create({
+      data: {
+        workspaceId,
+        stripeCustomerId: customerId ?? undefined,
+        subscriptionId: subscriptionId ?? undefined,
+        plan: "active",
+        status: "active",
+      },
+    });
+  }
 
   await prisma.usageEvent.create({
     data: {

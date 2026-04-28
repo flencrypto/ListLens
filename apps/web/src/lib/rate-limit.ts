@@ -118,7 +118,13 @@ export async function enforceRateLimit(
   );
 }
 
-/** Best-effort identifier: prefer userId, fall back to client IP, then "anonymous". */
+/**
+ * Best-effort identifier: prefer userId, fall back to client IP, then
+ * `anonymous`. The `anonymous` bucket is intentionally global and shared by
+ * all callers without a userId or routable IP — it acts as a hard ceiling on
+ * unauthenticated, unattributable traffic. Routes that must avoid this
+ * shared bucket should require auth or use a route-specific key prefix.
+ */
 export function rateLimitIdentifier(
   userId: string | null | undefined,
   req: Request,
