@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { LayoutDashboard, Camera, ShieldCheck, Clock, CreditCard } from "lucide-react";
+import { LayoutDashboard, Camera, ShieldCheck, Clock, CreditCard, Aperture } from "lucide-react";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/studio/new", label: "Studio", icon: Camera },
   { href: "/guard/new", label: "Guard", icon: ShieldCheck },
+  { href: "/lenses", label: "Lenses", icon: Aperture },
   { href: "/history", label: "History", icon: Clock },
   { href: "/billing", label: "Billing", icon: CreditCard },
 ];
