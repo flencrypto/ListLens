@@ -5,10 +5,10 @@
  * Studio/Guard pipelines), `planned` (scaffolded in product surfaces but not
  * yet implemented) or `deprecated` (back-compat alias retained for older
  * integrations). Product surfaces such as `/lenses` and the Studio Lens
- * picker are driven by mirrored registry data in the web app
- * (`apps/web/src/lib/lenses-registry.ts`), which keeps this package registry
- * as the canonical definition without importing it at runtime. The two must
- * be kept in sync.
+ * picker are driven by a mirrored registry inside the web app
+ * (`apps/web/src/lib/lenses-registry.ts`). Because the web app does not
+ * import this package registry at runtime, the two registry definitions must
+ * be kept in sync manually.
  */
 export type LensStatus = "live" | "planned" | "deprecated";
 

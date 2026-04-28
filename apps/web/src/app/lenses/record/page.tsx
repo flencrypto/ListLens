@@ -6,6 +6,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import type {
+  RecordReleaseIdentification,
+} from "@/lib/ai/schemas";
 
 /**
  * RecordLens — single-label-photo release identification with optional
@@ -13,27 +16,7 @@ import { Badge } from "@/components/ui/badge";
  * pressings rather than a single overconfident answer.
  */
 
-interface ReleaseMatch {
-  artist: string | null;
-  title: string | null;
-  label: string | null;
-  catalogue_number: string | null;
-  likely_release: string;
-  likelihood_percent: number;
-  evidence: string[];
-}
-
-interface IdentifyResult {
-  mode: "recordlens.identify";
-  lens: "RecordLens";
-  input_type: "single_label_photo" | "label_and_matrix";
-  top_match: ReleaseMatch;
-  alternate_matches: ReleaseMatch[];
-  needs_matrix_for_clarification: boolean;
-  matrix_clarification_questions: string[];
-  warnings: string[];
-  disclaimer: string;
-}
+type IdentifyResult = RecordReleaseIdentification;
 
 export default function RecordLensIdentifyPage() {
   const [labelUrls, setLabelUrls] = useState<string>("");
@@ -136,14 +119,20 @@ export default function RecordLensIdentifyPage() {
             <CardTitle className="text-base">Label photo</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <label className="block text-xs text-zinc-400 mb-1">Photo URL(s) — comma or whitespace separated</label>
+            <label htmlFor="label-urls" className="block text-xs text-zinc-400 mb-1">
+              Photo URL(s) — comma or whitespace separated
+            </label>
             <Input
+              id="label-urls"
               value={labelUrls}
               onChange={(e) => setLabelUrls(e.target.value)}
               placeholder="https://example.com/label-side-a.jpg"
             />
-            <label className="block text-xs text-zinc-400 mb-1">Optional seller hint</label>
+            <label htmlFor="seller-hint" className="block text-xs text-zinc-400 mb-1">
+              Optional seller hint
+            </label>
             <Input
+              id="seller-hint"
               value={hint}
               onChange={(e) => setHint(e.target.value)}
               placeholder="e.g. Radiohead OK Computer, UK pressing"
@@ -171,12 +160,30 @@ export default function RecordLensIdentifyPage() {
                   ))}
                 </ul>
               )}
-              <label className="block text-xs text-zinc-400 mt-2 mb-1">Side A matrix runout</label>
-              <Input value={matrixA} onChange={(e) => setMatrixA(e.target.value)} />
-              <label className="block text-xs text-zinc-400 mb-1">Side B matrix runout</label>
-              <Input value={matrixB} onChange={(e) => setMatrixB(e.target.value)} />
-              <label className="block text-xs text-zinc-400 mb-1">Extra symbols / initials</label>
-              <Input value={extraSymbols} onChange={(e) => setExtraSymbols(e.target.value)} />
+              <label htmlFor="matrix-side-a" className="block text-xs text-zinc-400 mt-2 mb-1">
+                Side A matrix runout
+              </label>
+              <Input
+                id="matrix-side-a"
+                value={matrixA}
+                onChange={(e) => setMatrixA(e.target.value)}
+              />
+              <label htmlFor="matrix-side-b" className="block text-xs text-zinc-400 mb-1">
+                Side B matrix runout
+              </label>
+              <Input
+                id="matrix-side-b"
+                value={matrixB}
+                onChange={(e) => setMatrixB(e.target.value)}
+              />
+              <label htmlFor="matrix-extra-symbols" className="block text-xs text-zinc-400 mb-1">
+                Extra symbols / initials
+              </label>
+              <Input
+                id="matrix-extra-symbols"
+                value={extraSymbols}
+                onChange={(e) => setExtraSymbols(e.target.value)}
+              />
               <Button
                 onClick={runWithMatrix}
                 disabled={loading}

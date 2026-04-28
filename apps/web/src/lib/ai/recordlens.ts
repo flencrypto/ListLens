@@ -14,11 +14,25 @@ import {
  *    never a single overconfident answer.
  *  - The trust language ("Likely version: …, X% confidence") is enforced via
  *    Zod schema literals and a sanitiser that strips overconfident phrases
- *    such as "first pressing" or "original" when no matrix has been provided.
+ *    such as "first pressing" or "original" from every model response,
+ *    regardless of whether matrix runout details have been supplied.
+ *  - A deterministic post-processing rule forces
+ *    `needs_matrix_for_clarification` to true (and seeds
+ *    `matrix_clarification_questions` if empty) whenever the top-match
+ *    likelihood is below 80% and matrix data has not yet been provided, so
+ *    the clarification flow cannot be skipped due to a model mistake.
  */
 
 const DISCLAIMER =
   "AI-assisted release identification — confirm pressing details before listing or buying." as const;
+
+const MATRIX_CONFIDENCE_THRESHOLD = 80;
+
+const DEFAULT_MATRIX_QUESTIONS = [
+  "Could you photograph the deadwax / matrix runout on side A?",
+  "Could you photograph the deadwax / matrix runout on side B?",
+  "Are there any extra symbols or initials etched into the runout?",
+];
 
 /** Phrases that imply unsupported certainty about pressing/originality or collectible status. */
 const OVERCONFIDENT_PHRASES: Array<[RegExp, string]> = [
@@ -45,10 +59,28 @@ function softenMatch<T extends { likely_release: string; evidence: string[] }>(m
 }
 
 function sanitise(raw: RecordReleaseIdentification): RecordReleaseIdentification {
+  const top_match = softenMatch(raw.top_match);
+  const alternate_matches = raw.alternate_matches.map(softenMatch);
+
+  // Deterministic clarification rule: while we don't yet have matrix data,
+  // force the clarification follow-up if the model's top-match confidence is
+  // below the threshold, even if it set `needs_matrix_for_clarification` to
+  // false. This prevents the clarification UI from being skipped by mistake.
+  const lacksMatrix = raw.input_type === "single_label_photo";
+  const lowConfidence = top_match.likelihood_percent < MATRIX_CONFIDENCE_THRESHOLD;
+  const needs_matrix_for_clarification =
+    raw.needs_matrix_for_clarification || (lacksMatrix && lowConfidence);
+  const matrix_clarification_questions =
+    needs_matrix_for_clarification && raw.matrix_clarification_questions.length === 0
+      ? [...DEFAULT_MATRIX_QUESTIONS]
+      : raw.matrix_clarification_questions;
+
   return {
     ...raw,
-    top_match: softenMatch(raw.top_match),
-    alternate_matches: raw.alternate_matches.map(softenMatch),
+    top_match,
+    alternate_matches,
+    needs_matrix_for_clarification,
+    matrix_clarification_questions,
     warnings: raw.warnings.map(softenLanguage),
     disclaimer: DISCLAIMER,
   };
