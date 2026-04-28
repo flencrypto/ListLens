@@ -5,8 +5,8 @@ export function createQueues(connection: IORedis) {
   const defaultJobOptions = {
     attempts: 3,
     backoff: { type: "exponential" as const, delay: 2000 },
-    removeOnComplete: { age: 3600, count: 1000 },
-    removeOnFail: { age: 86400 },
+    removeOnComplete: { age: 3600 /* 1 hour */, count: 1000 },
+    removeOnFail: { age: 86400 /* 24 hours */ },
   };
 
   return {

@@ -29,7 +29,7 @@ export const DISALLOWED_PHRASES: readonly string[] = [
 ];
 
 const SAFE_REPLACEMENTS: Array<[RegExp, string]> = [
-  [/\b(fake|counterfeit)\b/gi, "high replica-risk indicators found in"],
+  [/\b(fake|counterfeit)\b/gi, "high replica-risk indicators found"],
   [/\b(scammer|scam)\b/gi, "seller with suspicious listing behaviour"],
   [/\b(fraud(?:ulent)?)\b/gi, "misleading listing"],
 ];
