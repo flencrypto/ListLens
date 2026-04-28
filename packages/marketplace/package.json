@@ -1,5 +1,5 @@
 {
-  "name": "@listlens/lenses",
+  "name": "@listlens/marketplace",
   "version": "0.1.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -11,12 +11,13 @@
   },
   "scripts": {
     "build": "tsc --project tsconfig.json",
-    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
-  "devDependencies": {
-    "typescript": "^5.4.5",
-    "vitest": "^2.0.0"
+  "dependencies": {
+    "@listlens/schemas": "*",
+    "zod": "^3.23.8"
   },
-  "files": ["dist"]
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
 }
