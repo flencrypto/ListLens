@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Clerk publishable key handling.
 //
@@ -89,4 +90,34 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Sentry organisation and project. Configured via `npx @sentry/wizard@latest -i nextjs --saas
+  // --org mrflen --project javascript-nextjs`. Override locally with SENTRY_ORG / SENTRY_PROJECT.
+  org: "mrflen",
+  project: "javascript-nextjs",
+
+  // Auth token for source-map upload. Stored in `.env.sentry-build-plugin` (gitignored) or CI secret.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Only print logs for uploading source maps in CI.
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time).
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  tunnelRoute: "/monitoring",
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size.
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    // Enables automatic instrumentation of Vercel Cron Monitors.
+    automaticVercelMonitors: true,
+  },
+});
