@@ -14,21 +14,19 @@ function sanitiseSafeLanguage(text: string): string {
   return SAFE_REPLACEMENTS.reduce((t, [re, replacement]) => t.replace(re, replacement), text);
 }
 
-function containsForbiddenPhrase(text: string): boolean {
+function findForbiddenPhrase(text: string): string | undefined {
   const lower = text.toLowerCase();
-  return FORBIDDEN_PHRASES.some((p) => lower.includes(p));
+  return FORBIDDEN_PHRASES.find((p) => lower.includes(p));
 }
 
 function sanitiseOutput(raw: GuardOutput): GuardOutput {
   for (const flag of raw.red_flags) {
-    if (containsForbiddenPhrase(flag.message)) {
-      console.warn("[guard] forbidden phrase in red_flag, sanitising:", flag.message);
-    }
+    const hit = findForbiddenPhrase(flag.message);
+    if (hit) console.warn(`[guard] forbidden phrase "${hit}" in red_flag, sanitising:`, flag.message);
   }
   for (const q of raw.seller_questions) {
-    if (containsForbiddenPhrase(q)) {
-      console.warn("[guard] forbidden phrase in seller_question, sanitising:", q);
-    }
+    const hit = findForbiddenPhrase(q);
+    if (hit) console.warn(`[guard] forbidden phrase "${hit}" in seller_question, sanitising:`, q);
   }
   return {
     ...raw,
