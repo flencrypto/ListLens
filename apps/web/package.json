@@ -17,6 +17,7 @@
     "openai": "^4.52.0",
     "zod": "^3.23.8",
     "@prisma/client": "^5.14.0",
+    "@listlens/db": "*",
     "tailwindcss": "^3.4.4",
     "lucide-react": "^0.400.0",
     "clsx": "^2.1.1",
