@@ -43,19 +43,25 @@ export interface TabsTriggerProps extends React.ButtonHTMLAttributes<HTMLButtonE
   value: string;
 }
 
-export function TabsTrigger({ value, className, children, ...props }: TabsTriggerProps) {
+export function TabsTrigger({ value, className, children, onClick, ...props }: TabsTriggerProps) {
   const { activeTab, setActiveTab } = useTabs();
   const isActive = activeTab === value;
   return (
     <button
       role="tab"
       aria-selected={isActive}
-      onClick={() => setActiveTab(value)}
+      type="button"
       className={cn(
         "px-3 py-1.5 text-sm font-medium rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500",
         isActive ? "bg-white/15 text-white" : "text-white/50 hover:text-white/80",
         className
       )}
+      onClick={(event) => {
+        // Compose with a caller-provided onClick so spreading {...props} can't
+        // override the tab-switch handler.
+        onClick?.(event);
+        if (!event.defaultPrevented) setActiveTab(value);
+      }}
       {...props}
     >
       {children}

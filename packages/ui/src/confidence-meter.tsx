@@ -8,7 +8,9 @@ export interface ConfidenceMeterProps {
 }
 
 export function ConfidenceMeter({ value, label, className }: ConfidenceMeterProps) {
-  const pct = Math.round(value * 100);
+  // Clamp to [0,1] so out-of-range inputs don't break aria semantics or layout.
+  const clamped = Math.min(1, Math.max(0, Number.isFinite(value) ? value : 0));
+  const pct = Math.round(clamped * 100);
   const color = pct >= 80 ? "bg-emerald-500" : pct >= 60 ? "bg-yellow-500" : "bg-red-500";
   return (
     <div className={cn("space-y-1", className)}>

@@ -20,7 +20,7 @@ export function median(values: number[]): number {
 
 /**
  * Computes the Nth percentile using linear interpolation (same as Excel PERCENTILE).
- * Returns 0 for empty arrays or invalid percentile.
+ * Returns 0 for empty arrays. Throws RangeError when `p` is outside 0–100.
  */
 export function percentile(values: number[], p: number): number {
   if (values.length === 0) return 0;

@@ -8,6 +8,36 @@ interface ListingContext {
   images: string[];
 }
 
+/**
+ * Resolve the ListLens API base URL.
+ *
+ * Resolution order:
+ *   1. Build-time env var `VITE_LISTLENS_API_BASE_URL` / `LISTLENS_API_BASE_URL`
+ *      (WXT exposes Vite-style import.meta.env).
+ *   2. User-configured value persisted in extension storage under
+ *      `apiBaseUrl` (set via the side panel / settings, not yet shipped).
+ *   3. Fallback: production origin.
+ *
+ * This keeps local dev / staging working without code changes and avoids
+ * accidentally posting dev data to prod.
+ */
+const PROD_API_BASE_URL = "https://app.listlens.io";
+const BUILD_TIME_API_BASE_URL =
+  (import.meta as unknown as { env?: Record<string, string | undefined> }).env
+    ?.VITE_LISTLENS_API_BASE_URL ?? undefined;
+
+async function resolveApiBaseUrl(): Promise<string> {
+  if (BUILD_TIME_API_BASE_URL) return BUILD_TIME_API_BASE_URL;
+  try {
+    const stored = await browser.storage.local.get("apiBaseUrl");
+    const url = (stored as { apiBaseUrl?: string }).apiBaseUrl;
+    if (url && typeof url === "string") return url;
+  } catch {
+    // ignore — fall through to default
+  }
+  return PROD_API_BASE_URL;
+}
+
 export function Popup() {
   const [listing, setListing] = useState<ListingContext | null>(null);
   const [status, setStatus] = useState<"idle" | "loading" | "sent">("idle");
@@ -18,11 +48,12 @@ export function Popup() {
     });
   }, []);
 
-  async function sendToGuard() {
+  async function postListing(path: string) {
     if (!listing) return;
     setStatus("loading");
     try {
-      await fetch("https://app.listlens.io/api/extension/send-to-guard", {
+      const base = await resolveApiBaseUrl();
+      await fetch(`${base}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(listing),
@@ -33,20 +64,8 @@ export function Popup() {
     }
   }
 
-  async function sendToStudio() {
-    if (!listing) return;
-    setStatus("loading");
-    try {
-      await fetch("https://app.listlens.io/api/extension/send-to-studio", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(listing),
-      });
-      setStatus("sent");
-    } catch {
-      setStatus("idle");
-    }
-  }
+  const sendToGuard = () => postListing("/api/extension/send-to-guard");
+  const sendToStudio = () => postListing("/api/extension/send-to-studio");
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>

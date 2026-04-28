@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { LensIdSchema } from "./lenses";
 
 export const GuardOutputSchema = z.object({
   mode: z.literal("guard"),
-  lens: z.string(),
+  lens: LensIdSchema,
   risk: z.object({
     level: z.enum(["low", "medium", "medium_high", "high", "inconclusive"]),
     confidence: z.number().min(0).max(1),

@@ -1,8 +1,9 @@
 import { z } from "zod";
+import { LensIdSchema } from "./lenses";
 
 export const StudioOutputSchema = z.object({
   mode: z.literal("studio"),
-  lens: z.string(),
+  lens: LensIdSchema,
   identity: z.object({
     brand: z.string().nullable(),
     model: z.string().nullable(),

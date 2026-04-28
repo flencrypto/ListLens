@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { LensIdSchema } from "./lenses";
 
 export const EvidenceScoresSchema = z.object({
   photoQuality: z.number().min(0).max(1),
@@ -11,7 +12,7 @@ export type EvidenceScores = z.infer<typeof EvidenceScoresSchema>;
 
 export const LayeredIntelligenceOutputSchema = z.object({
   mode: z.literal("layered_intelligence"),
-  lens: z.string(),
+  lens: LensIdSchema,
   evidenceScores: EvidenceScoresSchema,
   overallConfidence: z.number().min(0).max(1),
   recommendation: z.string(),
