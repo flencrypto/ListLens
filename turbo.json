@@ -13,6 +13,7 @@
       "outputs": []
     },
     "type-check": {},
+    "typecheck": {},
     "test": {
       "dependsOn": ["^build"]
     }
