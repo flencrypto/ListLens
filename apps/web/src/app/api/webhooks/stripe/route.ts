@@ -85,7 +85,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
         workspaceId,
         stripeCustomerId: customerId ?? undefined,
         subscriptionId: subscriptionId ?? undefined,
-        plan: "active",
+        // The session does not carry an expanded line_items list by default,
+        // so we cannot map a price id to a plan slug here. The plan field is
+        // populated by the subsequent `invoice.paid` event, which has the
+        // line items needed to identify the active plan.
+        plan: "free",
         status: "active",
       },
     });
