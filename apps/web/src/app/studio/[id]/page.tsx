@@ -1,5 +1,6 @@
 "use client";
-import { useState, use } from "react";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { ListingEditor } from "@/components/studio/listing-editor";
 import type { StudioOutput } from "@/lib/ai/schemas";
 
-export default function StudioItemPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function StudioItemPage() {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [hint, setHint] = useState("");
   const [analysis, setAnalysis] = useState<StudioOutput | null>(null);

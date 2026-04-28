@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { guardStore, guardOwner, userOwnsGuardCheck } from "@/lib/store";
+import { guardStore, userOwnsGuardCheck } from "@/lib/store";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { userId } = await auth();

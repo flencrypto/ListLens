@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { requireStripe } from "@/lib/stripe";
+import { requireStripe, PLANS } from "@/lib/stripe";
+
+/** Allow-list of price IDs derived from configured PLANS — protects against arbitrary subscriptions. */
+function getAllowedPriceIds(): Set<string> {
+  return new Set(
+    Object.values(PLANS)
+      .map((p) => p.priceId)
+      .filter((id): id is string => typeof id === "string" && id.length > 0)
+  );
+}
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -8,6 +17,11 @@ export async function POST(req: NextRequest) {
   const body = await req.formData().catch(() => null);
   const priceId = body?.get("priceId") as string | null;
   if (!priceId) return NextResponse.json({ error: "Missing priceId" }, { status: 400 });
+
+  const allowed = getAllowedPriceIds();
+  if (!allowed.has(priceId)) {
+    return NextResponse.json({ error: "Unknown priceId" }, { status: 400 });
+  }
 
   const stripeClient = requireStripe();
   const session = await stripeClient.checkout.sessions.create({

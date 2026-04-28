@@ -1,5 +1,6 @@
 "use client";
-import { useState, use } from "react";
+import { useState } from "react";
+import { useParams } from "next/navigation";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,8 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { RiskReport } from "@/components/guard/risk-report";
 import type { GuardOutput } from "@/lib/ai/schemas";
 
-export default function GuardCheckPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function GuardCheckPage() {
+  const params = useParams<{ id: string }>();
+  const id = params.id;
   const [report, setReport] = useState<GuardOutput | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
