@@ -9,7 +9,7 @@ listlens/
 ├── apps/
 │   ├── web/          # Next.js 15 App Router — main web app (Clerk, Stripe, AI)
 │   ├── worker/       # BullMQ background worker (AI jobs, CV, billing, reports)
-│   └── extension/    # WXT browser extension for eBay & Vinted (Chrome/Firefox)
+│   └── extension/    # WXT browser extension for eBay & Vinted (Chrome/Edge)
 └── packages/
     ├── ai/           # OpenAI wrapper — Studio & Guard analyse functions
     ├── cv/           # Computer vision pipeline stubs (AR marker, measurements)

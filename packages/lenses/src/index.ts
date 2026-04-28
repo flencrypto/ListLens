@@ -15,7 +15,22 @@ export {
 } from "./safeWording";
 export type { ShoeLensSellerAttributes } from "./shoelens";
 
-export function routeLens(hint: string): string {
+/**
+ * Canonical lens identifier union. Mirrors `LensIdSchema` in
+ * `@listlens/schemas` but is duplicated here as a plain string-literal type
+ * so this package can stay free of the schemas dependency.
+ */
+export type LensId =
+  | "ShoeLens"
+  | "ClothingLens"
+  | "MeasureLens"
+  | "LPLens"
+  | "WatchLens"
+  | "MotorLens"
+  | "CardLens"
+  | "ToyLens";
+
+export function routeLens(hint: string): LensId {
   const h = hint.toLowerCase();
   if (h.includes("shoe") || h.includes("boot") || h.includes("trainer") || h.includes("sneaker")) return "ShoeLens";
   if (h.includes("clothing") || h.includes("jacket") || h.includes("shirt") || h.includes("dress")) return "ClothingLens";

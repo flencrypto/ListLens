@@ -22,9 +22,13 @@ interface ListingContext {
  * accidentally posting dev data to prod.
  */
 const PROD_API_BASE_URL = "https://app.listlens.io";
+const BUILD_TIME_ENV = (import.meta as unknown as {
+  env?: Record<string, string | undefined>;
+}).env;
 const BUILD_TIME_API_BASE_URL =
-  (import.meta as unknown as { env?: Record<string, string | undefined> }).env
-    ?.VITE_LISTLENS_API_BASE_URL ?? undefined;
+  BUILD_TIME_ENV?.VITE_LISTLENS_API_BASE_URL ??
+  BUILD_TIME_ENV?.LISTLENS_API_BASE_URL ??
+  undefined;
 
 async function resolveApiBaseUrl(): Promise<string> {
   if (BUILD_TIME_API_BASE_URL) return BUILD_TIME_API_BASE_URL;
@@ -53,11 +57,16 @@ export function Popup() {
     setStatus("loading");
     try {
       const base = await resolveApiBaseUrl();
-      await fetch(`${base}${path}`, {
+      const response = await fetch(`${base}${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(listing),
       });
+      if (!response.ok) {
+        throw new Error(
+          `Request failed with status ${response.status}${response.statusText ? ` ${response.statusText}` : ""}`,
+        );
+      }
       setStatus("sent");
     } catch {
       setStatus("idle");
