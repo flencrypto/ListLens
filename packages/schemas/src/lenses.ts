@@ -4,6 +4,7 @@ export const LensIdSchema = z.enum([
   "ShoeLens",
   "ClothingLens",
   "MeasureLens",
+  "RecordLens",
   "LPLens",
   "WatchLens",
   "MotorLens",

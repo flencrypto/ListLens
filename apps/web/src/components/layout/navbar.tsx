@@ -15,6 +15,9 @@ export function Navbar() {
           <Link href="/guard/new" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Guard
           </Link>
+          <Link href="/lenses" className="text-sm text-zinc-400 hover:text-white transition-colors">
+            Lenses
+          </Link>
           <Link href="/history" className="text-sm text-zinc-400 hover:text-white transition-colors">
             History
           </Link>
