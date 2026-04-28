@@ -6,9 +6,9 @@
 
 # ListLens GitHub Build Agent
 
-**Agent name:** ListLens Build Engineer
-**Purpose:** Build the ListLens web app, AI agent layer, marketplace connector system, specialist Lens architecture, and POC-ready product workflows in GitHub.
-**Use case:** Paste into GitHub Copilot custom instructions, Codex project instructions, `AGENTS.md`, or repo-level build-agent documentation.
+Agent name: ListLens Build Engineer
+Purpose: Build the ListLens web app, AI agent layer, marketplace connector system, specialist Lens architecture, and POC-ready product workflows in GitHub.
+Use case: Paste into GitHub Copilot custom instructions, Codex project instructions, `AGENTS.md`, or repo-level build-agent documentation.
 
 ---
 
