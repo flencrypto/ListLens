@@ -42,6 +42,9 @@ const MOCK_STUDIO_OUTPUT: StudioOutput = {
   warnings: ["Size not visible in photos", "Authenticity not independently verified"],
 };
 
+const STUDIO_SYSTEM_PROMPT = (lens: string) =>
+  `You are a specialist ${lens} AI for a resale listing platform. Return ONLY valid JSON. Do not include any markdown, explanations, or prose outside the JSON object.`;
+
 export async function analyseForStudio(
   photoUrls: string[],
   hint?: string,
@@ -54,24 +57,65 @@ export async function analyseForStudio(
       type: "image_url" as const,
       image_url: { url, detail: "high" as const },
     }));
+
+    const userPrompt = `Analyse these item photos for a ${lens} listing.${hint ? ` Seller hint: ${hint}` : ""}
+Return a JSON object with these fields:
+{
+  "mode": "studio",
+  "lens": "${lens}",
+  "identity": { "brand": string|null, "model": string|null, "confidence": 0-1 },
+  "attributes": { /* lens-specific key-value pairs */ },
+  "missing_photos": [string],
+  "pricing": { "quick_sale": number, "recommended": number, "high": number, "currency": "GBP", "confidence": 0-1 },
+  "marketplace_outputs": {
+    "ebay": { "title": string, "description": string, "item_specifics": object, "category_id": string, "condition_id": string },
+    "vinted": { "title": string, "description": string, "price_suggestion": number, "category_id": string }
+  },
+  "warnings": [string]
+}`;
+
+    const messages: Parameters<typeof client.chat.completions.create>[0]["messages"] = [
+      { role: "system", content: STUDIO_SYSTEM_PROMPT(lens) },
+      {
+        role: "user",
+        content: [
+          { type: "text" as const, text: userPrompt },
+          ...imageMessages,
+        ],
+      },
+    ];
+
     const response = await client.chat.completions.create({
       model: "gpt-4o",
-      messages: [
-        { role: "system", content: `You are a specialist ${lens} AI. Return ONLY valid JSON.` },
-        {
-          role: "user",
-          content: [
-            { type: "text", text: `Analyse for ${lens}.${hint ? ` Hint: ${hint}` : ""} Return JSON with mode:"studio", lens, identity, attributes, missing_photos, pricing, marketplace_outputs, warnings.` },
-            ...imageMessages,
-          ],
-        },
-      ],
+      messages,
       response_format: { type: "json_object" },
       max_tokens: 2000,
     });
+
     const raw = JSON.parse(response.choices[0].message.content ?? "{}");
     const result = StudioOutputSchema.safeParse(raw);
     if (result.success) return result.data;
+
+    // Retry once with a repair prompt
+    const repairMessages: typeof messages = [
+      ...messages,
+      { role: "assistant", content: response.choices[0].message.content ?? "" },
+      {
+        role: "user",
+        content: `Your response did not match the required schema. Validation errors:\n${JSON.stringify(result.error.errors)}\n\nPlease return a corrected JSON object that matches the schema exactly.`,
+      },
+    ];
+    const repairResponse = await client.chat.completions.create({
+      model: "gpt-4o",
+      messages: repairMessages,
+      response_format: { type: "json_object" },
+      max_tokens: 2000,
+    });
+    const repairRaw = JSON.parse(repairResponse.choices[0].message.content ?? "{}");
+    const repairResult = StudioOutputSchema.safeParse(repairRaw);
+    if (repairResult.success) return repairResult.data;
+
+    console.error("Studio AI output validation failed after retry:", repairResult.error.errors);
     throw new Error("AI output validation failed");
   }
   return { ...MOCK_STUDIO_OUTPUT, lens };

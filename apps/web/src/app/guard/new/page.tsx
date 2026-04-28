@@ -24,8 +24,17 @@ export default function NewGuardPage() {
   function handleAddScreenshot() {
     const trimmed = screenshotInput.trim();
     if (!trimmed) return;
+    if (screenshotUrls.includes(trimmed)) {
+      setScreenshotInput("");
+      return; // silently de-dupe
+    }
+    if (screenshotUrls.length >= 6) {
+      setError("Maximum 6 screenshots allowed.");
+      return;
+    }
     setScreenshotUrls((prev) => [...prev, trimmed]);
     setScreenshotInput("");
+    setError(null);
   }
 
   async function handleStart() {
@@ -46,10 +55,14 @@ export default function NewGuardPage() {
           lens,
         }),
       });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error((errData as { error?: string }).error ?? "Something went wrong");
+      }
       const data = await res.json();
       router.push(`/guard/${data.id}`);
-    } catch {
-      setError("Something went wrong. Please try again.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
       setLoading(false);
     }
   }

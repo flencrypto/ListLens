@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { guardCheckMeta } from "@/lib/store";
+import { guardCheckMeta, guardOwner } from "@/lib/store";
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth();
@@ -12,6 +12,7 @@ export async function POST(req: NextRequest) {
     screenshotUrls: body.screenshotUrls,
     lens: body.lens ?? "ShoeLens",
   });
+  guardOwner.set(id, userId);
   return NextResponse.json({ id, url: body.url, lens: body.lens ?? "ShoeLens", status: "pending" });
 }
 

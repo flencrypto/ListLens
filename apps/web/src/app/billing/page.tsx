@@ -49,7 +49,7 @@ const PLANS: PlanDisplay[] = [
     credits: "Unlimited",
     cta: "Subscribe",
     highlight: true,
-    disabled: false,
+    disabled: !STRIPE_PLANS.studio_starter.priceId,
     priceId: STRIPE_PLANS.studio_starter.priceId,
   },
   {
@@ -68,7 +68,7 @@ const PLANS: PlanDisplay[] = [
     credits: "Unlimited",
     cta: "Subscribe",
     highlight: false,
-    disabled: false,
+    disabled: !STRIPE_PLANS.studio_reseller.priceId,
     priceId: STRIPE_PLANS.studio_reseller.priceId,
   },
 ];

@@ -1,13 +1,19 @@
 import Stripe from "stripe";
 
-// Defer validation to runtime — allows build without secrets
-export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY ?? "sk_test_placeholder");
+// Defer Stripe client construction to runtime so next build succeeds without secrets.
+// All code must call requireStripe() rather than using the default export directly.
+let _stripe: Stripe | null = null;
 
 export function requireStripe(): Stripe {
   if (!process.env.STRIPE_SECRET_KEY) {
     throw new Error("STRIPE_SECRET_KEY environment variable is not set");
   }
-  return stripe;
+  if (!_stripe) {
+    _stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: "2024-06-20",
+    });
+  }
+  return _stripe;
 }
 
 export const PLANS = {

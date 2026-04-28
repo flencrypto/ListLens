@@ -24,13 +24,23 @@ export default function NewStudioPage() {
 
   async function handleStart() {
     setLoading(true);
-    const res = await fetch("/api/items", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lens: selectedLens, marketplace: selectedMarketplace }),
-    });
-    const data = await res.json();
-    router.push(`/studio/${data.id}`);
+    try {
+      const res = await fetch("/api/items", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lens: selectedLens, marketplace: selectedMarketplace }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error((errData as { error?: string }).error ?? "Failed to create listing");
+      }
+      const data = await res.json();
+      router.push(`/studio/${data.id}`);
+    } catch (e) {
+      console.error("Failed to start Studio listing:", e);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
