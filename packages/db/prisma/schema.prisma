@@ -7,27 +7,37 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// NOTE: pgvector extension is required for vector embeddings.
+// Run: CREATE EXTENSION IF NOT EXISTS vector; in your Postgres instance.
+// Migration: ALTER TABLE item_analyses ADD COLUMN embedding vector(1536);
+
 model User {
-  id        String   @id @default(cuid())
-  clerkId   String   @unique
-  email     String   @unique
-  name      String?
-  role      String   @default("user")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String   @id @default(cuid())
+  clerkId    String   @unique
+  email      String   @unique
+  name       String?
+  avatarUrl  String?
+  role       String   @default("user")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
   workspaces WorkspaceMember[]
+  usageEvents UsageEvent[]
 }
 
 model Workspace {
-  id          String   @id @default(cuid())
-  name        String
-  plan        String   @default("free")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  members     WorkspaceMember[]
-  items       Item[]
-  guardChecks GuardCheck[]
-  payments    Payment[]
+  id           String   @id @default(cuid())
+  name         String
+  plan         String   @default("free")
+  credits      Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  members      WorkspaceMember[]
+  items        Item[]
+  guardChecks  GuardCheck[]
+  payments     Payment[]
+  usageEvents  UsageEvent[]
+  marketplaceAccounts MarketplaceAccount[]
+  measureSessions MeasureSession[]
 }
 
 model WorkspaceMember {
@@ -38,6 +48,23 @@ model WorkspaceMember {
   workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   @@unique([workspaceId, userId])
+}
+
+model MarketplaceAccount {
+  id                  String    @id @default(cuid())
+  workspaceId         String
+  marketplace         String
+  connectorId         String
+  accessToken         String?
+  refreshToken        String?
+  tokenExpiresAt      DateTime?
+  accountName         String?
+  accountId           String?
+  status              String    @default("disconnected")
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  workspace           Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  @@unique([workspaceId, marketplace])
 }
 
 model Item {
@@ -85,17 +112,17 @@ model ItemAnalysis {
 }
 
 model Listing {
-  id                  String    @id @default(cuid())
-  itemId              String
-  marketplace         String
+  id                   String    @id @default(cuid())
+  itemId               String
+  marketplace          String
   marketplaceListingId String?
-  status              String    @default("draft")
-  payload             Json?
-  publishedAt         DateTime?
-  exportedAt          DateTime?
-  soldAt              DateTime?
-  createdAt           DateTime  @default(now())
-  item                Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  status               String    @default("draft")
+  payload              Json?
+  publishedAt          DateTime?
+  exportedAt           DateTime?
+  soldAt               DateTime?
+  createdAt            DateTime  @default(now())
+  item                 Item      @relation(fields: [itemId], references: [id], onDelete: Cascade)
 }
 
 model ComparableSale {
@@ -146,16 +173,16 @@ model GuardQuestion {
 }
 
 model Payment {
-  id               String    @id @default(cuid())
-  workspaceId      String
-  stripeCustomerId String?
-  subscriptionId   String?
-  plan             String    @default("free")
-  status           String    @default("active")
-  credits          Int       @default(0)
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  workspace        Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  id                String    @id @default(cuid())
+  workspaceId       String
+  stripeCustomerId  String?
+  subscriptionId    String?
+  plan              String    @default("free")
+  status            String    @default("active")
+  credits           Int       @default(0)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  workspace         Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
 }
 
 model UsageEvent {
@@ -165,4 +192,31 @@ model UsageEvent {
   eventName   String
   metadata    Json?
   createdAt   DateTime @default(now())
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User?    @relation(fields: [userId], references: [id])
+}
+
+model MeasureObject {
+  id               String   @id @default(cuid())
+  name             String
+  description      String?
+  markerSizeMm     Float
+  markerDictionary String   @default("ARUCO_4X4_50")
+  createdAt        DateTime @default(now())
+  sessions         MeasureSession[]
+}
+
+model MeasureSession {
+  id              String         @id @default(cuid())
+  workspaceId     String
+  measureObjectId String?
+  status          String         @default("pending")
+  imageUrls       String[]
+  result          Json?
+  confidence      Float?
+  warnings        String[]
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  workspace       Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  measureObject   MeasureObject? @relation(fields: [measureObjectId], references: [id])
 }
