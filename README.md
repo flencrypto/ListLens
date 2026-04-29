@@ -52,6 +52,8 @@ cp .env.example .env
 # fill in DATABASE_URL, REDIS_URL, OPENAI_API_KEY, STRIPE_*, CLERK_*, EBAY_*
 ```
 
+See **[`docs/api-keys.md`](docs/api-keys.md)** for where to obtain each key — every external service used by ListLens has a free tier or test mode.
+
 ### Development
 
 ```bash
