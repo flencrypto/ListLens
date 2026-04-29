@@ -52,6 +52,18 @@ cp .env.example .env
 # fill in DATABASE_URL, REDIS_URL, OPENAI_API_KEY, STRIPE_*, CLERK_*, EBAY_*
 ```
 
+#### Demo mode (no Clerk credentials)
+
+If `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are missing (or
+the publishable key is the build-time placeholder), the web app boots in
+**demo mode**: Clerk middleware, `<ClerkProvider>` and `<UserButton />` are
+skipped, and `auth()` returns a stable demo `userId`. Studio, Guard and the
+API routes remain functional against the in-memory store. Demo mode is
+detected at runtime in `apps/web/src/lib/clerk-config.ts`. To build (which
+runs with `NODE_ENV=production`) without real Clerk keys, also set
+`LISTLENS_ALLOW_PLACEHOLDER_CLERK_KEY=1` — this is refused on real
+production deploys (`VERCEL_ENV=production` / `LISTLENS_ENV=production`).
+
 See **[`docs/api-keys.md`](docs/api-keys.md)** for where to obtain each key — every external service used by ListLens has a free tier or test mode.
 
 ### Development

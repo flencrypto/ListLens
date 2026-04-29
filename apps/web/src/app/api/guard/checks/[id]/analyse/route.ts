@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth-shim";
 import { analyseForGuard } from "@/lib/ai/guard";
 import { guardStore, guardOwner, guardCheckMeta, userOwnsGuardCheck } from "@/lib/store";
 import { enforceRateLimit, rateLimitIdentifier } from "@/lib/rate-limit";
