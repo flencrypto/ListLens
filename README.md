@@ -64,6 +64,8 @@ runs with `NODE_ENV=production`) without real Clerk keys, also set
 `LISTLENS_ALLOW_PLACEHOLDER_CLERK_KEY=1` — this is refused on real
 production deploys (`VERCEL_ENV=production` / `LISTLENS_ENV=production`).
 
+See **[`docs/api-keys.md`](docs/api-keys.md)** for where to obtain each key — every external service used by ListLens has a free tier or test mode.
+
 ### Development
 
 ```bash

@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { withSentryConfig } from "@sentry/nextjs";
 
 // Clerk publishable key handling.
 //
@@ -68,7 +69,9 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkKey,
   },
   // Standalone output reduces container image size for self-hosted deploys.
-  output: "standalone",
+  // Netlify's `@netlify/plugin-nextjs` generates its own artefacts and is
+  // incompatible with `standalone`, so we opt out when running on Netlify.
+  output: process.env.NETLIFY ? undefined : "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
   images: {
@@ -89,4 +92,35 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Sentry organisation and project. Defaults match the wizard invocation
+  // `npx @sentry/wizard@latest -i nextjs --saas --org mrflen --project javascript-nextjs`,
+  // and can be overridden per-environment via SENTRY_ORG / SENTRY_PROJECT.
+  org: process.env.SENTRY_ORG ?? "mrflen",
+  project: process.env.SENTRY_PROJECT ?? "javascript-nextjs",
+
+  // Auth token for source-map upload. Stored in `.env.sentry-build-plugin` (gitignored) or CI secret.
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+
+  // Only print logs for uploading source maps in CI.
+  silent: !process.env.CI,
+
+  // For all available options, see:
+  // https://www.npmjs.com/package/@sentry/webpack-plugin#options
+
+  // Upload a larger set of source maps for prettier stack traces (increases build time).
+  widenClientFileUpload: true,
+
+  // Route browser requests to Sentry through a Next.js rewrite to circumvent ad-blockers.
+  // This can increase your server load as well as your hosting bill.
+  // Note: Check that the configured route will not match with your Next.js middleware, otherwise reporting of client-
+  // side errors will fail.
+  tunnelRoute: "/monitoring",
+
+  // Automatically tree-shake Sentry logger statements to reduce bundle size.
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    // Enables automatic instrumentation of Vercel Cron Monitors.
+    automaticVercelMonitors: true,
+  },
+});
