@@ -1,4 +1,6 @@
-export const metadata = {
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
   title: "Offline — ListLens",
   description: "You're offline. Reconnect to keep listing and checking.",
 };

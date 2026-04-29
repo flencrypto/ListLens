@@ -26,6 +26,11 @@ self.addEventListener("install", (event) => {
     caches
       .open(CACHE)
       .then((cache) => cache.addAll(PRECACHE_URLS))
+      .catch((err) => {
+        // Don't block activation on a precache failure — the SW still adds value
+        // for online navigation. Log so it surfaces in DevTools / Sentry breadcrumbs.
+        console.warn("[ListLens SW] precache failed:", err);
+      })
       .then(() => self.skipWaiting())
   );
 });
@@ -91,7 +96,17 @@ self.addEventListener("fetch", (event) => {
             return resp;
           })
           .catch(() => cached);
-        return cached || network;
+        return (
+          cached ||
+          network.then(
+            (resp) =>
+              resp ||
+              new Response("Offline", {
+                status: 503,
+                headers: { "Content-Type": "text/plain" },
+              })
+          )
+        );
       })
     );
   }
