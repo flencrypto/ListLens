@@ -1,12 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0%" stop-color="#22d3ee"/>
-      <stop offset="100%" stop-color="#8b5cf6"/>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#3ea8ff"/>
+      <stop offset="40%" stop-color="#22d3ee"/>
+      <stop offset="70%" stop-color="#4ade80"/>
+      <stop offset="100%" stop-color="#fb923c"/>
     </linearGradient>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#0b1a2c"/>
+      <stop offset="100%" stop-color="#040a14"/>
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="96" fill="#09090b"/>
-  <circle cx="256" cy="256" r="148" fill="none" stroke="url(#g)" stroke-width="28"/>
-  <circle cx="256" cy="256" r="64" fill="url(#g)"/>
-  <circle cx="232" cy="232" r="22" fill="#09090b" opacity="0.35"/>
+  <rect width="512" height="512" rx="96" fill="#040a14"/>
+  <!-- Tick scale -->
+  <g stroke="url(#ring)" stroke-width="4" opacity="0.85">
+    <line x1="256" y1="56" x2="256" y2="84"/>
+    <line x1="256" y1="428" x2="256" y2="456"/>
+    <line x1="56" y1="256" x2="84" y2="256"/>
+    <line x1="428" y1="256" x2="456" y2="256"/>
+  </g>
+  <g stroke="url(#ring)" stroke-width="3" opacity="0.6">
+    <line x1="397" y1="115" x2="416" y2="96"/>
+    <line x1="115" y1="115" x2="96" y2="96"/>
+    <line x1="397" y1="397" x2="416" y2="416"/>
+    <line x1="115" y1="397" x2="96" y2="416"/>
+  </g>
+  <!-- Outer aperture ring -->
+  <circle cx="256" cy="256" r="180" fill="none" stroke="url(#ring)" stroke-width="14"/>
+  <!-- Inner core -->
+  <circle cx="256" cy="256" r="116" fill="url(#core)" stroke="#22d3ee" stroke-width="3" stroke-opacity="0.5"/>
+  <!-- Cross-hairs -->
+  <line x1="256" y1="160" x2="256" y2="200" stroke="#22d3ee" stroke-width="6"/>
+  <line x1="256" y1="312" x2="256" y2="352" stroke="#fb923c" stroke-width="6"/>
+  <!-- Centre dot -->
+  <circle cx="256" cy="256" r="14" fill="#22d3ee"/>
 </svg>

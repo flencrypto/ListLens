@@ -5,12 +5,13 @@ import { isClerkConfigured } from "@/lib/clerk-config";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "ListLens – List smarter. Buy safer.",
-  description: "AI-powered listing studio and buyer protection for eBay and Vinted.",
-  applicationName: "ListLens",
+  title: "Mr.FLENS · List-LENS — List smarter. Buy safer.",
+  description:
+    "Mr.FLENS List-LENS — AI resale intelligence. Listing studio and buyer protection for eBay and Vinted, powered by specialist Lenses.",
+  applicationName: "Mr.FLENS List-LENS",
   appleWebApp: {
     capable: true,
-    title: "ListLens",
+    title: "Mr.FLENS List-LENS",
     statusBarStyle: "black-translucent",
   },
   icons: {
@@ -34,7 +35,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 5,
   viewportFit: "cover",
-  themeColor: "#09090b",
+  themeColor: "#040a14",
   colorScheme: "dark",
 };
 

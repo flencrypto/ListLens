@@ -1,13 +1,14 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
 import { isClerkConfigured } from "@/lib/clerk-config";
+import { BrandWordmark } from "@/components/brand/brand-wordmark";
 
 export function Navbar() {
   return (
     <nav className="border-b border-zinc-800 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <Link href="/dashboard" className="text-xl font-bold text-white">
-          ListLens
+        <Link href="/dashboard" aria-label="Mr.FLENS List-LENS — go to dashboard">
+          <BrandWordmark layout="inline" size="sm" />
         </Link>
         <div className="flex items-center gap-6">
           <Link href="/studio/new" className="text-sm text-zinc-400 hover:text-white transition-colors">
