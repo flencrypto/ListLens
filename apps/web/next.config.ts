@@ -93,10 +93,11 @@ const nextConfig: NextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // Sentry organisation and project. Configured via `npx @sentry/wizard@latest -i nextjs --saas
-  // --org mrflen --project javascript-nextjs`. Override locally with SENTRY_ORG / SENTRY_PROJECT.
-  org: "mrflen",
-  project: "javascript-nextjs",
+  // Sentry organisation and project. Defaults match the wizard invocation
+  // `npx @sentry/wizard@latest -i nextjs --saas --org mrflen --project javascript-nextjs`,
+  // and can be overridden per-environment via SENTRY_ORG / SENTRY_PROJECT.
+  org: process.env.SENTRY_ORG ?? "mrflen",
+  project: process.env.SENTRY_PROJECT ?? "javascript-nextjs",
 
   // Auth token for source-map upload. Stored in `.env.sentry-build-plugin` (gitignored) or CI secret.
   authToken: process.env.SENTRY_AUTH_TOKEN,

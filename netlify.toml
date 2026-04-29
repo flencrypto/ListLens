@@ -1,7 +1,11 @@
 # Netlify deployment configuration for the ListLens monorepo.
 #
-# The web app lives under apps/web. We point Netlify at that workspace via `base`
-# and let the official `@netlify/plugin-nextjs` plugin handle Next.js 15 App Router,
+# This is a Turborepo with npm workspaces. Netlify must install from the repo
+# root so the local workspace package `@listlens/db` resolves correctly. We
+# leave `base` unset (defaults to repo root) and run the build through Turbo
+# with `--filter=@listlens/web`, then publish from `apps/web/.next`.
+#
+# The official `@netlify/plugin-nextjs` plugin handles Next.js 15 App Router,
 # Route Handlers, middleware, image optimisation, and ISR.
 #
 # Notes:
@@ -12,13 +16,10 @@
 # - The `/monitoring` Sentry tunnel route is a normal Next.js rewrite handled by the plugin.
 
 [build]
-  base    = "apps/web"
-  command = "npm run build"
-  publish = ".next"
+  command = "npx turbo run build --filter=@listlens/web"
+  publish = "apps/web/.next"
 
 [build.environment]
-  # Make the Turborepo workspace visible to npm during `npm install`.
-  NPM_FLAGS    = "--workspaces=false"
   NODE_VERSION = "20"
 
 [[plugins]]

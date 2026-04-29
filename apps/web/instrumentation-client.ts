@@ -5,7 +5,10 @@
 import * as Sentry from "@sentry/nextjs";
 
 Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN ?? process.env.SENTRY_DSN,
+  // Only NEXT_PUBLIC_* vars are inlined into client bundles by Next.js, so the
+  // DSN must come from NEXT_PUBLIC_SENTRY_DSN. Server/edge runtimes use the
+  // private SENTRY_DSN in their respective config files.
+  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
   // Define how likely traces are sampled. Adjust this value in production,
   // or use tracesSampler for greater control.

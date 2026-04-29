@@ -43,22 +43,39 @@ export default function Page() {
         type="button"
         className="mt-8 rounded-md bg-violet-600 px-4 py-2 font-medium hover:bg-violet-500"
         onClick={async () => {
-          await Sentry.startSpan(
-            {
-              name: "Example Frontend Span",
-              op: "test",
-            },
-            async () => {
-              const res = await fetch("/api/sentry-example-api");
-              if (!res.ok) {
-                setIsConnected(false);
+          // Reset state and assume the route is reachable until a network-level
+          // failure proves otherwise. The example API route intentionally returns
+          // 500, so we treat HTTP errors as "reachable" — only fetch rejection
+          // (offline / DNS / blocked) means "not reachable".
+          setHasSentError(false);
+          setIsConnected(true);
+          let routeReachable = true;
+
+          try {
+            await Sentry.startSpan(
+              { name: "Example Frontend Span", op: "test" },
+              async () => {
+                try {
+                  await fetch("/api/sentry-example-api");
+                } catch {
+                  routeReachable = false;
+                  return;
+                }
+
+                throw new SentryExampleFrontendError(
+                  "This error is raised on the frontend of the example page."
+                );
               }
-              throw new SentryExampleFrontendError(
-                "This error is raised on the frontend of the example page."
-              );
+            );
+          } catch (error) {
+            Sentry.captureException(error);
+          } finally {
+            if (routeReachable) {
+              setHasSentError(true);
+            } else {
+              setIsConnected(false);
             }
-          );
-          setHasSentError(true);
+          }
         }}
       >
         Throw Sample Error
