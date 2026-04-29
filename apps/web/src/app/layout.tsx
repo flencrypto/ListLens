@@ -1,10 +1,35 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ServiceWorkerRegister } from "@/components/pwa/service-worker-register";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "ListLens – List smarter. Buy safer.",
   description: "AI-powered listing studio and buyer protection for eBay and Vinted.",
+  applicationName: "ListLens",
+  appleWebApp: {
+    capable: true,
+    title: "ListLens",
+    statusBarStyle: "black-translucent",
+  },
+  icons: {
+    icon: [{ url: "/icons/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/icons/icon.svg", type: "image/svg+xml" }],
+  },
+  formatDetection: {
+    telephone: false,
+  },
+};
+
+// Mobile-friendly viewport. `viewport-fit=cover` lets the dark UI extend under
+// iOS notches when installed as a PWA. Theme colour matches the zinc-950 body.
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  viewportFit: "cover",
+  themeColor: "#09090b",
+  colorScheme: "dark",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -12,6 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" className="dark">
       <body className="bg-zinc-950 text-zinc-50 antialiased min-h-screen">
         <ClerkProvider>{children}</ClerkProvider>
+        <ServiceWorkerRegister />
       </body>
     </html>
   );

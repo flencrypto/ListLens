@@ -69,7 +69,9 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: clerkKey,
   },
   // Standalone output reduces container image size for self-hosted deploys.
-  output: "standalone",
+  // Netlify's `@netlify/plugin-nextjs` generates its own artefacts and is
+  // incompatible with `standalone`, so we opt out when running on Netlify.
+  output: process.env.NETLIFY ? undefined : "standalone",
   poweredByHeader: false,
   reactStrictMode: true,
   images: {

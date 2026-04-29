@@ -1,0 +1,38 @@
+# Netlify deployment configuration for the ListLens monorepo.
+#
+# The web app lives under apps/web. We point Netlify at that workspace via `base`
+# and let the official `@netlify/plugin-nextjs` plugin handle Next.js 15 App Router,
+# Route Handlers, middleware, image optimisation, and ISR.
+#
+# Notes:
+# - `output: "standalone"` in apps/web/next.config.ts is auto-disabled when NETLIFY=true
+#   (Netlify's plugin generates its own deployment artefacts).
+# - Sentry source-map upload runs at build time when SENTRY_AUTH_TOKEN is set in the
+#   Netlify dashboard (Site settings → Environment variables).
+# - The `/monitoring` Sentry tunnel route is a normal Next.js rewrite handled by the plugin.
+
+[build]
+  base    = "apps/web"
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  # Make the Turborepo workspace visible to npm during `npm install`.
+  NPM_FLAGS    = "--workspaces=false"
+  NODE_VERSION = "20"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Service worker must be served from the root scope with no caching, so updates
+# propagate quickly. Manifest can be cached for a day.
+[[headers]]
+  for = "/sw.js"
+  [headers.values]
+    Cache-Control          = "public, max-age=0, must-revalidate"
+    Service-Worker-Allowed = "/"
+
+[[headers]]
+  for = "/manifest.webmanifest"
+  [headers.values]
+    Cache-Control = "public, max-age=86400"
