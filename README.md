@@ -52,7 +52,6 @@ cp .env.example .env
 # fill in DATABASE_URL, REDIS_URL, OPENAI_API_KEY, STRIPE_*, CLERK_*, EBAY_*
 ```
 
-See **[`docs/api-keys.md`](docs/api-keys.md)** for where to obtain each key — every external service used by ListLens has a free tier or test mode.
 #### Demo mode (no Clerk credentials)
 
 If `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY` are missing (or
@@ -64,6 +63,8 @@ detected at runtime in `apps/web/src/lib/clerk-config.ts`. To build (which
 runs with `NODE_ENV=production`) without real Clerk keys, also set
 `LISTLENS_ALLOW_PLACEHOLDER_CLERK_KEY=1` — this is refused on real
 production deploys (`VERCEL_ENV=production` / `LISTLENS_ENV=production`).
+
+See **[`docs/api-keys.md`](docs/api-keys.md)** for where to obtain each key — every external service used by ListLens has a free tier or test mode.
 
 ### Development
 

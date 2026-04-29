@@ -12,12 +12,14 @@ const isProtectedRoute = createRouteMatcher([
 ]);
 
 // Routes that must remain accessible without authentication: webhooks (signed
-// by the provider), liveness/readiness probes, and legal pages.
+// by the provider), liveness/readiness probes, legal pages, and the Sentry
+// tunnel route (POST-only but matcher is path-based).
 const isPublicRoute = createRouteMatcher([
   "/api/webhooks/(.*)",
   "/api/health",
   "/api/ready",
   "/legal/(.*)",
+  "/monitoring(.*)",
 ]);
 
 // In demo mode (no real Clerk keys configured) we skip Clerk entirely and let
