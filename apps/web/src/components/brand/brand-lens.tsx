@@ -204,7 +204,7 @@ export function BrandLens({
             className="pointer-events-none absolute right-[10%] bottom-[24%] font-semibold tracking-[0.2em] text-amber-300/80"
             style={{ fontSize: Math.max(8, size * 0.034) }}
           >
-            AI VALUATION
+            BUYER SCORE
           </span>
           <span
             className="pointer-events-none absolute left-1/2 bottom-[12%] -translate-x-1/2 font-semibold tracking-[0.2em] text-cyan-200/70"
