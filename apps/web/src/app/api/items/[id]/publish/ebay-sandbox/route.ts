@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@clerk/nextjs/server";
+import { auth } from "@/lib/auth-shim";
 import { analysisStore, userOwnsItem } from "@/lib/store";
 import { buildEbayPayload } from "@/lib/marketplace/ebay";
 

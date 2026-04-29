@@ -1,4 +1,6 @@
+import { NextResponse } from "next/server";
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { isClerkConfigured } from "@/lib/clerk-config";
 
 const isProtectedRoute = createRouteMatcher([
   "/dashboard(.*)",
@@ -18,12 +20,20 @@ const isPublicRoute = createRouteMatcher([
   "/legal/(.*)",
 ]);
 
-export default clerkMiddleware(async (auth, req) => {
+// In demo mode (no real Clerk keys configured) we skip Clerk entirely and let
+// every request through. Clerk would otherwise throw on every request because
+// it requires `CLERK_SECRET_KEY` at runtime. The whole app then runs against
+// the demo user id from `lib/clerk-config.ts`.
+const demoMiddleware = () => NextResponse.next();
+
+const realMiddleware = clerkMiddleware(async (auth, req) => {
   if (isPublicRoute(req)) return;
   if (isProtectedRoute(req)) {
     await auth.protect();
   }
 });
+
+export default isClerkConfigured() ? realMiddleware : demoMiddleware;
 
 export const config = {
   matcher: [
