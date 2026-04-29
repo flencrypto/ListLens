@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { UserButton } from "@clerk/nextjs";
+import { isClerkConfigured } from "@/lib/clerk-config";
 
 export function Navbar() {
   return (
@@ -24,7 +25,16 @@ export function Navbar() {
           <Link href="/billing" className="text-sm text-zinc-400 hover:text-white transition-colors">
             Billing
           </Link>
-          <UserButton />
+          {isClerkConfigured() ? (
+            <UserButton />
+          ) : (
+            <span
+              className="text-xs text-zinc-500 border border-zinc-800 rounded-full px-2 py-0.5"
+              title="Set NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY to enable sign-in."
+            >
+              Demo mode
+            </span>
+          )}
         </div>
       </div>
     </nav>
