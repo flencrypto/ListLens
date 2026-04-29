@@ -12,8 +12,17 @@
 //   - Precache the offline fallback + manifest icons on install.
 //   - For navigation requests: network-first, fall back to /offline on failure.
 //   - For everything else: pass through to the network.
+//
+// The cache name is versioned per SW build (the SW file changes whenever Next
+// rebuilds the app) so the `activate` step prunes old hashed `_next/static`
+// entries from previous deploys, preventing unbounded Cache Storage growth.
 
-const CACHE = "listlens-shell-v1";
+const CACHE_VERSION = "1";
+const CACHE_PREFIX = "listlens-shell-";
+const CACHE = `${CACHE_PREFIX}v${CACHE_VERSION}`;
+// Cap the runtime shell cache so a long-lived browser doesn't accumulate
+// arbitrarily many static entries between deploys.
+const MAX_SHELL_ENTRIES = 60;
 const PRECACHE_URLS = [
   "/offline",
   "/manifest.webmanifest",
@@ -40,11 +49,27 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((keys) =>
-        Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
+        // Drop every prior ListLens shell cache so old hashed _next/static
+        // entries don't accumulate across deploys.
+        Promise.all(
+          keys
+            .filter((k) => k.startsWith(CACHE_PREFIX) && k !== CACHE)
+            .map((k) => caches.delete(k))
+        )
       )
       .then(() => self.clients.claim())
   );
 });
+
+// Trim the shell cache to MAX_SHELL_ENTRIES (FIFO) so a single long-lived
+// version doesn't grow without bound either.
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length <= maxEntries) return;
+  const toDelete = keys.slice(0, keys.length - maxEntries);
+  await Promise.all(toDelete.map((req) => cache.delete(req)));
+}
 
 // Never intercept non-GET, cross-origin, or sensitive routes.
 function shouldBypass(request) {
@@ -91,7 +116,9 @@ self.addEventListener("fetch", (event) => {
           .then((resp) => {
             if (resp && resp.ok) {
               const copy = resp.clone();
-              caches.open(CACHE).then((c) => c.put(request, copy));
+              caches.open(CACHE).then((c) =>
+                c.put(request, copy).then(() => trimCache(CACHE, MAX_SHELL_ENTRIES))
+              );
             }
             return resp;
           })
