@@ -58,11 +58,9 @@ export default async function DashboardPage() {
             <CardContent>
               <div className="flex flex-col items-center justify-center py-8 rounded-lg border border-dashed border-zinc-800 gap-3">
                 <p className="text-zinc-500 text-sm">No listings yet</p>
-                <Link href="/studio/new">
-                  <Button size="sm" className="bg-cyan-600 hover:bg-cyan-500">
-                    Create first listing
-                  </Button>
-                </Link>
+                <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500">
+                  <Link href="/studio/new">Create first listing</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -80,11 +78,9 @@ export default async function DashboardPage() {
             <CardContent>
               <div className="flex flex-col items-center justify-center py-8 rounded-lg border border-dashed border-zinc-800 gap-3">
                 <p className="text-zinc-500 text-sm">No checks yet</p>
-                <Link href="/guard/new">
-                  <Button size="sm" className="bg-violet-600 hover:bg-violet-500">
-                    Check a listing
-                  </Button>
-                </Link>
+                <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-500">
+                  <Link href="/guard/new">Check a listing</Link>
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -97,11 +93,9 @@ export default async function DashboardPage() {
               <p className="text-white font-semibold">Free trial — 3 listings remaining</p>
               <p className="text-zinc-400 text-sm mt-0.5">Upgrade to Studio Starter for unlimited listings from £9.99/month</p>
             </div>
-            <Link href="/billing">
-              <Button className="bg-gradient-to-r from-cyan-500 to-violet-600 border-0">
-                Upgrade plan
-              </Button>
-            </Link>
+            <Button asChild className="bg-gradient-to-r from-cyan-500 to-violet-600 border-0">
+              <Link href="/billing">Upgrade plan</Link>
+            </Button>
           </CardContent>
         </Card>
       </main>

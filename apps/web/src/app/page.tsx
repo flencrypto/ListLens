@@ -73,9 +73,9 @@ export default function HomePage() {
             <Link href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Features</Link>
             <Link href="#lenses" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Lenses</Link>
             <Link href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Pricing</Link>
-            <Link href="/dashboard">
-              <Button size="sm">Get started</Button>
-            </Link>
+            <Button asChild size="sm">
+              <Link href="/dashboard">Get started</Link>
+            </Button>
           </div>
         </div>
       </nav>
@@ -99,16 +99,12 @@ export default function HomePage() {
             Photos → listing in seconds. Paste a URL → risk report instantly.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/studio/new">
-              <Button size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white border-0 px-8">
-                Start listing free
-              </Button>
-            </Link>
-            <Link href="/guard/new">
-              <Button size="lg" variant="outline" className="border-zinc-700 text-zinc-300 hover:text-white px-8">
-                Check a listing
-              </Button>
-            </Link>
+            <Button asChild size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white border-0 px-8">
+              <Link href="/studio/new">Start listing free</Link>
+            </Button>
+            <Button asChild size="lg" variant="outline" className="border-zinc-700 text-zinc-300 hover:text-white px-8">
+              <Link href="/guard/new">Check a listing</Link>
+            </Button>
           </div>
           <p className="text-sm text-zinc-500 mt-4">No credit card needed · First 3 listings free</p>
         </div>
@@ -139,9 +135,9 @@ export default function HomePage() {
                 ))}
               </ul>
               <div className="mt-6">
-                <Link href="/studio/new">
-                  <Button className="w-full bg-cyan-600 hover:bg-cyan-500">Create a listing</Button>
-                </Link>
+                <Button asChild className="w-full bg-cyan-600 hover:bg-cyan-500">
+                  <Link href="/studio/new">Create a listing</Link>
+                </Button>
               </div>
             </div>
 
@@ -165,9 +161,9 @@ export default function HomePage() {
                 ))}
               </ul>
               <div className="mt-6">
-                <Link href="/guard/new">
-                  <Button className="w-full bg-violet-600 hover:bg-violet-500">Check a listing</Button>
-                </Link>
+                <Button asChild className="w-full bg-violet-600 hover:bg-violet-500">
+                  <Link href="/guard/new">Check a listing</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -272,14 +268,13 @@ export default function HomePage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={plan.href}>
-                  <Button
-                    className={`w-full ${plan.highlight ? "bg-gradient-to-r from-cyan-500 to-violet-600 border-0" : ""}`}
-                    variant={plan.highlight ? "default" : "outline"}
-                  >
-                    {plan.cta}
-                  </Button>
-                </Link>
+                <Button
+                  asChild
+                  className={`w-full ${plan.highlight ? "bg-gradient-to-r from-cyan-500 to-violet-600 border-0" : ""}`}
+                  variant={plan.highlight ? "default" : "outline"}
+                >
+                  <Link href={plan.href}>{plan.cta}</Link>
+                </Button>
               </div>
             ))}
           </div>
