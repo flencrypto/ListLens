@@ -1,7 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   Modal,
   Platform,
   Pressable,
@@ -15,6 +14,7 @@ import { Badge } from "@/components/ui/Badge";
 import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { HUDSpinner } from "@/components/ui/Spinner";
 import { useColors } from "@/hooks/useColors";
 import {
   REVENUECAT_ENTITLEMENT_IDENTIFIER,
@@ -163,7 +163,7 @@ export default function BillingScreen() {
 
       {isLoading ? (
         <View style={{ paddingVertical: 24, alignItems: "center" }}>
-          <ActivityIndicator color={colors.brandCyan} />
+          <HUDSpinner color={colors.brandCyan} size={26} />
           <Text style={[styles.loadingText, { color: colors.zinc500 }]}>
             Loading plans…
           </Text>

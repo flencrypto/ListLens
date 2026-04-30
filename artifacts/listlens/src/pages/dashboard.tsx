@@ -29,7 +29,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {QUICK_LINKS.map((link) => (
             <Link key={link.href} href={link.href}>
-              <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-5 hover:border-zinc-600 transition-all cursor-pointer group">
+              <div className="brand-card p-5 transition-all cursor-pointer group hover:shadow-[0_0_32px_-12px_rgba(34,211,238,0.6)] hover:-translate-y-0.5">
                 <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center text-lg mb-3`}>
                   {link.icon}
                 </div>

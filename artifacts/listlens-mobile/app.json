@@ -9,9 +9,9 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#070b14"
+      "image": "./assets/images/splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#040a14"
     },
     "ios": {
       "supportsTablet": false
@@ -19,7 +19,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/icon.png",
-        "backgroundColor": "#070b14"
+        "backgroundColor": "#040a14"
       }
     },
     "web": {

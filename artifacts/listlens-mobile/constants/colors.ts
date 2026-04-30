@@ -37,13 +37,18 @@ const palette = {
 
   brandCyan: "#22d3ee",
   brandBlue: "#3ea8ff",
+  brandBlueBright: "#2979ff",
   brandGreen: "#4ade80",
   brandAmber: "#fb923c",
   brandViolet: "#8b5cf6",
   brandViolet600: "#7c3aed",
 
   navy: "#040a14",
+  navyDeep: "#020610",
   navy2: "#081325",
+  cardSurface: "#0a1628",
+  cardSurfaceSoft: "rgba(10, 22, 40, 0.65)",
+  cardSurfaceHi: "rgba(10, 22, 40, 0.85)",
   zincDeep: "#09090b",
   zinc900: "#18181b",
   zinc800: "#27272a",
@@ -71,12 +76,19 @@ const palette = {
   amber400: "#fbbf24",
   red400: "#f87171",
   red500: "#ef4444",
+
+  // HUD inner-stroke / glow recipe (used by Card & Spinner).
+  brandStroke: "rgba(34, 211, 238, 0.18)",
+  brandStrokeStrong: "rgba(34, 211, 238, 0.32)",
+  brandGlow: "rgba(34, 211, 238, 0.35)",
 };
 
 const colors = {
   light: palette,
   dark: palette,
   radius: 16,
+  // Reusable HUD tri-tone gauge stops (cyan → green → amber).
+  hudGauge: ["#22d3ee", "#4ade80", "#facc15", "#fb923c"] as const,
 };
 
 export default colors;

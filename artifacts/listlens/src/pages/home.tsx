@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { BrandLens } from "@/components/brand/brand-lens";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { BrandBackground } from "@/components/brand/brand-background";
+import { BrandGlyph } from "@/components/brand/brand-glyph";
 
 const LENSES = [
   { name: "ShoeLens", icon: "👟", desc: "Trainers, sneakers, shoes", status: "live" },
@@ -90,30 +91,43 @@ export default function HomePage() {
           <div className="flex justify-center mb-8">
             <BrandLens size={260} hideLabels />
           </div>
-          <Badge className="mb-6 bg-cyan-950 text-cyan-300 border border-cyan-700/50">
-            Mr.FLENS · List-LENS — UK-first AI resale platform
-          </Badge>
+          <div className="mb-6 inline-flex items-center gap-2">
+            <Badge className="bg-cyan-950/80 text-cyan-200 border border-cyan-700/50 backdrop-blur">
+              <span className="font-mono-hud text-[10px] uppercase tracking-[0.25em]">
+                Mr.FLENS · List-LENS — UK-first AI resale platform
+              </span>
+            </Badge>
+          </div>
           <h1 className="text-6xl sm:text-7xl font-extrabold tracking-tight mb-6">
             <span className="text-white">List smarter.</span>
             <br />
-            <span className="bg-gradient-to-r from-[#3ea8ff] via-[#22d3ee] to-[#4ade80] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#3ea8ff] via-[#22d3ee] to-[#4ade80] bg-clip-text text-transparent drop-shadow-[0_0_28px_rgba(34,211,238,0.35)]">
               Buy safer.
             </span>
           </h1>
-          <p className="text-xl text-zinc-400 max-w-2xl mx-auto mb-10">
+          <p className="text-xl text-zinc-300/90 max-w-2xl mx-auto mb-10">
             AI-powered listing studio and buyer protection for eBay and Vinted.
             Photos → listing in seconds. Paste a URL → risk report instantly.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white border-0 px-8">
+            <Button asChild size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 text-white border-0 px-8 shadow-[0_0_32px_-8px_rgba(34,211,238,0.6)]">
               <Link href="/studio/new">Start listing free</Link>
             </Button>
-            <Button asChild size="lg" variant="outline" className="border-zinc-700 text-zinc-300 hover:text-white px-8">
+            <Button asChild size="lg" variant="outline" className="border-cyan-700/60 text-cyan-100 hover:text-white hover:bg-cyan-950/40 px-8">
               <Link href="/guard/new">Check a listing</Link>
             </Button>
           </div>
-          <p className="text-sm text-zinc-500 mt-4">No credit card needed · First 3 listings free</p>
+          <p className="text-sm text-zinc-500 mt-4">
+            No credit card needed · First 3 listings free
+          </p>
+          <div className="mt-12 flex items-center justify-center gap-3 opacity-80">
+            <BrandGlyph size={28} animated showSparks={false} />
+            <span className="font-mono-hud text-[10px] uppercase tracking-[0.35em] text-cyan-300/70">
+              ShoeLens · LPLens · WatchLens · CardLens · ToyLens
+            </span>
+          </div>
         </div>
+        <div className="hud-divider absolute inset-x-0 bottom-0 opacity-50" />
       </section>
 
       {/* Features */}
@@ -122,9 +136,9 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold text-center text-white mb-14">Two tools. One trust layer.</h2>
           <div className="grid md:grid-cols-2 gap-8">
             {/* Studio */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+            <div className="brand-card p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-lg shadow-[0_0_24px_-4px_rgba(34,211,238,0.6)]">
                   📸
                 </div>
                 <div>
@@ -148,9 +162,9 @@ export default function HomePage() {
             </div>
 
             {/* Guard */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8">
+            <div className="brand-card brand-card-violet p-8">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-lg shadow-[0_0_24px_-4px_rgba(139,92,246,0.6)]">
                   🛡️
                 </div>
                 <div>
@@ -187,10 +201,10 @@ export default function HomePage() {
             {LENSES.map((lens) => (
               <div
                 key={lens.name}
-                className={`rounded-xl border p-4 text-center ${
+                className={`rounded-xl border p-4 text-center transition-all ${
                   lens.status === "live"
-                    ? "border-cyan-800/60 bg-cyan-950/30"
-                    : "border-zinc-800 bg-zinc-900/40 opacity-70"
+                    ? "border-cyan-700/60 bg-cyan-950/30 shadow-[0_0_24px_-12px_rgba(34,211,238,0.6)]"
+                    : "border-zinc-800/80 bg-zinc-900/40 opacity-70"
                 }`}
               >
                 <div className="text-3xl mb-2">{lens.icon}</div>
@@ -251,11 +265,11 @@ export default function HomePage() {
             {PRICING.map((plan) => (
               <div
                 key={plan.name}
-                className={`rounded-2xl border p-6 ${
+                className={
                   plan.highlight
-                    ? "border-cyan-700 bg-gradient-to-b from-cyan-950/50 to-zinc-900"
-                    : "border-zinc-800 bg-zinc-900/50"
-                }`}
+                    ? "brand-card brand-card-glow p-6"
+                    : "brand-card p-6"
+                }
               >
                 {plan.highlight && (
                   <div className="text-xs font-semibold text-cyan-400 mb-3 uppercase tracking-wider">Most popular</div>
@@ -289,9 +303,13 @@ export default function HomePage() {
 
       {/* Footer */}
       <footer className="border-t border-cyan-400/10 py-8 px-4">
+        <div className="hud-divider mb-8 opacity-40" />
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <BrandWordmark layout="inline" size="sm" />
-          <p className="text-zinc-500 text-sm">© 2026 Mr.FLENS · List-LENS. AI resale trust layer for eBay & Vinted.</p>
+          <div className="flex items-center gap-3">
+            <BrandGlyph size={24} />
+            <BrandWordmark layout="inline" size="sm" />
+          </div>
+          <p className="text-zinc-500 text-sm">© 2026 Mr.FLENS · List-LENS. AI resale trust layer for eBay &amp; Vinted.</p>
           <div className="flex gap-6">
             <Link href="/studio/new" className="text-sm text-zinc-400 hover:text-white transition-colors">Studio</Link>
             <Link href="/guard/new" className="text-sm text-zinc-400 hover:text-white transition-colors">Guard</Link>

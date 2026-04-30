@@ -14,6 +14,13 @@ export function BrandBackground() {
   return (
     <View pointerEvents="none" style={StyleSheet.absoluteFill}>
       <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.navy }]} />
+      {/* Directional cyan top-light to lift content above the fold */}
+      <LinearGradient
+        colors={["rgba(62,168,255,0.18)", "transparent"]}
+        style={[StyleSheet.absoluteFill, { height: "55%" }]}
+        start={{ x: 0.5, y: 0 }}
+        end={{ x: 0.5, y: 1 }}
+      />
       {/* Cyan top glow */}
       <View
         style={[

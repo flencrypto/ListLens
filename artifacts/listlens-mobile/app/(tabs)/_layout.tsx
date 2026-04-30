@@ -12,7 +12,8 @@ const NAVY = "#040a14";
 /**
  * Tab layout — five primary destinations matching the web nav structure:
  * Home (dashboard), Lenses, Studio, Guard, More. Custom Inter-styled header
- * with the brand wordmark replaces a stock title bar.
+ * with the brand wordmark replaces a stock title bar. A 1px cyan glow strip
+ * above the tab bar matches the web navbar's HUD divider.
  */
 export default function TabLayout() {
   const colors = useColors();
@@ -32,29 +33,51 @@ export default function TabLayout() {
         tabBarStyle: {
           position: "absolute",
           backgroundColor: Platform.OS === "ios" ? "transparent" : NAVY,
-          borderTopWidth: isWeb ? 1 : 0.5,
-          borderTopColor: "rgba(34,211,238,0.18)",
+          borderTopWidth: 0,
           elevation: 0,
           ...(isWeb ? { height: 84 } : {}),
         },
-        tabBarBackground: () =>
-          Platform.OS === "ios" ? (
-            <BlurView intensity={70} tint="dark" style={StyleSheet.absoluteFill}>
+        tabBarBackground: () => (
+          <View style={StyleSheet.absoluteFill}>
+            {Platform.OS === "ios" ? (
+              <BlurView
+                intensity={70}
+                tint="dark"
+                style={StyleSheet.absoluteFill}
+              >
+                <View
+                  style={[
+                    StyleSheet.absoluteFill,
+                    { backgroundColor: "rgba(4,10,20,0.55)" },
+                  ]}
+                />
+              </BlurView>
+            ) : (
               <View
                 style={[
                   StyleSheet.absoluteFill,
-                  { backgroundColor: "rgba(4,10,20,0.55)" },
+                  { backgroundColor: NAVY },
                 ]}
               />
-            </BlurView>
-          ) : (
+            )}
+            {/* HUD divider strip on top of the tab bar */}
             <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: NAVY, borderTopColor: "rgba(34,211,238,0.18)" },
-              ]}
+              pointerEvents="none"
+              style={{
+                position: "absolute",
+                left: 0,
+                right: 0,
+                top: 0,
+                height: 1,
+                backgroundColor: "rgba(34,211,238,0.35)",
+                shadowColor: colors.brandCyan,
+                shadowOpacity: 0.6,
+                shadowRadius: 6,
+                shadowOffset: { width: 0, height: 0 },
+              }}
             />
-          ),
+          </View>
+        ),
         headerStyle: { backgroundColor: NAVY },
         headerTintColor: colors.foreground,
         headerShadowVisible: false,

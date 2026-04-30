@@ -2,7 +2,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import * as Haptics from "expo-haptics";
 import React from "react";
 import {
-  ActivityIndicator,
   Platform,
   Pressable,
   StyleSheet,
@@ -10,6 +9,7 @@ import {
   View,
 } from "react-native";
 
+import { HUDSpinner } from "@/components/ui/Spinner";
 import { useColors } from "@/hooks/useColors";
 
 type Variant =
@@ -65,7 +65,7 @@ export function BrandButton({
   const content = (
     <View style={[styles.row, { paddingHorizontal: horizontalPadding }]}>
       {loading ? (
-        <ActivityIndicator color={isGradient ? "#040a14" : colors.brandCyan} />
+        <HUDSpinner size={18} color={isGradient ? "#040a14" : colors.brandCyan} />
       ) : (
         <>
           {iconLeft ? <View style={{ marginRight: 8 }}>{iconLeft}</View> : null}

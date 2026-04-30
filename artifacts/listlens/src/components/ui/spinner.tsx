@@ -1,16 +1,26 @@
-import { Loader2Icon } from "lucide-react"
+import { cn } from "@/lib/utils";
 
-import { cn } from "@/lib/utils"
-
-function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
+/**
+ * HUD-style spinner — dual cyan ring with a soft glow, sized via `font-size`.
+ *
+ * Default size is 1em so it can be embedded inside text/buttons. Pass
+ * `className="text-3xl text-cyan-300"` for a larger, recoloured spinner.
+ *
+ * The visual is implemented with pure CSS in `index.css` (.hud-spinner) so the
+ * component itself is a single SSR-friendly span — no `motion`, no SVG.
+ */
+function Spinner({
+  className,
+  ...props
+}: React.HTMLAttributes<HTMLSpanElement>) {
   return (
-    <Loader2Icon
+    <span
       role="status"
       aria-label="Loading"
-      className={cn("size-4 animate-spin", className)}
+      className={cn("hud-spinner", className)}
       {...props}
     />
-  )
+  );
 }
 
-export { Spinner }
+export { Spinner };

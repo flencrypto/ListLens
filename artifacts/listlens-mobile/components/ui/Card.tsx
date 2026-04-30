@@ -6,21 +6,65 @@ import { useColors } from "@/hooks/useColors";
 interface Props extends ViewProps {
   padded?: boolean;
   highlight?: boolean;
+  /** When true, adds a soft cyan glow + brighter inner stroke (HUD recipe). */
+  glow?: boolean;
+  /** Use the violet (Guard) tone instead of the default cyan tone. */
+  tone?: "cyan" | "violet";
 }
 
-export function Card({ children, padded = true, highlight = false, style, ...rest }: Props) {
+/**
+ * Card — the standard surface for content blocks. Uses the layered HUD
+ * recipe: deep navy fill, faint cyan inner stroke and an optional glow.
+ *
+ * Pair `highlight` with `tone="violet"` for Guard-themed surfaces.
+ */
+export function Card({
+  children,
+  padded = true,
+  highlight = false,
+  glow = false,
+  tone = "cyan",
+  style,
+  ...rest
+}: Props) {
   const colors = useColors();
+
+  const violet = tone === "violet";
+  const fill = highlight
+    ? violet
+      ? "rgba(20, 14, 36, 0.7)"
+      : colors.cardSurfaceHi
+    : colors.cardSurfaceSoft;
+  const border = highlight
+    ? violet
+      ? "rgba(139, 92, 246, 0.35)"
+      : colors.brandStrokeStrong
+    : violet
+      ? "rgba(139, 92, 246, 0.2)"
+      : colors.brandStroke;
+  const glowColor = violet ? "rgba(139,92,246,0.35)" : colors.brandGlow;
+
   return (
     <View
       {...rest}
       style={[
         styles.card,
         {
-          backgroundColor: highlight ? "rgba(8, 51, 68, 0.45)" : "rgba(24, 24, 27, 0.55)",
-          borderColor: highlight ? colors.cyan800 : colors.zinc800,
+          backgroundColor: fill,
+          borderColor: border,
           borderRadius: colors.radius,
           padding: padded ? 18 : 0,
         },
+        glow
+          ? {
+              shadowColor: glowColor,
+              shadowOpacity: 0.7,
+              shadowRadius: 18,
+              shadowOffset: { width: 0, height: 8 },
+              // Android elevation for a faint lift
+              elevation: 6,
+            }
+          : null,
         style,
       ]}
     >
