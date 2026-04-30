@@ -468,43 +468,46 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
 
   const userId = req.user?.id;
 
-  if (userId) {
-    try {
-      const { addEbayItem, refreshEbayToken } = await import("../lib/ebay");
-
-      const accessToken = await refreshEbayToken(userId);
-      if (accessToken) {
-        const stored = studioStore.get(id) ?? {};
-        const result = await addEbayItem(accessToken, {
-          title,
-          description,
-          price,
-          lens,
-          condition: String(stored["condition"] ?? "Used"),
-          attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
-        });
-        if (result) {
-          res.json({
-            ok: true,
-            itemId: result.itemId,
-            listing_url: result.viewItemURL,
-            message: "eBay listing created via API.",
-          });
-          return;
-        }
-      }
-    } catch (err) {
-      logger.warn({ err }, "eBay API publish failed, falling back to sandbox ID");
-    }
+  if (!userId) {
+    res.status(401).json({ error: "You must be logged in to publish to eBay." });
+    return;
   }
 
-  const sandboxListingId = `EBAY-SBX-${Date.now().toString(36).toUpperCase()}`;
-  res.json({
-    ok: true,
-    sandboxListingId,
-    listing_url: `https://sandbox.ebay.co.uk/itm/${sandboxListingId}`,
-    message: "eBay sandbox draft — connect your eBay account to publish for real.",
-  });
+  try {
+    const { addEbayItem, refreshEbayToken } = await import("../lib/ebay");
+
+    const accessToken = await refreshEbayToken(userId);
+    if (!accessToken) {
+      res.status(403).json({
+        error: "eBay account not connected. Connect your eBay account in the billing settings before publishing.",
+      });
+      return;
+    }
+
+    const stored = studioStore.get(id) ?? {};
+    const result = await addEbayItem(accessToken, {
+      title,
+      description,
+      price,
+      lens,
+      condition: String(stored["condition"] ?? "Used"),
+      attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
+    });
+
+    if (!result) {
+      res.status(502).json({ error: "eBay rejected the listing. Check your item details and try again." });
+      return;
+    }
+
+    res.json({
+      ok: true,
+      listingId: result.itemId,
+      viewItemURL: result.viewItemURL,
+    });
+  } catch (err) {
+    logger.error({ err }, "eBay API publish error");
+    res.status(500).json({ error: "Failed to publish to eBay. Please try again." });
+  }
 });
 
 router.post("/guard/checks", (req, res) => {

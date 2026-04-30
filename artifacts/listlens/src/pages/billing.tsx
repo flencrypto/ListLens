@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -90,6 +91,96 @@ const GUARD_PLANS = [
     href: "/billing",
   },
 ];
+
+interface EbayStatus {
+  connected: boolean;
+  credentialsMissing: boolean;
+  sandbox: boolean;
+  expiresAt?: string | null;
+}
+
+function EbayConnectSection() {
+  const [status, setStatus] = useState<EbayStatus | null>(null);
+  const [disconnecting, setDisconnecting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/ebay/status")
+      .then((r) => r.json())
+      .then((d) => setStatus(d as EbayStatus))
+      .catch(() => {});
+  }, []);
+
+  async function handleDisconnect() {
+    setDisconnecting(true);
+    try {
+      await fetch("/api/ebay/disconnect", { method: "POST" });
+      setStatus((s) => s ? { ...s, connected: false, expiresAt: null } : s);
+    } finally {
+      setDisconnecting(false);
+    }
+  }
+
+  if (!status) {
+    return (
+      <div className="brand-card p-6 animate-pulse">
+        <div className="h-4 bg-zinc-800 rounded w-40 mb-2" />
+        <div className="h-3 bg-zinc-800 rounded w-64" />
+      </div>
+    );
+  }
+
+  return (
+    <div className="brand-card p-6 space-y-4">
+      <div className="flex items-start justify-between flex-wrap gap-3">
+        <div>
+          <h2 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+            eBay Account
+            {status.sandbox && <Badge variant="secondary" className="text-xs">Sandbox</Badge>}
+          </h2>
+          <p className="text-zinc-400 text-sm">
+            Connect your eBay account to publish listings directly from the Studio editor.
+          </p>
+        </div>
+        {status.connected ? (
+          <Badge variant="success" className="shrink-0">Connected</Badge>
+        ) : (
+          <Badge variant="secondary" className="shrink-0">Not connected</Badge>
+        )}
+      </div>
+
+      {status.credentialsMissing ? (
+        <div className="rounded-lg border border-amber-900/40 bg-amber-950/20 px-4 py-3 text-sm text-amber-300">
+          eBay API credentials are not configured. Contact support to enable eBay publishing.
+        </div>
+      ) : status.connected ? (
+        <div className="space-y-3">
+          {status.expiresAt && (
+            <p className="text-zinc-500 text-xs">
+              Token valid until {new Date(status.expiresAt).toLocaleString()}
+            </p>
+          )}
+          <div className="flex gap-3">
+            <Button asChild variant="outline" className="flex-1 border-orange-800 text-orange-300 hover:bg-orange-950/30">
+              <a href="/api/ebay/connect">Re-authorise</a>
+            </Button>
+            <Button
+              variant="ghost"
+              className="text-zinc-500 hover:text-red-400 hover:bg-red-950/20"
+              disabled={disconnecting}
+              onClick={handleDisconnect}
+            >
+              {disconnecting ? "Disconnecting…" : "Disconnect"}
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <Button asChild className="bg-orange-600 hover:bg-orange-500 text-white border-0">
+          <a href="/api/ebay/connect">Connect eBay Account</a>
+        </Button>
+      )}
+    </div>
+  );
+}
 
 export default function BillingPage() {
   return (
@@ -197,6 +288,14 @@ export default function BillingPage() {
         <div className="flex justify-center py-2">
           <BrandGlyph size={24} showSparks={false} />
         </div>
+
+        {/* eBay Connect */}
+        <div>
+          <h2 className="text-lg font-semibold text-white mb-4">Connected Accounts</h2>
+          <EbayConnectSection />
+        </div>
+
+        <div className="hud-divider opacity-40" />
 
         {/* Manage billing */}
         <div className="brand-card p-6 flex items-center justify-between flex-wrap gap-4">

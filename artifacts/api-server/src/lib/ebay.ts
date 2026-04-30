@@ -181,9 +181,6 @@ export async function addEbayItem(
 
   const xml = `<?xml version="1.0" encoding="utf-8"?>
 <AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
-  <RequesterCredentials>
-    <eBayAuthToken>${userToken}</eBayAuthToken>
-  </RequesterCredentials>
   <ErrorLanguage>en_GB</ErrorLanguage>
   <WarningLevel>High</WarningLevel>
   <Item>
@@ -223,6 +220,7 @@ export async function addEbayItem(
       "X-EBAY-API-SITEID": "3",
       "X-EBAY-API-COMPATIBILITY-LEVEL": "1061",
       "X-EBAY-API-CALL-NAME": "AddItem",
+      "X-EBAY-API-IAF-TOKEN": userToken,
       "Content-Type": "text/xml",
     },
     body: xml,

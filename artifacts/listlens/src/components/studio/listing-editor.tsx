@@ -29,7 +29,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   const [exporting, setExporting] = useState(false);
   const [exported, setExported] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [published, setPublished] = useState<{ id: string; url: string; html: string } | null>(null);
+  const [published, setPublished] = useState<{ listingId: string; viewItemURL: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
@@ -89,10 +89,9 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
         const errData = await res.json().catch(() => ({}));
         throw new Error((errData as { error?: string }).error ?? `eBay draft failed (${res.status})`);
       }
-      const data = await res.json() as { sandboxListingId?: string; listing_url?: string; itemId?: string; viewItemURL?: string };
-      const listingId = data.sandboxListingId ?? data.itemId ?? `EBAY-${Date.now()}`;
-      const listingUrl = data.listing_url ?? data.viewItemURL ?? `https://sandbox.ebay.co.uk/itm/${listingId}`;
-      setPublished({ id: listingId, url: listingUrl, html: ebayHtml });
+      const data = await res.json() as { listingId: string; viewItemURL: string };
+      setPublished({ listingId: data.listingId, viewItemURL: data.viewItemURL });
+      window.open(data.viewItemURL, "_blank", "noopener,noreferrer");
     } catch (e) {
       setActionError(e instanceof Error ? e.message : "eBay draft failed.");
     } finally {
@@ -331,9 +330,9 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           {published ? (
             <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 space-y-1">
               <p className="text-emerald-400 text-sm font-medium">✓ Draft created</p>
-              <p className="text-zinc-400 text-xs">Listing ID: {published.id}</p>
+              <p className="text-zinc-400 text-xs">Listing ID: {published.listingId}</p>
               <a
-                href={published.url}
+                href={published.viewItemURL}
                 target="_blank"
                 rel="noreferrer"
                 className="text-cyan-500 text-xs underline hover:text-cyan-400"
