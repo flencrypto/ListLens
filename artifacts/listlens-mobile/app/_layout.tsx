@@ -39,6 +39,8 @@ const subscriptionCacheHydration = hydrateSubscriptionCache(queryClient).catch(
   },
 );
 
+const HYDRATION_TIMEOUT_MS = 3000;
+
 const NAVY = "#040a14";
 const FOREGROUND = "#fafafa";
 
@@ -84,11 +86,25 @@ export default function RootLayout() {
 
   useEffect(() => {
     let cancelled = false;
-    void subscriptionCacheHydration.then(() => {
+    let timedOut = false;
+    let timerId: ReturnType<typeof setTimeout>;
+
+    const timeout = new Promise<void>((resolve) => {
+      timerId = setTimeout(() => {
+        timedOut = true;
+        console.warn("Subscription cache hydration timed out after 3 s — proceeding anyway");
+        resolve();
+      }, HYDRATION_TIMEOUT_MS);
+    });
+
+    void Promise.race([subscriptionCacheHydration, timeout]).then(() => {
+      if (!timedOut) clearTimeout(timerId);
       if (!cancelled) setSubscriptionCacheReady(true);
     });
+
     return () => {
       cancelled = true;
+      clearTimeout(timerId);
     };
   }, []);
 
