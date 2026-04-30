@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BrandGlyph } from "@/components/brand/brand-glyph";
 import { PLANS as STRIPE_PLANS } from "@/lib/stripe";
 
 interface PlanDisplay {
@@ -191,6 +192,10 @@ export default function BillingPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        <div className="flex justify-center py-2">
+          <BrandGlyph size={24} showSparks={false} />
         </div>
 
         {/* Manage billing */}

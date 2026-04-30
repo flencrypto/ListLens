@@ -2,6 +2,7 @@ import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BrandGlyph } from "@/components/brand/brand-glyph";
 
 export default function HistoryPage() {
   return (
@@ -65,6 +66,10 @@ export default function HistoryPage() {
               <Link href="/guard/new">Check a listing</Link>
             </Button>
           </div>
+        </div>
+        <div className="hud-divider opacity-30" />
+        <div className="flex justify-center py-2">
+          <BrandGlyph size={22} showSparks={false} />
         </div>
       </main>
     </div>
