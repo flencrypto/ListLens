@@ -25,3 +25,9 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - `pnpm --filter @workspace/api-server run dev` — run API server locally
 
 See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+
+## Artifacts
+
+- `artifacts/listlens` — Mr.FLENS · List-LENS web app (Vite + React + Tailwind v4 + wouter). Ported from a Vercel/v0 Next.js export. Demo-mode auth (no Clerk), demo-mode billing (Stripe plans render disabled). Routes: `/`, `/splash`, `/dashboard`, `/billing`, `/history`, `/lenses`, `/lenses/record`, `/studio/new`, `/studio/:id`, `/guard/new`, `/guard/:id`, `/legal/{privacy,terms,ai-disclaimer}`, `/offline`. Auth/Stripe shims live in `src/lib/{auth-shim,clerk-config,stripe}.ts`. Pre-existing scaffold files in `src/components/{layout/sidebar,ui/sonner}.tsx` are not imported by any route and left alone.
+- `artifacts/api-server` — Express API scaffold (unchanged by the port).
+- `artifacts/mockup-sandbox` — Component preview server (unchanged).

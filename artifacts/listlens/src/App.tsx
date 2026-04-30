@@ -1,0 +1,61 @@
+import { Switch, Route, Router as WouterRouter } from "wouter";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect } from "react";
+
+import HomePage from "@/pages/home";
+import SplashPage from "@/pages/splash";
+import DashboardPage from "@/pages/dashboard";
+import BillingPage from "@/pages/billing";
+import HistoryPage from "@/pages/history";
+import LensesPage from "@/pages/lenses";
+import RecordLensPage from "@/pages/lenses/record";
+import NewStudioPage from "@/pages/studio/new";
+import StudioItemPage from "@/pages/studio/detail";
+import NewGuardPage from "@/pages/guard/new";
+import GuardCheckPage from "@/pages/guard/detail";
+import PrivacyPage from "@/pages/legal/privacy";
+import TermsPage from "@/pages/legal/terms";
+import AiDisclaimerPage from "@/pages/legal/ai-disclaimer";
+import OfflinePage from "@/pages/offline";
+import NotFound from "@/pages/not-found";
+
+const queryClient = new QueryClient();
+
+function Router() {
+  return (
+    <Switch>
+      <Route path="/" component={HomePage} />
+      <Route path="/splash" component={SplashPage} />
+      <Route path="/dashboard" component={DashboardPage} />
+      <Route path="/billing" component={BillingPage} />
+      <Route path="/history" component={HistoryPage} />
+      <Route path="/lenses" component={LensesPage} />
+      <Route path="/lenses/record" component={RecordLensPage} />
+      <Route path="/studio/new" component={NewStudioPage} />
+      <Route path="/studio/:id" component={StudioItemPage} />
+      <Route path="/guard/new" component={NewGuardPage} />
+      <Route path="/guard/:id" component={GuardCheckPage} />
+      <Route path="/legal/privacy" component={PrivacyPage} />
+      <Route path="/legal/terms" component={TermsPage} />
+      <Route path="/legal/ai-disclaimer" component={AiDisclaimerPage} />
+      <Route path="/offline" component={OfflinePage} />
+      <Route component={NotFound} />
+    </Switch>
+  );
+}
+
+function App() {
+  useEffect(() => {
+    document.documentElement.classList.add("dark");
+  }, []);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+        <Router />
+      </WouterRouter>
+    </QueryClientProvider>
+  );
+}
+
+export default App;
