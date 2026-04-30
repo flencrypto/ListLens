@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import crypto from "node:crypto";
-import { db } from "@workspace/db";
-import { ebayTokensTable } from "@workspace/db/schema";
+import { db, pool } from "@workspace/db";
+import { ebayTokensTable, ebayOauthStateTable } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import {
@@ -12,8 +12,6 @@ import {
 } from "../lib/ebay";
 
 const router: IRouter = Router();
-
-const pendingStates = new Map<string, string>();
 
 router.get("/ebay/status", async (req, res) => {
   const userId = req.user?.id;
@@ -47,7 +45,7 @@ router.get("/ebay/status", async (req, res) => {
   });
 });
 
-router.get("/ebay/connect", (req, res) => {
+router.get("/ebay/connect", async (req, res) => {
   const creds = getEbayCredentials();
 
   if (!creds) {
@@ -63,8 +61,13 @@ router.get("/ebay/connect", (req, res) => {
   }
 
   const state = crypto.randomBytes(16).toString("hex");
-  pendingStates.set(state, req.user.id);
-  setTimeout(() => pendingStates.delete(state), 10 * 60 * 1000);
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await db.insert(ebayOauthStateTable).values({
+    state,
+    userId: req.user.id,
+    expiresAt,
+  });
 
   const url = buildEbayAuthUrl(state);
   if (!url) {
@@ -89,12 +92,32 @@ router.get("/ebay/callback", async (req, res) => {
     return;
   }
 
-  const userId = pendingStates.get(state);
-  if (!userId) {
-    res.status(400).json({ error: "Invalid or expired state." });
-    return;
+  const client = await pool.connect();
+  let userId: string;
+  try {
+    const result = await client.query<{ user_id: string }>(
+      `UPDATE ebay_oauth_state
+       SET used_at = NOW()
+       WHERE state = $1
+         AND used_at IS NULL
+         AND expires_at > NOW()
+       RETURNING user_id`,
+      [state],
+    );
+
+    if (result.rowCount === 0) {
+      res.status(400).json({ error: "Invalid or expired state." });
+      return;
+    }
+
+    userId = result.rows[0].user_id;
+
+    await client.query(
+      `DELETE FROM ebay_oauth_state WHERE expires_at <= NOW()`,
+    );
+  } finally {
+    client.release();
   }
-  pendingStates.delete(state);
 
   const tokens = await exchangeEbayCode(code);
   if (!tokens) {

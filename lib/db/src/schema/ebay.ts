@@ -14,3 +14,11 @@ export const ebayTokensTable = pgTable("ebay_tokens", {
 
 export type EbayToken = typeof ebayTokensTable.$inferSelect;
 export type InsertEbayToken = typeof ebayTokensTable.$inferInsert;
+
+export const ebayOauthStateTable = pgTable("ebay_oauth_state", {
+  state: varchar("state").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
+});

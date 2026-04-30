@@ -74,9 +74,9 @@ export default function HomePage() {
             <BrandWordmark layout="inline" size="sm" />
           </Link>
           <div className="flex items-center gap-6">
-            <Link href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Features</Link>
-            <Link href="#lenses" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Lenses</Link>
-            <Link href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Pricing</Link>
+            <a href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Features</a>
+            <a href="#lenses" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Lenses</a>
+            <a href="#pricing" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Pricing</a>
             <Button asChild size="sm">
               <Link href="/dashboard">Get started</Link>
             </Button>

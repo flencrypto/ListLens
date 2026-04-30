@@ -47,6 +47,16 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ebay_oauth_state (
+        state VARCHAR PRIMARY KEY,
+        user_id VARCHAR NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        expires_at TIMESTAMPTZ NOT NULL,
+        used_at TIMESTAMPTZ
+      );
+    `);
+
     logger.info("Migrations applied successfully");
   } catch (err) {
     logger.warn({ err }, "Migration warning (non-fatal)");
