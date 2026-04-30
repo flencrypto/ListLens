@@ -307,4 +307,14 @@ router.get("/lenses", (_req, res) => {
   res.json({ lenses: ["ShoeLens", "RecordLens"] });
 });
 
+// Billing endpoints are submitted as <form method="POST"> from the billing
+// page. In demo mode there are no Stripe keys, so we 303-redirect back to
+// /billing with a flag instead of 404'ing.
+router.post("/billing/checkout", (_req, res) => {
+  res.redirect(303, "/billing?demo=checkout");
+});
+router.post("/billing/portal", (_req, res) => {
+  res.redirect(303, "/billing?demo=portal");
+});
+
 export default router;
