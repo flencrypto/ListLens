@@ -18,22 +18,32 @@ interface RiskReportProps {
 export function RiskReport({ report }: RiskReportProps) {
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            Risk Assessment
-            <Badge variant={riskColors[report.risk.level]}>
-              {report.risk.level.replace("_", " ").toUpperCase()}
-            </Badge>
-            <span className="text-zinc-500 text-sm font-normal">
-              {Math.round(report.risk.confidence * 100)}% confidence
-            </span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-zinc-400 text-xs">{report.disclaimer}</p>
-        </CardContent>
-      </Card>
+      <div className="brand-card brand-card-violet p-0 overflow-hidden">
+        <div className="px-6 py-3 border-b border-violet-500/15 flex items-center gap-2">
+          <span className="font-mono-hud text-[10px] tracking-[0.25em] uppercase text-violet-300">
+            Guard · Risk Report
+          </span>
+          <span className="ml-auto font-mono-hud text-[10px] tracking-[0.25em] uppercase text-violet-200/70">
+            v1.0
+          </span>
+        </div>
+        <Card className="bg-transparent border-0 shadow-none">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-3">
+              Risk Assessment
+              <Badge variant={riskColors[report.risk.level]}>
+                {report.risk.level.replace("_", " ").toUpperCase()}
+              </Badge>
+              <span className="text-zinc-500 text-sm font-normal">
+                {Math.round(report.risk.confidence * 100)}% confidence
+              </span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-zinc-400 text-xs">{report.disclaimer}</p>
+          </CardContent>
+        </Card>
+      </div>
 
       {report.red_flags.length > 0 && (
         <Card>

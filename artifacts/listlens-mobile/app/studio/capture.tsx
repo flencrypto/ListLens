@@ -122,6 +122,18 @@ export default function CaptureScreen() {
   return (
     <ScreenContainer>
       <View style={styles.intro}>
+        <Text
+          style={{
+            color: colors.cyan300,
+            fontFamily: "Inter_600SemiBold",
+            fontSize: 10,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Studio · Capture
+        </Text>
         <Text style={[styles.title, { color: colors.foreground }]}>
           Capture Photos
         </Text>
@@ -129,6 +141,14 @@ export default function CaptureScreen() {
           {lens} · Add {MIN_PHOTOS}–{MAX_PHOTOS} angles. Front, back, label,
           sole and any wear.
         </Text>
+        <View
+          style={{
+            marginTop: 10,
+            width: 80,
+            height: 1,
+            backgroundColor: colors.brandStrokeStrong,
+          }}
+        />
       </View>
 
       <Card padded={false} style={{ padding: 14 }}>

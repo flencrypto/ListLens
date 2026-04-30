@@ -29,6 +29,8 @@ export default function GuardCheckScreen() {
   const liveLenses = LENS_REGISTRY.filter((l) => l.status === "live");
   const [lens, setLens] = useState(liveLenses[0]?.id ?? "ShoeLens");
   const [busy, setBusy] = useState(false);
+  const violet300 = "rgba(196,181,253,0.95)";
+  const violetStroke = "rgba(167,139,250,0.32)";
 
   function addShot() {
     const trimmed = shotInput.trim();
@@ -83,12 +85,32 @@ export default function GuardCheckScreen() {
   return (
     <ScreenContainer>
       <View style={styles.intro}>
+        <Text
+          style={{
+            color: violet300,
+            fontFamily: "Inter_600SemiBold",
+            fontSize: 10,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Guard · New check
+        </Text>
         <Text style={[styles.title, { color: colors.foreground }]}>
           Check a listing
         </Text>
         <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
           AI risk report before you buy. Paste a URL or upload screenshots.
         </Text>
+        <View
+          style={{
+            marginTop: 10,
+            width: 80,
+            height: 1,
+            backgroundColor: violetStroke,
+          }}
+        />
       </View>
 
       <Card>

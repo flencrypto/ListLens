@@ -9,7 +9,16 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
-import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import Animated, {
+  Easing,
+  FadeInDown,
+  FadeInUp,
+  useAnimatedStyle,
+  useReducedMotion,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BrandBackground } from "@/components/brand/BrandBackground";
@@ -26,6 +35,29 @@ export default function SplashScreenRoute() {
   const { width, height } = useWindowDimensions();
   // Cap the lens so it never crowds the rest of the screen on shorter devices.
   const lensSize = Math.min(width - 80, height * 0.32, 280);
+
+  // Cinematic "spin-up" entrance for the lens — scale + subtle rotation,
+  // honours reduced-motion.
+  const reducedMotion = useReducedMotion();
+  const scale = useSharedValue(reducedMotion ? 1 : 0.78);
+  const rotate = useSharedValue(reducedMotion ? 0 : -8);
+  useEffect(() => {
+    if (reducedMotion) return;
+    scale.value = withTiming(1, {
+      duration: 1100,
+      easing: Easing.bezier(0.18, 0.71, 0.21, 1),
+    });
+    rotate.value = withTiming(0, {
+      duration: 1100,
+      easing: Easing.bezier(0.18, 0.71, 0.21, 1),
+    });
+  }, [reducedMotion, scale, rotate]);
+  const lensSpinUp = useAnimatedStyle(() => ({
+    transform: [
+      { scale: scale.value },
+      { rotate: `${rotate.value}deg` },
+    ],
+  }));
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.navy }]}>
@@ -64,7 +96,7 @@ export default function SplashScreenRoute() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInUp.duration(600)}>
+        <Animated.View entering={FadeInUp.duration(600)} style={lensSpinUp}>
           <BrandLens size={lensSize} />
         </Animated.View>
 

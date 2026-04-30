@@ -25,12 +25,32 @@ export default function NewListingScreen() {
   return (
     <ScreenContainer>
       <View style={styles.intro}>
+        <Text
+          style={{
+            color: colors.cyan300,
+            fontFamily: "Inter_600SemiBold",
+            fontSize: 10,
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            marginBottom: 6,
+          }}
+        >
+          Studio · New listing
+        </Text>
         <Text style={[styles.title, { color: colors.foreground }]}>
           New Listing
         </Text>
         <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
           Choose your lens and marketplace, then capture photos.
         </Text>
+        <View
+          style={{
+            marginTop: 10,
+            width: 80,
+            height: 1,
+            backgroundColor: colors.brandStrokeStrong,
+          }}
+        />
       </View>
 
       <Card>

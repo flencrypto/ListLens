@@ -52,7 +52,9 @@ export default function SplashPage() {
             {...fade(0.05)}
             className="w-full max-w-[min(92vw,560px)] aspect-square"
           >
-            <BrandLens variant="composed" className="!w-full !h-full" />
+            <div className={prefersReducedMotion ? "" : "brand-spin-up"}>
+              <BrandLens variant="composed" className="!w-full !h-full" />
+            </div>
           </motion.div>
 
           <motion.p
