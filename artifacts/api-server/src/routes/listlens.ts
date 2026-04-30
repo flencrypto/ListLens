@@ -1,17 +1,5 @@
-/**
- * Demo-mode endpoints for the ListLens (Mr.FLENS · List-LENS) web artifact.
- *
- * The original Next.js app shipped server-side route handlers under
- * `app/api/*`. The Vite port is frontend-only, so this router exposes
- * equivalent demo-mode handlers. Response shapes match the
- * StudioOutputSchema / GuardOutputSchema / RecordReleaseIdentificationSchema
- * defined in artifacts/listlens/src/lib/ai/schemas.ts so Studio, Guard, and
- * RecordLens flows are interactive end-to-end.
- *
- * No real AI / Stripe / DB calls are made — all data is static or generated
- * deterministically. Auth is intentionally not enforced (the web app runs in
- * demo mode and does not send credentials).
- */
+// Demo-mode endpoints for the ListLens web artifact. Response shapes match
+// the schemas in artifacts/listlens/src/lib/ai/schemas.ts.
 import { Router, type IRouter, type Request } from "express";
 
 const router: IRouter = Router();
@@ -216,17 +204,46 @@ router.get("/items/:id/analysis", (req, res) => {
   res.json({ analysis });
 });
 
-router.post("/items/:id/export/vinted", (_req, res) => {
-  res.json({
-    ok: true,
-    message: "Demo export — would open Vinted with prefilled fields.",
-  });
+router.post("/items/:id/export/vinted", (req, res) => {
+  const { id } = req.params;
+  const analysis = studioStore.get(id);
+  const vinted =
+    (analysis?.["marketplace_outputs"] as
+      | { vinted?: Record<string, unknown> }
+      | undefined)?.vinted ?? {};
+  const title = String(vinted["title"] ?? "ListLens demo item");
+  const category = String(vinted["category"] ?? "Other");
+  const price = String(
+    (analysis?.["pricing"] as { recommended?: number } | undefined)
+      ?.recommended ?? 0,
+  );
+  const csv = [
+    "title,category,price,currency,description",
+    [
+      JSON.stringify(title),
+      JSON.stringify(category),
+      price,
+      "GBP",
+      JSON.stringify(
+        "Demo export from Mr.FLENS · List-LENS — no real listing created.",
+      ),
+    ].join(","),
+    "",
+  ].join("\n");
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  res.setHeader(
+    "Content-Disposition",
+    `attachment; filename="vinted-${id}.csv"`,
+  );
+  res.send(csv);
 });
 
 router.post("/items/:id/publish/ebay-sandbox", (_req, res) => {
+  const sandboxListingId = `EBAY-SBX-${Date.now().toString(36).toUpperCase()}`;
   res.json({
     ok: true,
-    listing_url: "https://sandbox.ebay.co.uk/itm/demo-listing",
+    sandboxListingId,
+    listing_url: `https://sandbox.ebay.co.uk/itm/${sandboxListingId}`,
     message: "Demo publish — no real listing was created.",
   });
 });
@@ -266,19 +283,23 @@ router.post("/guard/checks/:id/save", (_req, res) => {
 
 router.post("/lenses/record/identify", (_req, res) => {
   res.json({
-    ...recordPayload,
-    input_type: "single_label_photo",
-    needs_matrix_for_clarification: true,
+    analysis: {
+      ...recordPayload,
+      input_type: "single_label_photo",
+      needs_matrix_for_clarification: true,
+    },
   });
 });
 
 router.post("/lenses/record/identify-with-matrix", (_req, res) => {
   res.json({
-    ...recordPayload,
-    input_type: "label_and_matrix",
-    needs_matrix_for_clarification: false,
-    matrix_clarification_questions: [],
-    top_match: { ...recordPayload.top_match, likelihood_percent: 91 },
+    analysis: {
+      ...recordPayload,
+      input_type: "label_and_matrix",
+      needs_matrix_for_clarification: false,
+      matrix_clarification_questions: [],
+      top_match: { ...recordPayload.top_match, likelihood_percent: 91 },
+    },
   });
 });
 

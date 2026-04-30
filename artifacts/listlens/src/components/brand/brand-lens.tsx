@@ -73,9 +73,8 @@ export function BrandLens({
       role="img"
       aria-label="Mr.FLENS List-LENS"
     >
-      {/* Inner wrapper sets font-size in container query units. Must be a
-          CHILD of the [container-type:inline-size] element above — cqw units
-          set on the container element itself fall back to viewport units. */}
+      {/* font-size:1cqw must live on a CHILD of the container, not the
+          container itself, or it falls back to viewport units. */}
       <div className="absolute inset-0" style={{ fontSize: "1cqw" }}>
       <svg
         viewBox="0 0 400 400"
