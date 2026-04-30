@@ -15,7 +15,11 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
-import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
+import {
+  hydrateSubscriptionCache,
+  initializeRevenueCat,
+  SubscriptionProvider,
+} from "@/lib/revenuecat";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -28,6 +32,12 @@ try {
   revenueCatInitError = err instanceof Error ? err.message : "Unknown error";
   console.warn("RevenueCat init failed:", revenueCatInitError);
 }
+
+const subscriptionCacheHydration = hydrateSubscriptionCache(queryClient).catch(
+  (err) => {
+    console.warn("Subscription cache hydration failed:", err);
+  },
+);
 
 const NAVY = "#040a14";
 const FOREGROUND = "#fafafa";
@@ -70,14 +80,27 @@ export default function RootLayout() {
     Inter_600SemiBold,
     Inter_700Bold,
   });
+  const [subscriptionCacheReady, setSubscriptionCacheReady] = React.useState(false);
 
   useEffect(() => {
-    if (fontsLoaded || fontError) {
+    let cancelled = false;
+    void subscriptionCacheHydration.then(() => {
+      if (!cancelled) setSubscriptionCacheReady(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const ready = (fontsLoaded || fontError) && subscriptionCacheReady;
+
+  useEffect(() => {
+    if (ready) {
       SplashScreen.hideAsync();
     }
-  }, [fontsLoaded, fontError]);
+  }, [ready]);
 
-  if (!fontsLoaded && !fontError) return null;
+  if (!ready) return null;
 
   return (
     <SafeAreaProvider>

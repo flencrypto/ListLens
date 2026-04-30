@@ -1,6 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import {
+  type QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import Constants from "expo-constants";
-import React, { createContext, useContext, useMemo } from "react";
+import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 import { Platform } from "react-native";
 import Purchases, {
   type CustomerInfo,
@@ -14,6 +20,72 @@ const REVENUECAT_IOS_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY;
 const REVENUECAT_ANDROID_API_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY;
 
 export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";
+
+const CUSTOMER_INFO_CACHE_KEY = "listlens.revenuecat.customerInfo.v1";
+const CUSTOMER_INFO_QUERY_KEY = ["revenuecat", "customer-info"] as const;
+
+async function loadCachedCustomerInfo(): Promise<CustomerInfo | null> {
+  try {
+    const raw = await AsyncStorage.getItem(CUSTOMER_INFO_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as CustomerInfo;
+  } catch {
+    return null;
+  }
+}
+
+async function saveCachedCustomerInfo(info: CustomerInfo): Promise<void> {
+  try {
+    await AsyncStorage.setItem(CUSTOMER_INFO_CACHE_KEY, JSON.stringify(info));
+  } catch {
+    // Ignore persistence errors — cache is a best-effort optimization.
+  }
+}
+
+async function clearCachedCustomerInfo(): Promise<void> {
+  try {
+    await AsyncStorage.removeItem(CUSTOMER_INFO_CACHE_KEY);
+  } catch {
+    // Ignore.
+  }
+}
+
+function hasActiveEntitlements(info: CustomerInfo | undefined | null): boolean {
+  if (!info) return false;
+  return Object.keys(info.entitlements?.active ?? {}).length > 0;
+}
+
+let hydrationPromise: Promise<void> | null = null;
+let hydrationCompleted = false;
+
+/**
+ * Loads the last known CustomerInfo from AsyncStorage and seeds it into the
+ * React Query cache before the network query fires. Safe to call multiple
+ * times — the work runs once and is shared across callers.
+ *
+ * Call this at app bootstrap (in parallel with font loading) so the first
+ * render of the SubscriptionProvider already sees the cached plan.
+ */
+export function hydrateSubscriptionCache(queryClient: QueryClient): Promise<void> {
+  if (hydrationPromise) return hydrationPromise;
+  hydrationPromise = (async () => {
+    const cached = await loadCachedCustomerInfo();
+    if (cached) {
+      const existing = queryClient.getQueryData<CustomerInfo>(CUSTOMER_INFO_QUERY_KEY);
+      if (!existing) {
+        queryClient.setQueryData(CUSTOMER_INFO_QUERY_KEY, cached);
+      }
+    }
+    hydrationCompleted = true;
+  })();
+  return hydrationPromise;
+}
+
+export function isSubscriptionCacheHydrated(): boolean {
+  return hydrationCompleted;
+}
 
 function getRevenueCatApiKey(): string {
   const useTestKey =
@@ -76,13 +148,41 @@ interface SubscriptionContextValue {
 
 function useSubscriptionContextValue(): SubscriptionContextValue {
   const queryClient = useQueryClient();
+  const [cacheHydrated, setCacheHydrated] = useState<boolean>(() =>
+    isSubscriptionCacheHydrated(),
+  );
+
+  useEffect(() => {
+    if (cacheHydrated) return;
+    let cancelled = false;
+    void hydrateSubscriptionCache(queryClient).then(() => {
+      if (!cancelled) setCacheHydrated(true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [queryClient, cacheHydrated]);
 
   const customerInfoQuery = useQuery({
-    queryKey: ["revenuecat", "customer-info"],
+    queryKey: CUSTOMER_INFO_QUERY_KEY,
     queryFn: () => Purchases.getCustomerInfo(),
     staleTime: 60 * 1000,
-    enabled: revenueCatConfigured,
+    // Hydration via setQueryData marks the query as fresh, which would
+    // suppress the network call for up to staleTime. Force a refetch on
+    // mount so the UI renders the cached plan instantly but still
+    // reconciles against the live entitlements in the background.
+    refetchOnMount: "always",
+    enabled: revenueCatConfigured && cacheHydrated,
   });
+
+  useEffect(() => {
+    if (!customerInfoQuery.isSuccess || !customerInfoQuery.data) return;
+    if (hasActiveEntitlements(customerInfoQuery.data)) {
+      void saveCachedCustomerInfo(customerInfoQuery.data);
+    } else {
+      void clearCachedCustomerInfo();
+    }
+  }, [customerInfoQuery.isSuccess, customerInfoQuery.data]);
 
   const offeringsQuery = useQuery({
     queryKey: ["revenuecat", "offerings"],
@@ -100,7 +200,12 @@ function useSubscriptionContextValue(): SubscriptionContextValue {
       return customerInfo;
     },
     onSuccess: (info) => {
-      queryClient.setQueryData(["revenuecat", "customer-info"], info);
+      queryClient.setQueryData(CUSTOMER_INFO_QUERY_KEY, info);
+      if (hasActiveEntitlements(info)) {
+        void saveCachedCustomerInfo(info);
+      } else {
+        void clearCachedCustomerInfo();
+      }
     },
   });
 
@@ -112,7 +217,12 @@ function useSubscriptionContextValue(): SubscriptionContextValue {
       return Purchases.restorePurchases();
     },
     onSuccess: (info) => {
-      queryClient.setQueryData(["revenuecat", "customer-info"], info);
+      queryClient.setQueryData(CUSTOMER_INFO_QUERY_KEY, info);
+      if (hasActiveEntitlements(info)) {
+        void saveCachedCustomerInfo(info);
+      } else {
+        void clearCachedCustomerInfo();
+      }
     },
   });
 
