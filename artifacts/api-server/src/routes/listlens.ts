@@ -458,13 +458,52 @@ router.post("/items/:id/export/vinted", (req, res) => {
   res.send(csv);
 });
 
-router.post("/items/:id/publish/ebay-sandbox", (_req, res) => {
+router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
+  const { id } = req.params;
+  const b = body(req);
+  const title = (b["title"] as string | undefined) ?? "Untitled";
+  const description = (b["description"] as string | undefined) ?? "";
+  const price = Number(b["price"] ?? 0);
+  const lens = (b["lens"] as string | undefined) ?? "default";
+
+  const userId = req.user?.id;
+
+  if (userId) {
+    try {
+      const { addEbayItem, refreshEbayToken } = await import("../lib/ebay");
+
+      const accessToken = await refreshEbayToken(userId);
+      if (accessToken) {
+        const stored = studioStore.get(id) ?? {};
+        const result = await addEbayItem(accessToken, {
+          title,
+          description,
+          price,
+          lens,
+          condition: String(stored["condition"] ?? "Used"),
+          attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
+        });
+        if (result) {
+          res.json({
+            ok: true,
+            itemId: result.itemId,
+            listing_url: result.viewItemURL,
+            message: "eBay listing created via API.",
+          });
+          return;
+        }
+      }
+    } catch (err) {
+      logger.warn({ err }, "eBay API publish failed, falling back to sandbox ID");
+    }
+  }
+
   const sandboxListingId = `EBAY-SBX-${Date.now().toString(36).toUpperCase()}`;
   res.json({
     ok: true,
     sandboxListingId,
     listing_url: `https://sandbox.ebay.co.uk/itm/${sandboxListingId}`,
-    message: "eBay sandbox publish — no real listing was created.",
+    message: "eBay sandbox draft — connect your eBay account to publish for real.",
   });
 });
 

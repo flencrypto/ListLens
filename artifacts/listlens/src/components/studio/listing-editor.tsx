@@ -1,10 +1,11 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/pricing";
 import type { StudioOutput } from "@/lib/ai/schemas";
+import { generateEbayHtml } from "@/lib/ebay-html";
 
 interface ListingEditorProps {
   itemId: string;
@@ -28,12 +29,18 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   const [exporting, setExporting] = useState(false);
   const [exported, setExported] = useState(false);
   const [publishing, setPublishing] = useState(false);
-  const [published, setPublished] = useState<string | null>(null);
+  const [published, setPublished] = useState<{ id: string; url: string; html: string } | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
+  const [htmlPreviewOpen, setHtmlPreviewOpen] = useState(false);
+  const [htmlCopied, setHtmlCopied] = useState(false);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
   const needsConfirmation =
     analysis.identity.confidence < 0.7 || analysis.pricing.confidence < 0.6;
+
+  const ebayHtml = generateEbayHtml(analysis, title, description, price);
 
   async function handleVintedExport() {
     setActionError(null);
@@ -48,7 +55,6 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
         const errData = await res.json().catch(() => ({}));
         throw new Error((errData as { error?: string }).error ?? `Vinted export failed (${res.status})`);
       }
-      // trigger CSV download
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -67,7 +73,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   async function handleEbayPublish() {
     if (needsConfirmation) {
       const ok = window.confirm(
-        "Confidence is below recommended threshold. Are you sure you want to create an eBay sandbox draft?"
+        "Confidence is below recommended threshold. Are you sure you want to create an eBay draft?"
       );
       if (!ok) return;
     }
@@ -77,16 +83,18 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
       const res = await fetch(`/api/items/${itemId}/publish/ebay-sandbox`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, price }),
+        body: JSON.stringify({ title, description, price, lens: analysis.lens }),
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error((errData as { error?: string }).error ?? `eBay sandbox draft failed (${res.status})`);
+        throw new Error((errData as { error?: string }).error ?? `eBay draft failed (${res.status})`);
       }
-      const data = await res.json();
-      if (data.sandboxListingId) setPublished(data.sandboxListingId);
+      const data = await res.json() as { sandboxListingId?: string; listing_url?: string; itemId?: string; viewItemURL?: string };
+      const listingId = data.sandboxListingId ?? data.itemId ?? `EBAY-${Date.now()}`;
+      const listingUrl = data.listing_url ?? data.viewItemURL ?? `https://sandbox.ebay.co.uk/itm/${listingId}`;
+      setPublished({ id: listingId, url: listingUrl, html: ebayHtml });
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "eBay sandbox draft failed.");
+      setActionError(e instanceof Error ? e.message : "eBay draft failed.");
     } finally {
       setPublishing(false);
     }
@@ -96,6 +104,12 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
     navigator.clipboard.writeText(text);
     setCopied(key);
     setTimeout(() => setCopied(null), 2000);
+  }
+
+  function handleCopyHtml() {
+    navigator.clipboard.writeText(ebayHtml);
+    setHtmlCopied(true);
+    setTimeout(() => setHtmlCopied(false), 2500);
   }
 
   const confidenceColor =
@@ -237,6 +251,104 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
         </div>
       )}
 
+      {/* eBay HTML Listing — primary export */}
+      <Card className="border-orange-900/40">
+        <CardHeader>
+          <CardTitle className="flex items-center justify-between flex-wrap gap-2 text-base">
+            <span className="flex items-center gap-2">
+              <span className="text-orange-400">eBay Listing HTML</span>
+              <Badge variant="secondary" className="text-xs">paste into eBay description</Badge>
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setHtmlPreviewOpen((v) => !v)}
+                className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors"
+              >
+                {htmlPreviewOpen ? "Hide preview" : "Show preview"}
+              </button>
+              <Button
+                size="sm"
+                onClick={handleCopyHtml}
+                className="bg-orange-600 hover:bg-orange-500 text-white text-xs h-7 px-3"
+              >
+                {htmlCopied ? "✓ Copied!" : "Copy HTML"}
+              </Button>
+            </div>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-zinc-400 text-sm">
+            Copy the HTML below and paste it into eBay's <strong className="text-zinc-300">custom description editor</strong> when creating your listing.
+          </p>
+
+          {/* Preview */}
+          {htmlPreviewOpen && (
+            <div className="rounded-lg border border-zinc-700 overflow-hidden">
+              <div className="bg-zinc-800 px-3 py-1.5 flex items-center gap-2 border-b border-zinc-700">
+                <span className="w-3 h-3 rounded-full bg-red-500/70 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-yellow-500/70 inline-block" />
+                <span className="w-3 h-3 rounded-full bg-green-500/70 inline-block" />
+                <span className="ml-2 text-xs text-zinc-500">Preview — how it looks on eBay</span>
+              </div>
+              <iframe
+                ref={iframeRef}
+                srcDoc={ebayHtml}
+                className="w-full bg-white"
+                style={{ height: "360px", border: "none" }}
+                sandbox="allow-same-origin"
+                title="eBay listing HTML preview"
+              />
+            </div>
+          )}
+
+          {/* HTML code block */}
+          <div className="relative">
+            <pre className="rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-zinc-400 overflow-auto max-h-48 leading-relaxed whitespace-pre-wrap break-all font-mono">
+              {ebayHtml}
+            </pre>
+            <button
+              onClick={handleCopyHtml}
+              className="absolute top-2 right-2 text-xs text-zinc-500 hover:text-zinc-200 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 transition-colors"
+            >
+              {htmlCopied ? "✓" : "Copy"}
+            </button>
+          </div>
+
+          <p className="text-zinc-500 text-xs">
+            On eBay: Create listing → Scroll to Description → click <strong className="text-zinc-400">HTML</strong> → paste this code.
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* eBay API Draft (optional — requires eBay account connection) */}
+      <Card>
+        <CardHeader><CardTitle className="text-base">eBay API Draft</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-zinc-400 text-sm">
+            Optionally create a draft listing directly via the eBay API.
+            {" "}<a href="/billing?tab=ebay" className="text-cyan-500 underline hover:text-cyan-400 text-xs">Connect your eBay account →</a>
+          </p>
+          {published ? (
+            <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 space-y-1">
+              <p className="text-emerald-400 text-sm font-medium">✓ Draft created</p>
+              <p className="text-zinc-400 text-xs">Listing ID: {published.id}</p>
+              <a
+                href={published.url}
+                target="_blank"
+                rel="noreferrer"
+                className="text-cyan-500 text-xs underline hover:text-cyan-400"
+              >
+                View on eBay →
+              </a>
+            </div>
+          ) : (
+            <Button onClick={handleEbayPublish} disabled={publishing} variant="outline" className="w-full">
+              {publishing ? "Creating draft…" : "Create eBay Draft"}
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
       {/* Vinted copy section */}
       <Card>
         <CardHeader><CardTitle className="text-base">Vinted Export</CardTitle></CardHeader>
@@ -258,24 +370,6 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
               {exported ? "✓ CSV downloaded" : exporting ? "Exporting…" : "Export Vinted CSV"}
             </Button>
           </div>
-        </CardContent>
-      </Card>
-
-      {/* eBay sandbox */}
-      <Card>
-        <CardHeader><CardTitle className="text-base">eBay Draft</CardTitle></CardHeader>
-        <CardContent className="space-y-3">
-          <p className="text-zinc-400 text-sm">Create a sandbox draft listing on eBay.</p>
-          {published ? (
-            <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3">
-              <p className="text-emerald-400 text-sm">✓ Sandbox draft created</p>
-              <p className="text-zinc-400 text-xs mt-1">ID: {published}</p>
-            </div>
-          ) : (
-            <Button onClick={handleEbayPublish} disabled={publishing} variant="outline" className="w-full">
-              {publishing ? "Creating draft…" : "Create eBay Sandbox Draft"}
-            </Button>
-          )}
         </CardContent>
       </Card>
 

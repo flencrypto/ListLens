@@ -1,5 +1,6 @@
 import app from "./app";
 import { logger } from "./lib/logger";
+import { runMigrations } from "./lib/migrate";
 
 const rawPort = process.env["PORT"];
 
@@ -30,11 +31,19 @@ if (missingSecrets.length > 0) {
   );
 }
 
-app.listen(port, (err) => {
-  if (err) {
-    logger.error({ err }, "Error listening on port");
-    process.exit(1);
-  }
-
-  logger.info({ port }, "Server listening");
-});
+runMigrations()
+  .then(() => {
+    app.listen(port, (err) => {
+      if (err) {
+        logger.error({ err }, "Error listening on port");
+        process.exit(1);
+      }
+      logger.info({ port }, "Server listening");
+    });
+  })
+  .catch((err) => {
+    logger.warn({ err }, "Startup migration failed — starting server anyway");
+    app.listen(port, () => {
+      logger.info({ port }, "Server listening (migration skipped)");
+    });
+  });
