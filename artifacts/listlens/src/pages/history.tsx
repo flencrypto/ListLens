@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,46 +28,44 @@ export default function HistoryPage() {
         </div>
 
         {/* Listings section */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+        <div className="brand-card p-6">
+          <div className="flex items-center justify-between pb-3">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
               <span>📸</span> Studio Listings
-            </CardTitle>
+            </h2>
             <Badge variant="secondary">0 listings</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-500 text-sm">No listings yet.</p>
-              <p className="text-zinc-600 text-xs max-w-xs text-center">
-                Create a listing in Studio. After analysis, your drafts will appear here.
-              </p>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/studio/new">Create first listing</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
+            <p className="text-zinc-500 text-sm">No listings yet.</p>
+            <p className="text-zinc-600 text-xs max-w-xs text-center">
+              Create a listing in Studio. After analysis, your drafts will appear here.
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/studio/new">Create first listing</Link>
+            </Button>
+          </div>
+        </div>
+
+        <div className="hud-divider opacity-40" />
 
         {/* Guard checks section */}
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
+        <div className="brand-card brand-card-violet p-6">
+          <div className="flex items-center justify-between pb-3">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
               <span>🛡️</span> Guard Checks
-            </CardTitle>
+            </h2>
             <Badge variant="secondary">0 checks</Badge>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-500 text-sm">No Guard checks yet.</p>
-              <p className="text-zinc-600 text-xs max-w-xs text-center">
-                Check a listing before you buy. Saved reports will appear here.
-              </p>
-              <Button asChild size="sm" variant="outline">
-                <Link href="/guard/new">Check a listing</Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+          <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
+            <p className="text-zinc-500 text-sm">No Guard checks yet.</p>
+            <p className="text-zinc-600 text-xs max-w-xs text-center">
+              Check a listing before you buy. Saved reports will appear here.
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/guard/new">Check a listing</Link>
+            </Button>
+          </div>
+        </div>
       </main>
     </div>
   );

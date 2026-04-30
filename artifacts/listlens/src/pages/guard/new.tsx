@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 const LENSES = [
@@ -85,94 +84,87 @@ export default function NewGuardPage() {
         </div>
 
         {/* Input method tabs */}
-        <Card className="mb-4">
-          <CardHeader>
-            <div className="flex rounded-lg border border-zinc-700 overflow-hidden w-fit">
-              <button
-                onClick={() => setTab("url")}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  tab === "url" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                🔗 Listing URL
-              </button>
-              <button
-                onClick={() => setTab("screenshots")}
-                className={`px-4 py-2 text-sm font-medium transition-colors ${
-                  tab === "screenshots" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
-                }`}
-              >
-                🖼 Screenshots
-              </button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {tab === "url" && (
-              <div className="space-y-3">
-                <p className="text-zinc-500 text-sm">Paste an eBay or Vinted listing URL</p>
-                <Input
-                  placeholder="https://www.ebay.co.uk/itm/... or https://www.vinted.co.uk/items/..."
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && handleStart()}
-                  className="bg-zinc-900 border-zinc-700 focus:border-violet-600"
-                />
-              </div>
-            )}
+        <div className="brand-card p-5 mb-4">
+          <div className="flex rounded-lg border border-zinc-700 overflow-hidden w-fit mb-5">
+            <button
+              onClick={() => setTab("url")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                tab === "url" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              🔗 Listing URL
+            </button>
+            <button
+              onClick={() => setTab("screenshots")}
+              className={`px-4 py-2 text-sm font-medium transition-colors ${
+                tab === "screenshots" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              🖼 Screenshots
+            </button>
+          </div>
 
-            {tab === "screenshots" && (
-              <div className="space-y-3">
-                <p className="text-zinc-500 text-sm">Paste screenshot image URLs (up to 6)</p>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-violet-600"
-                    placeholder="https://example.com/screenshot.jpg"
-                    value={screenshotInput}
-                    onChange={(e) => setScreenshotInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddScreenshot()}
-                  />
-                  <Button onClick={handleAddScreenshot} variant="secondary" size="sm">Add</Button>
-                </div>
-                {screenshotUrls.length > 0 && (
-                  <div className="space-y-1">
-                    {screenshotUrls.map((u, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 rounded-lg border border-violet-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.06)]">
-                        <span className="text-zinc-600 w-4">{i + 1}</span>
-                        <span className="truncate flex-1">{u}</span>
-                        <button onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))} className="text-zinc-600 hover:text-red-400 transition-colors">✕</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+          {tab === "url" && (
+            <div className="space-y-3">
+              <p className="text-zinc-500 text-sm">Paste an eBay or Vinted listing URL</p>
+              <Input
+                placeholder="https://www.ebay.co.uk/itm/... or https://www.vinted.co.uk/items/..."
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleStart()}
+                className="bg-zinc-900 border-zinc-700 focus:border-violet-600"
+              />
+            </div>
+          )}
+
+          {tab === "screenshots" && (
+            <div className="space-y-3">
+              <p className="text-zinc-500 text-sm">Paste screenshot image URLs (up to 6)</p>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-violet-600"
+                  placeholder="https://example.com/screenshot.jpg"
+                  value={screenshotInput}
+                  onChange={(e) => setScreenshotInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddScreenshot()}
+                />
+                <Button onClick={handleAddScreenshot} variant="secondary" size="sm">Add</Button>
               </div>
-            )}
-          </CardContent>
-        </Card>
+              {screenshotUrls.length > 0 && (
+                <div className="space-y-1">
+                  {screenshotUrls.map((u, i) => (
+                    <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 rounded-lg border border-violet-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.06)]">
+                      <span className="text-zinc-600 w-4">{i + 1}</span>
+                      <span className="truncate flex-1">{u}</span>
+                      <button onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))} className="text-zinc-600 hover:text-red-400 transition-colors">✕</button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Lens picker */}
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle className="text-base">Choose Lens</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
-              {LENSES.map((l) => (
-                <button
-                  key={l.id}
-                  onClick={() => setLens(l.id)}
-                  className={`rounded-xl border p-3 text-left transition-all ${
-                    lens === l.id
-                      ? "border-violet-500 bg-violet-950/40"
-                      : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
-                  }`}
-                >
-                  <div className="text-xl mb-1">{l.icon}</div>
-                  <div className="font-medium text-sm text-white">{l.name}</div>
-                </button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <div className="brand-card brand-card-violet p-5 mb-6">
+          <h2 className="text-base font-semibold text-white mb-4">Choose Lens</h2>
+          <div className="grid grid-cols-2 gap-3">
+            {LENSES.map((l) => (
+              <button
+                key={l.id}
+                onClick={() => setLens(l.id)}
+                className={`rounded-xl border p-3 text-left transition-all ${
+                  lens === l.id
+                    ? "border-violet-500 bg-violet-950/40"
+                    : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
+                }`}
+              >
+                <div className="text-xl mb-1">{l.icon}</div>
+                <div className="font-medium text-sm text-white">{l.name}</div>
+              </button>
+            ))}
+          </div>
+        </div>
 
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 

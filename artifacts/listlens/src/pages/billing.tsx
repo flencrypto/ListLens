@@ -1,6 +1,5 @@
 import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { PLANS as STRIPE_PLANS } from "@/lib/stripe";
@@ -97,21 +96,23 @@ export default function BillingPage() {
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-10">
         <div>
+          <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+            Account · Billing
+          </p>
           <h1 className="text-2xl font-bold text-white mb-1">Billing & Plans</h1>
           <p className="text-zinc-400 text-sm">Choose the plan that works for you. Cancel anytime.</p>
+          <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         {/* Current plan */}
-        <Card className="border-cyan-900/40 bg-gradient-to-r from-cyan-950/20 to-zinc-900">
-          <CardContent className="flex items-center justify-between flex-wrap gap-4 pt-6">
-            <div>
-              <p className="text-zinc-400 text-sm mb-1">Current plan</p>
-              <p className="text-white font-bold text-lg">Free Trial</p>
-              <p className="text-zinc-400 text-sm mt-0.5">3 listings remaining</p>
-            </div>
-            <Badge variant="secondary">Free</Badge>
-          </CardContent>
-        </Card>
+        <div className="brand-card brand-card-glow p-6 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <p className="text-zinc-400 text-sm mb-1">Current plan</p>
+            <p className="text-white font-bold text-lg">Free Trial</p>
+            <p className="text-zinc-400 text-sm mt-0.5">3 listings remaining</p>
+          </div>
+          <Badge variant="secondary">Free</Badge>
+        </div>
 
         {/* Studio plans */}
         <div>
@@ -162,6 +163,8 @@ export default function BillingPage() {
           </div>
         </div>
 
+        <div className="hud-divider opacity-40" />
+
         {/* Guard plans */}
         <div>
           <h2 className="text-lg font-semibold text-white mb-4">Guard Plans</h2>
@@ -188,19 +191,6 @@ export default function BillingPage() {
             ))}
           </div>
         </div>
-
-        {/* Manage billing */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Manage Billing</CardTitle>
-          </CardHeader>
-          <CardContent className="flex items-center justify-between flex-wrap gap-4">
-            <p className="text-zinc-400 text-sm">Access your invoices, update payment method, or cancel your subscription.</p>
-            <form action="/api/billing/portal" method="POST">
-              <Button type="submit" variant="outline">Billing portal</Button>
-            </form>
-          </CardContent>
-        </Card>
       </main>
     </div>
   );

@@ -3,7 +3,6 @@ import { useState } from "react";
 import { useParams } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { ListingEditor } from "@/components/studio/listing-editor";
@@ -62,72 +61,73 @@ export default function StudioItemPage() {
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-bold text-white">Studio</h1>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+              Studio · Analysis
+            </p>
+            <h1 className="text-2xl font-bold text-white mb-1">Studio</h1>
+            <div className="hud-divider mt-2 max-w-[120px]" />
+          </div>
           <Badge variant="secondary">Item {id.slice(-8)}</Badge>
         </div>
 
         {!analysis && (
           <>
             {/* Photo input */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center justify-between">
-                  <span>Add Photos</span>
-                  <span className="text-xs font-normal text-zinc-400">{photoUrls.length}/8 photos</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-zinc-500 text-sm">
-                  Paste image URLs (JPG, PNG, WebP). Upload 3–8 photos for best results.
-                </p>
-                <div className="flex gap-2">
-                  <input
-                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
-                    placeholder="https://example.com/photo.jpg"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                  />
-                  <Button onClick={handleAddUrl} variant="secondary" size="sm">Add</Button>
+            <div className="brand-card p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h2 className="text-base font-semibold text-white">Add Photos</h2>
+                <span className="text-xs font-normal text-zinc-400">{photoUrls.length}/8 photos</span>
+              </div>
+              <p className="text-zinc-500 text-sm">
+                Paste image URLs (JPG, PNG, WebP). Upload 3–8 photos for best results.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                  placeholder="https://example.com/photo.jpg"
+                  value={urlInput}
+                  onChange={(e) => setUrlInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
+                />
+                <Button onClick={handleAddUrl} variant="secondary" size="sm">Add</Button>
+              </div>
+
+              {photoUrls.length > 0 && (
+                <div className="space-y-2">
+                  {photoUrls.map((u, i) => (
+                    <div key={i} className="flex items-center gap-2 rounded-lg border border-cyan-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.06)]">
+                      <span className="text-xs text-zinc-500 w-5 shrink-0">{i + 1}</span>
+                      <span className="text-zinc-300 text-xs truncate flex-1">{u}</span>
+                      <button
+                        onClick={() => handleRemoveUrl(u)}
+                        className="text-zinc-600 hover:text-red-400 text-xs shrink-0 transition-colors"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  ))}
                 </div>
+              )}
 
-                {photoUrls.length > 0 && (
-                  <div className="space-y-2">
-                    {photoUrls.map((u, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-lg border border-cyan-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.06)]">
-                        <span className="text-xs text-zinc-500 w-5 shrink-0">{i + 1}</span>
-                        <span className="text-zinc-300 text-xs truncate flex-1">{u}</span>
-                        <button
-                          onClick={() => handleRemoveUrl(u)}
-                          className="text-zinc-600 hover:text-red-400 text-xs shrink-0 transition-colors"
-                        >
-                          ✕
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {error && <p className="text-red-400 text-sm">{error}</p>}
-              </CardContent>
-            </Card>
+              {error && <p className="text-red-400 text-sm">{error}</p>}
+            </div>
 
             {/* Hint */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Optional Hint <span className="text-zinc-500 font-normal text-xs">(optional)</span></CardTitle>
-              </CardHeader>
-              <CardContent>
-                <textarea
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 resize-none"
-                  rows={3}
-                  placeholder="e.g. 'Nike Air Max 90 size UK 10, bought 2022, worn maybe 5 times' — helps the AI identify your item faster"
-                  value={hint}
-                  onChange={(e) => setHint(e.target.value)}
-                />
-              </CardContent>
-            </Card>
+            <div className="brand-card p-6">
+              <h2 className="text-base font-semibold text-white mb-3">
+                Optional Hint{" "}
+                <span className="text-zinc-500 font-normal text-xs">(optional)</span>
+              </h2>
+              <textarea
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 resize-none"
+                rows={3}
+                placeholder="e.g. 'Nike Air Max 90 size UK 10, bought 2022, worn maybe 5 times' — helps the AI identify your item faster"
+                value={hint}
+                onChange={(e) => setHint(e.target.value)}
+              />
+            </div>
 
             <Button
               onClick={handleAnalyse}
