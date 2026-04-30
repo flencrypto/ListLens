@@ -170,6 +170,7 @@ export interface EbayListingInput {
   lens: string;
   condition?: string;
   attributes?: Record<string, unknown>;
+  photoUrls?: string[];
 }
 
 export async function addEbayItem(
@@ -178,6 +179,13 @@ export async function addEbayItem(
 ): Promise<{ itemId: string; viewItemURL: string } | null> {
   const categoryId = LENS_CATEGORY_MAP[input.lens] ?? LENS_CATEGORY_MAP.default;
   const condId = conditionId(input.condition);
+
+  const photos = (input.photoUrls ?? []).slice(0, 12);
+  const pictureDetails = photos.length > 0
+    ? `<PictureDetails>
+      ${photos.map((u) => `<PictureURL>${escXml(u)}</PictureURL>`).join("\n      ")}
+    </PictureDetails>`
+    : "";
 
   const xml = `<?xml version="1.0" encoding="utf-8"?>
 <AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
@@ -197,6 +205,7 @@ export async function addEbayItem(
     <Location>United Kingdom</Location>
     <Quantity>1</Quantity>
     <PaymentMethods>PayPal</PaymentMethods>
+    ${pictureDetails}
     <ReturnPolicy>
       <ReturnsAcceptedOption>ReturnsAccepted</ReturnsAcceptedOption>
       <RefundOption>MoneyBack</RefundOption>

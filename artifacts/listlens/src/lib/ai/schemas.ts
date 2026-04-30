@@ -3,6 +3,7 @@ import { z } from "zod";
 export const StudioOutputSchema = z.object({
   mode: z.literal("studio"),
   lens: z.string(),
+  listing_description: z.string().default(""),
   identity: z.object({
     brand: z.string().nullable(),
     model: z.string().nullable(),

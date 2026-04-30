@@ -485,13 +485,24 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
     }
 
     const stored = studioStore.get(id) ?? {};
+    const meta = itemMeta.get(id) ?? {};
+
+    const ebayOutput = (stored["marketplace_outputs"] as Record<string, unknown> | undefined)?.["ebay"] as Record<string, unknown> | undefined ?? {};
+    const resolvedDescription = description || String(stored["listing_description"] ?? ebayOutput["description"] ?? "");
+    const resolvedCondition = String(ebayOutput["condition"] ?? stored["condition"] ?? "Used");
+
+    const photoUrls = (meta.photoUrls ?? []).filter(
+      (u): u is string => typeof u === "string" && u.startsWith("http"),
+    );
+
     const result = await addEbayItem(accessToken, {
       title,
-      description,
+      description: resolvedDescription,
       price,
       lens,
-      condition: String(stored["condition"] ?? "Used"),
+      condition: resolvedCondition,
       attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
+      photoUrls,
     });
 
     if (!result) {

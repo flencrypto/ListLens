@@ -23,7 +23,11 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   const vinted = analysis.marketplace_outputs.vinted;
 
   const [title, setTitle] = useState<string>(() => getInitialTitle(ebay, analysis));
-  const [description, setDescription] = useState<string>((ebay.description as string) ?? "");
+  const [description, setDescription] = useState<string>(
+    analysis.listing_description ||
+    (ebay.description as string | undefined) ||
+    ""
+  );
   const [price, setPrice] = useState<number>(analysis.pricing.recommended);
 
   const [exporting, setExporting] = useState(false);
