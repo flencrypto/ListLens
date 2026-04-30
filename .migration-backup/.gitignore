@@ -1,0 +1,11 @@
+node_modules
+.next
+dist
+.env*
+!.env.example
+*.tsbuildinfo
+.turbo
+build
+
+# Sentry Config File (contains SENTRY_AUTH_TOKEN; never commit)
+.env.sentry-build-plugin
