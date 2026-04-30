@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Badge } from "@/components/ui/Badge";
@@ -8,38 +8,41 @@ import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
-
-type RiskLevel = "low" | "medium" | "high" | "inconclusive";
+import {
+  generateId,
+  getReport,
+  saveReport,
+  type GuardReport,
+  type RiskLevel,
+} from "@/lib/historyStore";
 
 interface RedFlag {
   severity: "low" | "medium" | "high";
   text: string;
 }
 
-const REPORT = {
-  level: "medium" as RiskLevel,
-  summary:
-    "Listing has several photos and a clear price, but is missing a size-label close-up and a sole shot. Seller has limited history and price is below the typical range.",
-  flags: [
-    {
-      severity: "high",
-      text: "No size label or style code photo — model identity cannot be confirmed.",
-    },
-    {
-      severity: "medium",
-      text: "Asking price is ~38% below the recent median for this model.",
-    },
-    {
-      severity: "low",
-      text: "Seller account is < 3 months old with limited prior reviews.",
-    },
-  ] satisfies RedFlag[],
-  questions: [
-    "Could you share a clear photo of the size label and sole?",
-    "Are the original box, laces and accessories included?",
-    "Where and when did you buy these originally?",
-  ],
-};
+const DEFAULT_LEVEL: RiskLevel = "medium";
+const DEFAULT_SUMMARY =
+  "Listing has several photos and a clear price, but is missing a size-label close-up and a sole shot. Seller has limited history and price is below the typical range.";
+const DEFAULT_FLAGS: RedFlag[] = [
+  {
+    severity: "high",
+    text: "No size label or style code photo — model identity cannot be confirmed.",
+  },
+  {
+    severity: "medium",
+    text: "Asking price is ~38% below the recent median for this model.",
+  },
+  {
+    severity: "low",
+    text: "Seller account is < 3 months old with limited prior reviews.",
+  },
+];
+const DEFAULT_QUESTIONS = [
+  "Could you share a clear photo of the size label and sole?",
+  "Are the original box, laces and accessories included?",
+  "Where and when did you buy these originally?",
+];
 
 export default function GuardReportScreen() {
   const colors = useColors();
@@ -49,24 +52,91 @@ export default function GuardReportScreen() {
     source?: string;
     url?: string;
     shots?: string;
+    reportId?: string;
   }>();
-  const [saved, setSaved] = useState(false);
+
+  const [report, setReport] = useState<GuardReport | null>(null);
+  const initialised = useRef(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const incomingId = params.reportId ? String(params.reportId) : null;
+      if (incomingId) {
+        const existing = await getReport(incomingId);
+        if (cancelled) return;
+        if (existing) {
+          setReport(existing);
+          initialised.current = true;
+          return;
+        }
+      }
+      const fresh: GuardReport = {
+        id: generateId(),
+        createdAt: Date.now(),
+        lens: params.lens ? String(params.lens) : "ShoeLens",
+        source:
+          params.source === "screenshots" ? "screenshots" : "url",
+        url: params.url ? String(params.url) : "",
+        shots: params.shots
+          ? String(params.shots).split("|").filter(Boolean)
+          : [],
+        level: DEFAULT_LEVEL,
+        summary: DEFAULT_SUMMARY,
+        flags: DEFAULT_FLAGS,
+        questions: DEFAULT_QUESTIONS,
+        saved: false,
+      };
+      if (cancelled) return;
+      setReport(fresh);
+      // Persist immediately so the report appears in History as soon as it's
+      // created, mirroring the studio draft auto-save behaviour.
+      saveReport(fresh).catch(() => undefined);
+      initialised.current = true;
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.reportId]);
+
+  // Persist on changes (e.g. user pressed Save report).
+  useEffect(() => {
+    if (!initialised.current || !report) return;
+    saveReport(report).catch(() => undefined);
+  }, [report]);
+
+  if (!report) {
+    return (
+      <ScreenContainer>
+        <View style={{ paddingHorizontal: 4 }}>
+          <Text style={[styles.title, { color: colors.foreground }]}>
+            Risk report
+          </Text>
+          <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
+            Loading…
+          </Text>
+        </View>
+      </ScreenContainer>
+    );
+  }
 
   const tone =
-    REPORT.level === "high"
+    report.level === "high"
       ? colors.red500
-      : REPORT.level === "medium"
+      : report.level === "medium"
       ? colors.amber400
-      : REPORT.level === "low"
+      : report.level === "low"
       ? colors.emerald400
       : colors.zinc400;
 
   const badgeTone =
-    REPORT.level === "high"
+    report.level === "high"
       ? "red"
-      : REPORT.level === "medium"
+      : report.level === "medium"
       ? "amber"
-      : REPORT.level === "low"
+      : report.level === "low"
       ? "emerald"
       : "neutral";
 
@@ -78,11 +148,11 @@ export default function GuardReportScreen() {
             Risk report
           </Text>
           <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
-            {params.lens ?? "ShoeLens"} ·{" "}
-            {params.source === "screenshots" ? "Screenshots" : "Listing URL"}
+            {report.lens} ·{" "}
+            {report.source === "screenshots" ? "Screenshots" : "Listing URL"}
           </Text>
         </View>
-        <Badge label={`${REPORT.level} risk`} tone={badgeTone} />
+        <Badge label={`${report.level} risk`} tone={badgeTone} />
       </View>
 
       <Card highlight>
@@ -97,7 +167,7 @@ export default function GuardReportScreen() {
             ]}
           >
             <Text style={[styles.scoreLevel, { color: tone }]}>
-              {REPORT.level.toUpperCase()}
+              {report.level.toUpperCase()}
             </Text>
           </View>
           <View style={{ flex: 1 }}>
@@ -105,7 +175,7 @@ export default function GuardReportScreen() {
               Overall risk
             </Text>
             <Text style={[styles.scoreSummary, { color: colors.foreground }]}>
-              {REPORT.summary}
+              {report.summary}
             </Text>
           </View>
         </View>
@@ -116,7 +186,7 @@ export default function GuardReportScreen() {
           Red flags
         </Text>
         <View style={{ gap: 10 }}>
-          {REPORT.flags.map((flag, i) => (
+          {report.flags.map((flag, i) => (
             <View key={i} style={styles.flagRow}>
               <View
                 style={[
@@ -167,7 +237,7 @@ export default function GuardReportScreen() {
           Suggested seller questions
         </Text>
         <View style={{ gap: 8 }}>
-          {REPORT.questions.map((q, i) => (
+          {report.questions.map((q, i) => (
             <View key={i} style={styles.questionRow}>
               <Feather name="message-circle" size={14} color={colors.brandViolet} />
               <Text style={[styles.questionText, { color: colors.zinc300 }]}>
@@ -181,10 +251,10 @@ export default function GuardReportScreen() {
       <View style={styles.buttonRow}>
         <View style={{ flex: 1 }}>
           <BrandButton
-            label={saved ? "✓ Report saved" : "Save report"}
+            label={report.saved ? "✓ Report saved" : "Save report"}
             variant="outline"
-            disabled={saved}
-            onPress={() => setSaved(true)}
+            disabled={report.saved}
+            onPress={() => setReport((r) => (r ? { ...r, saved: true } : r))}
           />
         </View>
         <View style={{ flex: 1 }}>

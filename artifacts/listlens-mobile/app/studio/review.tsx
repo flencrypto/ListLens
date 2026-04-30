@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -16,18 +16,19 @@ import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
+import {
+  generateId,
+  getDraft,
+  saveDraft,
+  type StudioDraft,
+} from "@/lib/historyStore";
 
-interface DemoDraft {
-  title: string;
-  brand: string;
-  size: string;
-  description: string;
-  bullets: string[];
-  pricing: { quick: number; recommended: number; high: number };
-  flags: { severity: "high" | "medium" | "low"; text: string }[];
-}
+type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
-const DEFAULT_DRAFT: DemoDraft = {
+const DEFAULT_BODY: DraftBody = {
+  lens: "ShoeLens",
+  marketplace: "both",
+  photos: [],
   title: "Nike Air Max 90 — UK 10 — Worn",
   brand: "Nike",
   size: "UK 10 / EU 45 / US 11",
@@ -46,6 +47,7 @@ const DEFAULT_DRAFT: DemoDraft = {
       text: "Add a clean side-on photo for size confidence",
     },
   ],
+  exported: "none",
 };
 
 export default function ReviewScreen() {
@@ -55,13 +57,84 @@ export default function ReviewScreen() {
     lens?: string;
     marketplace?: string;
     photos?: string;
+    draftId?: string;
   }>();
-  const photos = useMemo(
+
+  const paramPhotos = useMemo(
     () => (params.photos ? String(params.photos).split("|").filter(Boolean) : []),
     [params.photos],
   );
-  const [draft, setDraft] = useState<DemoDraft>(DEFAULT_DRAFT);
-  const [exported, setExported] = useState<"none" | "ebay" | "vinted">("none");
+
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [createdAt, setCreatedAt] = useState<number>(() => Date.now());
+  const [body, setBody] = useState<DraftBody>(DEFAULT_BODY);
+  const [hydrated, setHydrated] = useState(false);
+
+  // Hydrate from storage (existing draft) or seed a new one from params.
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      const incomingId = params.draftId ? String(params.draftId) : null;
+      if (incomingId) {
+        const existing = await getDraft(incomingId);
+        if (cancelled) return;
+        if (existing) {
+          setDraftId(existing.id);
+          setCreatedAt(existing.createdAt);
+          setBody({
+            lens: existing.lens,
+            marketplace: existing.marketplace,
+            photos: existing.photos,
+            title: existing.title,
+            brand: existing.brand,
+            size: existing.size,
+            description: existing.description,
+            bullets: existing.bullets,
+            pricing: existing.pricing,
+            flags: existing.flags,
+            exported: existing.exported,
+          });
+          setHydrated(true);
+          return;
+        }
+      }
+      // New draft
+      const id = generateId();
+      const now = Date.now();
+      if (cancelled) return;
+      setDraftId(id);
+      setCreatedAt(now);
+      setBody({
+        ...DEFAULT_BODY,
+        lens: params.lens ? String(params.lens) : DEFAULT_BODY.lens,
+        marketplace: params.marketplace
+          ? String(params.marketplace)
+          : DEFAULT_BODY.marketplace,
+        photos: paramPhotos,
+      });
+      setHydrated(true);
+    }
+    load();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.draftId]);
+
+  // Persist on every change once hydrated. Debounced lightly.
+  useEffect(() => {
+    if (!hydrated || !draftId) return;
+    const handle = setTimeout(() => {
+      const draft: StudioDraft = {
+        id: draftId,
+        createdAt,
+        updatedAt: Date.now(),
+        ...body,
+      };
+      saveDraft(draft).catch(() => undefined);
+    }, 250);
+    return () => clearTimeout(handle);
+  }, [hydrated, draftId, createdAt, body]);
 
   return (
     <ScreenContainer>
@@ -71,20 +144,20 @@ export default function ReviewScreen() {
             Review draft
           </Text>
           <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
-            {params.lens ?? "ShoeLens"} · {photos.length} photo
-            {photos.length === 1 ? "" : "s"}
+            {body.lens} · {body.photos.length} photo
+            {body.photos.length === 1 ? "" : "s"}
           </Text>
         </View>
         <Badge label="AI draft" tone="cyan" />
       </View>
 
-      {photos.length > 0 && (
+      {body.photos.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}
         >
-          {photos.map((uri, i) => (
+          {body.photos.map((uri, i) => (
             <Image
               key={`${uri}-${i}`}
               source={{ uri }}
@@ -99,8 +172,8 @@ export default function ReviewScreen() {
       <Card>
         <Text style={[styles.label, { color: colors.zinc400 }]}>Title</Text>
         <TextInput
-          value={draft.title}
-          onChangeText={(t) => setDraft((d) => ({ ...d, title: t }))}
+          value={body.title}
+          onChangeText={(t) => setBody((d) => ({ ...d, title: t }))}
           style={[styles.input, { color: colors.foreground, borderColor: colors.zinc700 }]}
           multiline
         />
@@ -108,8 +181,8 @@ export default function ReviewScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[styles.label, { color: colors.zinc400 }]}>Brand</Text>
             <TextInput
-              value={draft.brand}
-              onChangeText={(t) => setDraft((d) => ({ ...d, brand: t }))}
+              value={body.brand}
+              onChangeText={(t) => setBody((d) => ({ ...d, brand: t }))}
               style={[
                 styles.input,
                 { color: colors.foreground, borderColor: colors.zinc700 },
@@ -119,8 +192,8 @@ export default function ReviewScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[styles.label, { color: colors.zinc400 }]}>Size</Text>
             <TextInput
-              value={draft.size}
-              onChangeText={(t) => setDraft((d) => ({ ...d, size: t }))}
+              value={body.size}
+              onChangeText={(t) => setBody((d) => ({ ...d, size: t }))}
               style={[
                 styles.input,
                 { color: colors.foreground, borderColor: colors.zinc700 },
@@ -130,8 +203,8 @@ export default function ReviewScreen() {
         </View>
         <Text style={[styles.label, { color: colors.zinc400 }]}>Description</Text>
         <TextInput
-          value={draft.description}
-          onChangeText={(t) => setDraft((d) => ({ ...d, description: t }))}
+          value={body.description}
+          onChangeText={(t) => setBody((d) => ({ ...d, description: t }))}
           style={[
             styles.input,
             {
@@ -148,7 +221,7 @@ export default function ReviewScreen() {
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>
           Item highlights
         </Text>
-        {draft.bullets.map((b, i) => (
+        {body.bullets.map((b, i) => (
           <View key={i} style={styles.bulletRow}>
             <Feather name="check-circle" size={14} color={colors.brandCyan} />
             <Text style={[styles.bulletText, { color: colors.zinc300 }]}>{b}</Text>
@@ -161,14 +234,14 @@ export default function ReviewScreen() {
           Suggested pricing
         </Text>
         <View style={styles.pricingRow}>
-          <PriceTile label="Quick sale" value={draft.pricing.quick} tone={colors.zinc400} />
+          <PriceTile label="Quick sale" value={body.pricing.quick} tone={colors.zinc400} />
           <PriceTile
             label="Recommended"
-            value={draft.pricing.recommended}
+            value={body.pricing.recommended}
             tone={colors.brandCyan}
             highlight
           />
-          <PriceTile label="High" value={draft.pricing.high} tone={colors.brandGreen} />
+          <PriceTile label="High" value={body.pricing.high} tone={colors.brandGreen} />
         </View>
       </Card>
 
@@ -176,7 +249,7 @@ export default function ReviewScreen() {
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>
           Evidence check
         </Text>
-        {draft.flags.map((flag, i) => (
+        {body.flags.map((flag, i) => (
           <View key={i} style={styles.flagRow}>
             <Feather
               name="info"
@@ -203,18 +276,18 @@ export default function ReviewScreen() {
         <View style={{ gap: 10 }}>
           <BrandButton
             label={
-              exported === "vinted"
+              body.exported === "vinted"
                 ? "✓ Vinted draft saved"
                 : "Export to Vinted"
             }
-            onPress={() => setExported("vinted")}
+            onPress={() => setBody((d) => ({ ...d, exported: "vinted" }))}
           />
           <BrandButton
             label={
-              exported === "ebay" ? "✓ eBay payload saved" : "Save eBay draft"
+              body.exported === "ebay" ? "✓ eBay payload saved" : "Save eBay draft"
             }
             variant="outline"
-            onPress={() => setExported("ebay")}
+            onPress={() => setBody((d) => ({ ...d, exported: "ebay" }))}
           />
         </View>
       </Card>
