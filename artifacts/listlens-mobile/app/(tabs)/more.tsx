@@ -64,8 +64,8 @@ export default function MoreScreen() {
               style={({ pressed }) => [
                 styles.row,
                 {
-                  borderColor: colors.zinc800,
-                  backgroundColor: "rgba(24,24,27,0.55)",
+                  borderColor: colors.brandStroke,
+                  backgroundColor: colors.cardSurfaceSoft,
                   opacity: pressed ? 0.85 : 1,
                   borderRadius: colors.radius,
                 },

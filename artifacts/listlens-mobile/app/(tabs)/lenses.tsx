@@ -65,7 +65,7 @@ function LensCard({
 }) {
   const colors = useColors();
   const inner = (
-    <Card style={{ opacity: dimmed ? 0.6 : 1 }}>
+    <Card glow={interactive} style={{ opacity: dimmed ? 0.6 : 1 }}>
       <View style={styles.lensRow}>
         <Text style={styles.lensIcon}>{lens.icon}</Text>
         <View style={{ flex: 1 }}>

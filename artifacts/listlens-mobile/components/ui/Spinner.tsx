@@ -1,5 +1,5 @@
 import React, { useEffect, useId } from "react";
-import { AccessibilityInfo, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -60,10 +60,6 @@ export function HUDSpinner({ size = 22, color }: Props) {
       cancelAnimation(inner);
     };
   }, [outer, inner, reducedMotion]);
-
-  useEffect(() => {
-    void AccessibilityInfo.isReduceMotionEnabled?.().catch(() => undefined);
-  }, []);
 
   const outerStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${outer.value}deg` }],

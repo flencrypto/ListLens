@@ -92,8 +92,8 @@ export default function HomeScreen() {
                 styles.gridItem,
                 {
                   width: cardWidth,
-                  borderColor: colors.zinc800,
-                  backgroundColor: "rgba(24,24,27,0.5)",
+                  borderColor: colors.brandStroke,
+                  backgroundColor: colors.cardSurfaceSoft,
                   opacity: pressed ? 0.85 : 1,
                   borderRadius: colors.radius,
                 },

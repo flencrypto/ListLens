@@ -120,10 +120,10 @@ export default function BillingPage() {
             {PLANS.map((plan) => (
               <div
                 key={plan.key}
-                className={`rounded-2xl border p-6 flex flex-col ${
+                className={`p-6 flex flex-col ${
                   plan.highlight
-                    ? "border-cyan-700 bg-gradient-to-b from-cyan-950/40 to-zinc-900"
-                    : "border-zinc-800 bg-zinc-900/50"
+                    ? "brand-card brand-card-glow"
+                    : "brand-card"
                 }`}
               >
                 {plan.highlight && (
@@ -167,7 +167,7 @@ export default function BillingPage() {
           <h2 className="text-lg font-semibold text-white mb-4">Guard Plans</h2>
           <div className="grid md:grid-cols-2 gap-5 max-w-2xl">
             {GUARD_PLANS.map((plan) => (
-              <div key={plan.name} className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-6 flex flex-col">
+              <div key={plan.name} className="brand-card brand-card-violet p-6 flex flex-col">
                 <h3 className="font-bold text-white">{plan.name}</h3>
                 <div className="mt-1 mb-1">
                   <span className="text-3xl font-extrabold text-white">{plan.price}</span>

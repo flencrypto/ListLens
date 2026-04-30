@@ -45,7 +45,7 @@ export default function GuardScreen() {
         </Text>
       </View>
 
-      <Card>
+      <Card tone="violet" glow>
         <Text style={[styles.cardLead, { color: "#c4b5fd" }]}>
           What you get
         </Text>

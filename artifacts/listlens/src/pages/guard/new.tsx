@@ -132,7 +132,7 @@ export default function NewGuardPage() {
                 {screenshotUrls.length > 0 && (
                   <div className="space-y-1">
                     {screenshotUrls.map((u, i) => (
-                      <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
+                      <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 rounded-lg border border-violet-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.06)]">
                         <span className="text-zinc-600 w-4">{i + 1}</span>
                         <span className="truncate flex-1">{u}</span>
                         <button onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))} className="text-zinc-600 hover:text-red-400 transition-colors">✕</button>

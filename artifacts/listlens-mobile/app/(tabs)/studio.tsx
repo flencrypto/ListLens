@@ -33,7 +33,7 @@ export default function StudioScreen() {
         </Text>
       </View>
 
-      <Card>
+      <Card glow>
         <Text style={[styles.cardLead, { color: colors.cyan300 }]}>
           What you get
         </Text>

@@ -94,7 +94,7 @@ export default function StudioItemPage() {
                 {photoUrls.length > 0 && (
                   <div className="space-y-2">
                     {photoUrls.map((u, i) => (
-                      <div key={i} className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
+                      <div key={i} className="flex items-center gap-2 rounded-lg border border-cyan-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(34,211,238,0.06)]">
                         <span className="text-xs text-zinc-500 w-5 shrink-0">{i + 1}</span>
                         <span className="text-zinc-300 text-xs truncate flex-1">{u}</span>
                         <button
