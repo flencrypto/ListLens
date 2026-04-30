@@ -13,13 +13,20 @@ import React, { useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import * as SecureStore from "expo-secure-store";
 
+import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   hydrateSubscriptionCache,
   initializeRevenueCat,
   SubscriptionProvider,
 } from "@/lib/revenuecat";
+import { AuthProvider } from "@/lib/auth";
+
+const domain = process.env.EXPO_PUBLIC_DOMAIN;
+if (domain) setBaseUrl(`https://${domain}`);
+setAuthTokenGetter(() => SecureStore.getItemAsync("auth_session_token"));
 
 SplashScreen.preventAutoHideAsync();
 
@@ -122,14 +129,16 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <SubscriptionProvider>
-            <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
-              <KeyboardProvider>
-                <StatusBar style="light" />
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
-          </SubscriptionProvider>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
+                <KeyboardProvider>
+                  <StatusBar style="light" />
+                  <RootLayoutNav />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </SubscriptionProvider>
+          </AuthProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>

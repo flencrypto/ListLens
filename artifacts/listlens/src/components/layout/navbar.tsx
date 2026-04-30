@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 
-import { isClerkConfigured } from "@/lib/clerk-config";
+import { useAuth } from "@workspace/replit-auth-web";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,7 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const [location] = useLocation();
+  const { isAuthenticated, isLoading, login, logout } = useAuth();
 
   return (
     <nav className="sticky top-0 z-50 border-b border-cyan-400/15 bg-[#040a14]/85 backdrop-blur-md">
@@ -49,13 +50,18 @@ export function Navbar() {
               </Link>
             );
           })}
-          {isClerkConfigured() ? null : (
-            <span
-              className="ml-2 hidden rounded-full border border-cyan-700/40 bg-cyan-950/30 px-2 py-0.5 text-xs text-cyan-300/80 sm:inline-block"
-              title="Authentication is disabled in this demo build."
+          {!isLoading && (
+            <button
+              onClick={isAuthenticated ? logout : login}
+              className={cn(
+                "ml-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
+                isAuthenticated
+                  ? "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
+                  : "border-cyan-700/60 bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/50 hover:text-cyan-100",
+              )}
             >
-              Demo
-            </span>
+              {isAuthenticated ? "Log out" : "Log in"}
+            </button>
           )}
         </div>
       </div>

@@ -1,13 +1,14 @@
 import { Feather } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { BrandGlyph } from "@/components/brand/BrandGlyph";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/lib/revenuecat";
 
 interface MoreLink {
@@ -21,6 +22,8 @@ interface MoreLink {
 export default function MoreScreen() {
   const colors = useColors();
   const { isSubscribed } = useSubscription();
+  const { isAuthenticated, isLoading: authLoading, user, login, logout } = useAuth();
+
   const LINKS: MoreLink[] = [
     {
       href: "/more/history",
@@ -97,6 +100,51 @@ export default function MoreScreen() {
             </Pressable>
           </Link>
         ))}
+
+        {/* Auth row */}
+        <Pressable
+          onPress={isAuthenticated ? logout : login}
+          disabled={authLoading}
+          style={({ pressed }) => [
+            styles.row,
+            {
+              borderColor: colors.brandStroke,
+              backgroundColor: colors.cardSurfaceSoft,
+              opacity: pressed || authLoading ? 0.75 : 1,
+              borderRadius: colors.radius,
+            },
+          ]}
+        >
+          <View
+            style={[
+              styles.rowIcon,
+              {
+                backgroundColor: "rgba(8,51,68,0.55)",
+                borderColor: "rgba(34,211,238,0.25)",
+              },
+            ]}
+          >
+            {authLoading ? (
+              <ActivityIndicator size="small" color={colors.brandCyan} />
+            ) : (
+              <Feather
+                name={isAuthenticated ? "log-out" : "log-in"}
+                size={16}
+                color={colors.brandCyan}
+              />
+            )}
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.rowTitle, { color: colors.foreground }]}>
+              {isAuthenticated ? "Log out" : "Log in"}
+            </Text>
+            <Text style={[styles.rowDesc, { color: colors.zinc500 }]}>
+              {isAuthenticated && user
+                ? user.email ?? user.firstName ?? "Signed in"
+                : "Sign in to sync your data"}
+            </Text>
+          </View>
+        </Pressable>
       </View>
 
       <Card style={{ alignItems: "center", paddingVertical: 22 }}>
