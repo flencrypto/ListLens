@@ -15,6 +15,21 @@ if (Number.isNaN(port) || port <= 0) {
   throw new Error(`Invalid PORT value: "${rawPort}"`);
 }
 
+const REQUIRED_SECRETS = [
+  "XAI_API_KEY",
+  "OPENAI_API_KEY",
+  "DISCOGS_CONSUMER_KEY",
+  "DISCOGS_CONSUMER_SECRET",
+] as const;
+
+const missingSecrets = REQUIRED_SECRETS.filter((k) => !process.env[k]);
+if (missingSecrets.length > 0) {
+  throw new Error(
+    `Missing required environment variables: ${missingSecrets.join(", ")}. ` +
+      `Set them in Replit Secrets before starting the server.`,
+  );
+}
+
 app.listen(port, (err) => {
   if (err) {
     logger.error({ err }, "Error listening on port");

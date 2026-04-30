@@ -1,6 +1,8 @@
-// Demo-mode endpoints for the ListLens web artifact. Response shapes match
-// the schemas in artifacts/listlens/src/lib/ai/schemas.ts.
 import { Router, type IRouter, type Request } from "express";
+import { logger } from "../lib/logger";
+import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
+import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
+import type { DiscogsRelease } from "../lib/discogs";
 
 const router: IRouter = Router();
 
@@ -10,6 +12,8 @@ const newId = (prefix: string) =>
 interface ItemMeta {
   lens?: string;
   marketplace?: string;
+  photoUrls?: string[];
+  hint?: string;
 }
 interface GuardMeta {
   url?: string;
@@ -22,176 +26,308 @@ const studioStore = new Map<string, Record<string, unknown>>();
 const guardMeta = new Map<string, GuardMeta>();
 const guardStore = new Map<string, Record<string, unknown>>();
 
-function buildStudioOutput(lens: string, hint?: string) {
-  const isShoe = lens === "ShoeLens";
-  return {
-    mode: "studio" as const,
-    lens,
-    identity: isShoe
-      ? { brand: "Nike", model: "Air Max 90 — Triple White", confidence: 0.86 }
-      : {
-          brand: "Pink Floyd",
-          model: "The Dark Side of the Moon (1973 UK 1st press)",
-          confidence: 0.78,
-        },
-    attributes: isShoe
-      ? {
-          colourway: "Triple White",
-          size_uk: 9,
-          condition: "Used — Excellent",
-          style_code: "CN8490-100",
-          notes: hint ?? "Light creasing on toe box, soles clean.",
-        }
-      : {
-          format: '12" Vinyl LP',
-          speed: "33 RPM",
-          sleeve_condition: "VG+",
-          vinyl_condition: "VG+",
-          catalogue_number: "SHVL 804",
-        },
-    missing_photos: isShoe
-      ? ["Sole tread (close-up)", "Inner tongue label"]
-      : ["Matrix / runout etching", "Inner sleeve"],
-    pricing: isShoe
-      ? {
-          quick_sale: 65,
-          recommended: 85,
-          high: 110,
-          currency: "GBP",
-          confidence: 0.74,
-        }
-      : {
-          quick_sale: 28,
-          recommended: 42,
-          high: 65,
-          currency: "GBP",
-          confidence: 0.62,
-        },
-    marketplace_outputs: {
-      ebay: {
-        title: isShoe
-          ? "Nike Air Max 90 'Triple White' UK 9 — VGC Used"
-          : "Pink Floyd — Dark Side of the Moon 1973 UK Vinyl LP",
-        condition: "Used",
-        category: isShoe ? "Trainers" : "Vinyl Records",
-      },
-      vinted: {
-        title: isShoe
-          ? "Nike Air Max 90 White UK 9"
-          : "Pink Floyd Dark Side of the Moon LP",
-        category: isShoe ? "Men's Trainers" : "Music",
-      },
-    },
-    warnings: ["Demo mode — analysis values are illustrative only."],
-  };
-}
-
-function buildGuardOutput(lens: string, url?: string) {
-  const looksSus = url?.includes("vinted") ?? false;
-  return {
-    mode: "guard" as const,
-    lens: lens || "ShoeLens",
-    risk: {
-      level: looksSus ? ("medium_high" as const) : ("low" as const),
-      confidence: 0.71,
-    },
-    red_flags: looksSus
-      ? [
-          {
-            severity: "high" as const,
-            type: "stock_photo",
-            message:
-              "Listing photos appear to be manufacturer stock images, not the actual item.",
-          },
-          {
-            severity: "medium" as const,
-            type: "price_anomaly",
-            message:
-              "Asking price is ~38% below typical market for this model and condition.",
-          },
-        ]
-      : [
-          {
-            severity: "low" as const,
-            type: "missing_photo",
-            message:
-              "No close-up of the inner tongue label — request one before purchase.",
-          },
-        ],
-    missing_photos: ["Sole tread", "Inner tongue label", "Original receipt"],
-    seller_questions: [
-      "Can you share a photo of the inner tongue label and stitching?",
-      "Where and when did you originally purchase this?",
-      "Will you accept payment via the marketplace's buyer protection?",
-    ],
-    disclaimer: "AI-assisted risk screen, not formal authentication.",
-  };
-}
-
-const recordPayload = {
-  mode: "recordlens.identify" as const,
-  lens: "RecordLens" as const,
-  top_match: {
-    artist: "Pink Floyd",
-    title: "The Dark Side of the Moon",
-    label: "Harvest",
-    catalogue_number: "SHVL 804",
-    likely_release: "1973 UK 1st press, A2/B2 matrix, solid blue triangle",
-    likelihood_percent: 62,
-    evidence: [
-      "Harvest label, no EMI box",
-      "Catalogue SHVL 804 visible on label",
-    ],
-  },
-  alternate_matches: [
-    {
-      artist: "Pink Floyd",
-      title: "The Dark Side of the Moon",
-      label: "Harvest",
-      catalogue_number: "SHVL 804",
-      likely_release: "1974 UK 2nd press, A3/B3 matrix",
-      likelihood_percent: 24,
-      evidence: ["Identical sleeve art, label variant ambiguous from photo"],
-    },
-    {
-      artist: "Pink Floyd",
-      title: "The Dark Side of the Moon",
-      label: "Harvest / EMI",
-      catalogue_number: "SHVL 804",
-      likely_release: "Late-70s UK reissue with EMI box",
-      likelihood_percent: 14,
-      evidence: ["Possible EMI box artefact at label edge"],
-    },
-  ],
-  matrix_clarification_questions: [
-    "What does the matrix / runout etching read on Side A and Side B?",
-    "Is there a solid or open blue triangle on the label?",
-  ],
-  warnings: ["Demo mode — release identification values are illustrative."],
-  disclaimer:
-    "AI-assisted release identification — confirm pressing details before listing or buying.",
-};
-
 const body = (req: Request): Record<string, unknown> =>
   (req.body as Record<string, unknown>) ?? {};
+
+function imageContent(urls: string[]): { type: "image_url"; image_url: { url: string } }[] {
+  return urls
+    .filter(Boolean)
+    .map((url) => ({ type: "image_url" as const, image_url: { url } }));
+}
+
+async function runStudioAnalysis(
+  lens: string,
+  photoUrls: string[],
+  hint?: string,
+): Promise<Record<string, unknown>> {
+  const openai = getOpenAIClient();
+  const lensLabel = lens === "RecordLens" ? "vinyl record" : "item";
+
+  const systemPrompt = `You are an expert resale analyst for ${lensLabel}s. Analyse the provided photos and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
+{
+  "mode": "studio",
+  "lens": "${lens}",
+  "identity": { "brand": string|null, "model": string|null, "confidence": 0-1 },
+  "attributes": { ...key-value pairs relevant to the ${lensLabel} },
+  "missing_photos": [ ...strings listing missing shots needed ],
+  "pricing": { "quick_sale": number, "recommended": number, "high": number, "currency": "GBP", "confidence": 0-1 },
+  "marketplace_outputs": {
+    "ebay": { "title": string, "condition": string, "category": string },
+    "vinted": { "title": string, "category": string }
+  },
+  "warnings": [ ...any caveats ]
+}
+Base prices on current UK resale market values. Be specific about the model/pressing/edition.`;
+
+  const userContent: Parameters<typeof openai.chat.completions.create>[0]["messages"][0]["content"] = [
+    {
+      type: "text",
+      text: hint
+        ? `Analyse this ${lensLabel} for resale. Additional context: ${hint}`
+        : `Analyse this ${lensLabel} for resale.`,
+    },
+    ...imageContent(photoUrls),
+  ];
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
+    ],
+    max_tokens: 1200,
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
+async function runGuardAnalysis(
+  lens: string,
+  url?: string,
+  screenshotUrls?: string[],
+): Promise<Record<string, unknown>> {
+  const openai = getOpenAIClient();
+  const lensLabel = lens === "RecordLens" ? "vinyl record" : "item";
+
+  const systemPrompt = `You are an expert fraud and risk analyst for second-hand ${lensLabel} listings. Analyse the provided listing URL and/or screenshots and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
+{
+  "mode": "guard",
+  "lens": "${lens}",
+  "risk": { "level": "low"|"medium"|"medium_high"|"high"|"inconclusive", "confidence": 0-1 },
+  "red_flags": [{ "severity": "low"|"medium"|"high", "type": string, "message": string }],
+  "missing_photos": [ ...strings listing photos that would help verify authenticity ],
+  "seller_questions": [ ...3-5 questions the buyer should ask the seller ],
+  "disclaimer": "AI-assisted risk screen, not formal authentication."
+}
+Be specific. If screenshots look stock or inconsistent, flag it. If price is anomalously low, flag it.`;
+
+  const userParts: Parameters<typeof openai.chat.completions.create>[0]["messages"][0]["content"] = [
+    {
+      type: "text",
+      text: url
+        ? `Check this listing for fraud/risk signals. Listing URL: ${url}`
+        : `Check this listing for fraud/risk signals.`,
+    },
+    ...imageContent(screenshotUrls ?? []),
+  ];
+
+  const completion = await openai.chat.completions.create({
+    model: "gpt-4o",
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userParts },
+    ],
+    max_tokens: 1000,
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  return JSON.parse(raw) as Record<string, unknown>;
+}
+
+interface XaiRecordExtraction {
+  artist?: string;
+  title?: string;
+  label?: string;
+  catalogue_number?: string;
+  matrix?: string;
+  additional_details?: string;
+}
+
+async function extractRecordDetailsFromImage(
+  labelUrls: string[],
+  matrixUrls: string[] = [],
+): Promise<XaiRecordExtraction> {
+  const xai = getXaiClient();
+
+  const systemPrompt = `You are an expert in vinyl record identification. Examine the label photo(s) and extract the following details. Return ONLY valid JSON (no markdown):
+{
+  "artist": string|null,
+  "title": string|null,
+  "label": string|null,
+  "catalogue_number": string|null,
+  "matrix": string|null,
+  "additional_details": string|null
+}
+Be precise. Read text exactly as it appears on the label. If a field is not visible, return null.`;
+
+  const images = [...imageContent(labelUrls), ...imageContent(matrixUrls)];
+  const userContent: Parameters<typeof xai.chat.completions.create>[0]["messages"][0]["content"] = [
+    { type: "text", text: "Extract vinyl record identification details from these label/matrix photos." },
+    ...images,
+  ];
+
+  const completion = await xai.chat.completions.create({
+    model: "grok-2-vision-latest",
+    response_format: { type: "json_object" },
+    messages: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: userContent },
+    ],
+    max_tokens: 500,
+  });
+
+  const raw = completion.choices[0]?.message?.content ?? "{}";
+  return JSON.parse(raw) as XaiRecordExtraction;
+}
+
+function enrichMatchWithDiscogs(
+  match: Record<string, unknown>,
+  release: DiscogsRelease,
+  searchResult?: { cover_image?: string; thumb?: string },
+): Record<string, unknown> {
+  const primaryImage = release.images?.find((i) => i.type === "primary");
+  return {
+    ...match,
+    discogs: {
+      release_id: release.id,
+      tracklist: release.tracklist?.map((t) => `${t.position}. ${t.title}${t.duration ? ` (${t.duration})` : ""}`) ?? [],
+      formats: release.formats?.map((f) => `${f.name}${f.descriptions?.length ? ` (${f.descriptions.join(", ")})` : ""}`) ?? [],
+      year: release.year,
+      country: release.country,
+      community_have: release.community?.have ?? null,
+      community_want: release.community?.want ?? null,
+      community_rating: release.community?.rating?.average ?? null,
+      lowest_price: release.lowest_price ?? null,
+      num_for_sale: release.num_for_sale ?? null,
+      cover_image: primaryImage?.uri ?? searchResult?.cover_image ?? null,
+    },
+  };
+}
+
+async function identifyRecord(
+  labelUrls: string[],
+  matrixUrls: string[] = [],
+): Promise<Record<string, unknown>> {
+  const hasMatrix = matrixUrls.length > 0;
+
+  let extracted: XaiRecordExtraction = {};
+  try {
+    extracted = await extractRecordDetailsFromImage(labelUrls, matrixUrls);
+    logger.info({ extracted }, "xAI record extraction");
+  } catch (err) {
+    logger.error({ err }, "xAI record extraction failed");
+  }
+
+  const searchResults = await searchDiscogs({
+    artist: extracted.artist,
+    title: extracted.title,
+    catno: extracted.catalogue_number,
+    label: extracted.label,
+  });
+
+  const topSearchResult = searchResults[0];
+  const altSearchResults = searchResults.slice(1, 3);
+
+  let topRelease: DiscogsRelease | null = null;
+  if (topSearchResult) {
+    topRelease = await getDiscogsRelease(topSearchResult.id);
+  }
+
+  const topArtist = topRelease?.artists?.[0]?.name ?? extracted.artist ?? null;
+  const topTitle = topRelease?.title ?? extracted.title ?? null;
+  const topLabel = topRelease?.labels?.[0]?.name ?? extracted.label ?? null;
+  const topCatno = topRelease?.labels?.[0]?.catno ?? extracted.catalogue_number ?? null;
+
+  let topMatch: Record<string, unknown> = {
+    artist: topArtist,
+    title: topTitle,
+    label: topLabel,
+    catalogue_number: topCatno,
+    likely_release: [
+      topRelease?.year ? `${topRelease.year}` : null,
+      topRelease?.country ?? null,
+      topRelease?.formats?.[0]?.name ?? null,
+      extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
+    ]
+      .filter(Boolean)
+      .join(", ") || "Unknown pressing",
+    likelihood_percent: topSearchResult ? 75 : 40,
+    evidence: [
+      extracted.artist ? `Artist "${extracted.artist}" read from label` : null,
+      extracted.catalogue_number ? `Catalogue number "${extracted.catalogue_number}" read from label` : null,
+      topRelease ? `Matched Discogs release #${topRelease.id}` : null,
+      extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
+    ].filter(Boolean) as string[],
+  };
+
+  if (topRelease && topSearchResult) {
+    topMatch = enrichMatchWithDiscogs(topMatch, topRelease, topSearchResult);
+  }
+
+  const alternateMatches: Record<string, unknown>[] = await Promise.all(
+    altSearchResults.map(async (sr, idx) => {
+      const release = await getDiscogsRelease(sr.id).catch(() => null);
+      const artist = release?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null;
+      const title = release?.title ?? sr.title?.split(" - ")[1] ?? null;
+      let match: Record<string, unknown> = {
+        artist,
+        title,
+        label: release?.labels?.[0]?.name ?? (sr.label ?? [null])[0],
+        catalogue_number: release?.labels?.[0]?.catno ?? sr.catno ?? null,
+        likely_release: [sr.year, sr.country, (sr.format ?? [])[0]].filter(Boolean).join(", ") || "Alternate pressing",
+        likelihood_percent: Math.max(10, 40 - idx * 15),
+        evidence: [`Alternate Discogs match #${sr.id}`],
+      };
+      if (release) {
+        match = enrichMatchWithDiscogs(match, release, sr);
+      }
+      return match;
+    }),
+  );
+
+  const needsMatrix = !hasMatrix && !extracted.matrix;
+  const matrixQuestions = needsMatrix
+    ? [
+        "What does the matrix / runout etching read on Side A?",
+        "What does the matrix / runout etching read on Side B?",
+      ]
+    : [];
+
+  return {
+    mode: "recordlens.identify",
+    lens: "RecordLens",
+    input_type: hasMatrix ? "label_and_matrix" : "single_label_photo",
+    top_match: topMatch,
+    alternate_matches: alternateMatches,
+    needs_matrix_for_clarification: needsMatrix,
+    matrix_clarification_questions: matrixQuestions,
+    warnings: topSearchResult
+      ? []
+      : ["Could not find a Discogs match — result is based on label reading only."],
+    disclaimer:
+      "AI-assisted release identification — confirm pressing details before listing or buying.",
+  };
+}
 
 router.post("/items", (req, res) => {
   const b = body(req);
   const id = newId("item");
   const lens = (b["lens"] as string) ?? "ShoeLens";
   const marketplace = b["marketplace"] as string | undefined;
-  itemMeta.set(id, { lens, marketplace });
+  const photoUrls = (b["photoUrls"] as string[]) ?? [];
+  itemMeta.set(id, { lens, marketplace, photoUrls });
   res.json({ id, lens, marketplace, status: "draft" });
 });
 
-router.post("/items/:id/analyse", (req, res) => {
+router.post("/items/:id/analyse", async (req, res) => {
   const { id } = req.params;
   const b = body(req);
-  const lens =
-    (b["lens"] as string) ?? itemMeta.get(id)?.lens ?? "ShoeLens";
-  const analysis = buildStudioOutput(lens, b["hint"] as string);
-  studioStore.set(id, analysis);
-  res.json({ analysis });
+  const meta = itemMeta.get(id) ?? {};
+  const lens = (b["lens"] as string) ?? meta.lens ?? "ShoeLens";
+  const hint = (b["hint"] as string) ?? meta.hint;
+  const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? [];
+
+  try {
+    const analysis = await runStudioAnalysis(lens, photoUrls, hint);
+    studioStore.set(id, analysis);
+    res.json({ analysis });
+  } catch (err) {
+    logger.error({ err, id }, "Studio analysis failed");
+    res.status(500).json({ error: "Studio analysis failed. Please try again." });
+  }
 });
 
 router.get("/items/:id/analysis", (req, res) => {
@@ -211,7 +347,7 @@ router.post("/items/:id/export/vinted", (req, res) => {
     (analysis?.["marketplace_outputs"] as
       | { vinted?: Record<string, unknown> }
       | undefined)?.vinted ?? {};
-  const title = String(vinted["title"] ?? "ListLens demo item");
+  const title = String(vinted["title"] ?? "ListLens item");
   const category = String(vinted["category"] ?? "Other");
   const price = String(
     (analysis?.["pricing"] as { recommended?: number } | undefined)
@@ -224,9 +360,7 @@ router.post("/items/:id/export/vinted", (req, res) => {
       JSON.stringify(category),
       price,
       "GBP",
-      JSON.stringify(
-        "Demo export from Mr.FLENS · List-LENS — no real listing created.",
-      ),
+      JSON.stringify("Exported from Mr.FLENS · List-LENS."),
     ].join(","),
     "",
   ].join("\n");
@@ -244,7 +378,7 @@ router.post("/items/:id/publish/ebay-sandbox", (_req, res) => {
     ok: true,
     sandboxListingId,
     listing_url: `https://sandbox.ebay.co.uk/itm/${sandboxListingId}`,
-    message: "Demo publish — no real listing was created.",
+    message: "eBay sandbox publish — no real listing was created.",
   });
 });
 
@@ -269,47 +403,56 @@ router.get("/guard/checks/:id", (req, res) => {
   res.json({ id, report });
 });
 
-router.post("/guard/checks/:id/analyse", (req, res) => {
+router.post("/guard/checks/:id/analyse", async (req, res) => {
   const { id } = req.params;
   const meta = guardMeta.get(id) ?? {};
-  const report = buildGuardOutput(meta.lens ?? "ShoeLens", meta.url);
-  guardStore.set(id, report);
-  res.json({ id, report });
+  try {
+    const report = await runGuardAnalysis(
+      meta.lens ?? "ShoeLens",
+      meta.url,
+      meta.screenshotUrls,
+    );
+    guardStore.set(id, report);
+    res.json({ id, report });
+  } catch (err) {
+    logger.error({ err, id }, "Guard analysis failed");
+    res.status(500).json({ error: "Guard analysis failed. Please try again." });
+  }
 });
 
 router.post("/guard/checks/:id/save", (_req, res) => {
   res.json({ ok: true });
 });
 
-router.post("/lenses/record/identify", (_req, res) => {
-  res.json({
-    analysis: {
-      ...recordPayload,
-      input_type: "single_label_photo",
-      needs_matrix_for_clarification: true,
-    },
-  });
+router.post("/lenses/record/identify", async (req, res) => {
+  const b = body(req);
+  const labelUrls = (b["labelUrls"] as string[]) ?? [];
+  try {
+    const analysis = await identifyRecord(labelUrls, []);
+    res.json({ analysis: { ...analysis, input_type: "single_label_photo" } });
+  } catch (err) {
+    logger.error({ err }, "RecordLens identify failed");
+    res.status(500).json({ error: "Record identification failed. Please try again." });
+  }
 });
 
-router.post("/lenses/record/identify-with-matrix", (_req, res) => {
-  res.json({
-    analysis: {
-      ...recordPayload,
-      input_type: "label_and_matrix",
-      needs_matrix_for_clarification: false,
-      matrix_clarification_questions: [],
-      top_match: { ...recordPayload.top_match, likelihood_percent: 91 },
-    },
-  });
+router.post("/lenses/record/identify-with-matrix", async (req, res) => {
+  const b = body(req);
+  const labelUrls = (b["labelUrls"] as string[]) ?? [];
+  const matrixUrls = (b["matrixUrls"] as string[]) ?? [];
+  try {
+    const analysis = await identifyRecord(labelUrls, matrixUrls);
+    res.json({ analysis: { ...analysis, input_type: "label_and_matrix" } });
+  } catch (err) {
+    logger.error({ err }, "RecordLens identify-with-matrix failed");
+    res.status(500).json({ error: "Record identification failed. Please try again." });
+  }
 });
 
 router.get("/lenses", (_req, res) => {
   res.json({ lenses: ["ShoeLens", "RecordLens"] });
 });
 
-// Billing endpoints are submitted as <form method="POST"> from the billing
-// page. In demo mode there are no Stripe keys, so we 303-redirect back to
-// /billing with a flag instead of 404'ing.
 router.post("/billing/checkout", (_req, res) => {
   res.redirect(303, "/billing?demo=checkout");
 });
