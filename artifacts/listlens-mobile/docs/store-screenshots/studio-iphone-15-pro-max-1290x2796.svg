@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+  width="1290" height="2796" viewBox="0 0 1290 2796">
+  
+  <defs>
+    <linearGradient id="studioGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="guardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="historyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#52525b"/>
+      <stop offset="100%" stop-color="#3f3f46"/>
+    </linearGradient>
+    <linearGradient id="billingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#040a14"/>
+      <stop offset="100%" stop-color="#020610"/>
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="1290" height="2796" fill="#040a14"/>
+  <!-- Status bar -->
+  
+  <rect x="0" y="0" width="1290" height="100" rx="0" ry="0"
+    fill="#040a14" stroke="none" stroke-width="0" opacity="1"/>
+  <rect x="457" y="22" width="376" height="88" rx="44" ry="44"
+    fill="#000000" stroke="none" stroke-width="0" opacity="1"/>
+  <text x="52" y="90" font-family="DejaVu Sans, sans-serif"
+    font-size="30" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">9:41</text>
+  <text x="1238" y="90" font-family="DejaVu Sans, sans-serif"
+    font-size="30" font-weight="normal" fill="#fafafa"
+    text-anchor="end" opacity="0.7">▮▮▮  ▮▮▮  ▓▓▓</text>
+  <!-- Header -->
+  
+  <rect x="0" y="100" width="1290" height="48" rx="0" ry="0"
+    fill="#040a14" stroke="none" stroke-width="0" opacity="1"/>
+  <line x1="0" y1="147" x2="1290" y2="147"
+    stroke="#1e7a8a" stroke-width="1" opacity="0.5"/>
+  <text x="645" y="140.72" font-family="DejaVu Sans, sans-serif"
+    font-size="44" font-weight="bold" fill="#fafafa"
+    text-anchor="middle" opacity="1">MR.FLENS · LIST-LENS</text>
+  <!-- Screen content -->
+  <clipPath id="contentClip">
+    <rect x="0" y="148" width="1290" height="2500"/>
+  </clipPath>
+  <g clip-path="url(#contentClip)">
+    <rect x="52" y="200" width="75.60000000000001" height="75.60000000000001" rx="44" ry="44"
+    fill="url(#studioGrad)" stroke="none" stroke-width="0" opacity="1"/>
+<text x="89.80000000000001" y="249.14000000000001" font-family="DejaVu Sans, sans-serif"
+    font-size="41.580000000000005" font-weight="normal" fill="#fafafa"
+    text-anchor="middle" opacity="1">📷</text>
+<text x="169.20000000000002" y="241.58" font-family="DejaVu Sans, sans-serif"
+    font-size="84" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Studio</text>
+<text x="169.20000000000002" y="268.04" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#a1a1aa"
+    text-anchor="start" opacity="1">AI-powered listing creator</text>
+<filter id="glow_52_327.6"><feGaussianBlur stdDeviation="12" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <rect x="52" y="327.6" width="1186" height="493" rx="44" ry="44" fill="#0a1628" stroke="#22d3ee" stroke-width="1.5" opacity="0.9" filter="url(#glow_52_327.6)"/>
+<text x="88.4" y="379.6" font-family="DejaVu Sans, sans-serif"
+    font-size="44" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">What you get</text>
+<circle cx="96.2" cy="412.20000000000005" r="10.799999999999999" fill="#22d3ee" stroke="none" stroke-width="0"/>
+<text x="119.60000000000001" y="421.20000000000005" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">Photo-to-listing AI draft in seconds</text>
+<circle cx="96.2" cy="484.80000000000007" r="10.799999999999999" fill="#22d3ee" stroke="none" stroke-width="0"/>
+<text x="119.60000000000001" y="493.80000000000007" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">Editable title, description &amp; highlights</text>
+<circle cx="96.2" cy="557.4000000000001" r="10.799999999999999" fill="#22d3ee" stroke="none" stroke-width="0"/>
+<text x="119.60000000000001" y="566.4000000000001" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">Smart pricing: Quick / Recommended / High</text>
+<circle cx="96.2" cy="630" r="10.799999999999999" fill="#22d3ee" stroke="none" stroke-width="0"/>
+<text x="119.60000000000001" y="639" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">1-tap export to eBay and Vinted</text>
+<circle cx="96.2" cy="702.6" r="10.799999999999999" fill="#22d3ee" stroke="none" stroke-width="0"/>
+<text x="119.60000000000001" y="711.6" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">Built-in evidence accuracy check</text>
+<rect x="52" y="872.6" width="1186" height="58.8" rx="44" ry="44"
+    fill="#22d3ee" stroke="none" stroke-width="0" opacity="1"/>
+<text x="645" y="909.056" font-family="DejaVu Sans, sans-serif"
+    font-size="54" font-weight="bold" fill="#040a14"
+    text-anchor="middle" opacity="1">Start a new listing</text>
+<text x="52" y="1039.8" font-family="DejaVu Sans, sans-serif"
+    font-size="44" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Choose a Lens</text>
+<rect x="52" y="1084.6" width="577.4" height="317.57" rx="30.799999999999997" ry="30.799999999999997"
+    fill="#081325" stroke="#22d3ee" stroke-width="2" opacity="1"/>
+<text x="83.2" y="1249.7364" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">👕 Fashion &amp; Clothing</text>
+<text x="83.2" y="1338.656" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Apparel</text>
+<rect x="660.6" y="1084.6" width="577.4" height="317.57" rx="30.799999999999997" ry="30.799999999999997"
+    fill="#081325" stroke="#1e7a8a" stroke-width="1" opacity="1"/>
+<text x="691.8000000000001" y="1249.7364" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">📱 Electronics</text>
+<text x="691.8000000000001" y="1338.656" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Tech</text>
+<rect x="52" y="1433.37" width="577.4" height="317.57" rx="30.799999999999997" ry="30.799999999999997"
+    fill="#081325" stroke="#1e7a8a" stroke-width="1" opacity="1"/>
+<text x="83.2" y="1598.5064" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">🪑 Home &amp; Furniture</text>
+<text x="83.2" y="1687.426" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Home</text>
+<rect x="660.6" y="1433.37" width="577.4" height="317.57" rx="30.799999999999997" ry="30.799999999999997"
+    fill="#081325" stroke="#1e7a8a" stroke-width="1" opacity="1"/>
+<text x="691.8000000000001" y="1598.5064" font-family="DejaVu Sans, sans-serif"
+    font-size="36" font-weight="normal" fill="#d4d4d8"
+    text-anchor="start" opacity="1">🎮 Toys &amp; Collectibles</text>
+<text x="691.8000000000001" y="1687.426" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Hobbies</text>
+<text x="52" y="1838.1399999999999" font-family="DejaVu Sans, sans-serif"
+    font-size="44" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Marketplace</text>
+<rect x="52" y="1872.9399999999998" width="276.90000000000003" height="62" rx="31" ry="31"
+    fill="rgba(34,211,238,0.12)" stroke="#22d3ee" stroke-width="1.5" opacity="1"/>
+<text x="190.45000000000002" y="1915.1" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="bold" fill="#22d3ee"
+    text-anchor="middle" opacity="1">eBay + Vinted</text>
+<rect x="354.90000000000003" y="1872.9399999999998" width="210.9" height="62" rx="31" ry="31"
+    fill="transparent" stroke="#1e7a8a" stroke-width="1" opacity="1"/>
+<text x="460.35" y="1915.1" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="normal" fill="#a1a1aa"
+    text-anchor="middle" opacity="1">eBay only</text>
+<rect x="591.8000000000001" y="1872.9399999999998" width="243.90000000000003" height="62" rx="31" ry="31"
+    fill="transparent" stroke="#1e7a8a" stroke-width="1" opacity="1"/>
+<text x="713.7500000000001" y="1915.1" font-family="DejaVu Sans, sans-serif"
+    font-size="28" font-weight="normal" fill="#a1a1aa"
+    text-anchor="middle" opacity="1">Vinted only</text>
+  </g>
+  <!-- Tab bar -->
+  
+  <rect x="0" y="2648" width="1290" height="148" rx="0" ry="0"
+    fill="#050e1e" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/><text x="129" y="2692.4" font-family="DejaVu Sans, sans-serif"
+    font-size="43.199999999999996" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">⌂</text><text x="129" y="2754.56" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">Home</text><text x="387" y="2692.4" font-family="DejaVu Sans, sans-serif"
+    font-size="43.199999999999996" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">◎</text><text x="387" y="2754.56" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">Lenses</text><text x="645" y="2692.4" font-family="DejaVu Sans, sans-serif"
+    font-size="43.199999999999996" font-weight="normal" fill="#22d3ee"
+    text-anchor="middle" opacity="1">⊙</text><text x="645" y="2754.56" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="bold" fill="#22d3ee"
+    text-anchor="middle" opacity="1">Studio</text><line x1="580.5" y1="2650" x2="709.5" y2="2650"
+    stroke="#22d3ee" stroke-width="3" opacity="1"/><text x="903" y="2692.4" font-family="DejaVu Sans, sans-serif"
+    font-size="43.199999999999996" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">⛨</text><text x="903" y="2754.56" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">Guard</text><text x="1161" y="2692.4" font-family="DejaVu Sans, sans-serif"
+    font-size="43.199999999999996" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">···</text><text x="1161" y="2754.56" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">More</text>
+</svg>

@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+  width="750" height="1334" viewBox="0 0 750 1334">
+  
+  <defs>
+    <linearGradient id="studioGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="guardGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#7c3aed"/>
+    </linearGradient>
+    <linearGradient id="historyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#52525b"/>
+      <stop offset="100%" stop-color="#3f3f46"/>
+    </linearGradient>
+    <linearGradient id="billingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#0d9488"/>
+    </linearGradient>
+    <linearGradient id="navyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#040a14"/>
+      <stop offset="100%" stop-color="#020610"/>
+    </linearGradient>
+    <filter id="softGlow">
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="750" height="1334" fill="#040a14"/>
+  <!-- Status bar -->
+  
+  <rect x="0" y="0" width="750" height="40" rx="0" ry="0"
+    fill="#040a14" stroke="none" stroke-width="0" opacity="1"/>
+  
+  <text x="32" y="30" font-family="DejaVu Sans, sans-serif"
+    font-size="18" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">9:41</text>
+  <text x="718" y="30" font-family="DejaVu Sans, sans-serif"
+    font-size="18" font-weight="normal" fill="#fafafa"
+    text-anchor="end" opacity="0.7">▮▮▮  ▮▮▮  ▓▓▓</text>
+  <!-- Header -->
+  
+  <rect x="0" y="40" width="750" height="48" rx="0" ry="0"
+    fill="#040a14" stroke="none" stroke-width="0" opacity="1"/>
+  <line x1="0" y1="87" x2="750" y2="87"
+    stroke="#1e7a8a" stroke-width="1" opacity="0.5"/>
+  <text x="375" y="73.88" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="bold" fill="#fafafa"
+    text-anchor="middle" opacity="1">MR.FLENS · LIST-LENS</text>
+  <!-- Screen content -->
+  <clipPath id="contentClip">
+    <rect x="0" y="88" width="750" height="1166"/>
+  </clipPath>
+  <g clip-path="url(#contentClip)">
+    <text x="32" y="138" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="bold" fill="#a1a1aa"
+    text-anchor="start" opacity="1">WELCOME BACK</text>
+<text x="32" y="194" font-family="DejaVu Sans, sans-serif"
+    font-size="64" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Dashboard</text>
+<rect x="601" y="150" width="117" height="34" rx="17" ry="17"
+    fill="rgba(34,211,238,0.12)" stroke="#1e7a8a" stroke-width="1.5" opacity="1"/>
+<text x="659.5" y="169.12" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="bold" fill="#22d3ee"
+    text-anchor="middle" opacity="1">Free trial</text>
+<rect x="32" y="242" width="333.4" height="250.04999999999998" rx="28" ry="28"
+    fill="#0c1e38" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/>
+<rect x="52.004" y="267.005" width="70.014" height="70.014" rx="19.599999999999998" ry="19.599999999999998"
+    fill="url(#studioGrad)" stroke="none" stroke-width="0" opacity="1"/>
+<text x="87.011" y="317.41508" font-family="DejaVu Sans, sans-serif"
+    font-size="42.008399999999995" font-weight="normal" fill="#fafafa"
+    text-anchor="middle" opacity="1">📷</text>
+<text x="48" y="397.03099999999995" font-family="DejaVu Sans, sans-serif"
+    font-size="22" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">New Listing</text>
+<text x="48" y="447.04099999999994" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Photos → AI draft</text>
+<rect x="384.59999999999997" y="242" width="333.4" height="250.04999999999998" rx="28" ry="28"
+    fill="#0c1e38" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/>
+<rect x="404.604" y="267.005" width="70.014" height="70.014" rx="19.599999999999998" ry="19.599999999999998"
+    fill="url(#guardGrad)" stroke="none" stroke-width="0" opacity="1"/>
+<text x="439.611" y="317.41508" font-family="DejaVu Sans, sans-serif"
+    font-size="42.008399999999995" font-weight="normal" fill="#fafafa"
+    text-anchor="middle" opacity="1">🛡</text>
+<text x="400.59999999999997" y="397.03099999999995" font-family="DejaVu Sans, sans-serif"
+    font-size="22" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Check Listing</text>
+<text x="400.59999999999997" y="447.04099999999994" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">URL → Risk report</text>
+<rect x="32" y="511.25" width="333.4" height="250.04999999999998" rx="28" ry="28"
+    fill="#0c1e38" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/>
+<rect x="52.004" y="536.255" width="70.014" height="70.014" rx="19.599999999999998" ry="19.599999999999998"
+    fill="url(#historyGrad)" stroke="none" stroke-width="0" opacity="1"/>
+<text x="87.011" y="586.66508" font-family="DejaVu Sans, sans-serif"
+    font-size="42.008399999999995" font-weight="normal" fill="#fafafa"
+    text-anchor="middle" opacity="1">🕐</text>
+<text x="48" y="666.281" font-family="DejaVu Sans, sans-serif"
+    font-size="22" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">History</text>
+<text x="48" y="716.2909999999999" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Past activity</text>
+<rect x="384.59999999999997" y="511.25" width="333.4" height="250.04999999999998" rx="28" ry="28"
+    fill="#0c1e38" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/>
+<rect x="404.604" y="536.255" width="70.014" height="70.014" rx="19.599999999999998" ry="19.599999999999998"
+    fill="url(#billingGrad)" stroke="none" stroke-width="0" opacity="1"/>
+<text x="439.611" y="586.66508" font-family="DejaVu Sans, sans-serif"
+    font-size="42.008399999999995" font-weight="normal" fill="#fafafa"
+    text-anchor="middle" opacity="1">💳</text>
+<text x="400.59999999999997" y="666.281" font-family="DejaVu Sans, sans-serif"
+    font-size="22" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Billing</text>
+<text x="400.59999999999997" y="716.2909999999999" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="normal" fill="#71717a"
+    text-anchor="start" opacity="1">Plans &amp; credits</text>
+<rect x="32" y="793.3" width="686" height="225.045" rx="28" ry="28"
+    fill="#0a1628" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/>
+<text x="51.2" y="818.9" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Studio</text>
+<text x="702" y="818.9" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="normal" fill="#a1a1aa"
+    text-anchor="end" opacity="1">View all</text>
+<line x1="48" y1="831.6999999999999" x2="702" y2="831.6999999999999"
+    stroke="#27272a" stroke-width="1" opacity="1"/>
+<text x="375" y="937.3288" font-family="DejaVu Sans, sans-serif"
+    font-size="18" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">No listings yet</text>
+<rect x="284" y="957.145" width="182" height="48.4" rx="16.8" ry="16.8"
+    fill="#22d3ee" stroke="none" stroke-width="0" opacity="1"/>
+<text x="375" y="999.737" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="bold" fill="#040a14"
+    text-anchor="middle" opacity="1">Create first listing</text>
+<rect x="32" y="1043.945" width="686" height="225.045" rx="28" ry="28"
+    fill="#0a1628" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/>
+<text x="51.2" y="1069.5449999999998" font-family="DejaVu Sans, sans-serif"
+    font-size="26" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">Guard</text>
+<text x="702" y="1069.5449999999998" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="normal" fill="#a1a1aa"
+    text-anchor="end" opacity="1">View all</text>
+<line x1="48" y1="1082.345" x2="702" y2="1082.345"
+    stroke="#27272a" stroke-width="1" opacity="1"/>
+<text x="375" y="1187.9738" font-family="DejaVu Sans, sans-serif"
+    font-size="18" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">No checks yet</text>
+<rect x="290.5" y="1207.79" width="169" height="48.4" rx="16.8" ry="16.8"
+    fill="#8b5cf6" stroke="none" stroke-width="0" opacity="1"/>
+<text x="375" y="1250.382" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="bold" fill="#fafafa"
+    text-anchor="middle" opacity="1">Check a listing</text>
+<filter id="glow_32_1294.59"><feGaussianBlur stdDeviation="12" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <rect x="32" y="1294.59" width="686" height="135.027" rx="28" ry="28" fill="#0a1628" stroke="#22d3ee" stroke-width="1.5" opacity="0.9" filter="url(#glow_32_1294.59)"/>
+<text x="51.2" y="1345.90026" font-family="DejaVu Sans, sans-serif"
+    font-size="22" font-weight="bold" fill="#fafafa"
+    text-anchor="start" opacity="1">3 Studio credits remaining</text>
+<text x="51.2" y="1389.1089" font-family="DejaVu Sans, sans-serif"
+    font-size="14" font-weight="normal" fill="#a1a1aa"
+    text-anchor="start" opacity="1">Upgrade to Studio Starter · from £9.99/month</text>
+<rect x="598" y="1337.9035" width="104" height="48.4" rx="16.8" ry="16.8"
+    fill="#22d3ee" stroke="none" stroke-width="0" opacity="1"/>
+<text x="650" y="1370.8155" font-family="DejaVu Sans, sans-serif"
+    font-size="16" font-weight="bold" fill="#040a14"
+    text-anchor="middle" opacity="1">Upgrade</text>
+
+  <circle cx="375" cy="1535.5169999999998" r="67.5" fill="none" stroke="#22d3ee" stroke-width="1.5" opacity="0.7"/>
+  <circle cx="375" cy="1535.5169999999998" r="43.875" fill="none" stroke="#22d3ee" stroke-width="1" opacity="0.5"/>
+  <circle cx="375" cy="1535.5169999999998" r="21.6" fill="#22d3ee" opacity="0.12"/>
+  <circle cx="375" cy="1535.5169999999998" r="10.8" fill="#22d3ee" opacity="0.45"/>
+  <line x1="317.625" y1="1535.5169999999998" x2="432.375" y2="1535.5169999999998" stroke="#22d3ee" stroke-width="0.8" opacity="0.3"/>
+  <line x1="375" y1="1478.1419999999998" x2="375" y2="1592.8919999999998" stroke="#22d3ee" stroke-width="0.8" opacity="0.3"/>
+<text x="375" y="1628.6169999999997" font-family="DejaVu Sans, sans-serif"
+    font-size="44" font-weight="bold" fill="#fafafa"
+    text-anchor="middle" opacity="1">List smarter. Buy safer.</text>
+<text x="375" y="1688.6169999999997" font-family="DejaVu Sans, sans-serif"
+    font-size="18" font-weight="normal" fill="#a1a1aa"
+    text-anchor="middle" opacity="1">AI-powered listings for eBay &amp; Vinted</text>
+  </g>
+  <!-- Tab bar -->
+  
+  <rect x="0" y="1254" width="750" height="80" rx="0" ry="0"
+    fill="#050e1e" stroke="#1e7a8a" stroke-width="1" opacity="0.9"/><text x="75" y="1278" font-family="DejaVu Sans, sans-serif"
+    font-size="26.4" font-weight="normal" fill="#22d3ee"
+    text-anchor="middle" opacity="1">⌂</text><text x="75" y="1311.6" font-family="DejaVu Sans, sans-serif"
+    font-size="14" font-weight="bold" fill="#22d3ee"
+    text-anchor="middle" opacity="1">Home</text><line x1="37.5" y1="1256" x2="112.5" y2="1256"
+    stroke="#22d3ee" stroke-width="3" opacity="1"/><text x="225" y="1278" font-family="DejaVu Sans, sans-serif"
+    font-size="26.4" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">◎</text><text x="225" y="1311.6" font-family="DejaVu Sans, sans-serif"
+    font-size="14" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">Lenses</text><text x="375" y="1278" font-family="DejaVu Sans, sans-serif"
+    font-size="26.4" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">⊙</text><text x="375" y="1311.6" font-family="DejaVu Sans, sans-serif"
+    font-size="14" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">Studio</text><text x="525" y="1278" font-family="DejaVu Sans, sans-serif"
+    font-size="26.4" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">⛨</text><text x="525" y="1311.6" font-family="DejaVu Sans, sans-serif"
+    font-size="14" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">Guard</text><text x="675" y="1278" font-family="DejaVu Sans, sans-serif"
+    font-size="26.4" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">···</text><text x="675" y="1311.6" font-family="DejaVu Sans, sans-serif"
+    font-size="14" font-weight="normal" fill="#71717a"
+    text-anchor="middle" opacity="1">More</text>
+</svg>

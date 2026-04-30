@@ -1,0 +1,98 @@
+{
+  "generated": "2026-04-30T18:46:14.736Z",
+  "description": "App Store / Google Play submission-ready screenshot frames — Task #22",
+  "methodology": "SVG mockups rendered via ImageMagick librsvg. Dimensions match Apple App Store and Google Play requirements.",
+  "devices": [
+    {
+      "id": "iphone-se",
+      "label": "iPhone SE (3rd gen)",
+      "resolution": "750×1334",
+      "appleRequired": true,
+      "googleRequired": false
+    },
+    {
+      "id": "iphone-15-pro-max",
+      "label": "iPhone 15 Pro Max",
+      "resolution": "1290×2796",
+      "appleRequired": true,
+      "googleRequired": false
+    },
+    {
+      "id": "pixel-7",
+      "label": "Pixel 7",
+      "resolution": "1080×2400",
+      "appleRequired": false,
+      "googleRequired": true
+    }
+  ],
+  "screens": [
+    {
+      "id": "home",
+      "label": "Home – Dashboard"
+    },
+    {
+      "id": "studio",
+      "label": "Studio"
+    },
+    {
+      "id": "guard-report",
+      "label": "Guard – Risk Report"
+    }
+  ],
+  "files": [
+    {
+      "screen": "Home – Dashboard",
+      "device": "iPhone SE (3rd gen)",
+      "file": "home-iphone-se-750x1334.png",
+      "resolution": "750×1334"
+    },
+    {
+      "screen": "Studio",
+      "device": "iPhone SE (3rd gen)",
+      "file": "studio-iphone-se-750x1334.png",
+      "resolution": "750×1334"
+    },
+    {
+      "screen": "Guard – Risk Report",
+      "device": "iPhone SE (3rd gen)",
+      "file": "guard-report-iphone-se-750x1334.png",
+      "resolution": "750×1334"
+    },
+    {
+      "screen": "Home – Dashboard",
+      "device": "iPhone 15 Pro Max",
+      "file": "home-iphone-15-pro-max-1290x2796.png",
+      "resolution": "1290×2796"
+    },
+    {
+      "screen": "Studio",
+      "device": "iPhone 15 Pro Max",
+      "file": "studio-iphone-15-pro-max-1290x2796.png",
+      "resolution": "1290×2796"
+    },
+    {
+      "screen": "Guard – Risk Report",
+      "device": "iPhone 15 Pro Max",
+      "file": "guard-report-iphone-15-pro-max-1290x2796.png",
+      "resolution": "1290×2796"
+    },
+    {
+      "screen": "Home – Dashboard",
+      "device": "Pixel 7",
+      "file": "home-pixel-7-1080x2400.png",
+      "resolution": "1080×2400"
+    },
+    {
+      "screen": "Studio",
+      "device": "Pixel 7",
+      "file": "studio-pixel-7-1080x2400.png",
+      "resolution": "1080×2400"
+    },
+    {
+      "screen": "Guard – Risk Report",
+      "device": "Pixel 7",
+      "file": "guard-report-pixel-7-1080x2400.png",
+      "resolution": "1080×2400"
+    }
+  ]
+}
