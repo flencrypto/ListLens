@@ -70,23 +70,21 @@ export default function SplashPage() {
             {...fade(0.8)}
             className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
           >
-            <Link href="/studio/new">
-              <Button
-                size="lg"
-                className="border-0 bg-gradient-to-r from-[#22d3ee] via-[#4ade80] to-[#fb923c] px-8 font-semibold text-[#040a14] hover:brightness-110"
-              >
-                Enter Studio
-              </Button>
-            </Link>
-            <Link href="/guard/new">
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-cyan-400/40 px-8 text-cyan-100 hover:bg-cyan-400/10"
-              >
-                Run a Guard check
-              </Button>
-            </Link>
+            <Button
+              asChild
+              size="lg"
+              className="border-0 bg-gradient-to-r from-[#22d3ee] via-[#4ade80] to-[#fb923c] px-8 text-[#040a14] hover:brightness-110"
+            >
+              <Link href="/studio/new">Enter Studio</Link>
+            </Button>
+            <Button
+              asChild
+              size="lg"
+              variant="outline"
+              className="border-cyan-400/40 px-8 text-cyan-100 hover:bg-cyan-400/10"
+            >
+              <Link href="/guard/new">Run a Guard check</Link>
+            </Button>
           </motion.div>
 
           {/* Brand glyph (brain-in-cart) — matches the icon at the bottom of
