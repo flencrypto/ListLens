@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request } from "express";
+import { z } from "zod";
 import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
 import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
@@ -29,17 +30,62 @@ const guardStore = new Map<string, Record<string, unknown>>();
 const body = (req: Request): Record<string, unknown> =>
   (req.body as Record<string, unknown>) ?? {};
 
-function imageContent(urls: string[]): { type: "image_url"; image_url: { url: string } }[] {
+function imageContent(
+  urls: string[],
+): { type: "image_url"; image_url: { url: string } }[] {
   return urls
     .filter(Boolean)
     .map((url) => ({ type: "image_url" as const, image_url: { url } }));
 }
 
+const StudioOutputSchema = z.object({
+  mode: z.literal("studio"),
+  lens: z.string(),
+  identity: z.object({
+    brand: z.string().nullable(),
+    model: z.string().nullable(),
+    confidence: z.number().min(0).max(1),
+  }),
+  attributes: z.record(z.unknown()),
+  missing_photos: z.array(z.string()),
+  pricing: z.object({
+    quick_sale: z.number(),
+    recommended: z.number(),
+    high: z.number(),
+    currency: z.string(),
+    confidence: z.number().min(0).max(1),
+  }),
+  marketplace_outputs: z.object({
+    ebay: z.record(z.unknown()),
+    vinted: z.record(z.unknown()),
+  }),
+  warnings: z.array(z.string()),
+});
+
+const GuardOutputSchema = z.object({
+  mode: z.literal("guard"),
+  lens: z.string(),
+  risk: z.object({
+    level: z.enum(["low", "medium", "medium_high", "high", "inconclusive"]),
+    confidence: z.number().min(0).max(1),
+  }),
+  red_flags: z.array(
+    z.object({
+      severity: z.enum(["low", "medium", "high"]),
+      type: z.string(),
+      message: z.string(),
+    }),
+  ),
+  missing_photos: z.array(z.string()),
+  seller_questions: z.array(z.string()),
+  disclaimer: z.literal("AI-assisted risk screen, not formal authentication."),
+});
+
 async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
   hint?: string,
-): Promise<Record<string, unknown>> {
+): Promise<z.infer<typeof StudioOutputSchema>> {
   const openai = getOpenAIClient();
   const lensLabel = lens === "RecordLens" ? "vinyl record" : "item";
 
@@ -59,7 +105,9 @@ async function runStudioAnalysis(
 }
 Base prices on current UK resale market values. Be specific about the model/pressing/edition.`;
 
-  const userContent: Parameters<typeof openai.chat.completions.create>[0]["messages"][0]["content"] = [
+  const userContent: Parameters<
+    typeof openai.chat.completions.create
+  >[0]["messages"][0]["content"] = [
     {
       type: "text",
       text: hint
@@ -80,14 +128,16 @@ Base prices on current UK resale market values. Be specific about the model/pres
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(raw) as Record<string, unknown>;
+  const parsed = JSON.parse(raw) as unknown;
+  const validated = StudioOutputSchema.parse(parsed);
+  return validated;
 }
 
 async function runGuardAnalysis(
   lens: string,
   url?: string,
   screenshotUrls?: string[],
-): Promise<Record<string, unknown>> {
+): Promise<z.infer<typeof GuardOutputSchema>> {
   const openai = getOpenAIClient();
   const lensLabel = lens === "RecordLens" ? "vinyl record" : "item";
 
@@ -103,7 +153,9 @@ async function runGuardAnalysis(
 }
 Be specific. If screenshots look stock or inconsistent, flag it. If price is anomalously low, flag it.`;
 
-  const userParts: Parameters<typeof openai.chat.completions.create>[0]["messages"][0]["content"] = [
+  const userParts: Parameters<
+    typeof openai.chat.completions.create
+  >[0]["messages"][0]["content"] = [
     {
       type: "text",
       text: url
@@ -124,16 +176,18 @@ Be specific. If screenshots look stock or inconsistent, flag it. If price is ano
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(raw) as Record<string, unknown>;
+  const parsed = JSON.parse(raw) as unknown;
+  const validated = GuardOutputSchema.parse(parsed);
+  return validated;
 }
 
 interface XaiRecordExtraction {
-  artist?: string;
-  title?: string;
-  label?: string;
-  catalogue_number?: string;
-  matrix?: string;
-  additional_details?: string;
+  artist?: string | null;
+  title?: string | null;
+  label?: string | null;
+  catalogue_number?: string | null;
+  matrix?: string | null;
+  additional_details?: string | null;
 }
 
 async function extractRecordDetailsFromImage(
@@ -154,8 +208,13 @@ async function extractRecordDetailsFromImage(
 Be precise. Read text exactly as it appears on the label. If a field is not visible, return null.`;
 
   const images = [...imageContent(labelUrls), ...imageContent(matrixUrls)];
-  const userContent: Parameters<typeof xai.chat.completions.create>[0]["messages"][0]["content"] = [
-    { type: "text", text: "Extract vinyl record identification details from these label/matrix photos." },
+  const userContent: Parameters<
+    typeof xai.chat.completions.create
+  >[0]["messages"][0]["content"] = [
+    {
+      type: "text",
+      text: "Extract vinyl record identification details from these label/matrix photos.",
+    },
     ...images,
   ];
 
@@ -183,8 +242,16 @@ function enrichMatchWithDiscogs(
     ...match,
     discogs: {
       release_id: release.id,
-      tracklist: release.tracklist?.map((t) => `${t.position}. ${t.title}${t.duration ? ` (${t.duration})` : ""}`) ?? [],
-      formats: release.formats?.map((f) => `${f.name}${f.descriptions?.length ? ` (${f.descriptions.join(", ")})` : ""}`) ?? [],
+      tracklist:
+        release.tracklist?.map(
+          (t) =>
+            `${t.position}. ${t.title}${t.duration ? ` (${t.duration})` : ""}`,
+        ) ?? [],
+      formats:
+        release.formats?.map(
+          (f) =>
+            `${f.name}${f.descriptions?.length ? ` (${f.descriptions.join(", ")})` : ""}`,
+        ) ?? [],
       year: release.year,
       country: release.country,
       community_have: release.community?.have ?? null,
@@ -192,7 +259,8 @@ function enrichMatchWithDiscogs(
       community_rating: release.community?.rating?.average ?? null,
       lowest_price: release.lowest_price ?? null,
       num_for_sale: release.num_for_sale ?? null,
-      cover_image: primaryImage?.uri ?? searchResult?.cover_image ?? null,
+      cover_image:
+        primaryImage?.uri ?? searchResult?.cover_image ?? null,
     },
   };
 }
@@ -203,14 +271,11 @@ async function identifyRecord(
 ): Promise<Record<string, unknown>> {
   const hasMatrix = matrixUrls.length > 0;
 
-  let extracted: XaiRecordExtraction = {};
-  try {
-    extracted = await extractRecordDetailsFromImage(labelUrls, matrixUrls);
-    logger.info({ extracted }, "xAI record extraction");
-  } catch (err) {
-    logger.error({ err }, "xAI record extraction failed");
-  }
+  // xAI extraction — hard-fail so the route returns 500 on model errors
+  const extracted = await extractRecordDetailsFromImage(labelUrls, matrixUrls);
+  logger.info({ extracted }, "xAI record extraction");
 
+  // Discogs search — soft-degrade (errors already caught inside searchDiscogs)
   const searchResults = await searchDiscogs({
     artist: extracted.artist,
     title: extracted.title,
@@ -221,33 +286,39 @@ async function identifyRecord(
   const topSearchResult = searchResults[0];
   const altSearchResults = searchResults.slice(1, 3);
 
+  // Discogs release fetch — soft-degrade
   let topRelease: DiscogsRelease | null = null;
   if (topSearchResult) {
     topRelease = await getDiscogsRelease(topSearchResult.id);
   }
 
-  const topArtist = topRelease?.artists?.[0]?.name ?? extracted.artist ?? null;
+  const topArtist =
+    topRelease?.artists?.[0]?.name ?? extracted.artist ?? null;
   const topTitle = topRelease?.title ?? extracted.title ?? null;
   const topLabel = topRelease?.labels?.[0]?.name ?? extracted.label ?? null;
-  const topCatno = topRelease?.labels?.[0]?.catno ?? extracted.catalogue_number ?? null;
+  const topCatno =
+    topRelease?.labels?.[0]?.catno ?? extracted.catalogue_number ?? null;
 
   let topMatch: Record<string, unknown> = {
     artist: topArtist,
     title: topTitle,
     label: topLabel,
     catalogue_number: topCatno,
-    likely_release: [
-      topRelease?.year ? `${topRelease.year}` : null,
-      topRelease?.country ?? null,
-      topRelease?.formats?.[0]?.name ?? null,
-      extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
-    ]
-      .filter(Boolean)
-      .join(", ") || "Unknown pressing",
+    likely_release:
+      [
+        topRelease?.year ? `${topRelease.year}` : null,
+        topRelease?.country ?? null,
+        topRelease?.formats?.[0]?.name ?? null,
+        extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
+      ]
+        .filter(Boolean)
+        .join(", ") || "Unknown pressing",
     likelihood_percent: topSearchResult ? 75 : 40,
     evidence: [
       extracted.artist ? `Artist "${extracted.artist}" read from label` : null,
-      extracted.catalogue_number ? `Catalogue number "${extracted.catalogue_number}" read from label` : null,
+      extracted.catalogue_number
+        ? `Catalogue number "${extracted.catalogue_number}" read from label`
+        : null,
       topRelease ? `Matched Discogs release #${topRelease.id}` : null,
       extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
     ].filter(Boolean) as string[],
@@ -260,14 +331,21 @@ async function identifyRecord(
   const alternateMatches: Record<string, unknown>[] = await Promise.all(
     altSearchResults.map(async (sr, idx) => {
       const release = await getDiscogsRelease(sr.id).catch(() => null);
-      const artist = release?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null;
-      const title = release?.title ?? sr.title?.split(" - ")[1] ?? null;
+      const artist =
+        release?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null;
+      const title =
+        release?.title ?? sr.title?.split(" - ")[1] ?? null;
       let match: Record<string, unknown> = {
         artist,
         title,
-        label: release?.labels?.[0]?.name ?? (sr.label ?? [null])[0],
-        catalogue_number: release?.labels?.[0]?.catno ?? sr.catno ?? null,
-        likely_release: [sr.year, sr.country, (sr.format ?? [])[0]].filter(Boolean).join(", ") || "Alternate pressing",
+        label:
+          release?.labels?.[0]?.name ?? (sr.label ?? [null])[0] ?? null,
+        catalogue_number:
+          release?.labels?.[0]?.catno ?? sr.catno ?? null,
+        likely_release:
+          [sr.year, sr.country, (sr.format ?? [])[0]]
+            .filter(Boolean)
+            .join(", ") || "Alternate pressing",
         likelihood_percent: Math.max(10, 40 - idx * 15),
         evidence: [`Alternate Discogs match #${sr.id}`],
       };
@@ -296,7 +374,9 @@ async function identifyRecord(
     matrix_clarification_questions: matrixQuestions,
     warnings: topSearchResult
       ? []
-      : ["Could not find a Discogs match — result is based on label reading only."],
+      : [
+          "Could not find a Discogs match — result is based on label reading only.",
+        ],
     disclaimer:
       "AI-assisted release identification — confirm pressing details before listing or buying.",
   };
@@ -326,7 +406,9 @@ router.post("/items/:id/analyse", async (req, res) => {
     res.json({ analysis });
   } catch (err) {
     logger.error({ err, id }, "Studio analysis failed");
-    res.status(500).json({ error: "Studio analysis failed. Please try again." });
+    res
+      .status(500)
+      .json({ error: "Studio analysis failed. Please try again." });
   }
 });
 
@@ -344,9 +426,11 @@ router.post("/items/:id/export/vinted", (req, res) => {
   const { id } = req.params;
   const analysis = studioStore.get(id);
   const vinted =
-    (analysis?.["marketplace_outputs"] as
-      | { vinted?: Record<string, unknown> }
-      | undefined)?.vinted ?? {};
+    (
+      analysis?.["marketplace_outputs"] as
+        | { vinted?: Record<string, unknown> }
+        | undefined
+    )?.vinted ?? {};
   const title = String(vinted["title"] ?? "ListLens item");
   const category = String(vinted["category"] ?? "Other");
   const price = String(
@@ -416,7 +500,9 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
     res.json({ id, report });
   } catch (err) {
     logger.error({ err, id }, "Guard analysis failed");
-    res.status(500).json({ error: "Guard analysis failed. Please try again." });
+    res
+      .status(500)
+      .json({ error: "Guard analysis failed. Please try again." });
   }
 });
 
@@ -432,7 +518,9 @@ router.post("/lenses/record/identify", async (req, res) => {
     res.json({ analysis: { ...analysis, input_type: "single_label_photo" } });
   } catch (err) {
     logger.error({ err }, "RecordLens identify failed");
-    res.status(500).json({ error: "Record identification failed. Please try again." });
+    res
+      .status(500)
+      .json({ error: "Record identification failed. Please try again." });
   }
 });
 
@@ -442,10 +530,14 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
   const matrixUrls = (b["matrixUrls"] as string[]) ?? [];
   try {
     const analysis = await identifyRecord(labelUrls, matrixUrls);
-    res.json({ analysis: { ...analysis, input_type: "label_and_matrix" } });
+    res.json({
+      analysis: { ...analysis, input_type: "label_and_matrix" },
+    });
   } catch (err) {
     logger.error({ err }, "RecordLens identify-with-matrix failed");
-    res.status(500).json({ error: "Record identification failed. Please try again." });
+    res
+      .status(500)
+      .json({ error: "Record identification failed. Please try again." });
   }
 });
 

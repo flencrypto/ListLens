@@ -1,54 +1,34 @@
+import OAuth from "oauth-1.0a";
 import crypto from "node:crypto";
 import { logger } from "./logger";
 
 const DISCOGS_BASE = "https://api.discogs.com";
 const USER_AGENT = "MrFLENS-ListLens/1.0 +https://mrflens.com";
 
-function oauthHeader(method: string, url: string): string {
+function makeOAuth(): OAuth {
   const key = process.env["DISCOGS_CONSUMER_KEY"]!;
   const secret = process.env["DISCOGS_CONSUMER_SECRET"]!;
-  const nonce = crypto.randomBytes(16).toString("hex");
-  const ts = Math.floor(Date.now() / 1000).toString();
-
-  const params: Record<string, string> = {
-    oauth_consumer_key: key,
-    oauth_nonce: nonce,
-    oauth_signature_method: "HMAC-SHA1",
-    oauth_timestamp: ts,
-    oauth_version: "1.0",
-  };
-
-  const sortedParams = Object.keys(params)
-    .sort()
-    .map((k) => `${encodeURIComponent(k)}=${encodeURIComponent(params[k]!)}`)
-    .join("&");
-
-  const baseString = [
-    method.toUpperCase(),
-    encodeURIComponent(url),
-    encodeURIComponent(sortedParams),
-  ].join("&");
-
-  const signingKey = `${encodeURIComponent(secret)}&`;
-  const signature = crypto
-    .createHmac("sha1", signingKey)
-    .update(baseString)
-    .digest("base64");
-
-  const headerParams = { ...params, oauth_signature: signature };
-  const headerStr = Object.keys(headerParams)
-    .map((k) => `${k}="${encodeURIComponent(headerParams[k]!)}"`)
-    .join(", ");
-
-  return `OAuth ${headerStr}`;
+  return new OAuth({
+    consumer: { key, secret },
+    signature_method: "HMAC-SHA1",
+    hash_function(baseString, signingKey) {
+      return crypto
+        .createHmac("sha1", signingKey)
+        .update(baseString)
+        .digest("base64");
+    },
+  });
 }
 
 async function discogsGet<T>(path: string): Promise<T> {
   const url = `${DISCOGS_BASE}${path}`;
-  const auth = oauthHeader("GET", url);
+  const oauth = makeOAuth();
+  const requestData = { url, method: "GET" };
+  const authHeader = oauth.toHeader(oauth.authorize(requestData));
+
   const res = await fetch(url, {
     headers: {
-      Authorization: auth,
+      Authorization: authHeader["Authorization"],
       "User-Agent": USER_AGENT,
       Accept: "application/json",
     },
@@ -110,7 +90,7 @@ export async function searchDiscogs(query: {
     const data = await discogsGet<{ results: DiscogsSearchResult[] }>(path);
     return data.results ?? [];
   } catch (err) {
-    logger.warn({ err }, "Discogs search failed");
+    logger.warn({ err }, "Discogs search failed — returning empty results");
     return [];
   }
 }
@@ -121,7 +101,7 @@ export async function getDiscogsRelease(
   try {
     return await discogsGet<DiscogsRelease>(`/releases/${releaseId}`);
   } catch (err) {
-    logger.warn({ err, releaseId }, "Discogs release fetch failed");
+    logger.warn({ err, releaseId }, "Discogs release fetch failed — skipping enrichment");
     return null;
   }
 }
