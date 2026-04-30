@@ -19,7 +19,7 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { formatRemainingCredits, useSubscription } from "@/lib/revenuecat";
-import { getDashboard, type DashboardData } from "@/lib/api";
+import { getDashboard, type DashboardData, type RecentActivityItem } from "@/lib/api";
 
 interface QuickLink {
   href: "/(tabs)/studio" | "/(tabs)/guard" | "/more/history" | "/more/billing";
@@ -67,6 +67,40 @@ function planLabel(tier: string): string {
     case "guard_monthly": return "Guard Monthly";
     default: return "Free trial";
   }
+}
+
+function ActivityRow({
+  item,
+  colors,
+  onPress,
+}: {
+  item: RecentActivityItem;
+  colors: ReturnType<typeof useColors>;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.activityRow,
+        { borderBottomColor: colors.zinc800, opacity: pressed ? 0.75 : 1 },
+      ]}
+    >
+      <View style={{ flex: 1 }}>
+        <Text style={[styles.activityTitle, { color: colors.foreground }]} numberOfLines={1}>
+          {item.title}
+        </Text>
+        <Text style={[styles.activityMeta, { color: colors.zinc500 }]}>
+          {new Date(item.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+        </Text>
+      </View>
+      <View style={[styles.statusBadge, { backgroundColor: colors.cardSurfaceSoft }]}>
+        <Text style={[styles.statusBadgeText, { color: colors.zinc400 }]} numberOfLines={1}>
+          {item.status}
+        </Text>
+      </View>
+    </Pressable>
+  );
 }
 
 export default function HomeScreen() {
@@ -206,12 +240,7 @@ export default function HomeScreen() {
         {!dashLoading && studioActivity.length > 0 ? (
           <View style={styles.activityList}>
             {studioActivity.slice(0, 3).map((item) => (
-              <View key={item.id} style={[styles.activityRow, { borderBottomColor: colors.zinc800 }]}>
-                <Text style={[styles.activityTitle, { color: colors.foreground }]} numberOfLines={1}>{item.title}</Text>
-                <Text style={[styles.activityMeta, { color: colors.zinc500 }]}>
-                  {new Date(item.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                </Text>
-              </View>
+              <ActivityRow key={item.id} item={item} colors={colors} onPress={() => router.push("/more/history")} />
             ))}
           </View>
         ) : (
@@ -258,12 +287,7 @@ export default function HomeScreen() {
         {!dashLoading && guardActivity.length > 0 ? (
           <View style={styles.activityList}>
             {guardActivity.slice(0, 3).map((item) => (
-              <View key={item.id} style={[styles.activityRow, { borderBottomColor: colors.zinc800 }]}>
-                <Text style={[styles.activityTitle, { color: colors.foreground }]} numberOfLines={1}>{item.title}</Text>
-                <Text style={[styles.activityMeta, { color: colors.zinc500 }]}>
-                  {new Date(item.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
-                </Text>
-              </View>
+              <ActivityRow key={item.id} item={item} colors={colors} onPress={() => router.push("/more/history")} />
             ))}
           </View>
         ) : (
@@ -422,19 +446,29 @@ const styles = StyleSheet.create({
   activityRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
     paddingVertical: 10,
     borderBottomWidth: StyleSheet.hairlineWidth,
+    gap: 8,
   },
   activityTitle: {
     fontFamily: "Inter_500Medium",
     fontSize: 13,
-    flex: 1,
-    marginRight: 8,
   },
   activityMeta: {
     fontFamily: "Inter_400Regular",
     fontSize: 11,
+    marginTop: 2,
+  },
+  statusBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+    borderRadius: 6,
+    maxWidth: 90,
+  },
+  statusBadgeText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 10,
+    textTransform: "capitalize",
   },
   emptyBox: {
     borderWidth: 1,

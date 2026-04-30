@@ -4,10 +4,21 @@ function getApiBase(): string {
   return "http://localhost:8080";
 }
 
+let _getAuthToken: (() => Promise<string | null>) | null = null;
+
+export function setAuthTokenProvider(fn: () => Promise<string | null>): void {
+  _getAuthToken = fn;
+}
+
 async function post<T>(path: string, data: unknown): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (_getAuthToken) {
+    const token = await _getAuthToken().catch(() => null);
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
   const res = await fetch(`${getApiBase()}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(data),
   });
   if (!res.ok) {
@@ -15,12 +26,6 @@ async function post<T>(path: string, data: unknown): Promise<T> {
     throw new Error(`API ${path} failed (${res.status}): ${err}`);
   }
   return res.json() as Promise<T>;
-}
-
-let _getAuthToken: (() => Promise<string | null>) | null = null;
-
-export function setAuthTokenProvider(fn: () => Promise<string | null>): void {
-  _getAuthToken = fn;
 }
 
 async function get<T>(path: string): Promise<T> {

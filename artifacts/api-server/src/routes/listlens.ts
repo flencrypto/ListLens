@@ -414,7 +414,7 @@ router.post("/items/:id/analyse", async (req, res) => {
       "Untitled listing";
 
     if (userId) {
-      db.insert(studioItemsTable)
+      await db.insert(studioItemsTable)
         .values({ id, userId, lens, title, status: "analysed" })
         .onConflictDoUpdate({ target: studioItemsTable.id, set: { title, status: "analysed" } })
         .catch((err) => logger.warn({ err }, "studio_items insert failed (non-fatal)"));
@@ -570,7 +570,7 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
     guardStore.set(id, report);
 
     if (userId) {
-      db.insert(guardChecksTable)
+      await db.insert(guardChecksTable)
         .values({
           id,
           userId,
