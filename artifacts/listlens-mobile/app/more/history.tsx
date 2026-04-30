@@ -1,4 +1,5 @@
 import { Feather } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
@@ -169,6 +170,7 @@ function DraftRow({
   const photoCountLabel = `${draft.photos.length} photo${
     draft.photos.length === 1 ? "" : "s"
   }`;
+  const firstPhoto = draft.photos[0];
   return (
     <Pressable
       onPress={onPress}
@@ -182,14 +184,43 @@ function DraftRow({
         },
       ]}
     >
-      <View style={{ flex: 1 }}>
+      <View
+        style={[
+          styles.thumb,
+          {
+            borderColor: colors.brandStroke,
+            backgroundColor: "rgba(8,16,28,0.85)",
+          },
+        ]}
+      >
+        {firstPhoto ? (
+          <Image
+            source={{ uri: firstPhoto }}
+            style={styles.thumbImage}
+            contentFit="cover"
+            transition={120}
+            accessibilityLabel={`Photo for ${draft.title || "untitled draft"}`}
+          />
+        ) : (
+          <Feather name="camera-off" size={18} color={colors.zinc500} />
+        )}
+        {draft.photos.length > 1 ? (
+          <View style={styles.thumbCountPill}>
+            <Text style={styles.thumbCountText}>+{draft.photos.length - 1}</Text>
+          </View>
+        ) : null}
+      </View>
+      <View style={{ flex: 1, minWidth: 0 }}>
         <Text
           style={[styles.rowTitle, { color: colors.foreground }]}
           numberOfLines={1}
         >
           {draft.title || "Untitled draft"}
         </Text>
-        <Text style={[styles.rowMeta, { color: colors.zinc400 }]}>
+        <Text
+          style={[styles.rowMeta, { color: colors.zinc400 }]}
+          numberOfLines={1}
+        >
           {draft.lens} · {photoCountLabel} · {formatDate(draft.updatedAt)}
         </Text>
       </View>
@@ -341,5 +372,36 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 11,
     marginTop: 2,
+  },
+  thumb: {
+    width: 44,
+    height: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    overflow: "hidden",
+    alignItems: "center",
+    justifyContent: "center",
+    position: "relative",
+  },
+  thumbImage: {
+    width: "100%",
+    height: "100%",
+  },
+  thumbCountPill: {
+    position: "absolute",
+    right: 2,
+    bottom: 2,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+    borderRadius: 6,
+    backgroundColor: "rgba(4,10,20,0.85)",
+    borderWidth: 1,
+    borderColor: "rgba(34,211,238,0.35)",
+  },
+  thumbCountText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 9,
+    color: "#a5f3fc",
+    letterSpacing: 0.3,
   },
 });
