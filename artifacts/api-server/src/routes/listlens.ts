@@ -600,11 +600,4 @@ router.get("/lenses", (_req, res) => {
   res.json({ lenses: ["ShoeLens", "RecordLens"] });
 });
 
-router.post("/billing/checkout", (_req, res) => {
-  res.redirect(303, "/billing?demo=checkout");
-});
-router.post("/billing/portal", (_req, res) => {
-  res.redirect(303, "/billing?demo=portal");
-});
-
 export default router;

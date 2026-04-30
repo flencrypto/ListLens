@@ -7,6 +7,7 @@ import {
   LogoutMobileSessionResponse,
 } from "@workspace/api-zod";
 import { db, usersTable } from "@workspace/db";
+import { eq } from "drizzle-orm";
 import {
   clearSession,
   getOidcConfig,
@@ -82,16 +83,29 @@ async function upsertUser(claims: Record<string, unknown>) {
   return user;
 }
 
-router.get("/auth/user", (req: Request, res: Response) => {
+router.get("/auth/user", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  res.json(
-    GetCurrentAuthUserResponse.parse({
-      user: req.user,
-    }),
-  );
+
+  let credits = 0;
+  let planTier = "free";
+  try {
+    const [row] = await db
+      .select({ credits: usersTable.credits, planTier: usersTable.planTier })
+      .from(usersTable)
+      .where(eq(usersTable.id, req.user!.id));
+    if (row) {
+      credits = row.credits ?? 0;
+      planTier = row.planTier ?? "free";
+    }
+  } catch {
+    // DB unavailable in dev — return defaults
+  }
+
+  const base = GetCurrentAuthUserResponse.parse({ user: req.user });
+  res.json({ ...base, credits, planTier });
 });
 
 router.get("/login", async (req: Request, res: Response) => {
