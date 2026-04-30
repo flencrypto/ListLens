@@ -22,6 +22,14 @@ import { analyseItem, createItem } from "@/lib/api";
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
 
+const MEASURE_REFERENCE_OBJECTS = [
+  { id: "credit_card", label: "Credit card", hint: "credit card (85.6×54mm)" },
+  { id: "a4_paper", label: "A4 paper", hint: "A4 paper sheet (297×210mm)" },
+  { id: "ruler", label: "30cm ruler", hint: "30cm ruler" },
+  { id: "coin_50p", label: "50p coin", hint: "UK 50p coin (27.3mm)" },
+  { id: "a5_notebook", label: "A5 notebook", hint: "A5 notebook (210×148mm)" },
+] as const;
+
 interface PhotoEntry {
   uri: string;
   base64: string;
@@ -35,8 +43,12 @@ export default function CaptureScreen() {
     lens?: string;
     marketplace?: string;
   }>();
+  const isMeasureLens = lens === "MeasureLens";
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [busy, setBusy] = useState(false);
+  const [referenceObjectId, setReferenceObjectId] = useState<string>(
+    MEASURE_REFERENCE_OBJECTS[0].id,
+  );
 
   async function takePhoto() {
     if (photos.length >= MAX_PHOTOS) {
@@ -126,6 +138,13 @@ export default function CaptureScreen() {
         (p) => `data:${p.mimeType ?? "image/jpeg"};base64,${p.base64}`,
       );
 
+      const measureHint = isMeasureLens
+        ? `Reference object in photos: ${
+            MEASURE_REFERENCE_OBJECTS.find((r) => r.id === referenceObjectId)
+              ?.hint ?? "unknown reference"
+          }. Use this to estimate item dimensions accurately.`
+        : undefined;
+
       const { id } = await createItem({
         lens: String(lens),
         marketplace: String(marketplace),
@@ -135,6 +154,7 @@ export default function CaptureScreen() {
       const { analysis } = await analyseItem(id, {
         lens: String(lens),
         photoUrls,
+        ...(measureHint ? { hint: measureHint } : {}),
       });
 
       router.replace({
@@ -241,6 +261,47 @@ export default function CaptureScreen() {
         />
       </Card>
 
+      {isMeasureLens && (
+        <Card>
+          <Text style={[styles.cardLabel, { color: colors.foreground, marginBottom: 6 }]}>
+            Reference object
+          </Text>
+          <Text style={[styles.measureTip, { color: colors.zinc400 }]}>
+            Place a known object next to the item so the AI can estimate its real-world dimensions.
+          </Text>
+          <View style={styles.chipRow}>
+            {MEASURE_REFERENCE_OBJECTS.map((ref) => {
+              const selected = referenceObjectId === ref.id;
+              return (
+                <Pressable
+                  key={ref.id}
+                  onPress={() => setReferenceObjectId(ref.id)}
+                  style={({ pressed }) => [
+                    styles.chip,
+                    {
+                      borderColor: selected ? colors.brandCyan : colors.zinc700,
+                      backgroundColor: selected
+                        ? "rgba(8,51,68,0.55)"
+                        : "rgba(24,24,27,0.55)",
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      styles.chipText,
+                      { color: selected ? colors.cyan300 : colors.zinc300 },
+                    ]}
+                  >
+                    {ref.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+        </Card>
+      )}
+
       <BrandButton
         label={
           busy
@@ -329,6 +390,28 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_600SemiBold",
     fontSize: 10,
     letterSpacing: 0.4,
+  },
+  measureTip: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  chipRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 4,
+  },
+  chip: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  chipText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 12,
   },
   note: {
     fontFamily: "Inter_400Regular",

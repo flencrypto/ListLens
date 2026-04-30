@@ -1,4 +1,4 @@
-import { Router, type IRouter, type Request } from "express";
+import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
 import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
@@ -83,30 +83,107 @@ const GuardOutputSchema = z.object({
   disclaimer: z.literal("AI-assisted risk screen, not formal authentication."),
 });
 
+const LENS_META: Record<
+  string,
+  { label: string; category: string; attributeHints: string }
+> = {
+  ShoeLens: {
+    label: "shoe/sneaker",
+    category: "Clothes, Shoes & Accessories > Men's Shoes",
+    attributeHints:
+      "size (UK/EU/US), colourway, style_code, sole_condition, upper_condition, box_included",
+  },
+  RecordLens: {
+    label: "vinyl record",
+    category: "Music > Records",
+    attributeHints:
+      "artist, title, label, catalogue_number, pressing, format, sleeve_grade, media_grade",
+  },
+  LPLens: {
+    label: "LP vinyl album",
+    category: "Music > Records > Albums",
+    attributeHints:
+      "artist, album_title, label, catalogue_number, year, pressing_country, sleeve_grade, media_grade, matrix_runout",
+  },
+  ClothingLens: {
+    label: "clothing item",
+    category: "Clothes, Shoes & Accessories",
+    attributeHints:
+      "brand, size_label, size_numeric (chest/waist/length in cm), material, colour, style, condition_tags (pilling/fading/staining), era/vintage",
+  },
+  CardLens: {
+    label: "trading card",
+    category: "Collectables > Trading Cards",
+    attributeHints:
+      "card_name, set_name, set_number, rarity, language, edition (1st/unlimited), grade (PSA/BGS/CGC if applicable), centering, surface_condition, corner_condition",
+  },
+  ToyLens: {
+    label: "toy or collectible",
+    category: "Toys & Games > Action Figures & Dolls",
+    attributeHints:
+      "brand, product_name, year, completeness (parts/accessories present), packaging (boxed/loose/sealed), reproduction_risk_notes, play_wear_notes",
+  },
+  WatchLens: {
+    label: "watch or timepiece",
+    category: "Jewellery & Watches > Watches",
+    attributeHints:
+      "brand, model_reference, movement_type (manual/auto/quartz), case_material, dial_colour, bezel_type, bracelet_type, case_diameter_mm, lug_width_mm, year_approx, serial_number_visible, service_history, box_papers",
+  },
+  MeasureLens: {
+    label: "item with physical dimensions",
+    category: "Clothes, Shoes & Accessories",
+    attributeHints:
+      "item_type, estimated_dimensions (length_cm, width_cm, height_cm, depth_cm), measurement_method (reference_object or ruler), reference_object_used, fit_notes, size_label",
+  },
+  MotorLens: {
+    label: "vehicle or motor part",
+    category: "Vehicle Parts & Accessories",
+    attributeHints:
+      "make, model, year, part_name, part_number, oem_or_aftermarket, fitment_vehicles, condition_notes, mileage (if full vehicle), service_history_present",
+  },
+};
+
+function getLensMeta(
+  lens: string,
+): { label: string; category: string; attributeHints: string } {
+  return (
+    LENS_META[lens] ?? {
+      label: "item",
+      category: "Everything Else",
+      attributeHints: "key attributes relevant to this item",
+    }
+  );
+}
+
+function buildLensSystemPrompt(lens: string): string {
+  const meta = getLensMeta(lens);
+  return `You are an expert resale analyst specialising in ${meta.label}s. Analyse the provided photos and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
+{
+  "mode": "studio",
+  "lens": "${lens}",
+  "listing_description": "2-3 sentence honest description of the item's condition and key features, written in first person for eBay/Vinted",
+  "identity": { "brand": string|null, "model": string|null, "confidence": 0-1 },
+  "attributes": { ${meta.attributeHints} },
+  "missing_photos": [ ...strings listing missing shots needed for a complete listing ],
+  "pricing": { "quick_sale": number, "recommended": number, "high": number, "currency": "GBP", "confidence": 0-1 },
+  "marketplace_outputs": {
+    "ebay": { "title": string (max 80 chars), "condition": string, "category": "${meta.category}" },
+    "vinted": { "title": string (max 60 chars), "category": string }
+  },
+  "warnings": [ ...any caveats about authenticity, condition or pricing confidence ]
+}
+Base prices on current UK resale market values. Be specific — name the exact model, colourway, edition or pressing.`;
+}
+
 async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
   hint?: string,
 ): Promise<z.infer<typeof StudioOutputSchema>> {
   const openai = getOpenAIClient();
-  const lensLabel = lens === "RecordLens" ? "vinyl record" : "item";
+  const { label: lensLabel } = getLensMeta(lens);
 
-  const systemPrompt = `You are an expert resale analyst for ${lensLabel}s. Analyse the provided photos and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
-{
-  "mode": "studio",
-  "lens": "${lens}",
-  "listing_description": "2-3 sentence honest description of the item's condition and key features, written in first person for eBay/Vinted",
-  "identity": { "brand": string|null, "model": string|null, "confidence": 0-1 },
-  "attributes": { ...key-value pairs relevant to the ${lensLabel} },
-  "missing_photos": [ ...strings listing missing shots needed ],
-  "pricing": { "quick_sale": number, "recommended": number, "high": number, "currency": "GBP", "confidence": 0-1 },
-  "marketplace_outputs": {
-    "ebay": { "title": string, "condition": string, "category": string },
-    "vinted": { "title": string, "category": string }
-  },
-  "warnings": [ ...any caveats ]
-}
-Base prices on current UK resale market values. Be specific about the model/pressing/edition.`;
+  const systemPrompt = buildLensSystemPrompt(lens);
 
   const userContent: Parameters<
     typeof openai.chat.completions.create
@@ -142,7 +219,7 @@ async function runGuardAnalysis(
   screenshotUrls?: string[],
 ): Promise<z.infer<typeof GuardOutputSchema>> {
   const openai = getOpenAIClient();
-  const lensLabel = lens === "RecordLens" ? "vinyl record" : "item";
+  const { label: lensLabel } = getLensMeta(lens);
 
   const systemPrompt = `You are an expert fraud and risk analyst for second-hand ${lensLabel} listings. Analyse the provided listing URL and/or screenshots and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
 {
@@ -627,8 +704,129 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
   }
 });
 
+const LENS_REGISTRY_META = [
+  {
+    id: "RecordLens",
+    name: "RecordLens",
+    icon: "💿",
+    category: "Music Media",
+    description:
+      "Vinyl, CDs and cassettes. Identifies release from a label photo, with a matrix runout clarification flow.",
+    status: "live",
+  },
+  {
+    id: "ShoeLens",
+    name: "ShoeLens",
+    icon: "👟",
+    category: "Footwear",
+    description:
+      "Trainers, sneakers and shoes. Style code, size label and sole checks.",
+    status: "live",
+  },
+  {
+    id: "LPLens",
+    name: "LPLens",
+    icon: "🎵",
+    category: "Music Media",
+    description:
+      "LP vinyl albums. Sleeve and media grading, matrix runout, pressing country and edition details.",
+    status: "live",
+  },
+  {
+    id: "ClothingLens",
+    name: "ClothingLens",
+    icon: "👕",
+    category: "Apparel",
+    description:
+      "Clothing, vintage garments and apparel. Size label, fit and measurements.",
+    status: "live",
+  },
+  {
+    id: "CardLens",
+    name: "CardLens",
+    icon: "🎴",
+    category: "Trading Cards",
+    description:
+      "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
+    status: "live",
+  },
+  {
+    id: "ToyLens",
+    name: "ToyLens",
+    icon: "🧸",
+    category: "Toys & Collectibles",
+    description:
+      "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
+    status: "live",
+  },
+  {
+    id: "WatchLens",
+    name: "WatchLens",
+    icon: "⌚",
+    category: "Watches",
+    description:
+      "Watches and timepieces. Reference, dial and provenance evidence checks.",
+    status: "live",
+  },
+  {
+    id: "MeasureLens",
+    name: "MeasureLens",
+    icon: "📐",
+    category: "Measurement",
+    description:
+      "Physical reference object for accurate dimension estimation. Ideal for garments and parts.",
+    status: "live",
+  },
+  {
+    id: "MotorLens",
+    name: "MotorLens",
+    icon: "🚗",
+    category: "Vehicles & Parts",
+    description:
+      "Vehicles, parts and campers. Image + dimension-based fitment checks.",
+    status: "live",
+  },
+] as const;
+
 router.get("/lenses", (_req, res) => {
-  res.json({ lenses: ["ShoeLens", "RecordLens"] });
+  res.json({
+    lenses: LENS_REGISTRY_META.map((l) => l.id),
+    registry: LENS_REGISTRY_META,
+  });
 });
+
+async function handleLensAnalysis(
+  req: Request,
+  res: Response,
+  lensId: string,
+): Promise<void> {
+  const b = body(req);
+  const photoUrls = (b["photoUrls"] as string[]) ?? [];
+  const hint = b["hint"] as string | undefined;
+  const metadata = b["metadata"] as Record<string, unknown> | undefined;
+  const combinedHint = [
+    hint,
+    metadata && Object.keys(metadata).length > 0
+      ? `Additional metadata: ${JSON.stringify(metadata)}`
+      : undefined,
+  ]
+    .filter(Boolean)
+    .join(" | ") || undefined;
+  try {
+    const analysis = await runStudioAnalysis(lensId, photoUrls, combinedHint);
+    res.json({ analysis });
+  } catch (err) {
+    logger.error({ err, lensId }, `${lensId} analysis failed`);
+    res.status(500).json({ error: `${lensId} analysis failed. Please try again.` });
+  }
+}
+
+router.post("/lenses/lp", (req, res) => handleLensAnalysis(req, res, "LPLens"));
+router.post("/lenses/clothing", (req, res) => handleLensAnalysis(req, res, "ClothingLens"));
+router.post("/lenses/card", (req, res) => handleLensAnalysis(req, res, "CardLens"));
+router.post("/lenses/toy", (req, res) => handleLensAnalysis(req, res, "ToyLens"));
+router.post("/lenses/watch", (req, res) => handleLensAnalysis(req, res, "WatchLens"));
+router.post("/lenses/measure", (req, res) => handleLensAnalysis(req, res, "MeasureLens"));
+router.post("/lenses/motor", (req, res) => handleLensAnalysis(req, res, "MotorLens"));
 
 export default router;

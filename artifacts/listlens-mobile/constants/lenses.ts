@@ -34,22 +34,67 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     status: "live",
   },
   {
+    id: "LPLens",
+    name: "LPLens",
+    category: "Music Media",
+    description:
+      "LP vinyl albums. Sleeve and media grading, matrix runout, pressing country and edition details.",
+    icon: "🎵",
+    status: "live",
+  },
+  {
     id: "ClothingLens",
     name: "ClothingLens",
     category: "Apparel",
     description:
       "Clothing, vintage garments and apparel. Size label, fit and measurements.",
     icon: "👕",
-    status: "planned",
+    status: "live",
+  },
+  {
+    id: "CardLens",
+    name: "CardLens",
+    category: "Trading Cards",
+    description:
+      "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
+    icon: "🎴",
+    status: "live",
+  },
+  {
+    id: "ToyLens",
+    name: "ToyLens",
+    category: "Toys & Collectibles",
+    description:
+      "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
+    icon: "🧸",
+    status: "live",
+  },
+  {
+    id: "WatchLens",
+    name: "WatchLens",
+    category: "Watches",
+    description:
+      "Watches and timepieces. Reference, dial and provenance evidence checks.",
+    icon: "⌚",
+    status: "live",
   },
   {
     id: "MeasureLens",
     name: "MeasureLens",
     category: "Measurement",
     description:
-      "Physical reference object + computer vision for accurate garment measurements.",
+      "Physical reference object for accurate dimension estimation. Ideal for garments and parts.",
     icon: "📐",
-    status: "planned",
+    status: "live",
+  },
+  {
+    id: "MotorLens",
+    name: "MotorLens",
+    category: "Vehicles & Parts",
+    description:
+      "Vehicles, parts and campers. Image + dimension-based fitment checks.",
+    icon: "🚗",
+    status: "live",
   },
   {
     id: "TechLens",
@@ -70,33 +115,6 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     status: "planned",
   },
   {
-    id: "CardLens",
-    name: "CardLens",
-    category: "Trading Cards",
-    description:
-      "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
-    icon: "🎴",
-    status: "planned",
-  },
-  {
-    id: "ToyLens",
-    name: "ToyLens",
-    category: "Toys & Collectibles",
-    description:
-      "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
-    icon: "🧸",
-    status: "planned",
-  },
-  {
-    id: "WatchLens",
-    name: "WatchLens",
-    category: "Watches",
-    description:
-      "Watches and timepieces. Reference, dial and provenance evidence checks.",
-    icon: "⌚",
-    status: "planned",
-  },
-  {
     id: "AntiquesLens",
     name: "AntiquesLens",
     category: "Antiques & Vintage",
@@ -112,15 +130,6 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Signed items and provenance. Evidence-led — never authenticates signatures.",
     icon: "✍️",
-    status: "planned",
-  },
-  {
-    id: "MotorLens",
-    name: "MotorLens",
-    category: "Vehicles & Parts",
-    description:
-      "Vehicles, parts and campers. Image + dimension-based fitment with MotorMeasureLens.",
-    icon: "🚗",
     status: "planned",
   },
 ];

@@ -33,6 +33,89 @@ const LENS_DETAILS: Record<string, { focus: string[]; tips: string[] }> = {
       "One photo per side, plus the size label and the sole.",
     ],
   },
+  LPLens: {
+    focus: [
+      "Centre label — artist, title, catalogue number, label name",
+      "Sleeve front and back, including any OBI strip or inserts",
+      "Dead-wax matrix etchings for pressing identification",
+      "Any damage: ring wear, seam splits, writing on sleeve",
+    ],
+    tips: [
+      "Photograph both sides of the label — Side A and Side B.",
+      "Angle your camera to catch light across the groove surface to reveal marks.",
+    ],
+  },
+  ClothingLens: {
+    focus: [
+      "Care/size label showing brand, size and material composition",
+      "Front and back of the garment laid flat",
+      "Any wear: pilling, fading, staining or missing buttons",
+      "Measurements if no size label (chest, waist, length)",
+    ],
+    tips: [
+      "Lay the item flat on a white or neutral background.",
+      "Zoom in on any defects — buyers appreciate honesty.",
+    ],
+  },
+  CardLens: {
+    focus: [
+      "Card front — full frame with no glare",
+      "Card back — condition of reverse print",
+      "Close-up of each corner for wear",
+      "Set symbol, number and edition (1st edition stamp if applicable)",
+    ],
+    tips: [
+      "Use a lightbox or diffused light to eliminate glare on holofoil.",
+      "Include a corner macro shot — this is what graders look for first.",
+    ],
+  },
+  ToyLens: {
+    focus: [
+      "Item from multiple angles including base/feet/back",
+      "Any manufacturer marks, copyright dates or country of origin",
+      "All accessories, parts and original packaging present",
+      "Any play wear, paint loss or reproduction indicators",
+    ],
+    tips: [
+      "Count all pieces before shooting — note anything missing in your listing.",
+      "Show the box insert flat if still present — it adds real value.",
+    ],
+  },
+  WatchLens: {
+    focus: [
+      "Dial — brand, model name, colour, lume condition",
+      "Case back — engraving, serial number, reference number",
+      "Crown and pushers — condition and original parts",
+      "Bracelet or strap — clasp, length and wear",
+    ],
+    tips: [
+      "Shoot the caseback with a macro lens or macro mode for serial clarity.",
+      "Include a wrist shot to show size context.",
+    ],
+  },
+  MeasureLens: {
+    focus: [
+      "Item alongside a reference object (credit card, A4 paper, ruler)",
+      "Multiple angles showing the full item with the reference visible",
+      "Any relevant labels: size tag, dimension stickers",
+    ],
+    tips: [
+      "Keep the reference object in the same plane as the item being measured.",
+      "Choose your reference object in the picker before capturing — it tells the AI the scale.",
+    ],
+  },
+  MotorLens: {
+    focus: [
+      "Part number, OEM markings and manufacturer stamps",
+      "Condition of mounting points, connectors and surfaces",
+      "Any damage: corrosion, cracks, stripped threads",
+      "VIN plate or odometer if listing a full vehicle",
+    ],
+    tips: [
+      "Include a ruler or known object if listing a part — size matters for fitment.",
+      "Photograph any engraved or stamped numbers clearly — avoid shadows.",
+    ],
+  },
 };
 
 export default function LensDetailScreen() {

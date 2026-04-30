@@ -119,7 +119,7 @@ export async function createItem(params: {
 
 export async function analyseItem(
   id: string,
-  params: { lens: string; photoUrls: string[] },
+  params: { lens: string; photoUrls: string[]; hint?: string },
 ): Promise<{ analysis: StudioAnalysis }> {
   return post(`/api/items/${id}/analyse`, params);
 }
@@ -133,4 +133,52 @@ export async function identifyRecord(params: {
       ? "/api/lenses/record/identify-with-matrix"
       : "/api/lenses/record/identify";
   return post(path, params);
+}
+
+export interface ApiLensEntry {
+  id: string;
+  name: string;
+  icon: string;
+  category: string;
+  description: string;
+  status: string;
+}
+
+export async function getLensRegistry(): Promise<{
+  lenses: string[];
+  registry: ApiLensEntry[];
+}> {
+  return get("/api/lenses");
+}
+
+/**
+ * Direct specialist-lens analysis — calls the lens-specific route without
+ * creating a persistent item record. Use `analyseItem` instead when you need
+ * history tracking and item-level export. This path is intended for stateless
+ * preview/draft checks on individual specialist lenses.
+ */
+export async function analyseLens(params: {
+  lens: string;
+  photoUrls: string[];
+  hint?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<{ analysis: StudioAnalysis }> {
+  const lensRouteMap: Record<string, string> = {
+    LPLens: "/api/lenses/lp",
+    ClothingLens: "/api/lenses/clothing",
+    CardLens: "/api/lenses/card",
+    ToyLens: "/api/lenses/toy",
+    WatchLens: "/api/lenses/watch",
+    MeasureLens: "/api/lenses/measure",
+    MotorLens: "/api/lenses/motor",
+  };
+  const path = lensRouteMap[params.lens];
+  if (!path) {
+    throw new Error(`No specialist lens route for ${params.lens}`);
+  }
+  return post(path, {
+    photoUrls: params.photoUrls,
+    hint: params.hint,
+    metadata: params.metadata,
+  });
 }

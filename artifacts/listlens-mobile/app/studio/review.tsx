@@ -58,19 +58,28 @@ function analysisToBody(
     identityStr;
 
   const attrs = analysis.attributes ?? {};
+
   const size =
     (attrs["size"] as string | undefined) ??
     (attrs["Size"] as string | undefined) ??
+    (attrs["size_label"] as string | undefined) ??
     "";
 
+  function flattenAttr(key: string, value: unknown): string {
+    if (value === null || value === undefined) return `${key}: —`;
+    if (typeof value !== "object") return `${key}: ${String(value)}`;
+    const entries = Object.entries(value as Record<string, unknown>)
+      .filter(([, v]) => v !== null && v !== undefined)
+      .map(([k, v]) => `${k}: ${String(v)}`);
+    return `${key} — ${entries.join(", ")}`;
+  }
+
+  const SKIP_KEYS = new Set(["size", "Size", "size_label"]);
+
   const bullets: string[] = Object.entries(attrs)
-    .filter(
-      ([k]) =>
-        !["size", "Size"].includes(k) &&
-        typeof attrs[k] !== "object",
-    )
-    .slice(0, 6)
-    .map(([k, v]) => `${k}: ${String(v)}`);
+    .filter(([k]) => !SKIP_KEYS.has(k))
+    .slice(0, 8)
+    .map(([k, v]) => flattenAttr(k, v));
 
   const flags: DraftBody["flags"] = [
     ...(analysis.missing_photos ?? []).map((text) => ({

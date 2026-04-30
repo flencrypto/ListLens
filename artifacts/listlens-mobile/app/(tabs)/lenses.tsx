@@ -1,17 +1,56 @@
 import { Link } from "expo-router";
-import React from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { LENS_REGISTRY, type LensEntry } from "@/constants/lenses";
+import { getLensRegistry, type ApiLensEntry } from "@/lib/api";
+
+function apiEntryToLensEntry(e: ApiLensEntry): LensEntry {
+  return {
+    id: e.id,
+    name: e.name,
+    category: e.category,
+    description: e.description,
+    icon: e.icon,
+    status: e.status as LensEntry["status"],
+  };
+}
 
 export default function LensesScreen() {
   const colors = useColors();
-  const live = LENS_REGISTRY.filter((l) => l.status === "live");
-  const planned = LENS_REGISTRY.filter((l) => l.status === "planned");
+  const [registry, setRegistry] = useState<readonly LensEntry[]>(LENS_REGISTRY);
+  const [loading, setLoading] = useState(true);
+  const [apiError, setApiError] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    getLensRegistry()
+      .then(({ registry: apiRegistry }) => {
+        if (!cancelled) {
+          setRegistry(apiRegistry.map(apiEntryToLensEntry));
+          setApiError(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setRegistry(LENS_REGISTRY);
+          setApiError(true);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const live = registry.filter((l) => l.status === "live");
+  const planned = registry.filter((l) => l.status === "planned");
 
   return (
     <ScreenContainer withTabPadding>
@@ -21,35 +60,50 @@ export default function LensesScreen() {
           Specialist category agents that power Studio and Guard. Each lens
           applies its own evidence rules, fields and trust language.
         </Text>
+        {apiError && (
+          <Text style={[styles.offlineNote, { color: colors.zinc500 }]}>
+            Showing cached lens catalogue — connect to refresh.
+          </Text>
+        )}
       </View>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Available now
-          </Text>
-          <Badge label={`${live.length} live`} tone="emerald" />
+      {loading ? (
+        <View style={styles.loader}>
+          <ActivityIndicator color={colors.brandCyan} />
         </View>
-        <View style={styles.list}>
-          {live.map((lens) => (
-            <LensCard key={lens.id} lens={lens} interactive />
-          ))}
-        </View>
-      </View>
+      ) : (
+        <>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                Available now
+              </Text>
+              <Badge label={`${live.length} live`} tone="emerald" />
+            </View>
+            <View style={styles.list}>
+              {live.map((lens) => (
+                <LensCard key={lens.id} lens={lens} interactive />
+              ))}
+            </View>
+          </View>
 
-      <View style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Coming soon
-          </Text>
-          <Badge label={`${planned.length} planned`} tone="neutral" />
-        </View>
-        <View style={styles.list}>
-          {planned.map((lens) => (
-            <LensCard key={lens.id} lens={lens} dimmed />
-          ))}
-        </View>
-      </View>
+          {planned.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+                  Coming soon
+                </Text>
+                <Badge label={`${planned.length} planned`} tone="neutral" />
+              </View>
+              <View style={styles.list}>
+                {planned.map((lens) => (
+                  <LensCard key={lens.id} lens={lens} dimmed />
+                ))}
+              </View>
+            </View>
+          )}
+        </>
+      )}
     </ScreenContainer>
   );
 }
@@ -107,6 +161,15 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 13,
     lineHeight: 19,
+  },
+  offlineNote: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+    marginTop: 2,
+  },
+  loader: {
+    paddingVertical: 40,
+    alignItems: "center",
   },
   section: { gap: 10 },
   sectionHeader: {
