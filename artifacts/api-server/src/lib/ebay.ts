@@ -149,18 +149,246 @@ const LENS_CATEGORY_MAP: Record<string, string> = {
   default: "1249",
 };
 
-const CONDITION_ID_MAP: Record<string, number> = {
+/**
+ * Per-lens condition ID maps.
+ * Keys are lowercased condition strings the AI may produce.
+ * Values are eBay ConditionID integers for the relevant category set.
+ *
+ * Records (category 306) use the specialist vinyl grade scale.
+ * Clothing (category 11450) uses the fashion-specific set that eBay requires.
+ * Everything else (shoes, watches, general) uses the standard buyer-grade set.
+ */
+const CONDITION_ID_BY_LENS: Record<string, Record<string, number>> = {
+  RecordLens: {
+    mint: 1000,
+    m: 1000,
+    "near mint": 2000,
+    "nm": 2000,
+    "nm-": 2000,
+    "near mint (nm)": 2000,
+    "near mint (nm-)": 2000,
+    "very good plus": 3000,
+    "vg+": 3000,
+    "very good+": 3000,
+    "very good": 4000,
+    "vg": 4000,
+    "good plus": 5000,
+    "g+": 5000,
+    good: 6000,
+    "g": 6000,
+    fair: 7000,
+    poor: 8000,
+    used: 4000,
+    new: 1000,
+  },
+  LP: {
+    mint: 1000,
+    m: 1000,
+    "near mint": 2000,
+    "nm": 2000,
+    "nm-": 2000,
+    "very good plus": 3000,
+    "vg+": 3000,
+    "very good": 4000,
+    "vg": 4000,
+    "good plus": 5000,
+    "g+": 5000,
+    good: 6000,
+    fair: 7000,
+    poor: 8000,
+    used: 4000,
+    new: 1000,
+  },
+  Clothing: {
+    new: 1000,
+    "new with tags": 1000,
+    "new with box": 1000,
+    "new without tags": 1500,
+    "new without box": 1500,
+    "new with defects": 2750,
+    "very good": 4000,
+    "like new": 4000,
+    good: 5000,
+    acceptable: 6000,
+    used: 4000,
+  },
+};
+
+/** Fallback condition map used when no lens-specific map exists. */
+const CONDITION_ID_GENERIC: Record<string, number> = {
   new: 1000,
   "like new": 3000,
   "very good": 4000,
-  "good": 5000,
-  "acceptable": 6000,
+  good: 5000,
+  acceptable: 6000,
   used: 3000,
 };
 
-function conditionId(conditionStr?: string): number {
-  if (!conditionStr) return 3000;
-  return CONDITION_ID_MAP[conditionStr.toLowerCase()] ?? 3000;
+/**
+ * Category-safe fallback ConditionIDs used when the AI produces an
+ * unrecognised condition string. Each value is a valid, uncontroversial
+ * condition for the lens's eBay category.
+ *
+ * - Records/LP (category 306): 4000 = Very Good — the accepted default
+ *   grade for used vinyl on Discogs/eBay
+ * - Clothing (category 11450): 4000 = Very Good — lowest common
+ *   denominator for lightly-worn items in the fashion category set
+ * - ShoeLens (category 93427) / Watch (category 14324) / generic: 3000
+ *   which maps to "Used" in the standard eBay condition set
+ */
+const CONDITION_FALLBACK_BY_LENS: Record<string, number> = {
+  RecordLens: 4000,
+  LP: 4000,
+  Clothing: 4000,
+};
+
+/**
+ * Resolve an eBay ConditionID from a human-readable condition string.
+ * Uses a lens-specific map when available, otherwise falls back to the
+ * generic map. Unknown values use the lens's category-safe fallback
+ * rather than a single global default.
+ */
+function conditionId(conditionStr: string | undefined, lens?: string): number {
+  const fallback = (lens ? CONDITION_FALLBACK_BY_LENS[lens] : undefined) ?? 3000;
+  if (!conditionStr) return fallback;
+  const key = conditionStr.toLowerCase().trim();
+  const lensMap = lens ? (CONDITION_ID_BY_LENS[lens] ?? null) : null;
+  if (lensMap) return lensMap[key] ?? CONDITION_ID_GENERIC[key] ?? fallback;
+  return CONDITION_ID_GENERIC[key] ?? fallback;
+}
+
+const LENS_SPECIFIC_MAP: Record<string, Record<string, string>> = {
+  ShoeLens: {
+    size: "UK Shoe Size",
+    uk_size: "UK Shoe Size",
+    shoe_size: "UK Shoe Size",
+    us_size: "US Shoe Size",
+    eu_size: "EU Shoe Size",
+    colour: "Colour",
+    color: "Colour",
+    brand: "Brand",
+    model: "Model",
+    material: "Upper Material",
+    style: "Style",
+    gender: "Department",
+    type: "Shoe Type",
+    width: "Width",
+  },
+  Clothing: {
+    size: "Size",
+    uk_size: "Size",
+    eu_size: "EU Size",
+    us_size: "US Size",
+    colour: "Colour",
+    color: "Colour",
+    brand: "Brand",
+    model: "Style",
+    material: "Material",
+    gender: "Department",
+    type: "Type",
+    pattern: "Pattern",
+    neckline: "Neckline",
+    sleeve: "Sleeve Length",
+    fit: "Fit",
+  },
+  RecordLens: {
+    artist: "Artist",
+    label: "Record Label",
+    format: "Format",
+    genre: "Genre",
+    speed: "Speed",
+    country: "Country/Region of Manufacture",
+    year: "Release Year",
+    catalogue_number: "Catalogue Number",
+    colour: "Colour",
+    color: "Colour",
+    edition: "Edition",
+    pressing: "Country/Region of Manufacture",
+  },
+  LP: {
+    artist: "Artist",
+    label: "Record Label",
+    format: "Format",
+    genre: "Genre",
+    speed: "Speed",
+    country: "Country/Region of Manufacture",
+    year: "Release Year",
+    catalogue_number: "Catalogue Number",
+    edition: "Edition",
+  },
+  Watch: {
+    brand: "Brand",
+    model: "Model",
+    colour: "Colour",
+    color: "Colour",
+    case_material: "Case Material",
+    material: "Case Material",
+    dial_colour: "Dial Colour",
+    strap_material: "Strap Material",
+    movement: "Movement",
+    size: "Case Size",
+    gender: "Department",
+    water_resistance: "Water Resistance",
+  },
+};
+
+const GENERIC_SPECIFIC_MAP: Record<string, string> = {
+  brand: "Brand",
+  model: "Model",
+  colour: "Colour",
+  color: "Colour",
+  material: "Material",
+  size: "Size",
+  gender: "Department",
+  type: "Type",
+};
+
+function buildItemSpecifics(
+  lens: string,
+  attributes: Record<string, unknown>,
+  identity?: { brand?: string | null; model?: string | null },
+): string {
+  const lensMap = LENS_SPECIFIC_MAP[lens] ?? {};
+  const nameValues: { name: string; value: string }[] = [];
+  const seen = new Set<string>();
+
+  const addSpec = (name: string, rawVal: unknown) => {
+    if (seen.has(name)) return;
+    const value =
+      rawVal == null || rawVal === "null" || rawVal === "undefined"
+        ? ""
+        : typeof rawVal === "string"
+          ? rawVal.trim()
+          : String(rawVal).trim();
+    if (!value) return;
+    nameValues.push({ name, value: value.slice(0, 65) });
+    seen.add(name);
+  };
+
+  if (identity?.brand) {
+    addSpec(lensMap["brand"] ?? GENERIC_SPECIFIC_MAP["brand"] ?? "Brand", identity.brand);
+  }
+  if (identity?.model) {
+    addSpec(lensMap["model"] ?? GENERIC_SPECIFIC_MAP["model"] ?? "Model", identity.model);
+  }
+
+  for (const [key, rawVal] of Object.entries(attributes)) {
+    const normalKey = key.toLowerCase().replace(/\s+/g, "_");
+    const name = lensMap[normalKey] ?? GENERIC_SPECIFIC_MAP[normalKey];
+    if (!name) continue;
+    addSpec(name, rawVal);
+  }
+
+  if (nameValues.length === 0) return "";
+
+  const inner = nameValues
+    .map(
+      ({ name, value }) =>
+        `      <NameValueList><Name>${escXml(name)}</Name><Value>${escXml(value)}</Value></NameValueList>`,
+    )
+    .join("\n");
+
+  return `<ItemSpecifics>\n${inner}\n    </ItemSpecifics>`;
 }
 
 export interface EbayListingInput {
@@ -170,6 +398,7 @@ export interface EbayListingInput {
   lens: string;
   condition?: string;
   attributes?: Record<string, unknown>;
+  identity?: { brand?: string | null; model?: string | null };
   photoUrls?: string[];
 }
 
@@ -178,14 +407,21 @@ export async function addEbayItem(
   input: EbayListingInput,
 ): Promise<{ itemId: string; viewItemURL: string } | null> {
   const categoryId = LENS_CATEGORY_MAP[input.lens] ?? LENS_CATEGORY_MAP.default;
-  const condId = conditionId(input.condition);
+  const condId = conditionId(input.condition, input.lens);
 
   const photos = (input.photoUrls ?? []).slice(0, 12);
-  const pictureDetails = photos.length > 0
-    ? `<PictureDetails>
+  const pictureDetails =
+    photos.length > 0
+      ? `<PictureDetails>
       ${photos.map((u) => `<PictureURL>${escXml(u)}</PictureURL>`).join("\n      ")}
     </PictureDetails>`
-    : "";
+      : "";
+
+  const itemSpecifics = buildItemSpecifics(
+    input.lens,
+    input.attributes ?? {},
+    input.identity,
+  );
 
   const xml = `<?xml version="1.0" encoding="utf-8"?>
 <AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
@@ -206,6 +442,7 @@ export async function addEbayItem(
     <Quantity>1</Quantity>
     <PaymentMethods>PayPal</PaymentMethods>
     ${pictureDetails}
+    ${itemSpecifics}
     <ReturnPolicy>
       <ReturnsAcceptedOption>ReturnsAccepted</ReturnsAcceptedOption>
       <RefundOption>MoneyBack</RefundOption>

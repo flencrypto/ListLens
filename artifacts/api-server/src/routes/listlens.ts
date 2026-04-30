@@ -587,6 +587,10 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
       (u): u is string => typeof u === "string" && u.startsWith("http"),
     );
 
+    const identity = stored["identity"] as
+      | { brand?: string | null; model?: string | null }
+      | undefined;
+
     const result = await addEbayItem(accessToken, {
       title,
       description: resolvedDescription,
@@ -594,6 +598,7 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
       lens,
       condition: resolvedCondition,
       attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
+      identity,
       photoUrls,
     });
 
