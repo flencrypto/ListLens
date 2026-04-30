@@ -5,14 +5,16 @@ import { motion, useReducedMotion } from "framer-motion";
 import { BrandLens } from "@/components/brand/brand-lens";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { BrandBackground } from "@/components/brand/brand-background";
+import { BrandGlyph } from "@/components/brand/brand-glyph";
 import { Button } from "@/components/ui/button";
 
 /**
  * /splash — the Mr.FLENS · List-LENS animated splash page.
  *
- * Mirrors the rebrand artwork: deep navy backdrop, BrandLens HUD aperture
- * front-and-centre, staggered MR.FLENS / List-LENS wordmark reveal, and
- * primary CTAs into Studio and Guard. Honours `prefers-reduced-motion`.
+ * Mirrors the rebrand artwork: deep navy backdrop, the composed BrandLens
+ * (HUD aperture with the wordmark + readouts inside the ring), the BrandGlyph
+ * brain-in-cart mark, and primary CTAs into Studio and Guard. Honours
+ * `prefers-reduced-motion`.
  */
 export default function SplashPage() {
   const prefersReducedMotion = useReducedMotion();
@@ -31,6 +33,7 @@ export default function SplashPage() {
       <BrandBackground />
 
       <div className="relative z-10 flex min-h-screen flex-col">
+        {/* Top chrome — minimal, mirrors the artwork's quiet header */}
         <header className="flex items-center justify-between px-6 py-5 sm:px-10">
           <BrandWordmark layout="inline" size="sm" />
           <Link
@@ -41,18 +44,20 @@ export default function SplashPage() {
           </Link>
         </header>
 
-        <section className="flex flex-1 flex-col items-center justify-center px-6 pb-16 text-center">
-          <motion.div {...fade(0.05)} className="mb-8">
-            <BrandLens size={340} />
-          </motion.div>
-
-          <motion.div {...fade(0.35)}>
-            <BrandWordmark layout="stacked" size="lg" />
+        <section className="flex flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
+          {/* Composed brand lens — wordmark + readouts live inside the ring,
+              exactly like the rebrand artwork. The lens is fully responsive
+              via container queries inside BrandLens. */}
+          <motion.div
+            {...fade(0.05)}
+            className="w-full max-w-[min(92vw,560px)] aspect-square"
+          >
+            <BrandLens variant="composed" className="!w-full !h-full" />
           </motion.div>
 
           <motion.p
-            {...fade(0.6)}
-            className="mt-6 max-w-xl text-base text-cyan-100/70 sm:text-lg"
+            {...fade(0.55)}
+            className="mt-2 max-w-xl text-base text-cyan-100/70 sm:text-lg"
           >
             AI resale intelligence. Layered specialist Lenses, evidence-led
             listings, buyer risk checks. <br className="hidden sm:block" />
@@ -62,13 +67,13 @@ export default function SplashPage() {
           </motion.p>
 
           <motion.div
-            {...fade(0.85)}
-            className="mt-10 flex flex-col items-center gap-3 sm:flex-row"
+            {...fade(0.8)}
+            className="mt-8 flex flex-col items-center gap-3 sm:flex-row"
           >
             <Link href="/studio/new">
               <Button
                 size="lg"
-                className="border-0 bg-gradient-to-r from-[#22d3ee] via-[#4ade80] to-[#fb923c] px-8 text-[#040a14] hover:brightness-110"
+                className="border-0 bg-gradient-to-r from-[#22d3ee] via-[#4ade80] to-[#fb923c] px-8 font-semibold text-[#040a14] hover:brightness-110"
               >
                 Enter Studio
               </Button>
@@ -84,9 +89,15 @@ export default function SplashPage() {
             </Link>
           </motion.div>
 
+          {/* Brand glyph (brain-in-cart) — matches the icon at the bottom of
+              the rebrand artwork. */}
+          <motion.div {...fade(1.0)} className="mt-10">
+            <BrandGlyph size={44} className="opacity-90" />
+          </motion.div>
+
           <motion.p
-            {...fade(1.05)}
-            className="mt-6 text-xs uppercase tracking-[0.3em] text-cyan-200/50"
+            {...fade(1.15)}
+            className="mt-3 text-[10px] uppercase tracking-[0.4em] text-cyan-200/45"
           >
             Powered by RecordLens · ShoeLens · ClothingLens · MeasureLens
           </motion.p>
