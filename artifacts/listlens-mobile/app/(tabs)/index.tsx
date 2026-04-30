@@ -240,7 +240,7 @@ export default function HomeScreen() {
         {!dashLoading && studioActivity.length > 0 ? (
           <View style={styles.activityList}>
             {studioActivity.slice(0, 3).map((item) => (
-              <ActivityRow key={item.id} item={item} colors={colors} onPress={() => router.push("/more/history")} />
+              <ActivityRow key={item.id} item={item} colors={colors} onPress={() => router.push("/more/history" as never)} />
             ))}
           </View>
         ) : (
@@ -287,7 +287,14 @@ export default function HomeScreen() {
         {!dashLoading && guardActivity.length > 0 ? (
           <View style={styles.activityList}>
             {guardActivity.slice(0, 3).map((item) => (
-              <ActivityRow key={item.id} item={item} colors={colors} onPress={() => router.push("/more/history")} />
+              <ActivityRow
+                key={item.id}
+                item={item}
+                colors={colors}
+                onPress={() =>
+                  router.push({ pathname: "/guard/report", params: { reportId: item.id } } as never)
+                }
+              />
             ))}
           </View>
         ) : (
