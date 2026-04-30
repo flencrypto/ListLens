@@ -5,16 +5,16 @@ import type { MetadataRoute } from "next";
 // (Chrome, Safari, Edge) use this for the "Add to Home Screen" experience.
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "ListLens — List smarter. Buy safer.",
-    short_name: "ListLens",
+    name: "Mr.FLENS · List-LENS — List smarter. Buy safer.",
+    short_name: "Mr.FLENS",
     description:
-      "AI-powered listing studio and buyer protection for eBay and Vinted.",
-    start_url: "/dashboard",
+      "Mr.FLENS List-LENS — AI resale intelligence. Listing studio and buyer protection for eBay and Vinted, powered by specialist Lenses.",
+    start_url: "/splash",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#09090b",
-    theme_color: "#09090b",
+    background_color: "#040a14",
+    theme_color: "#040a14",
     categories: ["productivity", "shopping", "utilities"],
     icons: [
       {

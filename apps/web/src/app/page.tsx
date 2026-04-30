@@ -1,6 +1,9 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BrandLens } from "@/components/brand/brand-lens";
+import { BrandWordmark } from "@/components/brand/brand-wordmark";
+import { BrandBackground } from "@/components/brand/brand-background";
 
 const LENSES = [
   { name: "ShoeLens", icon: "👟", desc: "Trainers, sneakers, shoes", status: "live" },
@@ -62,13 +65,13 @@ const PRICING = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-50">
+    <div className="min-h-screen bg-[#040a14] text-zinc-50">
       {/* Nav */}
-      <nav className="border-b border-zinc-800/60 bg-zinc-950/80 backdrop-blur sticky top-0 z-50">
+      <nav className="border-b border-cyan-400/10 bg-[#040a14]/80 backdrop-blur sticky top-0 z-50">
         <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
-          <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
-            ListLens
-          </span>
+          <Link href="/splash" aria-label="Mr.FLENS List-LENS">
+            <BrandWordmark layout="inline" size="sm" />
+          </Link>
           <div className="flex items-center gap-6">
             <Link href="#features" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Features</Link>
             <Link href="#lenses" className="text-sm text-zinc-400 hover:text-white transition-colors hidden sm:block">Lenses</Link>
@@ -82,15 +85,18 @@ export default function HomePage() {
 
       {/* Hero */}
       <section className="relative overflow-hidden py-24 px-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/30 via-zinc-950 to-violet-950/30 pointer-events-none" />
-        <div className="relative max-w-4xl mx-auto text-center">
-          <Badge className="mb-6 bg-cyan-950 text-cyan-400 border border-cyan-800/50">
-            UK-first AI resale platform
+        <BrandBackground />
+        <div className="relative max-w-5xl mx-auto text-center">
+          <div className="flex justify-center mb-8">
+            <BrandLens size={260} hideLabels />
+          </div>
+          <Badge className="mb-6 bg-cyan-950 text-cyan-300 border border-cyan-700/50">
+            Mr.FLENS · List-LENS — UK-first AI resale platform
           </Badge>
           <h1 className="text-6xl sm:text-7xl font-extrabold tracking-tight mb-6">
             <span className="text-white">List smarter.</span>
             <br />
-            <span className="bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#3ea8ff] via-[#22d3ee] to-[#4ade80] bg-clip-text text-transparent">
               Buy safer.
             </span>
           </h1>
@@ -282,12 +288,10 @@ export default function HomePage() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-zinc-800 py-8 px-4">
+      <footer className="border-t border-cyan-400/10 py-8 px-4">
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-lg font-bold bg-gradient-to-r from-cyan-400 to-violet-500 bg-clip-text text-transparent">
-            ListLens
-          </span>
-          <p className="text-zinc-500 text-sm">© 2025 ListLens. AI resale trust layer for eBay & Vinted.</p>
+          <BrandWordmark layout="inline" size="sm" />
+          <p className="text-zinc-500 text-sm">© 2026 Mr.FLENS · List-LENS. AI resale trust layer for eBay & Vinted.</p>
           <div className="flex gap-6">
             <Link href="/studio/new" className="text-sm text-zinc-400 hover:text-white transition-colors">Studio</Link>
             <Link href="/guard/new" className="text-sm text-zinc-400 hover:text-white transition-colors">Guard</Link>
