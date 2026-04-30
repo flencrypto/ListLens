@@ -62,19 +62,29 @@ export default function TabLayout() {
             )}
             {/* HUD divider strip on top of the tab bar */}
             <View
-              pointerEvents="none"
-              style={{
-                position: "absolute",
-                left: 0,
-                right: 0,
-                top: 0,
-                height: 1,
-                backgroundColor: "rgba(34,211,238,0.35)",
-                shadowColor: colors.brandCyan,
-                shadowOpacity: 0.6,
-                shadowRadius: 6,
-                shadowOffset: { width: 0, height: 0 },
-              }}
+              style={[
+                {
+                  position: "absolute",
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  height: 1,
+                  backgroundColor: "rgba(34,211,238,0.35)",
+                  pointerEvents: "none",
+                },
+                Platform.select({
+                  web: {
+                    // RN-web prefers boxShadow over the deprecated shadow* props.
+                    boxShadow: "0 0 6px rgba(34,211,238,0.6)",
+                  },
+                  default: {
+                    shadowColor: colors.brandCyan,
+                    shadowOpacity: 0.6,
+                    shadowRadius: 6,
+                    shadowOffset: { width: 0, height: 0 },
+                  },
+                }),
+              ]}
             />
           </View>
         ),

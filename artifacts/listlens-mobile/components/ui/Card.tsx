@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, ViewProps } from "react-native";
+import { Platform, StyleSheet, View, ViewProps } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -56,14 +56,21 @@ export function Card({
           padding: padded ? 18 : 0,
         },
         glow
-          ? {
-              shadowColor: glowColor,
-              shadowOpacity: 0.7,
-              shadowRadius: 18,
-              shadowOffset: { width: 0, height: 8 },
-              // Android elevation for a faint lift
-              elevation: 6,
-            }
+          ? Platform.select({
+              web: {
+                // RN-web deprecates shadow* props — use boxShadow directly so
+                // the preview console stays quiet. Visual is equivalent.
+                boxShadow: `0 8px 18px ${glowColor}`,
+              },
+              default: {
+                shadowColor: glowColor,
+                shadowOpacity: 0.7,
+                shadowRadius: 18,
+                shadowOffset: { width: 0, height: 8 },
+                // Android elevation for a faint lift
+                elevation: 6,
+              },
+            })
           : null,
         style,
       ]}
