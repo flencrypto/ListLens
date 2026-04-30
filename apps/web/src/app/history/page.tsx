@@ -18,12 +18,12 @@ export default async function HistoryPage() {
             <p className="text-zinc-400 text-sm">Your saved listings and Guard checks.</p>
           </div>
           <div className="flex gap-2">
-            <Link href="/studio/new">
-              <Button size="sm" className="bg-cyan-600 hover:bg-cyan-500">New listing</Button>
-            </Link>
-            <Link href="/guard/new">
-              <Button size="sm" variant="outline" className="border-violet-700 text-violet-300 hover:bg-violet-950/40">New check</Button>
-            </Link>
+            <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500">
+              <Link href="/studio/new">New listing</Link>
+            </Button>
+            <Button asChild size="sm" variant="outline" className="border-violet-700 text-violet-300 hover:bg-violet-950/40">
+              <Link href="/guard/new">New check</Link>
+            </Button>
           </div>
         </div>
 
@@ -41,9 +41,9 @@ export default async function HistoryPage() {
               <p className="text-zinc-600 text-xs max-w-xs text-center">
                 Create a listing in Studio. After analysis, your drafts will appear here.
               </p>
-              <Link href="/studio/new">
-                <Button size="sm" variant="outline">Create first listing</Button>
-              </Link>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/studio/new">Create first listing</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -62,9 +62,9 @@ export default async function HistoryPage() {
               <p className="text-zinc-600 text-xs max-w-xs text-center">
                 Check a listing before you buy. Saved reports will appear here.
               </p>
-              <Link href="/guard/new">
-                <Button size="sm" variant="outline">Check a listing</Button>
-              </Link>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/guard/new">Check a listing</Link>
+              </Button>
             </div>
           </CardContent>
         </Card>

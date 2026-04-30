@@ -184,9 +184,9 @@ export default async function BillingPage() {
                     </li>
                   ))}
                 </ul>
-                <Link href={plan.href}>
-                  <Button variant="outline" className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40">{plan.cta}</Button>
-                </Link>
+                <Button asChild variant="outline" className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40">
+                  <Link href={plan.href}>{plan.cta}</Link>
+                </Button>
               </div>
             ))}
           </div>
