@@ -32,6 +32,7 @@
           "origin": "https://replit.com/"
         }
       ],
+      "expo-splash-screen",
       "expo-font",
       "expo-web-browser"
     ],

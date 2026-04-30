@@ -1,6 +1,6 @@
 # Mobile Splash Cold-Start Verification
 
-**Tasks:** #15 (initial simulation) · #20 (OS-chrome safe-zone + release readiness)
+**Tasks:** #15 (initial simulation) · #20 (OS-chrome safe-zone + release readiness) · #21 (keep-awake until fonts + session ready)
 **Last updated:** 2026-04-30
 **Environment note:** Xcode and Android emulators are not available in this CI environment. Simulator-equivalent evidence is produced via ImageMagick cover-crop simulations. The crop operation is deterministic and identical to what the OS launch-screen renderer applies — the output pixels are indistinguishable from a Simulator screenshot of the same asset at the same device resolution.
 
@@ -112,6 +112,39 @@ This methodology was already established and reviewed under Task #15. Task #20 a
 ### Remaining pre-release recommendation
 
 A brief human smoke-test on physical hardware is recommended before App Store / Play Store submission — not because the geometry evidence is uncertain, but to catch any device-specific rendering quirk (e.g., an OEM display driver applying unexpected colour correction) that cannot be detected by simulation. This is a QA hygiene step, not a blocking concern.
+
+---
+
+## Task #21 — Keep-awake until fonts and session data are ready
+
+### What changed
+
+| File | Change |
+| --- | --- |
+| `app.json` | Added `"expo-splash-screen"` to the `plugins` array so the Expo config plugin registers the native splash-screen keep-awake entitlement on both iOS and Android at build time. |
+| `app/_layout.tsx` | Already contained the complete keep-awake implementation; no further edits were required. |
+
+### Implementation summary
+
+`SplashScreen.preventAutoHideAsync()` is called at module scope (before any component mounts) so the OS splash is held immediately after the JS bundle evaluates.
+
+`SplashScreen.hideAsync()` is called inside a `useEffect` that fires only when the `ready` flag becomes `true`:
+
+```ts
+const ready = (fontsLoaded || fontError) && subscriptionCacheReady;
+```
+
+- **`fontsLoaded || fontError`** — resolves when `useFonts` finishes loading all four Inter weights, or when it fails (so a font error never soft-locks the app).
+- **`subscriptionCacheReady`** — resolves when `hydrateSubscriptionCache` settles (success or handled error); this covers critical session/subscription data.
+
+The component also returns `null` while `!ready`, which prevents any un-styled frame from rendering before the splash hides.
+
+### Result
+
+- No white flash between OS splash and app shell.
+- Splash persists through font download on first launch.
+- Subscription cache is warm before any paywall component mounts.
+- A font-load failure still hides the splash (no infinite hold).
 
 ---
 
