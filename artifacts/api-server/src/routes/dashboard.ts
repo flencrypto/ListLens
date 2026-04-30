@@ -1,6 +1,6 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, usersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, studioItemsTable, guardChecksTable } from "@workspace/db";
+import { eq, desc, count } from "drizzle-orm";
 import { logger } from "../lib/logger";
 
 const router: IRouter = Router();
@@ -14,27 +14,62 @@ router.get("/dashboard", async (req: Request, res: Response) => {
   const userId = req.user!.id;
 
   try {
-    const [user] = await db
-      .select({
-        credits: usersTable.credits,
-        planTier: usersTable.planTier,
-      })
-      .from(usersTable)
-      .where(eq(usersTable.id, userId));
+    const [[user], [studioCountRow], [guardCountRow], recentStudio, recentGuard] =
+      await Promise.all([
+        db
+          .select({ credits: usersTable.credits, planTier: usersTable.planTier })
+          .from(usersTable)
+          .where(eq(usersTable.id, userId)),
+        db
+          .select({ count: count() })
+          .from(studioItemsTable)
+          .where(eq(studioItemsTable.userId, userId)),
+        db
+          .select({ count: count() })
+          .from(guardChecksTable)
+          .where(eq(guardChecksTable.userId, userId)),
+        db
+          .select()
+          .from(studioItemsTable)
+          .where(eq(studioItemsTable.userId, userId))
+          .orderBy(desc(studioItemsTable.createdAt))
+          .limit(5),
+        db
+          .select()
+          .from(guardChecksTable)
+          .where(eq(guardChecksTable.userId, userId))
+          .orderBy(desc(guardChecksTable.createdAt))
+          .limit(5),
+      ]);
+
+    const studioActivity = recentStudio.map((item) => ({
+      id: item.id,
+      type: "studio" as const,
+      title: item.title ?? "Studio listing",
+      status: item.status,
+      date: item.createdAt.toISOString(),
+      href: `/studio/${item.id}`,
+    }));
+
+    const guardActivity = recentGuard.map((item) => ({
+      id: item.id,
+      type: "guard" as const,
+      title: item.url ? (() => { try { return new URL(item.url!).hostname; } catch { return item.url!; } })() : "Guard check",
+      status: item.riskLevel ?? item.status,
+      date: item.createdAt.toISOString(),
+      href: `/guard/${item.id}`,
+    }));
+
+    const recentActivity = [...studioActivity, ...guardActivity]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
 
     res.json({
-      studioCount: 0,
-      guardCount: 0,
+      studioCount: studioCountRow?.count ?? 0,
+      guardCount: guardCountRow?.count ?? 0,
       credits: user?.credits ?? 0,
       planTier: user?.planTier ?? "free",
-      recentActivity: [] as {
-        id: string;
-        type: "studio" | "guard";
-        title: string;
-        status: string;
-        date: string;
-        href: string;
-      }[],
+      recentActivity,
     });
   } catch (err) {
     logger.error({ err, userId }, "Dashboard query failed");

@@ -24,6 +24,29 @@ export async function runMigrations(): Promise<void> {
         ADD COLUMN IF NOT EXISTS plan_tier VARCHAR NOT NULL DEFAULT 'free';
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS studio_items (
+        id VARCHAR PRIMARY KEY,
+        user_id VARCHAR,
+        lens VARCHAR NOT NULL DEFAULT 'ShoeLens',
+        title VARCHAR,
+        status VARCHAR NOT NULL DEFAULT 'analysed',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS guard_checks (
+        id VARCHAR PRIMARY KEY,
+        user_id VARCHAR,
+        lens VARCHAR NOT NULL DEFAULT 'ShoeLens',
+        url VARCHAR,
+        risk_level VARCHAR,
+        status VARCHAR NOT NULL DEFAULT 'checked',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     logger.info("Migrations applied successfully");
   } catch (err) {
     logger.warn({ err }, "Migration warning (non-fatal)");

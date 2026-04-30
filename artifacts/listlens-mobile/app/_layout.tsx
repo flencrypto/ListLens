@@ -23,10 +23,12 @@ import {
   SubscriptionProvider,
 } from "@/lib/revenuecat";
 import { AuthProvider } from "@/lib/auth";
+import { setAuthTokenProvider } from "@/lib/api";
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (domain) setBaseUrl(`https://${domain}`);
 setAuthTokenGetter(() => SecureStore.getItemAsync("auth_session_token"));
+setAuthTokenProvider(() => SecureStore.getItemAsync("auth_session_token"));
 
 SplashScreen.preventAutoHideAsync();
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -71,16 +71,25 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/dashboard")
-      .then(async (r) => {
-        if (r.status === 401) { setLoggedIn(false); return; }
-        const d = await r.json() as DashboardData;
-        setData(d);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
+  const fetchDashboard = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch("/api/dashboard");
+      if (r.status === 401) { setLoggedIn(false); return; }
+      const d = await r.json() as DashboardData;
+      setData(d);
+    } catch {
+    } finally {
+      setLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    void fetchDashboard();
+    const onVisible = () => { if (document.visibilityState === "visible") void fetchDashboard(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [fetchDashboard]);
 
   const planBadge = data ? planLabel(data.planTier) : "Free trial";
   const isUpgradeable = !data || data.planTier === "free";

@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -10,6 +10,7 @@ import {
   useWindowDimensions,
   View,
 } from "react-native";
+import { useFocusEffect } from "expo-router";
 
 import { BrandLens } from "@/components/brand/BrandLens";
 import { Badge } from "@/components/ui/Badge";
@@ -82,12 +83,15 @@ export default function HomeScreen() {
   const [dashData, setDashData] = useState<DashboardData | null>(null);
   const [dashLoading, setDashLoading] = useState(true);
 
-  useEffect(() => {
-    getDashboard()
-      .then((d) => setDashData(d))
-      .catch(() => {})
-      .finally(() => setDashLoading(false));
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      setDashLoading(true);
+      getDashboard()
+        .then((d) => setDashData(d))
+        .catch(() => setDashData(null))
+        .finally(() => setDashLoading(false));
+    }, []),
+  );
 
   const tier = dashData?.planTier ?? "free";
   const badgeLabel = isSubscribed ? "Pro" : (dashData ? planLabel(tier) : "Free trial");

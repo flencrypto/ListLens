@@ -4,6 +4,7 @@ import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
 import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
+import { db, studioItemsTable, guardChecksTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
@@ -401,10 +402,24 @@ router.post("/items/:id/analyse", async (req, res) => {
   const lens = (b["lens"] as string) ?? meta.lens ?? "ShoeLens";
   const hint = (b["hint"] as string) ?? meta.hint;
   const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? [];
+  const userId = req.user?.id;
 
   try {
     const analysis = await runStudioAnalysis(lens, photoUrls, hint);
     studioStore.set(id, analysis);
+
+    const title =
+      String((analysis.marketplace_outputs?.ebay as Record<string, unknown>)?.["title"] ?? "") ||
+      [analysis.identity.brand, analysis.identity.model].filter(Boolean).join(" ") ||
+      "Untitled listing";
+
+    if (userId) {
+      db.insert(studioItemsTable)
+        .values({ id, userId, lens, title, status: "analysed" })
+        .onConflictDoUpdate({ target: studioItemsTable.id, set: { title, status: "analysed" } })
+        .catch((err) => logger.warn({ err }, "studio_items insert failed (non-fatal)"));
+    }
+
     res.json({ analysis });
   } catch (err) {
     logger.error({ err, id }, "Studio analysis failed");
@@ -545,6 +560,7 @@ router.get("/guard/checks/:id", (req, res) => {
 router.post("/guard/checks/:id/analyse", async (req, res) => {
   const { id } = req.params;
   const meta = guardMeta.get(id) ?? {};
+  const userId = req.user?.id;
   try {
     const report = await runGuardAnalysis(
       meta.lens ?? "ShoeLens",
@@ -552,6 +568,21 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
       meta.screenshotUrls,
     );
     guardStore.set(id, report);
+
+    if (userId) {
+      db.insert(guardChecksTable)
+        .values({
+          id,
+          userId,
+          lens: meta.lens ?? "ShoeLens",
+          url: meta.url ?? null,
+          riskLevel: report.risk.level,
+          status: "checked",
+        })
+        .onConflictDoUpdate({ target: guardChecksTable.id, set: { riskLevel: report.risk.level } })
+        .catch((err) => logger.warn({ err }, "guard_checks insert failed (non-fatal)"));
+    }
+
     res.json({ id, report });
   } catch (err) {
     logger.error({ err, id }, "Guard analysis failed");
