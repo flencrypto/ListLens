@@ -142,8 +142,8 @@ export default function NewListingScreen() {
       />
 
       <Text style={[styles.note, { color: colors.zinc500 }]}>
-        Photos stay on your device. Your draft is generated locally for this
-        demo.
+        Photos are sent securely to AI for analysis. Drafts are reviewed before
+        any export.
       </Text>
     </ScreenContainer>
   );

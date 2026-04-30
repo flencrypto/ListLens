@@ -41,6 +41,7 @@ function imageContent(
 const StudioOutputSchema = z.object({
   mode: z.literal("studio"),
   lens: z.string(),
+  listing_description: z.string().default(""),
   identity: z.object({
     brand: z.string().nullable(),
     model: z.string().nullable(),
@@ -93,6 +94,7 @@ async function runStudioAnalysis(
 {
   "mode": "studio",
   "lens": "${lens}",
+  "listing_description": "2-3 sentence honest description of the item's condition and key features, written in first person for eBay/Vinted",
   "identity": { "brand": string|null, "model": string|null, "confidence": 0-1 },
   "attributes": { ...key-value pairs relevant to the ${lensLabel} },
   "missing_photos": [ ...strings listing missing shots needed ],

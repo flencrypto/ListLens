@@ -17,9 +17,16 @@ import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
+import { analyseItem, createItem } from "@/lib/api";
 
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
+
+interface PhotoEntry {
+  uri: string;
+  base64: string;
+  mimeType?: string;
+}
 
 export default function CaptureScreen() {
   const colors = useColors();
@@ -28,7 +35,7 @@ export default function CaptureScreen() {
     lens?: string;
     marketplace?: string;
   }>();
-  const [photos, setPhotos] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [busy, setBusy] = useState(false);
 
   async function takePhoto() {
@@ -37,26 +44,35 @@ export default function CaptureScreen() {
       return;
     }
     if (Platform.OS === "web") {
-      // expo-camera/launchCameraAsync is not supported on web; fall back to
-      // the library picker so the flow still works in the browser preview.
       return pickFromLibrary();
     }
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) {
-      notify(
-        "Camera permission was declined. You can enable it in Settings.",
-      );
+      notify("Camera permission was declined. You can enable it in Settings.");
       return;
     }
     const res = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
-      quality: 0.85,
+      quality: 0.8,
+      base64: true,
     });
     if (!res.canceled && res.assets[0]) {
+      const asset = res.assets[0];
+      if (!asset.base64) {
+        notify("Could not read photo data. Please try again.");
+        return;
+      }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(
         () => undefined,
       );
-      setPhotos((prev) => [...prev, res.assets[0]!.uri]);
+      setPhotos((prev) => [
+        ...prev,
+        {
+          uri: asset.uri,
+          base64: asset.base64,
+          mimeType: asset.mimeType ?? "image/jpeg",
+        },
+      ]);
     }
   }
 
@@ -79,10 +95,18 @@ export default function CaptureScreen() {
       mediaTypes: ["images"],
       allowsMultipleSelection: true,
       selectionLimit: remaining,
-      quality: 0.85,
+      quality: 0.8,
+      base64: true,
     });
     if (!res.canceled) {
-      const next = res.assets.map((a) => a.uri).slice(0, remaining);
+      const next: PhotoEntry[] = res.assets
+        .filter((a) => !!a.base64)
+        .map((a) => ({
+          uri: a.uri,
+          base64: a.base64 as string,
+          mimeType: a.mimeType ?? "image/jpeg",
+        }))
+        .slice(0, remaining);
       setPhotos((prev) => [...prev, ...next]);
     }
   }
@@ -97,22 +121,39 @@ export default function CaptureScreen() {
       return;
     }
     setBusy(true);
-    // Simulate the analysis hop. In a real build this would POST to the API.
-    setTimeout(() => {
+    try {
+      const photoUrls = photos.map(
+        (p) => `data:${p.mimeType ?? "image/jpeg"};base64,${p.base64}`,
+      );
+
+      const { id } = await createItem({
+        lens: String(lens),
+        marketplace: String(marketplace),
+        photoUrls,
+      });
+
+      const { analysis } = await analyseItem(id, {
+        lens: String(lens),
+        photoUrls,
+      });
+
       router.replace({
         pathname: "/studio/review",
         params: {
           lens: String(lens),
           marketplace: String(marketplace),
-          photos: photos.join("|"),
+          photos: photos.map((p) => p.uri).join("|"),
+          analysis: JSON.stringify(analysis),
         },
       });
-    }, 1100);
+    } catch {
+      notify("AI analysis failed. Please check your connection and try again.");
+      setBusy(false);
+    }
   }
 
   function notify(message: string) {
     if (Platform.OS === "web") {
-      // eslint-disable-next-line no-alert
       window.alert(message);
     } else {
       Alert.alert("Heads up", message);
@@ -162,10 +203,10 @@ export default function CaptureScreen() {
         </View>
 
         <View style={styles.thumbGrid}>
-          {photos.map((uri, idx) => (
+          {photos.map((entry, idx) => (
             <CaptureThumb
-              key={`${uri}-${idx}`}
-              uri={uri}
+              key={`${entry.uri}-${idx}`}
+              uri={entry.uri}
               onRemove={() => removePhoto(idx)}
             />
           ))}
@@ -202,21 +243,23 @@ export default function CaptureScreen() {
 
       <BrandButton
         label={
-          photos.length < MIN_PHOTOS
-            ? `Add ${MIN_PHOTOS - photos.length} more photo${
-                MIN_PHOTOS - photos.length === 1 ? "" : "s"
-              }`
-            : "Analyse with AI →"
+          busy
+            ? "Analysing with AI…"
+            : photos.length < MIN_PHOTOS
+              ? `Add ${MIN_PHOTOS - photos.length} more photo${
+                  MIN_PHOTOS - photos.length === 1 ? "" : "s"
+                }`
+              : "Analyse with AI →"
         }
         size="lg"
         loading={busy}
-        disabled={photos.length < MIN_PHOTOS}
+        disabled={photos.length < MIN_PHOTOS || busy}
         onPress={startAnalysis}
       />
 
       <Text style={[styles.note, { color: colors.zinc500 }]}>
-        We never publish without your review. Drafts go to the review screen
-        first.
+        Photos are sent securely for AI analysis and not stored. Drafts go to
+        the review screen first.
       </Text>
     </ScreenContainer>
   );
@@ -305,7 +348,14 @@ function CaptureThumb({
   return (
     <View style={styles.thumbWrap}>
       {error ? (
-        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(8,16,28,0.85)" }}>
+        <View
+          style={{
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: "rgba(8,16,28,0.85)",
+          }}
+        >
           <Feather name="image" size={24} color="rgba(113,113,122,0.6)" />
         </View>
       ) : (

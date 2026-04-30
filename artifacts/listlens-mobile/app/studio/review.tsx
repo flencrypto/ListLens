@@ -22,6 +22,7 @@ import {
   saveDraft,
   type StudioDraft,
 } from "@/lib/historyStore";
+import type { StudioAnalysis } from "@/lib/api";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -29,26 +30,77 @@ const DEFAULT_BODY: DraftBody = {
   lens: "ShoeLens",
   marketplace: "both",
   photos: [],
-  title: "Nike Air Max 90 — UK 10 — Worn",
-  brand: "Nike",
-  size: "UK 10 / EU 45 / US 11",
-  description:
-    "Worn but clean Nike Air Max 90 in white/grey. Original laces. Light creasing on the toe box, sole intact with even wear. Photos taken in natural light. Smoke-free home, ships next day.",
-  bullets: [
-    "Style code visible on the inside size label",
-    "Outsole shows even wear, no separation",
-    "Original laces and sock liner",
-    "Stored in a smoke-free home",
-  ],
-  pricing: { quick: 38, recommended: 52, high: 68 },
-  flags: [
-    {
-      severity: "low",
-      text: "Add a clean side-on photo for size confidence",
-    },
-  ],
+  title: "AI-drafted listing",
+  brand: "",
+  size: "",
+  description: "Listing drafted from your photos.",
+  bullets: [],
+  pricing: { quick: 0, recommended: 0, high: 0 },
+  flags: [],
   exported: "none",
 };
+
+function analysisToBody(
+  analysis: StudioAnalysis,
+  lens: string,
+  marketplace: string,
+  photos: string[],
+): DraftBody {
+  const ebay = analysis.marketplace_outputs?.ebay ?? {};
+  const vinted = analysis.marketplace_outputs?.vinted ?? {};
+  const identityStr =
+    [analysis.identity?.brand, analysis.identity?.model]
+      .filter(Boolean)
+      .join(" ") || "AI-drafted listing";
+  const title =
+    (ebay["title"] as string | undefined) ??
+    (vinted["title"] as string | undefined) ??
+    identityStr;
+
+  const attrs = analysis.attributes ?? {};
+  const size =
+    (attrs["size"] as string | undefined) ??
+    (attrs["Size"] as string | undefined) ??
+    "";
+
+  const bullets: string[] = Object.entries(attrs)
+    .filter(
+      ([k]) =>
+        !["size", "Size"].includes(k) &&
+        typeof attrs[k] !== "object",
+    )
+    .slice(0, 6)
+    .map(([k, v]) => `${k}: ${String(v)}`);
+
+  const flags: DraftBody["flags"] = [
+    ...(analysis.missing_photos ?? []).map((text) => ({
+      severity: "medium" as const,
+      text,
+    })),
+    ...(analysis.warnings ?? []).map((text) => ({
+      severity: "low" as const,
+      text,
+    })),
+  ];
+
+  return {
+    lens,
+    marketplace,
+    photos,
+    title,
+    brand: analysis.identity?.brand ?? "",
+    size,
+    description: analysis.listing_description ?? "",
+    bullets,
+    pricing: {
+      quick: analysis.pricing?.quick_sale ?? 0,
+      recommended: analysis.pricing?.recommended ?? 0,
+      high: analysis.pricing?.high ?? 0,
+    },
+    flags,
+    exported: "none",
+  };
+}
 
 export default function ReviewScreen() {
   const colors = useColors();
@@ -58,6 +110,7 @@ export default function ReviewScreen() {
     marketplace?: string;
     photos?: string;
     draftId?: string;
+    analysis?: string;
   }>();
 
   const paramPhotos = useMemo(
@@ -98,20 +151,44 @@ export default function ReviewScreen() {
           return;
         }
       }
-      // New draft
+
+      // New draft — use real AI analysis if provided, else fallback defaults
       const id = generateId();
       const now = Date.now();
       if (cancelled) return;
       setDraftId(id);
       setCreatedAt(now);
-      setBody({
-        ...DEFAULT_BODY,
-        lens: params.lens ? String(params.lens) : DEFAULT_BODY.lens,
-        marketplace: params.marketplace
-          ? String(params.marketplace)
-          : DEFAULT_BODY.marketplace,
-        photos: paramPhotos,
-      });
+
+      const rawAnalysis = params.analysis ? String(params.analysis) : null;
+      if (rawAnalysis) {
+        try {
+          const parsed = JSON.parse(rawAnalysis) as StudioAnalysis;
+          setBody(
+            analysisToBody(
+              parsed,
+              params.lens ? String(params.lens) : DEFAULT_BODY.lens,
+              params.marketplace ? String(params.marketplace) : DEFAULT_BODY.marketplace,
+              paramPhotos,
+            ),
+          );
+        } catch {
+          setBody({
+            ...DEFAULT_BODY,
+            lens: params.lens ? String(params.lens) : DEFAULT_BODY.lens,
+            marketplace: params.marketplace ? String(params.marketplace) : DEFAULT_BODY.marketplace,
+            photos: paramPhotos,
+          });
+        }
+      } else {
+        setBody({
+          ...DEFAULT_BODY,
+          lens: params.lens ? String(params.lens) : DEFAULT_BODY.lens,
+          marketplace: params.marketplace
+            ? String(params.marketplace)
+            : DEFAULT_BODY.marketplace,
+          photos: paramPhotos,
+        });
+      }
       setHydrated(true);
     }
     load();

@@ -58,12 +58,12 @@ export default function StudioScreen() {
 
       <Card>
         <Text style={[styles.cardLead, { color: colors.foreground }]}>
-          Demo mode
+          How it works
         </Text>
         <Text style={[styles.cardBody, { color: colors.zinc400 }]}>
-          The current build runs the full Studio flow with demo data so you can
-          feel the experience end to end. Drafts you create here aren't sent to
-          eBay or Vinted yet.
+          Photos are sent securely to GPT-4o vision for analysis. The AI reads
+          your item and drafts a full listing. You review and edit before
+          exporting to eBay or Vinted.
         </Text>
       </Card>
     </ScreenContainer>
