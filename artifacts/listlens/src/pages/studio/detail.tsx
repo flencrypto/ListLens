@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -15,8 +15,21 @@ export default function StudioItemPage() {
   const [hint, setHint] = useState("");
   const [analysis, setAnalysis] = useState<StudioOutput | null>(null);
   const [loading, setLoading] = useState(false);
+  const [loadingExisting, setLoadingExisting] = useState(true);
   const [urlInput, setUrlInput] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/items/${id}/analysis`)
+      .then(async (res) => {
+        if (res.ok) {
+          const data = await res.json();
+          if (data.analysis) setAnalysis(data.analysis as StudioOutput);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingExisting(false));
+  }, [id]);
 
   function handleAddUrl() {
     const trimmed = urlInput.trim();
@@ -72,7 +85,13 @@ export default function StudioItemPage() {
           <Badge variant="secondary">Item {id.slice(-8)}</Badge>
         </div>
 
-        {!analysis && (
+        {loadingExisting && (
+          <div className="flex justify-center py-16">
+            <Spinner className="text-cyan-400" />
+          </div>
+        )}
+
+        {!loadingExisting && !analysis && (
           <>
             {/* Photo input */}
             <div className="brand-card p-6 space-y-4">

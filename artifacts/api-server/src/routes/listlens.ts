@@ -4,7 +4,8 @@ import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
 import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
-import { db, studioItemsTable, guardChecksTable } from "@workspace/db";
+import { db, studioItemsTable, guardChecksTable, listingsTable } from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
 
 const router: IRouter = Router();
 
@@ -462,19 +463,69 @@ async function identifyRecord(
   };
 }
 
-router.post("/items", (req, res) => {
+router.get("/items", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "You must be logged in to view listings." });
+    return;
+  }
+  try {
+    const rows = await db
+      .select()
+      .from(listingsTable)
+      .where(eq(listingsTable.userId, userId))
+      .orderBy(desc(listingsTable.createdAt));
+    res.json({ listings: rows });
+  } catch (err) {
+    logger.error({ err }, "Failed to fetch listings");
+    res.status(500).json({ error: "Failed to fetch listings." });
+  }
+});
+
+router.post("/items", async (req, res) => {
   const b = body(req);
   const id = newId("item");
   const lens = (b["lens"] as string) ?? "ShoeLens";
   const marketplace = b["marketplace"] as string | undefined;
   const photoUrls = (b["photoUrls"] as string[]) ?? [];
+  const userId = req.user?.id ?? null;
+
   itemMeta.set(id, { lens, marketplace, photoUrls });
+
+  try {
+    await db.insert(listingsTable).values({
+      id,
+      userId,
+      lens,
+      marketplace,
+      photoUrls,
+      status: "draft",
+    });
+  } catch (err) {
+    logger.warn({ err, id }, "Could not persist listing to DB (non-fatal)");
+  }
+
   res.json({ id, lens, marketplace, status: "draft" });
 });
 
 router.post("/items/:id/analyse", async (req, res) => {
   const { id } = req.params;
   const b = body(req);
+
+  const ownership = await fetchOwnedListing(id, req.user?.id);
+  if (ownership.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (ownership.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  if (ownership.notFound && !itemMeta.has(id)) {
+    res.status(404).json({ error: "Listing not found." });
+    return;
+  }
+
   const meta = itemMeta.get(id) ?? {};
   const lens = (b["lens"] as string) ?? meta.lens ?? "ShoeLens";
   const hint = (b["hint"] as string) ?? meta.hint;
@@ -485,16 +536,35 @@ router.post("/items/:id/analyse", async (req, res) => {
     const analysis = await runStudioAnalysis(lens, photoUrls, hint);
     studioStore.set(id, analysis);
 
-    const title =
-      String((analysis.marketplace_outputs?.ebay as Record<string, unknown>)?.["title"] ?? "") ||
-      [analysis.identity.brand, analysis.identity.model].filter(Boolean).join(" ") ||
-      "Untitled listing";
+    const ebayTitle = String((analysis.marketplace_outputs?.ebay as Record<string, unknown>)?.["title"] ?? "");
+    const identity = analysis.identity as { brand?: string | null; model?: string | null } | undefined;
+    const title = ebayTitle || [identity?.brand, identity?.model].filter(Boolean).join(" ") || "Untitled listing";
+    const pricing = analysis.pricing as { recommended?: number; currency?: string } | undefined;
+    const price = pricing?.recommended != null ? String(pricing.recommended) : null;
+    const description = (analysis as Record<string, unknown>)["listing_description"] as string | null ?? null;
 
     if (userId) {
       await db.insert(studioItemsTable)
         .values({ id, userId, lens, title, status: "analysed" })
         .onConflictDoUpdate({ target: studioItemsTable.id, set: { title, status: "analysed" } })
         .catch((err) => logger.warn({ err }, "studio_items insert failed (non-fatal)"));
+    }
+
+    try {
+      await db
+        .update(listingsTable)
+        .set({
+          analysis,
+          title,
+          price,
+          description,
+          hint: hint ?? null,
+          photoUrls,
+          status: "analysed",
+        })
+        .where(eq(listingsTable.id, id));
+    } catch (dbErr) {
+      logger.warn({ dbErr, id }, "Could not persist analysis to DB (non-fatal)");
     }
 
     res.json({ analysis });
@@ -506,19 +576,75 @@ router.post("/items/:id/analyse", async (req, res) => {
   }
 });
 
-router.get("/items/:id/analysis", (req, res) => {
+type OwnedListingResult =
+  | { row: typeof listingsTable.$inferSelect; denied: false; dbError: false; notFound: false }
+  | { row: null; denied: false; dbError: false; notFound: true }
+  | { row: null; denied: true; dbError: false; notFound: false }
+  | { row: null; denied: false; dbError: true; notFound: false };
+
+async function fetchOwnedListing(
+  id: string,
+  currentUserId: string | undefined,
+): Promise<OwnedListingResult> {
+  try {
+    const [row] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
+    if (!row) {
+      return { row: null, denied: false, dbError: false, notFound: true };
+    }
+    if (row.userId !== null && row.userId !== currentUserId) {
+      return { row: null, denied: true, dbError: false, notFound: false };
+    }
+    return { row, denied: false, dbError: false, notFound: false };
+  } catch (err) {
+    logger.warn({ err, id }, "DB error during ownership check — denying access");
+    return { row: null, denied: false, dbError: true, notFound: false };
+  }
+}
+
+router.get("/items/:id/analysis", async (req, res) => {
   const { id } = req.params;
-  const analysis = studioStore.get(id);
-  if (!analysis) {
-    res.status(404).json({ error: "Not found" });
+  const result = await fetchOwnedListing(id, req.user?.id);
+  if (result.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
     return;
   }
-  res.json({ analysis });
+  if (result.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const cached = studioStore.get(id);
+  if (cached) {
+    res.json({ analysis: cached });
+    return;
+  }
+  if (result.row?.analysis) {
+    studioStore.set(id, result.row.analysis);
+    if (!itemMeta.has(id)) {
+      itemMeta.set(id, {
+        lens: result.row.lens,
+        marketplace: result.row.marketplace ?? undefined,
+        photoUrls: result.row.photoUrls ?? [],
+      });
+    }
+    res.json({ analysis: result.row.analysis });
+    return;
+  }
+  res.status(404).json({ error: "Not found" });
 });
 
-router.post("/items/:id/export/vinted", (req, res) => {
+router.post("/items/:id/export/vinted", async (req, res) => {
   const { id } = req.params;
-  const analysis = studioStore.get(id);
+  const result = await fetchOwnedListing(id, req.user?.id);
+  if (result.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (result.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  const analysis = studioStore.get(id) ?? result.row?.analysis;
   const vinted =
     (
       analysis?.["marketplace_outputs"] as
@@ -565,6 +691,16 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
     return;
   }
 
+  const ownershipResult = await fetchOwnedListing(id, userId);
+  if (ownershipResult.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (ownershipResult.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
   try {
     const { addEbayItem, refreshEbayToken } = await import("../lib/ebay");
 
@@ -576,8 +712,11 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
       return;
     }
 
-    const stored = studioStore.get(id) ?? {};
-    const meta = itemMeta.get(id) ?? {};
+    const dbRow = ownershipResult.row;
+    let stored = studioStore.get(id) ?? dbRow?.analysis ?? {};
+    let meta = itemMeta.get(id) ?? (dbRow
+      ? { lens: dbRow.lens, marketplace: dbRow.marketplace ?? undefined, photoUrls: dbRow.photoUrls ?? [] }
+      : {});
 
     const ebayOutput = (stored["marketplace_outputs"] as Record<string, unknown> | undefined)?.["ebay"] as Record<string, unknown> | undefined ?? {};
     const resolvedDescription = description || String(stored["listing_description"] ?? ebayOutput["description"] ?? "");

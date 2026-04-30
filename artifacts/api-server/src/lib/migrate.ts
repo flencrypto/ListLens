@@ -57,6 +57,24 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS listings (
+        id VARCHAR PRIMARY KEY,
+        user_id VARCHAR,
+        lens VARCHAR NOT NULL DEFAULT 'ShoeLens',
+        marketplace VARCHAR,
+        photo_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
+        hint TEXT,
+        title TEXT,
+        description TEXT,
+        price TEXT,
+        analysis JSONB,
+        status VARCHAR NOT NULL DEFAULT 'draft',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     logger.info("Migrations applied successfully");
   } catch (err) {
     logger.warn({ err }, "Migration warning (non-fatal)");
