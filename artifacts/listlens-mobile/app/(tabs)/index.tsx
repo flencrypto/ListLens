@@ -16,6 +16,7 @@ import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
+import { formatRemainingCredits, useSubscription } from "@/lib/revenuecat";
 
 interface QuickLink {
   href: "/(tabs)/studio" | "/(tabs)/guard" | "/more/history" | "/more/billing";
@@ -61,6 +62,12 @@ export default function HomeScreen() {
   const router = useRouter();
   const { width } = useWindowDimensions();
   const cardWidth = (Math.min(width, 480) - 18 * 2 - 12) / 2;
+  const { customerInfo, isSubscribed } = useSubscription();
+  const planLabel = formatRemainingCredits(customerInfo);
+  const planSubtitle = isSubscribed
+    ? "Manage your subscription anytime in Billing & Plans."
+    : "Upgrade to Studio Starter for unlimited listings from £9.99/month";
+  const ctaLabel = isSubscribed ? "Manage" : "Upgrade";
 
   return (
     <ScreenContainer withTabPadding>
@@ -73,7 +80,7 @@ export default function HomeScreen() {
             Dashboard
           </Text>
         </View>
-        <Badge label="Free trial" tone="cyan" />
+        <Badge label={isSubscribed ? "Pro" : "Free trial"} tone="cyan" />
       </View>
 
       {/* Quick action grid */}
@@ -184,15 +191,15 @@ export default function HomeScreen() {
         <View style={styles.creditsRow}>
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={[styles.creditsTitle, { color: colors.foreground }]}>
-              Free trial — 3 listings remaining
+              {planLabel}
             </Text>
             <Text style={[styles.creditsBody, { color: colors.zinc400 }]}>
-              Upgrade to Studio Starter for unlimited listings from £9.99/month
+              {planSubtitle}
             </Text>
           </View>
           <View style={{ minWidth: 110 }}>
             <BrandButton
-              label="Upgrade"
+              label={ctaLabel}
               size="sm"
               onPress={() => router.push("/more/billing")}
             />

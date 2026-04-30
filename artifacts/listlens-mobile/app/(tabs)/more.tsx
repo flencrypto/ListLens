@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
+import { useSubscription } from "@/lib/revenuecat";
 
 interface MoreLink {
   href: "/more/history" | "/more/billing" | "/more/legal" | "/splash";
@@ -17,36 +18,36 @@ interface MoreLink {
   badge?: string;
 }
 
-const LINKS: MoreLink[] = [
-  {
-    href: "/more/history",
-    label: "History",
-    desc: "Your saved listings and Guard checks",
-    icon: "clock",
-  },
-  {
-    href: "/more/billing",
-    label: "Billing & Plans",
-    desc: "Manage subscription and credits",
-    icon: "credit-card",
-    badge: "Free trial",
-  },
-  {
-    href: "/more/legal",
-    label: "Legal",
-    desc: "Privacy, terms, AI disclaimer",
-    icon: "file-text",
-  },
-  {
-    href: "/splash",
-    label: "Replay splash",
-    desc: "See the brand intro again",
-    icon: "play-circle",
-  },
-];
-
 export default function MoreScreen() {
   const colors = useColors();
+  const { isSubscribed } = useSubscription();
+  const LINKS: MoreLink[] = [
+    {
+      href: "/more/history",
+      label: "History",
+      desc: "Your saved listings and Guard checks",
+      icon: "clock",
+    },
+    {
+      href: "/more/billing",
+      label: "Billing & Plans",
+      desc: "Manage subscription and credits",
+      icon: "credit-card",
+      badge: isSubscribed ? "Pro" : "Free trial",
+    },
+    {
+      href: "/more/legal",
+      label: "Legal",
+      desc: "Privacy, terms, AI disclaimer",
+      icon: "file-text",
+    },
+    {
+      href: "/splash",
+      label: "Replay splash",
+      desc: "See the brand intro again",
+      icon: "play-circle",
+    },
+  ];
   return (
     <ScreenContainer withTabPadding>
       <View style={styles.header}>

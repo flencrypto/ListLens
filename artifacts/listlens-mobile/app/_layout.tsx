@@ -15,10 +15,19 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { initializeRevenueCat, SubscriptionProvider } from "@/lib/revenuecat";
 
 SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
+
+let revenueCatInitError: string | null = null;
+try {
+  initializeRevenueCat();
+} catch (err) {
+  revenueCatInitError = err instanceof Error ? err.message : "Unknown error";
+  console.warn("RevenueCat init failed:", revenueCatInitError);
+}
 
 const NAVY = "#040a14";
 const FOREGROUND = "#fafafa";
@@ -74,12 +83,14 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <ErrorBoundary>
         <QueryClientProvider client={queryClient}>
-          <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
-            <KeyboardProvider>
-              <StatusBar style="light" />
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
+          <SubscriptionProvider>
+            <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
+              <KeyboardProvider>
+                <StatusBar style="light" />
+                <RootLayoutNav />
+              </KeyboardProvider>
+            </GestureHandlerRootView>
+          </SubscriptionProvider>
         </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
