@@ -11,8 +11,12 @@ export default function HistoryPage() {
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
+            <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+              Archive · v1.0
+            </p>
             <h1 className="text-2xl font-bold text-white mb-1">History</h1>
             <p className="text-zinc-400 text-sm">Your saved listings and Guard checks.</p>
+            <div className="hud-divider mt-3 max-w-[160px]" />
           </div>
           <div className="flex gap-2">
             <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500">

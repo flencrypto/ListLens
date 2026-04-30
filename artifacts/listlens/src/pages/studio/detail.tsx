@@ -5,6 +5,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { ListingEditor } from "@/components/studio/listing-editor";
 import type { StudioOutput } from "@/lib/ai/schemas";
 
@@ -135,7 +136,7 @@ export default function StudioItemPage() {
             >
               {loading ? (
                 <span className="flex items-center gap-2">
-                  <span className="animate-spin">⟳</span> Analysing…
+                  <Spinner className="text-base text-cyan-300" /> Analysing…
                 </span>
               ) : (
                 "Analyse with AI →"
