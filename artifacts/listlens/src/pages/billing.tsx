@@ -166,6 +166,7 @@ export default function BillingPage() {
         <div className="hud-divider opacity-40" />
 
         {/* Guard plans */}
+
         <div>
           <h2 className="text-lg font-semibold text-white mb-4">Guard Plans</h2>
           <div className="grid md:grid-cols-2 gap-5 max-w-2xl">
@@ -190,6 +191,17 @@ export default function BillingPage() {
               </div>
             ))}
           </div>
+        </div>
+
+        {/* Manage billing */}
+        <div className="brand-card p-6 flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <h2 className="text-base font-semibold text-white mb-1">Manage Billing</h2>
+            <p className="text-zinc-400 text-sm">Access your invoices, update payment method, or cancel your subscription.</p>
+          </div>
+          <form action="/api/billing/portal" method="POST">
+            <Button type="submit" variant="outline">Billing portal</Button>
+          </form>
         </div>
       </main>
     </div>
