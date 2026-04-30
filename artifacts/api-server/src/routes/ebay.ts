@@ -8,6 +8,8 @@ import {
   buildEbayAuthUrl,
   exchangeEbayCode,
   getEbayCredentials,
+  getEbaySettings,
+  saveEbaySettings,
   IS_SANDBOX,
 } from "../lib/ebay";
 
@@ -43,6 +45,50 @@ router.get("/ebay/status", async (req, res) => {
     sandbox: IS_SANDBOX,
     credentialsMissing: false,
   });
+});
+
+router.get("/ebay/settings", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+  const settings = await getEbaySettings(userId);
+  res.json({
+    shippingCost: settings.shippingCost,
+    returnsAccepted: settings.returnsAccepted,
+    returnPeriod: settings.returnPeriod,
+    paymentMethod: settings.paymentMethod,
+  });
+});
+
+router.post("/ebay/settings", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "Not authenticated." });
+    return;
+  }
+
+  const b = (req.body as Record<string, unknown>) ?? {};
+
+  const rawCost = parseFloat(String(b["shippingCost"] ?? "3.99"));
+  if (isNaN(rawCost) || rawCost < 0 || rawCost > 999.99) {
+    res.status(400).json({ error: "shippingCost must be a number between 0 and 999.99." });
+    return;
+  }
+  const shippingCost = rawCost.toFixed(2);
+
+  const returnsAccepted = b["returnsAccepted"] !== false && b["returnsAccepted"] !== "false";
+  const returnPeriod = ["Days_14", "Days_30", "Days_60"].includes(String(b["returnPeriod"]))
+    ? String(b["returnPeriod"])
+    : "Days_30";
+  const paymentMethod = ["PayPal", "CashOnPickup", "VisaMC"].includes(String(b["paymentMethod"]))
+    ? String(b["paymentMethod"])
+    : "PayPal";
+
+  await saveEbaySettings(userId, { shippingCost, returnsAccepted, returnPeriod, paymentMethod });
+  logger.info({ userId }, "eBay settings saved");
+  res.json({ ok: true });
 });
 
 router.get("/ebay/connect", async (req, res) => {

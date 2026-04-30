@@ -1,5 +1,5 @@
 import { db } from "@workspace/db";
-import { ebayTokensTable } from "@workspace/db/schema";
+import { ebayTokensTable, ebaySettingsTable, type EbaySettings } from "@workspace/db/schema";
 import { eq } from "drizzle-orm";
 import { logger } from "./logger";
 
@@ -138,6 +138,42 @@ export async function refreshEbayToken(
     .where(eq(ebayTokensTable.userId, userId));
 
   return json.access_token;
+}
+
+export async function getEbaySettings(userId: string): Promise<EbaySettings> {
+  const row = await db
+    .select()
+    .from(ebaySettingsTable)
+    .where(eq(ebaySettingsTable.userId, userId))
+    .then((r) => r[0] ?? null);
+
+  return row ?? {
+    userId,
+    shippingCost: "3.99",
+    returnsAccepted: true,
+    returnPeriod: "Days_30",
+    paymentMethod: "PayPal",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
+}
+
+export async function saveEbaySettings(
+  userId: string,
+  settings: {
+    shippingCost: string;
+    returnsAccepted: boolean;
+    returnPeriod: string;
+    paymentMethod: string;
+  },
+): Promise<void> {
+  await db
+    .insert(ebaySettingsTable)
+    .values({ userId, ...settings })
+    .onConflictDoUpdate({
+      target: ebaySettingsTable.userId,
+      set: { ...settings, updatedAt: new Date() },
+    });
 }
 
 const LENS_CATEGORY_MAP: Record<string, string> = {
@@ -400,6 +436,12 @@ export interface EbayListingInput {
   attributes?: Record<string, unknown>;
   identity?: { brand?: string | null; model?: string | null };
   photoUrls?: string[];
+  settings?: {
+    shippingCost: string;
+    returnsAccepted: boolean;
+    returnPeriod: string;
+    paymentMethod: string;
+  };
 }
 
 export async function addEbayItem(
@@ -408,6 +450,13 @@ export async function addEbayItem(
 ): Promise<{ itemId: string; viewItemURL: string } | null> {
   const categoryId = LENS_CATEGORY_MAP[input.lens] ?? LENS_CATEGORY_MAP.default;
   const condId = conditionId(input.condition, input.lens);
+
+  const settings = input.settings ?? {
+    shippingCost: "3.99",
+    returnsAccepted: true,
+    returnPeriod: "Days_30",
+    paymentMethod: "PayPal",
+  };
 
   const photos = (input.photoUrls ?? []).slice(0, 12);
   const pictureDetails =
@@ -422,6 +471,21 @@ export async function addEbayItem(
     input.attributes ?? {},
     input.identity,
   );
+
+  const returnsAcceptedOption = settings.returnsAccepted
+    ? "ReturnsAccepted"
+    : "ReturnsNotAccepted";
+
+  const returnPolicyBlock = settings.returnsAccepted
+    ? `<ReturnPolicy>
+      <ReturnsAcceptedOption>${returnsAcceptedOption}</ReturnsAcceptedOption>
+      <RefundOption>MoneyBack</RefundOption>
+      <ReturnsWithinOption>${escXml(settings.returnPeriod)}</ReturnsWithinOption>
+      <ShippingCostPaidByOption>Buyer</ShippingCostPaidByOption>
+    </ReturnPolicy>`
+    : `<ReturnPolicy>
+      <ReturnsAcceptedOption>ReturnsNotAccepted</ReturnsAcceptedOption>
+    </ReturnPolicy>`;
 
   const xml = `<?xml version="1.0" encoding="utf-8"?>
 <AddItemRequest xmlns="urn:ebay:apis:eBLBaseComponents">
@@ -440,21 +504,16 @@ export async function addEbayItem(
     <ListingType>FixedPriceItem</ListingType>
     <Location>United Kingdom</Location>
     <Quantity>1</Quantity>
-    <PaymentMethods>PayPal</PaymentMethods>
+    <PaymentMethods>${escXml(settings.paymentMethod)}</PaymentMethods>
     ${pictureDetails}
     ${itemSpecifics}
-    <ReturnPolicy>
-      <ReturnsAcceptedOption>ReturnsAccepted</ReturnsAcceptedOption>
-      <RefundOption>MoneyBack</RefundOption>
-      <ReturnsWithinOption>Days_30</ReturnsWithinOption>
-      <ShippingCostPaidByOption>Buyer</ShippingCostPaidByOption>
-    </ReturnPolicy>
+    ${returnPolicyBlock}
     <ShippingDetails>
       <ShippingType>Flat</ShippingType>
       <ShippingServiceOptions>
         <ShippingServicePriority>1</ShippingServicePriority>
         <ShippingService>UK_RoyalMailFirstClassStandard</ShippingService>
-        <ShippingServiceCost>3.99</ShippingServiceCost>
+        <ShippingServiceCost>${escXml(settings.shippingCost)}</ShippingServiceCost>
       </ShippingServiceOptions>
     </ShippingDetails>
   </Item>

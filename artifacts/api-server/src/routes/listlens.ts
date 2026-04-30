@@ -702,7 +702,7 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
   }
 
   try {
-    const { addEbayItem, refreshEbayToken } = await import("../lib/ebay");
+    const { addEbayItem, refreshEbayToken, getEbaySettings } = await import("../lib/ebay");
 
     const accessToken = await refreshEbayToken(userId);
     if (!accessToken) {
@@ -729,6 +729,7 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
     const identity = stored["identity"] as
       | { brand?: string | null; model?: string | null }
       | undefined;
+    const userSettings = await getEbaySettings(userId);
 
     const result = await addEbayItem(accessToken, {
       title,
@@ -739,6 +740,12 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
       attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
       identity,
       photoUrls,
+      settings: {
+        shippingCost: userSettings.shippingCost,
+        returnsAccepted: userSettings.returnsAccepted,
+        returnPeriod: userSettings.returnPeriod,
+        paymentMethod: userSettings.paymentMethod,
+      },
     });
 
     if (!result) {

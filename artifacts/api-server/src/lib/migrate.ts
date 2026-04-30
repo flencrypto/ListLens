@@ -75,6 +75,18 @@ export async function runMigrations(): Promise<void> {
       );
     `);
 
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS ebay_settings (
+        user_id VARCHAR PRIMARY KEY,
+        shipping_cost VARCHAR NOT NULL DEFAULT '3.99',
+        returns_accepted BOOLEAN NOT NULL DEFAULT TRUE,
+        return_period VARCHAR NOT NULL DEFAULT 'Days_30',
+        payment_method VARCHAR NOT NULL DEFAULT 'PayPal',
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+    `);
+
     logger.info("Migrations applied successfully");
   } catch (err) {
     logger.warn({ err }, "Migration warning (non-fatal)");

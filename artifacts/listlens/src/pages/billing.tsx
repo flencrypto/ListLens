@@ -83,6 +83,13 @@ interface EbayStatus {
   expiresAt?: string | null;
 }
 
+interface EbaySettings {
+  shippingCost: string;
+  returnsAccepted: boolean;
+  returnPeriod: string;
+  paymentMethod: string;
+}
+
 interface BillingInfo {
   credits: number;
   planTier: string;
@@ -95,6 +102,172 @@ const PLAN_TIER_LABELS: Record<string, string> = {
   studio_reseller: "Studio Reseller",
   guard_monthly: "Guard Monthly",
 };
+
+const RETURN_PERIOD_OPTIONS = [
+  { value: "Days_14", label: "14 days" },
+  { value: "Days_30", label: "30 days" },
+  { value: "Days_60", label: "60 days" },
+];
+
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "PayPal", label: "PayPal" },
+  { value: "CashOnPickup", label: "Cash on collection" },
+  { value: "VisaMC", label: "Credit / Debit card" },
+];
+
+function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
+  const [settings, setSettings] = useState<EbaySettings>({
+    shippingCost: "3.99",
+    returnsAccepted: true,
+    returnPeriod: "Days_30",
+    paymentMethod: "PayPal",
+  });
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/ebay/settings")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) setSettings(d as EbaySettings);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  async function handleSave(e: React.FormEvent) {
+    e.preventDefault();
+    setSaving(true);
+    setSaved(false);
+    try {
+      const res = await fetch("/api/ebay/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(settings),
+      });
+      if (res.ok) {
+        setSaved(true);
+        onSaved?.();
+        setTimeout(() => setSaved(false), 3000);
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="space-y-2 animate-pulse">
+        <div className="h-3 bg-zinc-800 rounded w-32" />
+        <div className="h-8 bg-zinc-800 rounded" />
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSave} className="space-y-4 pt-1">
+      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+        Listing defaults
+      </p>
+
+      <div className="grid grid-cols-2 gap-3">
+        {/* Shipping cost */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">
+            Shipping cost (£)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            value={settings.shippingCost}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, shippingCost: e.target.value }))
+            }
+          />
+        </div>
+
+        {/* Payment method */}
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">
+            Payment method
+          </label>
+          <select
+            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            value={settings.paymentMethod}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, paymentMethod: e.target.value }))
+            }
+          >
+            {PAYMENT_METHOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Returns accepted */}
+      <div className="flex items-center justify-between">
+        <label className="text-sm text-zinc-300">Accept returns</label>
+        <button
+          type="button"
+          onClick={() =>
+            setSettings((s) => ({ ...s, returnsAccepted: !s.returnsAccepted }))
+          }
+          className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
+            settings.returnsAccepted ? "bg-cyan-600" : "bg-zinc-700"
+          }`}
+        >
+          <span
+            className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${
+              settings.returnsAccepted ? "translate-x-4" : "translate-x-1"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Return period — only shown if returns accepted */}
+      {settings.returnsAccepted && (
+        <div>
+          <label className="block text-xs text-zinc-400 mb-1">
+            Return period
+          </label>
+          <select
+            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            value={settings.returnPeriod}
+            onChange={(e) =>
+              setSettings((s) => ({ ...s, returnPeriod: e.target.value }))
+            }
+          >
+            {RETURN_PERIOD_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      <div className="flex items-center gap-3">
+        <Button
+          type="submit"
+          size="sm"
+          disabled={saving}
+          className="bg-orange-600 hover:bg-orange-500 text-white border-0"
+        >
+          {saving ? "Saving…" : "Save settings"}
+        </Button>
+        {saved && (
+          <span className="text-xs text-emerald-400">Settings saved</span>
+        )}
+      </div>
+    </form>
+  );
+}
 
 function EbayConnectSection() {
   const [status, setStatus] = useState<EbayStatus | null>(null);
@@ -162,7 +335,7 @@ function EbayConnectSection() {
           eBay publishing.
         </div>
       ) : status.connected ? (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {status.expiresAt && (
             <p className="text-zinc-500 text-xs">
               Token valid until {new Date(status.expiresAt).toLocaleString()}
@@ -184,6 +357,10 @@ function EbayConnectSection() {
             >
               {disconnecting ? "Disconnecting…" : "Disconnect"}
             </Button>
+          </div>
+
+          <div className="border-t border-zinc-800 pt-4">
+            <EbaySettingsForm />
           </div>
         </div>
       ) : (
