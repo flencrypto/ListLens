@@ -158,13 +158,7 @@ export default function ReviewScreen() {
           contentContainerStyle={{ gap: 10, paddingHorizontal: 2 }}
         >
           {body.photos.map((uri, i) => (
-            <Image
-              key={`${uri}-${i}`}
-              source={{ uri }}
-              style={styles.heroPhoto}
-              contentFit="cover"
-              transition={120}
-            />
+            <ReviewPhoto key={`${uri}-${i}`} uri={uri} />
           ))}
         </ScrollView>
       )}
@@ -434,3 +428,23 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
 });
+
+function ReviewPhoto({ uri }: { uri: string }) {
+  const [error, setError] = useState(false);
+  if (error) {
+    return (
+      <View style={[styles.heroPhoto, { alignItems: "center", justifyContent: "center", backgroundColor: "rgba(8,16,28,0.85)" }]}>
+        <Feather name="image" size={28} color="rgba(113,113,122,0.6)" />
+      </View>
+    );
+  }
+  return (
+    <Image
+      source={{ uri }}
+      style={styles.heroPhoto}
+      contentFit="cover"
+      transition={120}
+      onError={() => setError(true)}
+    />
+  );
+}

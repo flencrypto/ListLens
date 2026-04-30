@@ -167,10 +167,12 @@ function DraftRow({
   onPress: () => void;
 }) {
   const colors = useColors();
+  const [thumbError, setThumbError] = useState(false);
   const photoCountLabel = `${draft.photos.length} photo${
     draft.photos.length === 1 ? "" : "s"
   }`;
   const firstPhoto = draft.photos[0];
+  const showImage = Boolean(firstPhoto) && !thumbError;
   return (
     <Pressable
       onPress={onPress}
@@ -193,18 +195,19 @@ function DraftRow({
           },
         ]}
       >
-        {firstPhoto ? (
+        {showImage ? (
           <Image
             source={{ uri: firstPhoto }}
             style={styles.thumbImage}
             contentFit="cover"
             transition={120}
             accessibilityLabel={`Photo for ${draft.title || "untitled draft"}`}
+            onError={() => setThumbError(true)}
           />
         ) : (
           <Feather name="camera-off" size={18} color={colors.zinc500} />
         )}
-        {draft.photos.length > 1 ? (
+        {showImage && draft.photos.length > 1 ? (
           <View style={styles.thumbCountPill}>
             <Text style={styles.thumbCountText}>+{draft.photos.length - 1}</Text>
           </View>

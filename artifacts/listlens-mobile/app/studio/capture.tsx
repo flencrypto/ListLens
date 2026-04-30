@@ -163,21 +163,11 @@ export default function CaptureScreen() {
 
         <View style={styles.thumbGrid}>
           {photos.map((uri, idx) => (
-            <View key={`${uri}-${idx}`} style={styles.thumbWrap}>
-              <Image
-                source={{ uri }}
-                style={styles.thumb}
-                contentFit="cover"
-                transition={150}
-              />
-              <Pressable
-                onPress={() => removePhoto(idx)}
-                style={styles.thumbClose}
-                hitSlop={8}
-              >
-                <Feather name="x" size={12} color="#fff" />
-              </Pressable>
-            </View>
+            <CaptureThumb
+              key={`${uri}-${idx}`}
+              uri={uri}
+              onRemove={() => removePhoto(idx)}
+            />
           ))}
           {photos.length < MAX_PHOTOS && (
             <Pressable
@@ -303,3 +293,33 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
 });
+
+function CaptureThumb({
+  uri,
+  onRemove,
+}: {
+  uri: string;
+  onRemove: () => void;
+}) {
+  const [error, setError] = useState(false);
+  return (
+    <View style={styles.thumbWrap}>
+      {error ? (
+        <View style={{ flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(8,16,28,0.85)" }}>
+          <Feather name="image" size={24} color="rgba(113,113,122,0.6)" />
+        </View>
+      ) : (
+        <Image
+          source={{ uri }}
+          style={styles.thumb}
+          contentFit="cover"
+          transition={150}
+          onError={() => setError(true)}
+        />
+      )}
+      <Pressable onPress={onRemove} style={styles.thumbClose} hitSlop={8}>
+        <Feather name="x" size={12} color="#fff" />
+      </Pressable>
+    </View>
+  );
+}
