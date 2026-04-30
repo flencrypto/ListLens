@@ -62,6 +62,7 @@ export default function TabLayout() {
             )}
             {/* HUD divider strip on top of the tab bar */}
             <View
+              pointerEvents="none"
               style={[
                 {
                   position: "absolute",
@@ -70,7 +71,6 @@ export default function TabLayout() {
                   top: 0,
                   height: 1,
                   backgroundColor: "rgba(34,211,238,0.35)",
-                  pointerEvents: "none",
                 },
                 Platform.select({
                   web: {
