@@ -28,6 +28,6 @@ See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and pa
 
 ## Artifacts
 
-- `artifacts/listlens` — Mr.FLENS · List-LENS web app (Vite + React + Tailwind v4 + wouter). Ported from a Vercel/v0 Next.js export. Demo-mode auth (no Clerk), demo-mode billing (Stripe plans render disabled). Routes: `/`, `/splash`, `/dashboard`, `/billing`, `/history`, `/lenses`, `/lenses/record`, `/studio/new`, `/studio/:id`, `/guard/new`, `/guard/:id`, `/legal/{privacy,terms,ai-disclaimer}`, `/offline`. Auth/Stripe shims live in `src/lib/{auth-shim,clerk-config,stripe}.ts`. Pre-existing scaffold files in `src/components/{layout/sidebar,ui/sonner}.tsx` are not imported by any route and left alone.
-- `artifacts/api-server` — Express API scaffold (unchanged by the port).
+- `artifacts/listlens` — Mr.FLENS · List-LENS web app (Vite + React + Tailwind v4 + wouter). Ported from a Vercel/v0 Next.js export. Demo-mode auth (no Clerk), demo-mode billing (Stripe plans render disabled). Routes: `/`, `/splash`, `/dashboard`, `/billing`, `/history`, `/lenses`, `/lenses/record`, `/studio/new`, `/studio/:id`, `/guard/new`, `/guard/:id`, `/legal/{privacy,terms,ai-disclaimer}`, `/offline`. Auth/Stripe shims live in `src/lib/{auth-shim,clerk-config,stripe}.ts`.
+- `artifacts/api-server` — Express API server. Hosts `/healthz` plus the ListLens demo router at `src/routes/listlens.ts`, mounted under `/api/*` for the workspace path-based proxy. The demo router returns deterministic mocks (no AI / Stripe / DB) for every endpoint the ListLens frontend calls (items, guard checks, RecordLens identify, lenses).
 - `artifacts/mockup-sandbox` — Component preview server (unchanged).
