@@ -17,6 +17,39 @@ async function post<T>(path: string, data: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function get<T>(path: string): Promise<T> {
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "unknown error");
+    throw new Error(`API ${path} failed (${res.status}): ${err}`);
+  }
+  return res.json() as Promise<T>;
+}
+
+export interface RecentActivityItem {
+  id: string;
+  type: "studio" | "guard";
+  title: string;
+  status: string;
+  date: string;
+  href: string;
+}
+
+export interface DashboardData {
+  studioCount: number;
+  guardCount: number;
+  credits: number;
+  planTier: string;
+  recentActivity: RecentActivityItem[];
+}
+
+export async function getDashboard(): Promise<DashboardData> {
+  return get<DashboardData>("/api/dashboard");
+}
+
 export interface StudioAnalysis {
   mode: "studio";
   lens: string;

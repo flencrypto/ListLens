@@ -1,8 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Link, useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   Text,
@@ -17,6 +18,7 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { formatRemainingCredits, useSubscription } from "@/lib/revenuecat";
+import { getDashboard, type DashboardData } from "@/lib/api";
 
 interface QuickLink {
   href: "/(tabs)/studio" | "/(tabs)/guard" | "/more/history" | "/more/billing";
@@ -57,17 +59,46 @@ const QUICK_LINKS: QuickLink[] = [
   },
 ];
 
+function planLabel(tier: string): string {
+  switch (tier) {
+    case "studio_starter": return "Studio Starter";
+    case "studio_reseller": return "Studio Reseller";
+    case "guard_monthly": return "Guard Monthly";
+    default: return "Free trial";
+  }
+}
+
 export default function HomeScreen() {
   const colors = useColors();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const cardWidth = (Math.min(width, 480) - 18 * 2 - 12) / 2;
   const { customerInfo, isSubscribed } = useSubscription();
-  const planLabel = formatRemainingCredits(customerInfo);
   const planSubtitle = isSubscribed
     ? "Manage your subscription anytime in Billing & Plans."
-    : "Upgrade to Studio Starter for unlimited listings from £9.99/month";
+    : "Upgrade to Studio Starter for unlimited listings from £19.00/month";
   const ctaLabel = isSubscribed ? "Manage" : "Upgrade";
+
+  const [dashData, setDashData] = useState<DashboardData | null>(null);
+  const [dashLoading, setDashLoading] = useState(true);
+
+  useEffect(() => {
+    getDashboard()
+      .then((d) => setDashData(d))
+      .catch(() => {})
+      .finally(() => setDashLoading(false));
+  }, []);
+
+  const tier = dashData?.planTier ?? "free";
+  const badgeLabel = isSubscribed ? "Pro" : (dashData ? planLabel(tier) : "Free trial");
+  const creditsTitle = dashData
+    ? (tier !== "free"
+        ? `${planLabel(tier)} plan active`
+        : formatRemainingCredits(customerInfo))
+    : formatRemainingCredits(customerInfo);
+
+  const studioActivity = dashData?.recentActivity.filter((a) => a.type === "studio") ?? [];
+  const guardActivity = dashData?.recentActivity.filter((a) => a.type === "guard") ?? [];
 
   return (
     <ScreenContainer withTabPadding>
@@ -80,7 +111,35 @@ export default function HomeScreen() {
             Dashboard
           </Text>
         </View>
-        <Badge label={isSubscribed ? "Pro" : "Free trial"} tone="cyan" />
+        <Badge label={badgeLabel} tone="cyan" />
+      </View>
+
+      {/* Stats row */}
+      <View style={styles.statsRow}>
+        <View style={[styles.statCard, { backgroundColor: colors.cardSurfaceSoft, borderColor: colors.brandStroke, borderRadius: colors.radius }]}>
+          {dashLoading ? (
+            <ActivityIndicator size="small" color={colors.brandCyan} />
+          ) : (
+            <Text style={[styles.statNumber, { color: colors.foreground }]}>{dashData?.studioCount ?? 0}</Text>
+          )}
+          <Text style={[styles.statLabel, { color: colors.zinc400 }]}>Listings</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: colors.cardSurfaceSoft, borderColor: colors.brandStroke, borderRadius: colors.radius }]}>
+          {dashLoading ? (
+            <ActivityIndicator size="small" color={colors.brandViolet} />
+          ) : (
+            <Text style={[styles.statNumber, { color: colors.foreground }]}>{dashData?.guardCount ?? 0}</Text>
+          )}
+          <Text style={[styles.statLabel, { color: colors.zinc400 }]}>Guard checks</Text>
+        </View>
+        <View style={[styles.statCard, { backgroundColor: colors.cardSurfaceSoft, borderColor: colors.brandStroke, borderRadius: colors.radius }]}>
+          {dashLoading ? (
+            <ActivityIndicator size="small" color="#a78bfa" />
+          ) : (
+            <Text style={[styles.statNumber, { color: "#a78bfa" }]}>{dashData?.credits ?? 0}</Text>
+          )}
+          <Text style={[styles.statLabel, { color: colors.zinc400 }]}>Credits</Text>
+        </View>
       </View>
 
       {/* Quick action grid */}
@@ -118,7 +177,7 @@ export default function HomeScreen() {
         ))}
       </View>
 
-      {/* Studio + Guard panels */}
+      {/* Studio panel */}
       <Card>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
@@ -126,6 +185,11 @@ export default function HomeScreen() {
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
               Studio
             </Text>
+            {!dashLoading && (dashData?.studioCount ?? 0) > 0 && (
+              <View style={[styles.countBadge, { backgroundColor: colors.brandCyan + "22" }]}>
+                <Text style={[styles.countBadgeText, { color: colors.brandCyan }]}>{dashData!.studioCount}</Text>
+              </View>
+            )}
           </View>
           <Link href="/more/history" asChild>
             <Pressable hitSlop={12}>
@@ -135,23 +199,37 @@ export default function HomeScreen() {
             </Pressable>
           </Link>
         </View>
-        <View
-          style={[
-            styles.emptyBox,
-            { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
-          ]}
-        >
-          <Text style={[styles.emptyText, { color: colors.zinc500 }]}>
-            No listings yet
-          </Text>
-          <BrandButton
-            label="Create first listing"
-            size="sm"
-            onPress={() => router.push("/(tabs)/studio")}
-          />
-        </View>
+        {!dashLoading && studioActivity.length > 0 ? (
+          <View style={styles.activityList}>
+            {studioActivity.slice(0, 3).map((item) => (
+              <View key={item.id} style={[styles.activityRow, { borderBottomColor: colors.zinc800 }]}>
+                <Text style={[styles.activityTitle, { color: colors.foreground }]} numberOfLines={1}>{item.title}</Text>
+                <Text style={[styles.activityMeta, { color: colors.zinc500 }]}>
+                  {new Date(item.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.emptyBox,
+              { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
+            ]}
+          >
+            <Text style={[styles.emptyText, { color: colors.zinc500 }]}>
+              No listings yet
+            </Text>
+            <BrandButton
+              label="Create first listing"
+              size="sm"
+              onPress={() => router.push("/(tabs)/studio")}
+            />
+          </View>
+        )}
       </Card>
 
+      {/* Guard panel */}
       <Card>
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
@@ -159,6 +237,11 @@ export default function HomeScreen() {
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
               Guard
             </Text>
+            {!dashLoading && (dashData?.guardCount ?? 0) > 0 && (
+              <View style={[styles.countBadge, { backgroundColor: colors.brandViolet + "22" }]}>
+                <Text style={[styles.countBadgeText, { color: colors.brandViolet }]}>{dashData!.guardCount}</Text>
+              </View>
+            )}
           </View>
           <Link href="/more/history" asChild>
             <Pressable hitSlop={12}>
@@ -168,22 +251,35 @@ export default function HomeScreen() {
             </Pressable>
           </Link>
         </View>
-        <View
-          style={[
-            styles.emptyBox,
-            { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
-          ]}
-        >
-          <Text style={[styles.emptyText, { color: colors.zinc500 }]}>
-            No checks yet
-          </Text>
-          <BrandButton
-            label="Check a listing"
-            variant="guard"
-            size="sm"
-            onPress={() => router.push("/(tabs)/guard")}
-          />
-        </View>
+        {!dashLoading && guardActivity.length > 0 ? (
+          <View style={styles.activityList}>
+            {guardActivity.slice(0, 3).map((item) => (
+              <View key={item.id} style={[styles.activityRow, { borderBottomColor: colors.zinc800 }]}>
+                <Text style={[styles.activityTitle, { color: colors.foreground }]} numberOfLines={1}>{item.title}</Text>
+                <Text style={[styles.activityMeta, { color: colors.zinc500 }]}>
+                  {new Date(item.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                </Text>
+              </View>
+            ))}
+          </View>
+        ) : (
+          <View
+            style={[
+              styles.emptyBox,
+              { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
+            ]}
+          >
+            <Text style={[styles.emptyText, { color: colors.zinc500 }]}>
+              No checks yet
+            </Text>
+            <BrandButton
+              label="Check a listing"
+              variant="guard"
+              size="sm"
+              onPress={() => router.push("/(tabs)/guard")}
+            />
+          </View>
+        )}
       </Card>
 
       {/* Credits banner */}
@@ -191,7 +287,7 @@ export default function HomeScreen() {
         <View style={styles.creditsRow}>
           <View style={{ flex: 1, marginRight: 12 }}>
             <Text style={[styles.creditsTitle, { color: colors.foreground }]}>
-              {planLabel}
+              {creditsTitle}
             </Text>
             <Text style={[styles.creditsBody, { color: colors.zinc400 }]}>
               {planSubtitle}
@@ -241,6 +337,27 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginTop: 4,
   },
+  statsRow: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  statCard: {
+    flex: 1,
+    borderWidth: 1,
+    paddingVertical: 12,
+    alignItems: "center",
+    gap: 4,
+  },
+  statNumber: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 22,
+  },
+  statLabel: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 10,
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
   grid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -285,6 +402,35 @@ const styles = StyleSheet.create({
   cardLink: {
     fontFamily: "Inter_500Medium",
     fontSize: 12,
+  },
+  countBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+  },
+  countBadgeText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 11,
+  },
+  activityList: {
+    gap: 0,
+  },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  activityTitle: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    flex: 1,
+    marginRight: 8,
+  },
+  activityMeta: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
   },
   emptyBox: {
     borderWidth: 1,
