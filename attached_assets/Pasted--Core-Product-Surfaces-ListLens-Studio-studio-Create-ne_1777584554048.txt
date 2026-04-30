@@ -1,0 +1,89 @@
+🎯 Core Product Surfaces
+ListLens Studio (/studio)
+
+Create new listing sessions with photo uploads
+AI-powered item analysis via a layered agent pipeline
+Editable listing draft output (title, description, bullet points, condition, pricing)
+Export to Vinted (manual export format)
+Export to eBay (draft/sandbox/API-ready payload)
+Per-item history and saved listings
+ListLens Guard (/guard)
+
+Paste URL or upload screenshots for risk checks
+AI risk report: risk level (low/medium/high/inconclusive), confidence score, red flags, missing evidence
+Safe-language guardrails — never says "fake", "counterfeit", "scammer" (enforced via sanitiseSafeLanguage())
+Seller question generation
+Guard report history
+Dashboard (/dashboard)
+
+Overview of listings, guard checks, and usage
+History (/history)
+
+Browse past Studio listings and Guard reports
+🔍 Specialist Lenses (Agent Routing)
+Implemented in packages/lenses/src/:
+
+Lens	Status
+RecordLens	✅ Full — label photo identification, ranked release likelihoods, matrix/runout clarification flow
+LPLens	✅ LP-specific variant
+ShoeLens	✅ Trainers/sneakers analysis
+ClothingLens	✅ Garment analysis
+CardLens	✅ Trading cards
+ToyLens	✅ Toys/figures/LEGO
+WatchLens	✅ Watches
+MeasureLens	✅ CV-based measurement reference system
+MotorLens	✅ Vehicles/parts
+Live API endpoints:
+
+POST /api/lenses/record/identify — single-label release identification
+POST /api/lenses/record/identify-with-matrix — matrix/runout clarification flow
+POST /api/lenses/shoe/analyse — shoe analysis
+POST /api/lenses/lp — LP-specific analysis
+POST /api/lenses — general lens routing
+🤖 AI Pipeline
+Layered AI architecture (not a single prompt): Capture → Quality → Category Router → Identity → Evidence → Specialist Lens → Comps → Pricing → Risk & Trust → Copy → Validator
+RecordLens ranked version likelihoods with confidence percentages
+Guard AI risk reports with structured JSON outputs (Zod-validated)
+Studio AI listing generation with structured outputs
+All AI outputs include confidence scores, warnings, and missing-evidence flags
+AI job metadata stored: prompt version, model, schema version, output, cost estimate
+🏪 Marketplace Connectors (packages/marketplace/src/)
+eBay — draft/sandbox/API-ready payload formatter
+Vinted — export formatter
+Connector registry (pluggable for future marketplaces)
+POST /api/items/:id/export/:marketplace
+POST /api/items/:id/publish/:marketplace
+💳 Billing & Payments
+Stripe integration — credit/pay-per-check model
+Checkout session (POST /api/billing/checkout)
+Customer portal (POST /api/billing/portal)
+Stripe webhook handler (/api/webhooks/stripe)
+Credit consumption per Guard check
+🔐 Auth & Security
+Clerk authentication with demo/CI mode (placeholder key support)
+Per-resource ownership checks (items + guard checks locked to user)
+Rate limiting (lib/rate-limit.ts)
+Public routes: home, splash, legal pages
+🧩 Browser Extension (apps/extension/)
+Built with WXT framework
+Background service worker for auth/API calls
+Content script for marketplace detection (eBay/Vinted)
+Popup UI for running Guard checks on current listing
+⚙️ Infrastructure & Dev
+Monorepo with Turborepo (apps/web, apps/extension, packages/*)
+PWA support (/manifest.ts, /offline page)
+Sentry error tracking (/monitoring tunnel route, example page)
+Clerk webhook handler (/api/webhooks/clerk)
+Health check endpoint (/api/health)
+PostHog analytics (via packages/ai and usage events)
+Prisma ORM + DB package (packages/db)
+In-memory store (lib/store.ts) for POC-mode (no DB required to run)
+TypeScript strict mode throughout
+Vitest tests for safe-wording, schemas, and pricing logic
+🎨 UI / Design
+Dark premium UI with cyan/violet gradients, glass cards
+Splash/marketing page (/splash)
+Legal pages (/legal)
+Lenses grid page (/lenses)
+Framer Motion animations
+Accessible, keyboard-navigable components (shadcn/ui base)

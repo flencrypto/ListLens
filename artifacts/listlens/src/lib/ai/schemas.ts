@@ -31,6 +31,20 @@ export const StudioOutputSchema = z.object({
  * releases (top match + alternate matches) — never a single overconfident
  * answer — and a flag indicating whether matrix/runout input is needed.
  */
+export const DiscogsEnrichmentSchema = z.object({
+  release_id: z.number(),
+  tracklist: z.array(z.string()).default([]),
+  formats: z.array(z.string()).default([]),
+  year: z.number().nullable().optional(),
+  country: z.string().nullable().optional(),
+  community_have: z.number().nullable().optional(),
+  community_want: z.number().nullable().optional(),
+  community_rating: z.number().nullable().optional(),
+  lowest_price: z.number().nullable().optional(),
+  num_for_sale: z.number().nullable().optional(),
+  cover_image: z.string().nullable().optional(),
+});
+
 export const RecordReleaseMatchSchema = z.object({
   artist: z.string().nullable(),
   title: z.string().nullable(),
@@ -39,6 +53,7 @@ export const RecordReleaseMatchSchema = z.object({
   likely_release: z.string(),
   likelihood_percent: z.number().min(0).max(100),
   evidence: z.array(z.string()).default([]),
+  discogs: DiscogsEnrichmentSchema.optional(),
 });
 
 export const RecordReleaseIdentificationSchema = z.object({
@@ -78,3 +93,4 @@ export type StudioOutput = z.infer<typeof StudioOutputSchema>;
 export type GuardOutput = z.infer<typeof GuardOutputSchema>;
 export type RecordReleaseIdentification = z.infer<typeof RecordReleaseIdentificationSchema>;
 export type RecordReleaseMatch = z.infer<typeof RecordReleaseMatchSchema>;
+export type DiscogsEnrichment = z.infer<typeof DiscogsEnrichmentSchema>;
