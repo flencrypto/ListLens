@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import type {
   RecordReleaseIdentification,
 } from "@/lib/ai/schemas";
@@ -102,6 +103,9 @@ export default function RecordLensIdentifyPage() {
       <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         <div>
+          <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+            Lens · RecordLens
+          </p>
           <div className="flex items-center gap-3">
             <span className="text-3xl">💿</span>
             <div>
@@ -112,6 +116,7 @@ export default function RecordLensIdentifyPage() {
               </p>
             </div>
           </div>
+          <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         <Card>
@@ -142,7 +147,13 @@ export default function RecordLensIdentifyPage() {
               disabled={loading}
               className="bg-cyan-600 hover:bg-cyan-500"
             >
-              {loading ? "Analysing…" : "Identify from label"}
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="text-base text-cyan-200" /> Analysing…
+                </span>
+              ) : (
+                "Identify from label"
+              )}
             </Button>
           </CardContent>
         </Card>
@@ -189,7 +200,13 @@ export default function RecordLensIdentifyPage() {
                 disabled={loading}
                 className="bg-violet-600 hover:bg-violet-500"
               >
-                {loading ? "Re-ranking…" : "Re-rank with matrix"}
+                {loading ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="text-base text-violet-200" /> Re-ranking…
+                </span>
+              ) : (
+                "Re-rank with matrix"
+              )}
               </Button>
             </CardContent>
           </Card>

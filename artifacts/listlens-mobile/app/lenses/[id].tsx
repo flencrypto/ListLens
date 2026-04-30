@@ -84,7 +84,7 @@ export default function LensDetailScreen() {
         />
       </View>
 
-      <Card>
+      <Card glow={isLive}>
         <Text style={[styles.body, { color: colors.zinc300 }]}>
           {lens.description}
         </Text>
@@ -92,7 +92,7 @@ export default function LensDetailScreen() {
 
       {detail ? (
         <>
-          <Card>
+          <Card glow={isLive}>
             <Text style={[styles.section, { color: colors.foreground }]}>
               What this lens looks for
             </Text>

@@ -13,11 +13,15 @@ export default function LensesPage() {
       <Navbar />
       <main className="max-w-6xl mx-auto px-4 py-8 space-y-10">
         <div>
+          <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+            Catalogue · Lenses
+          </p>
           <h1 className="text-2xl font-bold text-white">Lenses</h1>
           <p className="text-zinc-400 text-sm mt-1">
             Specialist category agents that power Studio and Guard. Each Lens applies its own
             evidence rules, fields and trust language.
           </p>
+          <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         <section>
@@ -32,8 +36,10 @@ export default function LensesPage() {
               const interactive = Boolean(lens.href);
               const card = (
                 <Card
-                  className={`h-full transition-colors ${
-                    interactive ? "hover:border-zinc-600 cursor-pointer" : ""
+                  className={`h-full transition-all ${
+                    interactive
+                      ? "hover:border-cyan-500/40 hover:shadow-[0_0_24px_-8px_rgba(34,211,238,0.45)] cursor-pointer"
+                      : ""
                   }`}
                 >
                   <CardHeader className="flex flex-row items-center gap-3">

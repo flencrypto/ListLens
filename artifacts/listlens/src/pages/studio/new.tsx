@@ -48,8 +48,12 @@ export default function NewStudioPage() {
       <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
+          <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+            Studio · New listing
+          </p>
           <h1 className="text-2xl font-bold text-white mb-1">New Listing</h1>
           <p className="text-zinc-400 text-sm">Choose your lens and marketplace, then upload photos.</p>
+          <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         {/* Lens picker */}

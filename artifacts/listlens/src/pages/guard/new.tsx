@@ -76,8 +76,12 @@ export default function NewGuardPage() {
       <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
+          <p className="text-violet-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
+            Guard · New check
+          </p>
           <h1 className="text-2xl font-bold text-white mb-1">Guard — Check a Listing</h1>
           <p className="text-zinc-400 text-sm">AI risk report before you buy. Paste a URL or upload screenshots.</p>
+          <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         {/* Input method tabs */}
