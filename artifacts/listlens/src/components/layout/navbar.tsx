@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { useAuth } from "@workspace/replit-auth-web";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { cn } from "@/lib/utils";
-import { identifyUser, resetUser } from "@/lib/posthog";
 
 const NAV_LINKS = [
   { href: "/studio/new", label: "Studio", match: /^\/studio/ },
@@ -18,14 +17,7 @@ export function Navbar() {
   const [location] = useLocation();
   const { isAuthenticated, isLoading, login, logout, user } = useAuth();
 
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      identifyUser(user.id);
-    }
-  }, [isAuthenticated, user?.id]);
-
   function handleLogout() {
-    resetUser();
     logout();
   }
 

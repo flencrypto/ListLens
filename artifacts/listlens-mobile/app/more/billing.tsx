@@ -21,7 +21,6 @@ import {
   formatRemainingCredits,
   useSubscription,
 } from "@/lib/revenuecat";
-import { captureEvent } from "@/lib/posthog";
 
 interface PlanCopy {
   packageLookupKey: "$rc_monthly" | "$rc_annual" | "$rc_lifetime";
@@ -74,10 +73,6 @@ const GUARD_PLANS: PlanCopy[] = [
 export default function BillingScreen() {
   const colors = useColors();
 
-  useEffect(() => {
-    captureEvent("paywall_shown", { source: "mobile_billing_screen" });
-  }, []);
-
   const {
     customerInfo,
     currentOffering,
@@ -109,12 +104,6 @@ export default function BillingScreen() {
     const pkg = pendingPackage;
     setPendingPackage(null);
     setActionError(null);
-    captureEvent("upgrade_tapped", {
-      plan: pkg.identifier,
-      productId: pkg.product.identifier,
-      price: pkg.product.priceString,
-      source: "mobile",
-    });
     try {
       await purchase(pkg);
     } catch (e) {
