@@ -6,6 +6,7 @@ import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
+import { captureServerEvent } from "../lib/posthog";
 
 const router: IRouter = Router();
 
@@ -176,6 +177,24 @@ function buildLensSystemPrompt(lens: string): string {
 Base prices on current UK resale market values. Be specific — name the exact model, colourway, edition or pressing.`;
 }
 
+const GPT4O_INPUT_COST_PER_TOKEN = 2.5 / 1_000_000;
+const GPT4O_OUTPUT_COST_PER_TOKEN = 10.0 / 1_000_000;
+const GROK_VISION_COST_PER_TOKEN = 5.0 / 1_000_000;
+
+function estimateCostUsd(
+  model: string,
+  promptTokens: number,
+  completionTokens: number,
+): number {
+  if (model.startsWith("gpt-4o")) {
+    return (
+      promptTokens * GPT4O_INPUT_COST_PER_TOKEN +
+      completionTokens * GPT4O_OUTPUT_COST_PER_TOKEN
+    );
+  }
+  return (promptTokens + completionTokens) * GROK_VISION_COST_PER_TOKEN;
+}
+
 async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
@@ -206,6 +225,21 @@ async function runStudioAnalysis(
       { role: "user", content: userContent },
     ],
     max_tokens: 1200,
+  });
+
+  const usage = completion.usage;
+  captureServerEvent("server", "ai_job_completed", {
+    model: "gpt-4o",
+    prompt_version: "studio_v1",
+    lens,
+    mode: "studio",
+    prompt_tokens: usage?.prompt_tokens ?? 0,
+    completion_tokens: usage?.completion_tokens ?? 0,
+    estimated_cost_usd: estimateCostUsd(
+      "gpt-4o",
+      usage?.prompt_tokens ?? 0,
+      usage?.completion_tokens ?? 0,
+    ),
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
@@ -254,6 +288,21 @@ Be specific. If screenshots look stock or inconsistent, flag it. If price is ano
       { role: "user", content: userParts },
     ],
     max_tokens: 1000,
+  });
+
+  const usage = completion.usage;
+  captureServerEvent("server", "ai_job_completed", {
+    model: "gpt-4o",
+    prompt_version: "guard_v1",
+    lens,
+    mode: "guard",
+    prompt_tokens: usage?.prompt_tokens ?? 0,
+    completion_tokens: usage?.completion_tokens ?? 0,
+    estimated_cost_usd: estimateCostUsd(
+      "gpt-4o",
+      usage?.prompt_tokens ?? 0,
+      usage?.completion_tokens ?? 0,
+    ),
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
@@ -307,6 +356,21 @@ Be precise. Read text exactly as it appears on the label. If a field is not visi
       { role: "user", content: userContent },
     ],
     max_tokens: 500,
+  });
+
+  const usage = completion.usage;
+  captureServerEvent("server", "ai_job_completed", {
+    model: "grok-2-vision-latest",
+    prompt_version: "record_extract_v1",
+    lens: "RecordLens",
+    mode: "record_identify",
+    prompt_tokens: usage?.prompt_tokens ?? 0,
+    completion_tokens: usage?.completion_tokens ?? 0,
+    estimated_cost_usd: estimateCostUsd(
+      "grok-2-vision-latest",
+      usage?.prompt_tokens ?? 0,
+      usage?.completion_tokens ?? 0,
+    ),
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";

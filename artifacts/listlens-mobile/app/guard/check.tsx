@@ -16,6 +16,7 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { LENS_REGISTRY } from "@/constants/lenses";
+import { captureEvent } from "@/lib/posthog";
 
 type Tab = "url" | "screenshots";
 
@@ -68,6 +69,8 @@ export default function GuardCheckScreen() {
       notify("Add at least one screenshot URL.");
       return;
     }
+    captureEvent("lens_selected", { lens, source: "mobile_guard" });
+    captureEvent("guard_check_started", { lens, source: tab, platform: "mobile" });
     setBusy(true);
     setTimeout(() => {
       router.replace({

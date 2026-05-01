@@ -1,8 +1,10 @@
 import { Link, useLocation } from "wouter";
+import { useEffect } from "react";
 
 import { useAuth } from "@workspace/replit-auth-web";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { cn } from "@/lib/utils";
+import { identifyUser, resetUser } from "@/lib/posthog";
 
 const NAV_LINKS = [
   { href: "/studio/new", label: "Studio", match: /^\/studio/ },
@@ -14,7 +16,18 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const [location] = useLocation();
-  const { isAuthenticated, isLoading, login, logout } = useAuth();
+  const { isAuthenticated, isLoading, login, logout, user } = useAuth();
+
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      identifyUser(user.id);
+    }
+  }, [isAuthenticated, user?.id]);
+
+  function handleLogout() {
+    resetUser();
+    logout();
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b border-cyan-400/15 bg-[#040a14]/85 backdrop-blur-md">
@@ -52,7 +65,7 @@ export function Navbar() {
           })}
           {!isLoading && (
             <button
-              onClick={isAuthenticated ? logout : login}
+              onClick={isAuthenticated ? handleLogout : login}
               className={cn(
                 "ml-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
                 isAuthenticated

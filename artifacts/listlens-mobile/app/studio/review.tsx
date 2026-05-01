@@ -23,6 +23,7 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis } from "@/lib/api";
+import { captureEvent } from "@/lib/posthog";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -360,14 +361,20 @@ export default function ReviewScreen() {
                 ? "✓ Vinted draft saved"
                 : "Export to Vinted"
             }
-            onPress={() => setBody((d) => ({ ...d, exported: "vinted" }))}
+            onPress={() => {
+              captureEvent("export_triggered", { destination: "vinted", lens: body.lens, source: "mobile" });
+              setBody((d) => ({ ...d, exported: "vinted" }));
+            }}
           />
           <BrandButton
             label={
               body.exported === "ebay" ? "✓ eBay payload saved" : "Save eBay draft"
             }
             variant="outline"
-            onPress={() => setBody((d) => ({ ...d, exported: "ebay" }))}
+            onPress={() => {
+              captureEvent("export_triggered", { destination: "ebay", lens: body.lens, source: "mobile" });
+              setBody((d) => ({ ...d, exported: "ebay" }));
+            }}
           />
         </View>
       </Card>

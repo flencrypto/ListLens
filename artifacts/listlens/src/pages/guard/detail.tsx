@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskReport } from "@/components/guard/risk-report";
 import type { GuardOutput } from "@/lib/ai/schemas";
+import { capture } from "@/lib/posthog";
 
 export default function GuardCheckPage() {
   const params = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function GuardCheckPage() {
       if (!res.ok) throw new Error("Analysis failed");
       const data = await res.json();
       setReport(data.report);
+      capture("guard_check_completed", { checkId: id, riskLevel: data.report?.risk?.level });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
     } finally {

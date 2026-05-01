@@ -8,6 +8,7 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { LENS_REGISTRY } from "@/constants/lenses";
+import { captureEvent } from "@/lib/posthog";
 
 const MARKETPLACES = [
   { id: "both", label: "eBay + Vinted" },
@@ -133,12 +134,13 @@ export default function NewListingScreen() {
         label={`Continue with ${lens}`}
         size="lg"
         iconLeft={<Feather name="arrow-right" size={18} color="#040a14" />}
-        onPress={() =>
+        onPress={() => {
+          captureEvent("lens_selected", { lens, marketplace, source: "mobile_studio" });
           router.push({
             pathname: "/studio/capture",
             params: { lens, marketplace },
-          })
-        }
+          });
+        }}
       />
 
       <Text style={[styles.note, { color: colors.zinc500 }]}>

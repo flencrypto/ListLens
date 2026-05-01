@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, typ
 import * as AuthSession from "expo-auth-session";
 import * as WebBrowser from "expo-web-browser";
 import * as SecureStore from "expo-secure-store";
+import { identifyMobileUser, resetMobileUser } from "@/lib/posthog";
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -78,6 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         setUser(data.user);
+        if (data.user.id) {
+          identifyMobileUser(String(data.user.id));
+        }
       } else {
         await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
         setUser(null);
@@ -159,6 +163,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
       setUser(null);
+      resetMobileUser();
     }
   }, []);
 

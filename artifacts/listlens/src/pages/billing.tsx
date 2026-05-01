@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BrandGlyph } from "@/components/brand/brand-glyph";
 import { PLANS as STRIPE_PLANS } from "@/lib/stripe";
+import { capture } from "@/lib/posthog";
 
 interface PlanDisplay {
   key: string;
@@ -382,6 +383,7 @@ export default function BillingPage() {
   const checkoutStatus = params.get("checkout");
 
   useEffect(() => {
+    capture("paywall_shown", { source: "billing_page" });
     fetch("/api/billing/info")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -506,6 +508,7 @@ export default function BillingPage() {
                       />
                       <Button
                         type="submit"
+                        onClick={() => capture("upgrade_tapped", { plan: plan.key, price: plan.price })}
                         className={`w-full ${
                           plan.highlight
                             ? "bg-gradient-to-r from-cyan-500 to-violet-600 border-0"
@@ -558,6 +561,7 @@ export default function BillingPage() {
                   <input type="hidden" name="mode" value="payment" />
                   <Button
                     type="submit"
+                    onClick={() => capture("upgrade_tapped", { plan: "guard_single", price: "£1.99" })}
                     variant="outline"
                     className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40"
                   >
@@ -596,6 +600,7 @@ export default function BillingPage() {
                   <input type="hidden" name="priceId" value={GUARD_MONTHLY_PRICE_ID} />
                   <Button
                     type="submit"
+                    onClick={() => capture("upgrade_tapped", { plan: "guard_monthly", price: "£6.99" })}
                     variant="outline"
                     className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40"
                   >

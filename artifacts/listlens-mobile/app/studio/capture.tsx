@@ -18,6 +18,7 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { analyseItem, createItem } from "@/lib/api";
+import { captureEvent } from "@/lib/posthog";
 
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
@@ -133,6 +134,7 @@ export default function CaptureScreen() {
       return;
     }
     setBusy(true);
+    captureEvent("studio_analysis_started", { lens: String(lens), photoCount: photos.length, source: "mobile" });
     try {
       const photoUrls = photos.map(
         (p) => `data:${p.mimeType ?? "image/jpeg"};base64,${p.base64}`,
@@ -156,6 +158,8 @@ export default function CaptureScreen() {
         photoUrls,
         ...(measureHint ? { hint: measureHint } : {}),
       });
+
+      captureEvent("studio_analysis_completed", { lens: String(lens), itemId: id, source: "mobile" });
 
       router.replace({
         pathname: "/studio/review",
