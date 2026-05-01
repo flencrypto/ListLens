@@ -231,7 +231,7 @@ export default function CaptureScreen() {
           }. Use this to estimate item dimensions accurately.`
         : undefined;
 
-      // Animate fake progress for the AI call (typically 15–40 s)
+      // Animate fake progress for the AI call (typically 5–30 s)
       startProgressPhase("Analysing with AI…", 45, 95, 30_000);
 
       const { id } = await createItem({
@@ -311,7 +311,7 @@ export default function CaptureScreen() {
             <Text style={[styles.overlayHint, { color: colors.zinc500 }]}>
               {uploadCount !== null
                 ? "Uploading over Wi-Fi is fastest. Keep the app open."
-                : "This usually takes 20–60 seconds. Keep the app open."}
+                : "This usually takes 5–30 seconds. Keep the app open."}
             </Text>
           </View>
         </View>

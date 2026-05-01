@@ -29,7 +29,7 @@ function getVisionClientInfo(): VisionClientInfo {
   if (xaiKey) {
     return {
       client: new OpenAI({ apiKey: xaiKey, baseURL: "https://api.x.ai/v1" }),
-      model: "grok-4",
+      model: "grok-4-fast-non-reasoning",
       mode: "vision",
     };
   }
