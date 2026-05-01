@@ -34,7 +34,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   if (req.path === "/api/webhooks/stripe") {
     express.raw({ type: "application/json" })(req, res, next);
   } else {
-    express.json()(req, res, next);
+    express.json({ limit: "30mb" })(req, res, next);
   }
 });
 
