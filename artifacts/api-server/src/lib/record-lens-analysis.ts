@@ -337,7 +337,12 @@ Be precise. Copy text exactly as it appears. Include all catalogue numbers even 
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(raw) as Partial<RecordExtraction>;
+  let parsed: Partial<RecordExtraction> = {};
+  try {
+    parsed = JSON.parse(raw) as Partial<RecordExtraction>;
+  } catch (err) {
+    logger.warn({ err, raw: raw.slice(0, 200) }, "extractRecordDetails JSON.parse failed — using empty extraction");
+  }
   return {
     catalog_numbers: parsed.catalog_numbers ?? [],
     matrix_runout_a: parsed.matrix_runout_a ?? null,
@@ -401,7 +406,12 @@ If sleeve is missing or not visible, return "Not graded" for sleeve_grade.`;
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(raw) as Partial<ConditionGrade>;
+  let parsed: Partial<ConditionGrade> = {};
+  try {
+    parsed = JSON.parse(raw) as Partial<ConditionGrade>;
+  } catch (err) {
+    logger.warn({ err, raw: raw.slice(0, 200) }, "gradeCondition JSON.parse failed — using VG+ defaults");
+  }
   return {
     media_grade: parsed.media_grade ?? "VG+",
     sleeve_grade: parsed.sleeve_grade ?? "VG+",
@@ -548,7 +558,12 @@ Additional text: ${extraction.readable_text || "none"}`;
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(raw) as Partial<PressingDetails> & { confidence?: number };
+  let parsed: Partial<PressingDetails> & { confidence?: number } = {};
+  try {
+    parsed = JSON.parse(raw) as Partial<PressingDetails> & { confidence?: number };
+  } catch (err) {
+    logger.warn({ err, raw: raw.slice(0, 200) }, "identifyPressingViaLLM JSON.parse failed — falling back to extraction data");
+  }
   return {
     artist: parsed.artist ?? extraction.artist,
     title: parsed.title ?? extraction.title,
@@ -660,7 +675,12 @@ Discogs have/want: ${pressing.discogs_community_have ?? "?"} / ${pressing.discog
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(raw) as Partial<ListingCopy>;
+  let parsed: Partial<ListingCopy> = {};
+  try {
+    parsed = JSON.parse(raw) as Partial<ListingCopy>;
+  } catch (err) {
+    logger.warn({ err, raw: raw.slice(0, 200) }, "generateListingCopy JSON.parse failed — using fallback copy");
+  }
 
   const tracklist =
     parsed.tracklist?.length

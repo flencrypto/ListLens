@@ -78,11 +78,9 @@ export default function RecordLensIdentifyPage() {
         body: JSON.stringify({
           labelPhotoUrls: urls,
           hint: hint || undefined,
-          matrix: {
-            side_a: matrixA || undefined,
-            side_b: matrixB || undefined,
-            extra_symbols: extraSymbols || undefined,
-          },
+          matrixSideA: matrixA || undefined,
+          matrixSideB: matrixB || undefined,
+          matrixSideCD: extraSymbols || undefined,
         }),
       });
       if (!res.ok) {

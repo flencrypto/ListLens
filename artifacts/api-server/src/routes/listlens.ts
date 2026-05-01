@@ -1333,7 +1333,7 @@ router.post("/guard/checks/:id/save", (_req, res) => {
 
 router.post("/lenses/record/identify", async (req, res) => {
   const b = body(req);
-  const labelUrls = (b["labelUrls"] as string[]) ?? [];
+  const labelUrls = (b["labelPhotoUrls"] as string[] | undefined) ?? (b["labelUrls"] as string[] | undefined) ?? [];
   try {
     const analysis = await identifyRecord(labelUrls, []);
     res.json({ analysis: { ...analysis, input_type: "single_label_photo" } });
@@ -1347,8 +1347,8 @@ router.post("/lenses/record/identify", async (req, res) => {
 
 router.post("/lenses/record/identify-with-matrix", async (req, res) => {
   const b = body(req);
-  const labelUrls = (b["labelUrls"] as string[]) ?? [];
-  const matrixUrls = (b["matrixUrls"] as string[]) ?? [];
+  const labelUrls = (b["labelPhotoUrls"] as string[] | undefined) ?? (b["labelUrls"] as string[] | undefined) ?? [];
+  const matrixUrls = (b["matrixPhotoUrls"] as string[] | undefined) ?? (b["matrixUrls"] as string[] | undefined) ?? [];
   const itemId = b["itemId"] as string | undefined;
   const matrixSideA = (b["matrixSideA"] as string | undefined)?.trim() || undefined;
   const matrixSideB = (b["matrixSideB"] as string | undefined)?.trim() || undefined;
