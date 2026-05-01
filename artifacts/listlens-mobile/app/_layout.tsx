@@ -6,6 +6,7 @@ import {
   useFonts,
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import * as Font from "expo-font";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
@@ -14,7 +15,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
-import { Feather } from "@expo/vector-icons";
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
@@ -96,7 +96,12 @@ export default function RootLayout() {
   const [subscriptionCacheReady, setSubscriptionCacheReady] = useState(false);
 
   useEffect(() => {
-    Feather.loadFont()
+    Font.loadAsync({
+      // Load from project assets so Metro serves it from a clean local path,
+      // avoiding Android issues with deeply-nested pnpm symlinks.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      feather: require("../assets/fonts/Feather.ttf"),
+    })
       .then(() => setFeatherReady(true))
       .catch((err) => {
         console.warn("Feather font load failed:", err);
