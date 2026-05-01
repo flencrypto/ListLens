@@ -15,7 +15,6 @@ import {
   type GuardReport,
   type RiskLevel,
 } from "@/lib/historyStore";
-import { captureEvent } from "@/lib/posthog";
 
 interface RedFlag {
   severity: "low" | "medium" | "high";
@@ -90,7 +89,6 @@ export default function GuardReportScreen() {
       };
       if (cancelled) return;
       setReport(fresh);
-      captureEvent("guard_check_completed", { lens: fresh.lens, riskLevel: fresh.level, source: "mobile" });
       // Persist immediately so the report appears in History as soon as it's
       // created, mirroring the studio draft auto-save behaviour.
       saveReport(fresh).catch(() => undefined);

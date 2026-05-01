@@ -1,11 +1,8 @@
 import { Link, useLocation } from "wouter";
-import { useEffect } from "react";
 
 import { useAuth } from "@workspace/replit-auth-web";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { cn } from "@/lib/utils";
-import { identifyUser, resetUser } from "@/lib/posthog";
-
 const NAV_LINKS = [
   { href: "/studio/new", label: "Studio", match: /^\/studio/ },
   { href: "/guard/new", label: "Guard", match: /^\/guard/ },
@@ -16,16 +13,9 @@ const NAV_LINKS = [
 
 export function Navbar() {
   const [location] = useLocation();
-  const { isAuthenticated, isLoading, login, logout, user } = useAuth();
-
-  useEffect(() => {
-    if (isAuthenticated && user?.id) {
-      identifyUser(user.id);
-    }
-  }, [isAuthenticated, user?.id]);
+  const { isAuthenticated, isLoading, login, logout } = useAuth();
 
   function handleLogout() {
-    resetUser();
     logout();
   }
 

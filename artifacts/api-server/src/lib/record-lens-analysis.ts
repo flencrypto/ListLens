@@ -14,8 +14,6 @@
 import OpenAI from "openai";
 import { logger } from "./logger";
 import { searchDiscogs, getDiscogsRelease } from "./discogs";
-import { captureServerEvent } from "./posthog";
-
 // ─── Vision model routing ─────────────────────────────────────────────────────
 
 type VisionMode = "vision" | "text_only";
@@ -334,15 +332,6 @@ Be precise. Copy text exactly as it appears. Include all catalogue numbers even 
     max_tokens: 700,
   });
 
-  captureServerEvent("server", "ai_job_completed", {
-    model: clientInfo.model,
-    prompt_version: "record_extract_v2",
-    lens: "RecordLens",
-    mode: "record_extract",
-    prompt_tokens: completion.usage?.prompt_tokens ?? 0,
-    completion_tokens: completion.usage?.completion_tokens ?? 0,
-  });
-
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as Partial<RecordExtraction>;
   return {
@@ -405,15 +394,6 @@ If sleeve is missing or not visible, return "Not graded" for sleeve_grade.`;
       { role: "user", content: userContent },
     ],
     max_tokens: 500,
-  });
-
-  captureServerEvent("server", "ai_job_completed", {
-    model: clientInfo.model,
-    prompt_version: "record_condition_v1",
-    lens: "RecordLens",
-    mode: "record_condition",
-    prompt_tokens: completion.usage?.prompt_tokens ?? 0,
-    completion_tokens: completion.usage?.completion_tokens ?? 0,
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
@@ -525,15 +505,6 @@ Additional text: ${extraction.readable_text || "none"}`;
     max_tokens: 600,
   });
 
-  captureServerEvent("server", "ai_job_completed", {
-    model: clientInfo.model,
-    prompt_version: "record_identify_llm_v1",
-    lens: "RecordLens",
-    mode: "record_identify_llm",
-    prompt_tokens: completion.usage?.prompt_tokens ?? 0,
-    completion_tokens: completion.usage?.completion_tokens ?? 0,
-  });
-
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as Partial<PressingDetails> & { confidence?: number };
   return {
@@ -627,15 +598,6 @@ Discogs have/want: ${pressing.discogs_community_have ?? "?"} / ${pressing.discog
       { role: "user", content: userText },
     ],
     max_tokens: 800,
-  });
-
-  captureServerEvent("server", "ai_job_completed", {
-    model: clientInfo.model,
-    prompt_version: "record_listing_v1",
-    lens: "RecordLens",
-    mode: "record_listing",
-    prompt_tokens: completion.usage?.prompt_tokens ?? 0,
-    completion_tokens: completion.usage?.completion_tokens ?? 0,
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";

@@ -6,7 +6,6 @@ import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
-import { captureServerEvent } from "../lib/posthog";
 import { runRecordLensAnalysis } from "../lib/record-lens-analysis";
 
 const router: IRouter = Router();
@@ -272,19 +271,6 @@ async function runStudioAnalysis(
   });
 
   const usage = completion.usage;
-  captureServerEvent("server", "ai_job_completed", {
-    model: "gpt-4o",
-    prompt_version: "studio_v1",
-    lens,
-    mode: "studio",
-    prompt_tokens: usage?.prompt_tokens ?? 0,
-    completion_tokens: usage?.completion_tokens ?? 0,
-    estimated_cost_usd: estimateCostUsd(
-      "gpt-4o",
-      usage?.prompt_tokens ?? 0,
-      usage?.completion_tokens ?? 0,
-    ),
-  });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as unknown;
@@ -433,19 +419,6 @@ async function runGuardAnalysis(
   });
 
   const usage = completion.usage;
-  captureServerEvent("server", "ai_job_completed", {
-    model: "gpt-4o",
-    prompt_version: "guard_v1",
-    lens,
-    mode: "guard",
-    prompt_tokens: usage?.prompt_tokens ?? 0,
-    completion_tokens: usage?.completion_tokens ?? 0,
-    estimated_cost_usd: estimateCostUsd(
-      "gpt-4o",
-      usage?.prompt_tokens ?? 0,
-      usage?.completion_tokens ?? 0,
-    ),
-  });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as unknown;
@@ -501,19 +474,6 @@ Be precise. Read text exactly as it appears on the label. If a field is not visi
   });
 
   const usage = completion.usage;
-  captureServerEvent("server", "ai_job_completed", {
-    model: "grok-2-vision-latest",
-    prompt_version: "record_extract_v1",
-    lens: "RecordLens",
-    mode: "record_identify",
-    prompt_tokens: usage?.prompt_tokens ?? 0,
-    completion_tokens: usage?.completion_tokens ?? 0,
-    estimated_cost_usd: estimateCostUsd(
-      "grok-2-vision-latest",
-      usage?.prompt_tokens ?? 0,
-      usage?.completion_tokens ?? 0,
-    ),
-  });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
   return JSON.parse(raw) as XaiRecordExtraction;

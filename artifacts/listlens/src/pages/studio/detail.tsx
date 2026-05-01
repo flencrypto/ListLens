@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { ListingEditor } from "@/components/studio/listing-editor";
 import type { StudioOutput } from "@/lib/ai/schemas";
-import { capture } from "@/lib/posthog";
 import { useUpload } from "@workspace/object-storage-web";
 
 const MAX_PHOTOS = 8;
@@ -103,7 +102,6 @@ export default function StudioItemPage() {
     }
     setError(null);
     setLoading(true);
-    capture("studio_analysis_started", { itemId: id, photoCount: photoUrls.length, hasHint: Boolean(hint.trim()) });
     try {
       const res = await fetch(`/api/items/${id}/analyse`, {
         method: "POST",
@@ -113,7 +111,6 @@ export default function StudioItemPage() {
       if (!res.ok) throw new Error("Analysis failed");
       const data = await res.json();
       setAnalysis(data.analysis);
-      capture("studio_analysis_completed", { itemId: id, lens: data.analysis?.lens });
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {

@@ -23,7 +23,6 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis } from "@/lib/api";
-import { captureEvent } from "@/lib/posthog";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -362,7 +361,6 @@ export default function ReviewScreen() {
                 : "Export to Vinted"
             }
             onPress={() => {
-              captureEvent("export_triggered", { destination: "vinted", lens: body.lens, source: "mobile" });
               setBody((d) => ({ ...d, exported: "vinted" }));
             }}
           />
@@ -372,7 +370,6 @@ export default function ReviewScreen() {
             }
             variant="outline"
             onPress={() => {
-              captureEvent("export_triggered", { destination: "ebay", lens: body.lens, source: "mobile" });
               setBody((d) => ({ ...d, exported: "ebay" }));
             }}
           />

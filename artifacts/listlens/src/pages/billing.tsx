@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { BrandGlyph } from "@/components/brand/brand-glyph";
 import { PLANS as STRIPE_PLANS } from "@/lib/stripe";
-import { capture } from "@/lib/posthog";
-
 interface PlanDisplay {
   key: string;
   name: string;
@@ -388,7 +386,6 @@ export default function BillingPage() {
   }, []);
 
   useEffect(() => {
-    capture("paywall_shown", { source: "billing_page" });
     fetchBillingInfo();
   }, [fetchBillingInfo]);
 
@@ -402,7 +399,6 @@ export default function BillingPage() {
         body: JSON.stringify({ plan }),
       });
       if (res.ok) {
-        capture("upgrade_tapped", { plan, demo: true });
         setDemoFeedback(plan === "free" ? "Reverted to Free Trial" : `${label} demo activated`);
         fetchBillingInfo();
         setTimeout(() => setDemoFeedback(null), 4000);
@@ -598,7 +594,6 @@ export default function BillingPage() {
                       <input type="hidden" name="priceId" value={plan.priceId} />
                       <Button
                         type="submit"
-                        onClick={() => capture("upgrade_tapped", { plan: plan.key, price: plan.price })}
                         className={`w-full ${
                           plan.highlight
                             ? "bg-gradient-to-r from-cyan-500 to-violet-600 border-0"
@@ -657,7 +652,6 @@ export default function BillingPage() {
                   <input type="hidden" name="mode" value="payment" />
                   <Button
                     type="submit"
-                    onClick={() => capture("upgrade_tapped", { plan: "guard_single", price: "£1.99" })}
                     variant="outline"
                     className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40"
                   >
@@ -731,7 +725,6 @@ export default function BillingPage() {
                   <input type="hidden" name="priceId" value={GUARD_MONTHLY_PRICE_ID} />
                   <Button
                     type="submit"
-                    onClick={() => capture("upgrade_tapped", { plan: "guard_monthly", price: "£6.99" })}
                     variant="outline"
                     className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40"
                   >

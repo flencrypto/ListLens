@@ -4,8 +4,6 @@ import { useLocation } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { capture } from "@/lib/posthog";
-
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens" },
   { id: "LPLens", icon: "🎵", name: "LPLens" },
@@ -45,7 +43,6 @@ export default function NewGuardPage() {
     }
     setError(null);
     setLoading(true);
-    capture("lens_selected", { lens, source: "guard" });
     let navigated = false;
     try {
       const res = await fetch("/api/guard/checks", {
@@ -62,7 +59,6 @@ export default function NewGuardPage() {
         throw new Error((errData as { error?: string }).error ?? "Something went wrong");
       }
       const data = await res.json();
-      capture("guard_check_started", { lens, source: tab, checkId: data.id });
       navigated = true;
       setLocation(`/guard/${data.id}`);
     } catch (e) {
