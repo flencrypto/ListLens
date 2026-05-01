@@ -41,6 +41,12 @@
           ]
         }
       ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow Mr.FLENS to access your photos to analyse listings with Guard."
+        }
+      ],
       "expo-web-browser"
     ],
     "experiments": {

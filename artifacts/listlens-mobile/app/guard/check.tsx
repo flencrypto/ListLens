@@ -1,10 +1,13 @@
 import { Feather } from "@expo/vector-icons";
+import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -17,37 +20,54 @@ import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { LENS_REGISTRY } from "@/constants/lenses";
 
-type Tab = "url" | "screenshots";
+type Tab = "url" | "photos";
+
+const MAX_PHOTOS = 6;
 
 export default function GuardCheckScreen() {
   const colors = useColors();
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("url");
   const [url, setUrl] = useState("");
-  const [shotInput, setShotInput] = useState("");
-  const [shots, setShots] = useState<string[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
   const liveLenses = LENS_REGISTRY.filter((l) => l.status === "live");
   const [lens, setLens] = useState(liveLenses[0]?.id ?? "ShoeLens");
   const [busy, setBusy] = useState(false);
+
   const violet300 = "rgba(196,181,253,0.95)";
   const violetStroke = "rgba(167,139,250,0.32)";
 
-  function addShot() {
-    const trimmed = shotInput.trim();
-    if (!trimmed || shots.includes(trimmed)) {
-      setShotInput("");
+  async function pickPhotos() {
+    if (photos.length >= MAX_PHOTOS) {
+      notify(`Maximum ${MAX_PHOTOS} photos allowed.`);
       return;
     }
-    if (shots.length >= 6) {
-      notify("Max 6 screenshots.");
-      return;
+
+    const remaining = MAX_PHOTOS - photos.length;
+
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: "images",
+        allowsMultipleSelection: true,
+        selectionLimit: remaining,
+        quality: 0.85,
+        exif: false,
+      });
+
+      if (!result.canceled) {
+        const uris = result.assets.map((a) => a.uri);
+        setPhotos((prev) => {
+          const combined = [...prev, ...uris];
+          return combined.slice(0, MAX_PHOTOS);
+        });
+      }
+    } catch {
+      notify("Could not open photo library. Please try again.");
     }
-    setShots((prev) => [...prev, trimmed]);
-    setShotInput("");
   }
 
-  function removeShot(i: number) {
-    setShots((prev) => prev.filter((_, idx) => idx !== i));
+  function removePhoto(index: number) {
+    setPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
   function notify(message: string) {
@@ -64,8 +84,8 @@ export default function GuardCheckScreen() {
       notify("Paste an eBay or Vinted listing URL to continue.");
       return;
     }
-    if (tab === "screenshots" && shots.length === 0) {
-      notify("Add at least one screenshot URL.");
+    if (tab === "photos" && photos.length === 0) {
+      notify("Add at least one photo to analyse.");
       return;
     }
     setBusy(true);
@@ -74,9 +94,9 @@ export default function GuardCheckScreen() {
         pathname: "/guard/report",
         params: {
           lens,
-          source: tab,
+          source: tab === "photos" ? "screenshots" : "url",
           url: tab === "url" ? url.trim() : "",
-          shots: shots.join("|"),
+          shots: photos.join("|"),
         },
       });
     }, 1100);
@@ -101,7 +121,8 @@ export default function GuardCheckScreen() {
           Check a listing
         </Text>
         <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
-          AI risk report before you buy. Paste a URL or upload screenshots.
+          AI risk report before you buy. Paste a URL or upload photos from your
+          device.
         </Text>
         <View
           style={{
@@ -140,27 +161,27 @@ export default function GuardCheckScreen() {
             </Text>
           </Pressable>
           <Pressable
-            onPress={() => setTab("screenshots")}
+            onPress={() => setTab("photos")}
             style={[
               styles.tab,
               {
                 backgroundColor:
-                  tab === "screenshots" ? colors.brandViolet600 : "transparent",
+                  tab === "photos" ? colors.brandViolet600 : "transparent",
               },
             ]}
           >
             <Feather
               name="image"
               size={14}
-              color={tab === "screenshots" ? "#fff" : colors.zinc400}
+              color={tab === "photos" ? "#fff" : colors.zinc400}
             />
             <Text
               style={[
                 styles.tabText,
-                { color: tab === "screenshots" ? "#fff" : colors.zinc400 },
+                { color: tab === "photos" ? "#fff" : colors.zinc400 },
               ]}
             >
-              Screenshots
+              Photos
             </Text>
           </Pressable>
         </View>
@@ -185,62 +206,94 @@ export default function GuardCheckScreen() {
             />
           </View>
         ) : (
-          <View style={{ gap: 10, marginTop: 12 }}>
-            <Text style={[styles.helperText, { color: colors.zinc500 }]}>
-              Paste screenshot image URLs (up to 6)
-            </Text>
-            <View style={{ flexDirection: "row", gap: 8 }}>
-              <TextInput
-                value={shotInput}
-                onChangeText={setShotInput}
-                placeholder="https://example.com/shot.jpg"
-                placeholderTextColor={colors.zinc600}
-                autoCapitalize="none"
-                autoCorrect={false}
-                onSubmitEditing={addShot}
-                style={[
-                  styles.input,
+          <View style={{ gap: 12, marginTop: 12 }}>
+            <View style={styles.photosHeader}>
+              <Text style={[styles.helperText, { color: colors.zinc500 }]}>
+                Upload listing photos from your device
+              </Text>
+              <Text
+                style={[styles.countBadge, { color: colors.zinc500 }]}
+              >
+                {photos.length}/{MAX_PHOTOS}
+              </Text>
+            </View>
+
+            {photos.length > 0 && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.photoStrip}
+              >
+                {photos.map((uri, i) => (
+                  <View key={`${uri}-${i}`} style={styles.thumbWrapper}>
+                    <Image
+                      source={{ uri }}
+                      style={[
+                        styles.thumb,
+                        { borderColor: colors.zinc700 },
+                      ]}
+                      resizeMode="cover"
+                    />
+                    <Pressable
+                      onPress={() => removePhoto(i)}
+                      hitSlop={4}
+                      style={[
+                        styles.removeBtn,
+                        { backgroundColor: colors.zinc900 },
+                      ]}
+                    >
+                      <Feather name="x" size={10} color={colors.zinc300} />
+                    </Pressable>
+                    <View
+                      style={[
+                        styles.thumbIndex,
+                        { backgroundColor: "rgba(4,10,20,0.75)" },
+                      ]}
+                    >
+                      <Text
+                        style={{ color: colors.zinc400, fontSize: 10, fontFamily: "Inter_500Medium" }}
+                      >
+                        {i + 1}
+                      </Text>
+                    </View>
+                  </View>
+                ))}
+              </ScrollView>
+            )}
+
+            {photos.length < MAX_PHOTOS && (
+              <Pressable
+                onPress={pickPhotos}
+                style={({ pressed }) => [
+                  styles.addPhotoBtn,
                   {
-                    flex: 1,
-                    color: colors.foreground,
-                    borderColor: colors.zinc700,
+                    borderColor: pressed
+                      ? colors.brandViolet
+                      : colors.zinc700,
+                    backgroundColor: pressed
+                      ? "rgba(76,29,149,0.15)"
+                      : "rgba(24,24,27,0.4)",
+                    opacity: pressed ? 0.85 : 1,
                   },
                 ]}
-              />
-              <Pressable
-                onPress={addShot}
-                style={[
-                  styles.smallButton,
-                  { backgroundColor: colors.zinc800 },
-                ]}
               >
-                <Text style={{ color: colors.foreground, fontFamily: "Inter_600SemiBold" }}>
-                  Add
+                <Feather name="plus" size={18} color={colors.zinc400} />
+                <Text
+                  style={[styles.addPhotoLabel, { color: colors.zinc400 }]}
+                >
+                  {photos.length === 0 ? "Add photos" : "Add more"}
                 </Text>
               </Pressable>
-            </View>
-            {shots.map((shot, i) => (
-              <View
-                key={`${shot}-${i}`}
-                style={[
-                  styles.shotRow,
-                  { borderColor: colors.zinc800, backgroundColor: "rgba(24,24,27,0.5)" },
-                ]}
+            )}
+
+            {photos.length === 0 && (
+              <Text
+                style={[styles.tipText, { color: colors.zinc600 }]}
               >
-                <Text style={[styles.shotIndex, { color: colors.zinc500 }]}>
-                  {i + 1}
-                </Text>
-                <Text
-                  style={[styles.shotUrl, { color: colors.zinc300 }]}
-                  numberOfLines={1}
-                >
-                  {shot}
-                </Text>
-                <Pressable onPress={() => removeShot(i)} hitSlop={8}>
-                  <Feather name="x" size={14} color={colors.zinc500} />
-                </Pressable>
-              </View>
-            ))}
+                Up to {MAX_PHOTOS} photos · Screenshots, product images or
+                seller photos all work
+              </Text>
+            )}
           </View>
         )}
       </Card>
@@ -331,6 +384,7 @@ const styles = StyleSheet.create({
   helperText: {
     fontFamily: "Inter_400Regular",
     fontSize: 12,
+    flex: 1,
   },
   input: {
     borderWidth: 1,
@@ -340,30 +394,65 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 14,
   },
-  smallButton: {
-    paddingHorizontal: 14,
+  photosHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  countBadge: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 11,
+  },
+  photoStrip: {
+    flexDirection: "row",
+    gap: 8,
+    paddingBottom: 4,
+  },
+  thumbWrapper: {
+    position: "relative",
+  },
+  thumb: {
+    width: 80,
+    height: 80,
     borderRadius: 10,
+    borderWidth: 1,
+  },
+  removeBtn: {
+    position: "absolute",
+    top: 4,
+    right: 4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: "center",
     justifyContent: "center",
   },
-  shotRow: {
+  thumbIndex: {
+    position: "absolute",
+    bottom: 4,
+    left: 4,
+    borderRadius: 4,
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+  },
+  addPhotoBtn: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 10,
+    justifyContent: "center",
+    gap: 8,
     borderWidth: 1,
+    borderStyle: "dashed",
     borderRadius: 10,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 18,
   },
-  shotIndex: {
+  addPhotoLabel: {
     fontFamily: "Inter_500Medium",
-    fontSize: 12,
-    width: 16,
+    fontSize: 14,
   },
-  shotUrl: {
-    flex: 1,
+  tipText: {
     fontFamily: "Inter_400Regular",
-    fontSize: 12,
+    fontSize: 11,
+    textAlign: "center",
   },
   cardTitle: {
     fontFamily: "Inter_600SemiBold",
