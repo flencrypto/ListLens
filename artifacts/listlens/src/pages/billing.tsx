@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ interface PlanDisplay {
   credits: string;
   cta: string;
   highlight: boolean;
-  disabled: boolean;
   priceId?: string;
 }
 
@@ -32,7 +31,6 @@ const PLANS: PlanDisplay[] = [
     credits: "3 listings",
     cta: "Current plan",
     highlight: false,
-    disabled: true,
   },
   {
     key: "studio_starter",
@@ -50,7 +48,6 @@ const PLANS: PlanDisplay[] = [
     credits: "Unlimited",
     cta: "Subscribe",
     highlight: true,
-    disabled: !STRIPE_PLANS.studio_starter.priceId,
     priceId: STRIPE_PLANS.studio_starter.priceId,
   },
   {
@@ -69,13 +66,31 @@ const PLANS: PlanDisplay[] = [
     credits: "Unlimited",
     cta: "Subscribe",
     highlight: false,
-    disabled: !STRIPE_PLANS.studio_reseller.priceId,
     priceId: STRIPE_PLANS.studio_reseller.priceId,
   },
 ];
 
 const GUARD_SINGLE_PRICE_ID = STRIPE_PLANS.guard_single.priceId;
 const GUARD_MONTHLY_PRICE_ID = STRIPE_PLANS.guard_monthly.priceId;
+
+const PLAN_TIER_LABELS: Record<string, string> = {
+  free: "Free Trial",
+  studio_starter: "Studio Starter",
+  studio_reseller: "Studio Reseller",
+  guard_monthly: "Guard Monthly",
+};
+
+const RETURN_PERIOD_OPTIONS = [
+  { value: "Days_14", label: "14 days" },
+  { value: "Days_30", label: "30 days" },
+  { value: "Days_60", label: "60 days" },
+];
+
+const PAYMENT_METHOD_OPTIONS = [
+  { value: "PayPal", label: "PayPal" },
+  { value: "CashOnPickup", label: "Cash on collection" },
+  { value: "VisaMC", label: "Credit / Debit card" },
+];
 
 interface EbayStatus {
   connected: boolean;
@@ -96,25 +111,6 @@ interface BillingInfo {
   planTier: string;
   stripeConfigured: boolean;
 }
-
-const PLAN_TIER_LABELS: Record<string, string> = {
-  free: "Free Trial",
-  studio_starter: "Studio Starter",
-  studio_reseller: "Studio Reseller",
-  guard_monthly: "Guard Monthly",
-};
-
-const RETURN_PERIOD_OPTIONS = [
-  { value: "Days_14", label: "14 days" },
-  { value: "Days_30", label: "30 days" },
-  { value: "Days_60", label: "60 days" },
-];
-
-const PAYMENT_METHOD_OPTIONS = [
-  { value: "PayPal", label: "PayPal" },
-  { value: "CashOnPickup", label: "Cash on collection" },
-  { value: "VisaMC", label: "Credit / Debit card" },
-];
 
 function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
   const [settings, setSettings] = useState<EbaySettings>({
@@ -173,7 +169,6 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
       </p>
 
       <div className="grid grid-cols-2 gap-3">
-        {/* Shipping cost */}
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
             Shipping cost (£)
@@ -190,7 +185,6 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
           />
         </div>
 
-        {/* Payment method */}
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
             Payment method
@@ -211,7 +205,6 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
         </div>
       </div>
 
-      {/* Returns accepted */}
       <div className="flex items-center justify-between">
         <label className="text-sm text-zinc-300">Accept returns</label>
         <button
@@ -231,7 +224,6 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
         </button>
       </div>
 
-      {/* Return period — only shown if returns accepted */}
       {settings.returnsAccepted && (
         <div>
           <label className="block text-xs text-zinc-400 mb-1">
@@ -378,12 +370,15 @@ function EbayConnectSection() {
 
 export default function BillingPage() {
   const [billingInfo, setBillingInfo] = useState<BillingInfo | null>(null);
+  const [demoLoading, setDemoLoading] = useState<string | null>(null);
+  const [demoFeedback, setDemoFeedback] = useState<string | null>(null);
+
   const search = useSearch();
   const params = new URLSearchParams(search);
   const checkoutStatus = params.get("checkout");
+  const demoParam = params.get("demo");
 
-  useEffect(() => {
-    capture("paywall_shown", { source: "billing_page" });
+  const fetchBillingInfo = useCallback(() => {
     fetch("/api/billing/info")
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
@@ -391,6 +386,36 @@ export default function BillingPage() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    capture("paywall_shown", { source: "billing_page" });
+    fetchBillingInfo();
+  }, [fetchBillingInfo]);
+
+  async function handleDemoUpgrade(plan: string, label: string) {
+    setDemoLoading(plan);
+    setDemoFeedback(null);
+    try {
+      const res = await fetch("/api/billing/demo-upgrade", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan }),
+      });
+      if (res.ok) {
+        capture("upgrade_tapped", { plan, demo: true });
+        setDemoFeedback(plan === "free" ? "Reverted to Free Trial" : `${label} demo activated`);
+        fetchBillingInfo();
+        setTimeout(() => setDemoFeedback(null), 4000);
+      } else {
+        const err = (await res.json()) as { error?: string };
+        setDemoFeedback(err.error ?? "Demo upgrade failed");
+      }
+    } catch {
+      setDemoFeedback("Network error — try again");
+    } finally {
+      setDemoLoading(null);
+    }
+  }
 
   const planLabel =
     billingInfo
@@ -400,6 +425,7 @@ export default function BillingPage() {
   const isFree = !billingInfo || billingInfo.planTier === "free";
   const currentPlanKey = billingInfo?.planTier ?? "free";
   const stripeConfigured = billingInfo?.stripeConfigured ?? false;
+  const demoMode = !stripeConfigured;
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -418,6 +444,40 @@ export default function BillingPage() {
           <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
+        {/* Demo mode banner */}
+        {demoMode && (
+          <div className="rounded-lg border border-amber-800/50 bg-amber-950/25 px-5 py-4 space-y-1">
+            <p className="text-sm font-semibold text-amber-300 flex items-center gap-2">
+              <span className="inline-block w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              Demo Mode — Stripe not yet connected
+            </p>
+            <p className="text-xs text-amber-400/80">
+              Subscription buttons simulate the plan experience without charging anything.
+              Connect Stripe to enable real payments.
+            </p>
+          </div>
+        )}
+
+        {/* Demo feedback toast */}
+        {demoFeedback && (
+          <div className="rounded-lg border border-cyan-800/50 bg-cyan-950/30 px-4 py-3 text-sm text-cyan-300 flex items-center gap-2">
+            <span className="inline-block w-2 h-2 rounded-full bg-cyan-400" />
+            {demoFeedback}
+          </div>
+        )}
+
+        {/* Demo checkout redirect feedback */}
+        {demoParam === "checkout" && !checkoutStatus && (
+          <div className="rounded-lg border border-zinc-700/60 bg-zinc-900/40 px-4 py-3 text-sm text-zinc-400">
+            Checkout would open here — use the demo buttons above to simulate plan selection.
+          </div>
+        )}
+        {demoParam === "portal" && (
+          <div className="rounded-lg border border-zinc-700/60 bg-zinc-900/40 px-4 py-3 text-sm text-zinc-400">
+            Billing portal will be available once Stripe is connected.
+          </div>
+        )}
+
         {checkoutStatus === "success" && (
           <div className="rounded-lg border border-emerald-800/60 bg-emerald-950/30 px-4 py-3 text-sm text-emerald-300">
             Payment successful — your plan has been updated.
@@ -433,13 +493,20 @@ export default function BillingPage() {
         <div className="brand-card brand-card-glow p-6 flex items-center justify-between flex-wrap gap-4">
           <div>
             <p className="text-zinc-400 text-sm mb-1">Current plan</p>
-            <p className="text-white font-bold text-lg">{planLabel}</p>
+            <p className="text-white font-bold text-lg">
+              {planLabel}
+              {demoMode && !isFree && (
+                <span className="ml-2 text-xs font-normal text-amber-400 border border-amber-700/60 rounded px-1.5 py-0.5">
+                  demo
+                </span>
+              )}
+            </p>
             {isFree ? (
-              <p className="text-zinc-400 text-sm mt-0.5">
-                3 listings remaining
-              </p>
+              <p className="text-zinc-400 text-sm mt-0.5">3 listings remaining</p>
             ) : (
-              <p className="text-zinc-400 text-sm mt-0.5">Active subscription</p>
+              <p className="text-zinc-400 text-sm mt-0.5">
+                {demoMode ? "Simulated active subscription" : "Active subscription"}
+              </p>
             )}
             {billingInfo && billingInfo.credits > 0 && (
               <p className="text-violet-300 text-sm mt-1 font-medium">
@@ -447,9 +514,20 @@ export default function BillingPage() {
               </p>
             )}
           </div>
-          <Badge variant={isFree ? "secondary" : "success"}>
-            {isFree ? "Free" : "Active"}
-          </Badge>
+          <div className="flex flex-col items-end gap-2">
+            <Badge variant={isFree ? "secondary" : "success"}>
+              {isFree ? "Free" : demoMode ? "Demo Active" : "Active"}
+            </Badge>
+            {demoMode && !isFree && (
+              <button
+                onClick={() => handleDemoUpgrade("free", "Free Trial")}
+                disabled={demoLoading === "free"}
+                className="text-xs text-zinc-500 hover:text-red-400 underline underline-offset-2 transition-colors"
+              >
+                {demoLoading === "free" ? "Reverting…" : "Reset to free"}
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Studio plans */}
@@ -460,15 +538,13 @@ export default function BillingPage() {
           <div className="grid md:grid-cols-3 gap-5">
             {PLANS.map((plan) => {
               const isCurrentPlan = plan.key === currentPlanKey;
-              const isDisabled =
-                plan.disabled || isCurrentPlan || !stripeConfigured;
+              const isLoading = demoLoading === plan.key;
+
               return (
                 <div
                   key={plan.key}
                   className={`p-6 flex flex-col ${
-                    plan.highlight
-                      ? "brand-card brand-card-glow"
-                      : "brand-card"
+                    plan.highlight ? "brand-card brand-card-glow" : "brand-card"
                   }`}
                 >
                   {plan.highlight && (
@@ -495,17 +571,31 @@ export default function BillingPage() {
                       </li>
                     ))}
                   </ul>
-                  {isDisabled ? (
+
+                  {isCurrentPlan ? (
                     <Button disabled variant="secondary" className="w-full">
-                      {isCurrentPlan ? "Current plan" : plan.cta}
+                      Current plan
                     </Button>
-                  ) : (
+                  ) : plan.key === "free" ? (
+                    <Button disabled variant="secondary" className="w-full opacity-40">
+                      Free tier
+                    </Button>
+                  ) : demoMode ? (
+                    <Button
+                      onClick={() => handleDemoUpgrade(plan.key, plan.name)}
+                      disabled={isLoading}
+                      className={`w-full ${
+                        plan.highlight
+                          ? "bg-gradient-to-r from-cyan-500 to-violet-600 border-0"
+                          : ""
+                      }`}
+                      variant={plan.highlight ? "default" : "outline"}
+                    >
+                      {isLoading ? "Activating…" : `Try ${plan.name} (demo)`}
+                    </Button>
+                  ) : plan.priceId ? (
                     <form action="/api/billing/checkout" method="POST">
-                      <input
-                        type="hidden"
-                        name="priceId"
-                        value={plan.priceId ?? ""}
-                      />
+                      <input type="hidden" name="priceId" value={plan.priceId} />
                       <Button
                         type="submit"
                         onClick={() => capture("upgrade_tapped", { plan: plan.key, price: plan.price })}
@@ -519,17 +609,15 @@ export default function BillingPage() {
                         {plan.cta}
                       </Button>
                     </form>
+                  ) : (
+                    <Button disabled variant="secondary" className="w-full">
+                      Coming soon
+                    </Button>
                   )}
                 </div>
               );
             })}
           </div>
-          {!stripeConfigured && (
-            <p className="text-zinc-600 text-xs mt-3">
-              Stripe is not yet configured. Add your Stripe API keys to enable
-              subscriptions.
-            </p>
-          )}
         </div>
 
         <div className="hud-divider opacity-40" />
@@ -555,7 +643,15 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
-              {stripeConfigured && GUARD_SINGLE_PRICE_ID ? (
+              {demoMode ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40"
+                >
+                  <Link href="/guard/new">Try a check (free)</Link>
+                </Button>
+              ) : stripeConfigured && GUARD_SINGLE_PRICE_ID ? (
                 <form action="/api/billing/checkout" method="POST">
                   <input type="hidden" name="priceId" value={GUARD_SINGLE_PRICE_ID} />
                   <input type="hidden" name="mode" value="payment" />
@@ -580,8 +676,19 @@ export default function BillingPage() {
             </div>
 
             {/* Guard Monthly */}
-            <div className="brand-card brand-card-violet p-6 flex flex-col">
-              <h3 className="font-bold text-white">Guard Monthly</h3>
+            <div
+              className={`brand-card brand-card-violet p-6 flex flex-col ${
+                currentPlanKey === "guard_monthly" ? "ring-1 ring-violet-500/50" : ""
+              }`}
+            >
+              <h3 className="font-bold text-white flex items-center gap-2">
+                Guard Monthly
+                {currentPlanKey === "guard_monthly" && demoMode && (
+                  <span className="text-xs font-normal text-amber-400 border border-amber-700/60 rounded px-1.5 py-0.5">
+                    demo
+                  </span>
+                )}
+              </h3>
               <div className="mt-1 mb-1">
                 <span className="text-3xl font-extrabold text-white">£6.99</span>
                 <span className="text-zinc-400 text-sm">/month</span>
@@ -595,7 +702,31 @@ export default function BillingPage() {
                   </li>
                 ))}
               </ul>
-              {stripeConfigured && GUARD_MONTHLY_PRICE_ID ? (
+              {currentPlanKey === "guard_monthly" ? (
+                <div className="space-y-2">
+                  <Button disabled variant="secondary" className="w-full">
+                    Current plan
+                  </Button>
+                  {demoMode && (
+                    <button
+                      onClick={() => handleDemoUpgrade("free", "Free Trial")}
+                      disabled={demoLoading === "free"}
+                      className="w-full text-xs text-zinc-500 hover:text-red-400 underline underline-offset-2 transition-colors text-center"
+                    >
+                      {demoLoading === "free" ? "Reverting…" : "Reset to free"}
+                    </button>
+                  )}
+                </div>
+              ) : demoMode ? (
+                <Button
+                  onClick={() => handleDemoUpgrade("guard_monthly", "Guard Monthly")}
+                  disabled={demoLoading === "guard_monthly"}
+                  variant="outline"
+                  className="w-full border-violet-800 text-violet-300 hover:bg-violet-950/40"
+                >
+                  {demoLoading === "guard_monthly" ? "Activating…" : "Try Guard Monthly (demo)"}
+                </Button>
+              ) : stripeConfigured && GUARD_MONTHLY_PRICE_ID ? (
                 <form action="/api/billing/checkout" method="POST">
                   <input type="hidden" name="priceId" value={GUARD_MONTHLY_PRICE_ID} />
                   <Button
@@ -618,11 +749,6 @@ export default function BillingPage() {
               )}
             </div>
           </div>
-          {!stripeConfigured && (
-            <p className="text-zinc-600 text-xs mt-3">
-              Stripe is not yet configured. Add your Stripe API keys to enable Guard purchases.
-            </p>
-          )}
         </div>
 
         <div className="flex justify-center py-2">

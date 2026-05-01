@@ -137,6 +137,51 @@ router.post("/billing/checkout", async (req: Request, res: Response) => {
   }
 });
 
+/**
+ * Demo plan switcher — only active when Stripe is NOT configured.
+ * Lets developers/owners test the paid-plan experience without real payments.
+ */
+const DEMO_VALID_PLANS = ["free", "studio_starter", "studio_reseller", "guard_monthly"] as const;
+type DemoPlan = (typeof DEMO_VALID_PLANS)[number];
+
+const DEMO_CREDITS: Record<DemoPlan, number> = {
+  free: 0,
+  studio_starter: 0,
+  studio_reseller: 0,
+  guard_monthly: 10,
+};
+
+router.post("/billing/demo-upgrade", async (req: Request, res: Response) => {
+  if (isStripeConfigured()) {
+    res.status(403).json({ error: "Demo mode not available when Stripe is configured" });
+    return;
+  }
+
+  if (!req.isAuthenticated()) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const { plan } = req.body as { plan?: string };
+  if (!plan || !(DEMO_VALID_PLANS as readonly string[]).includes(plan)) {
+    res.status(400).json({ error: "Invalid plan. Must be one of: " + DEMO_VALID_PLANS.join(", ") });
+    return;
+  }
+
+  const validPlan = plan as DemoPlan;
+  const updates: { planTier: string; credits?: number } = { planTier: validPlan };
+  if (DEMO_CREDITS[validPlan] > 0) updates.credits = DEMO_CREDITS[validPlan];
+  if (validPlan === "free") updates.credits = 0;
+
+  await db
+    .update(usersTable)
+    .set(updates)
+    .where(eq(usersTable.id, req.user!.id));
+
+  logger.info({ userId: req.user!.id, planTier: validPlan }, "[DEMO] Plan tier applied");
+  res.json({ success: true, planTier: validPlan, credits: updates.credits ?? 0 });
+});
+
 router.post("/billing/portal", async (req: Request, res: Response) => {
   if (!isStripeConfigured()) {
     res.redirect(303, "/billing?demo=portal");
