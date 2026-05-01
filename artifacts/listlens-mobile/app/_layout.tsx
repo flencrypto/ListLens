@@ -14,6 +14,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
+import { PostHogProvider } from "posthog-react-native";
 
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
@@ -24,6 +25,10 @@ import {
 } from "@/lib/revenuecat";
 import { AuthProvider } from "@/lib/auth";
 import { setAuthTokenProvider } from "@/lib/api";
+
+const POSTHOG_API_KEY = process.env.EXPO_PUBLIC_POSTHOG_API_KEY ?? "";
+const POSTHOG_HOST =
+  process.env.EXPO_PUBLIC_POSTHOG_HOST ?? "https://app.posthog.com";
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
 if (domain) setBaseUrl(`https://${domain}`);
@@ -146,7 +151,13 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        {inner}
+        {POSTHOG_API_KEY ? (
+          <PostHogProvider apiKey={POSTHOG_API_KEY} options={{ host: POSTHOG_HOST }}>
+            {inner}
+          </PostHogProvider>
+        ) : (
+          inner
+        )}
       </ErrorBoundary>
     </SafeAreaProvider>
   );

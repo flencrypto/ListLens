@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatPrice } from "@/lib/pricing";
 import type { StudioOutput } from "@/lib/ai/schemas";
 import { generateEbayHtml } from "@/lib/ebay-html";
+import { capture } from "@/lib/posthog";
 
 interface ListingEditorProps {
   itemId: string;
@@ -49,6 +50,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   async function handleVintedExport() {
     setActionError(null);
     setExporting(true);
+    capture("export_triggered", { itemId, destination: "vinted", lens: analysis.lens });
     try {
       const res = await fetch(`/api/items/${itemId}/export/vinted`, {
         method: "POST",
@@ -83,6 +85,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
     }
     setActionError(null);
     setPublishing(true);
+    capture("export_triggered", { itemId, destination: "ebay", lens: analysis.lens });
     try {
       const res = await fetch(`/api/items/${itemId}/publish/ebay-sandbox`, {
         method: "POST",

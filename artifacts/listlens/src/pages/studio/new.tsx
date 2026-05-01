@@ -4,6 +4,7 @@ import { useLocation } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { capture } from "@/lib/posthog";
 
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens", desc: "Trainers, sneakers, shoes" },
@@ -23,6 +24,7 @@ export default function NewStudioPage() {
   const [loading, setLoading] = useState(false);
 
   async function handleStart() {
+    capture("lens_selected", { lens: selectedLens, marketplace: selectedMarketplace, source: "studio" });
     setLoading(true);
     try {
       const res = await fetch("/api/items", {
@@ -35,6 +37,7 @@ export default function NewStudioPage() {
         throw new Error((errData as { error?: string }).error ?? "Failed to create listing");
       }
       const data = await res.json();
+      capture("studio_analysis_started", { lens: selectedLens, marketplace: selectedMarketplace, itemId: data.id });
       setLocation(`/studio/${data.id}`);
     } catch (e) {
       console.error("Failed to start Studio listing:", e);

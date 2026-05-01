@@ -23,6 +23,7 @@
     "openid-client": "^6.8.4",
     "pino": "^9",
     "pino-http": "^10",
+    "posthog-node": "^5.31.0",
     "stripe": "^22.1.0",
     "zod": "catalog:"
   },
