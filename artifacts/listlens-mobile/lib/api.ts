@@ -207,6 +207,25 @@ export async function getLensRegistry(): Promise<{
   return get("/api/lenses");
 }
 
+export interface EbayStatus {
+  connected: boolean;
+  expiresAt: string | null;
+  sandbox: boolean;
+  credentialsMissing: boolean;
+}
+
+export async function getEbayStatus(): Promise<EbayStatus> {
+  return get<EbayStatus>("/api/ebay/status");
+}
+
+export async function getEbayMobileConnectUrl(): Promise<{ url: string }> {
+  return get<{ url: string }>("/api/ebay/mobile-connect");
+}
+
+export async function disconnectEbay(): Promise<{ ok: boolean }> {
+  return post<{ ok: boolean }>("/api/ebay/disconnect", {});
+}
+
 /**
  * Direct specialist-lens analysis — calls the lens-specific route without
  * creating a persistent item record. Use `analyseItem` instead when you need

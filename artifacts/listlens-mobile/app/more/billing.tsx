@@ -1,6 +1,8 @@
 import { Feather } from "@expo/vector-icons";
-import React, { useMemo, useState } from "react";
+import * as WebBrowser from "expo-web-browser";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Modal,
   Platform,
   Pressable,
@@ -16,6 +18,12 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { HUDSpinner } from "@/components/ui/Spinner";
 import { useColors } from "@/hooks/useColors";
+import {
+  type EbayStatus,
+  disconnectEbay,
+  getEbayMobileConnectUrl,
+  getEbayStatus,
+} from "@/lib/api";
 import {
   REVENUECAT_ENTITLEMENT_IDENTIFIER,
   formatRemainingCredits,
@@ -88,6 +96,59 @@ export default function BillingScreen() {
   const [pendingPackage, setPendingPackage] = useState<PurchasesPackage | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [restoreMessage, setRestoreMessage] = useState<string | null>(null);
+
+  const [ebayStatus, setEbayStatus] = useState<EbayStatus | null>(null);
+  const [ebayLoading, setEbayLoading] = useState(true);
+  const [ebayConnecting, setEbayConnecting] = useState(false);
+  const [ebayDisconnecting, setEbayDisconnecting] = useState(false);
+
+  const loadEbayStatus = useCallback(async () => {
+    try {
+      const status = await getEbayStatus();
+      setEbayStatus(status);
+    } catch {
+      // non-fatal — just don't show eBay section
+    } finally {
+      setEbayLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEbayStatus();
+  }, [loadEbayStatus]);
+
+  const handleEbayConnect = useCallback(async () => {
+    setEbayConnecting(true);
+    try {
+      const { url } = await getEbayMobileConnectUrl();
+      const result = await WebBrowser.openAuthSessionAsync(url, "listlens-mobile://");
+      if (result.type === "success") {
+        const urlStr = result.url;
+        if (urlStr.includes("connected=true")) {
+          await loadEbayStatus();
+        } else if (urlStr.includes("error=true")) {
+          Alert.alert("eBay Connect", "eBay authorisation was not completed. Please try again.");
+        }
+      }
+    } catch (e) {
+      const err = e as { message?: string };
+      Alert.alert("eBay Connect", err?.message ?? "Could not start eBay login. Please try again.");
+    } finally {
+      setEbayConnecting(false);
+    }
+  }, [loadEbayStatus]);
+
+  const handleEbayDisconnect = useCallback(async () => {
+    setEbayDisconnecting(true);
+    try {
+      await disconnectEbay();
+      await loadEbayStatus();
+    } catch {
+      Alert.alert("eBay", "Failed to disconnect. Please try again.");
+    } finally {
+      setEbayDisconnecting(false);
+    }
+  }, [loadEbayStatus]);
 
   const packagesByLookup = useMemo(() => {
     const map = new Map<string, PurchasesPackage>();
@@ -254,6 +315,53 @@ export default function BillingScreen() {
             : "Cancel or change plans in your device's subscription settings."}
         </Text>
       </Card>
+
+      {/* eBay Account */}
+      {!ebayLoading && ebayStatus && !ebayStatus.credentialsMissing && (
+        <Card>
+          <View style={styles.cardHeader}>
+            <Feather name="shopping-bag" size={16} color="#f5a623" />
+            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+              eBay Account
+            </Text>
+            {ebayStatus.connected && (
+              <Badge label={ebayStatus.sandbox ? "Sandbox" : "Connected"} tone="cyan" />
+            )}
+          </View>
+          {ebayStatus.connected ? (
+            <>
+              <Text style={[styles.cardBody, { color: colors.zinc400 }]}>
+                Your eBay account is linked.
+                {ebayStatus.sandbox ? " (Sandbox mode — listings won't go live.)" : " Listings will be published directly to eBay."}
+              </Text>
+              {ebayStatus.expiresAt && (
+                <Text style={[styles.note, { color: colors.zinc500 }]}>
+                  Token expires: {new Date(ebayStatus.expiresAt).toLocaleDateString()}
+                </Text>
+              )}
+              <View style={{ height: 12 }} />
+              <BrandButton
+                label={ebayDisconnecting ? "Disconnecting…" : "Disconnect eBay"}
+                variant="outline"
+                disabled={ebayDisconnecting}
+                onPress={handleEbayDisconnect}
+              />
+            </>
+          ) : (
+            <>
+              <Text style={[styles.cardBody, { color: colors.zinc400 }]}>
+                Connect your eBay account so listings can be published directly when the integration goes live.
+              </Text>
+              <View style={{ height: 12 }} />
+              <BrandButton
+                label={ebayConnecting ? "Opening eBay…" : "Connect eBay Account"}
+                disabled={ebayConnecting}
+                onPress={handleEbayConnect}
+              />
+            </>
+          )}
+        </Card>
+      )}
 
       <Modal
         visible={pendingPackage !== null}

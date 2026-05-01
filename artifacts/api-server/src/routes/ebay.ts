@@ -124,12 +124,54 @@ router.get("/ebay/connect", async (req, res) => {
   res.redirect(302, url);
 });
 
+/**
+ * Mobile eBay connect — identical to /ebay/connect but returns JSON { url }
+ * instead of a browser redirect, and prefixes the state with "m_" so the
+ * callback knows to deep-link back to the app instead of to /billing.
+ */
+router.get("/ebay/mobile-connect", async (req, res) => {
+  const creds = getEbayCredentials();
+
+  if (!creds) {
+    res.status(503).json({
+      error: "eBay credentials not configured on the server.",
+    });
+    return;
+  }
+
+  if (!req.user?.id) {
+    res.status(401).json({ error: "You must be logged in to connect eBay." });
+    return;
+  }
+
+  const rawState = crypto.randomBytes(16).toString("hex");
+  const state = `m_${rawState}`;
+  const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+
+  await db.insert(ebayOauthStateTable).values({
+    state,
+    userId: req.user.id,
+    expiresAt,
+  });
+
+  const url = buildEbayAuthUrl(state);
+  if (!url) {
+    res.status(503).json({ error: "Could not build eBay auth URL." });
+    return;
+  }
+
+  res.json({ url });
+});
+
 router.get("/ebay/callback", async (req, res) => {
   const { code, state, error: oauthError } = req.query as Record<string, string>;
+  const isMobile = typeof state === "string" && state.startsWith("m_");
+  const successRedirect = isMobile ? "listlens-mobile://ebay?connected=true" : "/billing?ebay=connected";
+  const errorRedirect = isMobile ? "listlens-mobile://ebay?error=true" : "/billing?ebay=error";
 
   if (oauthError) {
     logger.warn({ oauthError }, "eBay OAuth error");
-    res.redirect("/billing?ebay=error");
+    res.redirect(errorRedirect);
     return;
   }
 
@@ -167,7 +209,7 @@ router.get("/ebay/callback", async (req, res) => {
 
   const tokens = await exchangeEbayCode(code);
   if (!tokens) {
-    res.redirect("/billing?ebay=error");
+    res.redirect(errorRedirect);
     return;
   }
 
@@ -191,8 +233,8 @@ router.get("/ebay/callback", async (req, res) => {
       },
     });
 
-  logger.info({ userId }, "eBay token stored");
-  res.redirect("/billing?ebay=connected");
+  logger.info({ userId, isMobile }, "eBay token stored");
+  res.redirect(successRedirect);
 });
 
 router.post("/ebay/disconnect", async (req, res) => {

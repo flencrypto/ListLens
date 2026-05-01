@@ -1,7 +1,8 @@
 import { Feather } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -131,6 +132,13 @@ export default function ReviewScreen() {
   const [createdAt, setCreatedAt] = useState<number>(() => Date.now());
   const [body, setBody] = useState<DraftBody>(DEFAULT_BODY);
   const [hydrated, setHydrated] = useState(false);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  const copyField = useCallback(async (key: string, text: string) => {
+    await Clipboard.setStringAsync(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey((k) => (k === key ? null : k)), 1800);
+  }, []);
 
   // Hydrate from storage (existing draft) or seed a new one from params.
   useEffect(() => {
@@ -250,7 +258,23 @@ export default function ReviewScreen() {
       )}
 
       <Card>
-        <Text style={[styles.label, { color: colors.zinc400 }]}>Title</Text>
+        <View style={styles.fieldHeader}>
+          <Text style={[styles.label, { color: colors.zinc400 }]}>Title</Text>
+          <Pressable
+            onPress={() => copyField("title", body.title)}
+            hitSlop={10}
+            style={styles.copyBtn}
+          >
+            <Feather
+              name={copiedKey === "title" ? "check" : "copy"}
+              size={13}
+              color={copiedKey === "title" ? colors.brandCyan : colors.zinc500}
+            />
+            <Text style={[styles.copyLabel, { color: copiedKey === "title" ? colors.brandCyan : colors.zinc500 }]}>
+              {copiedKey === "title" ? "Copied" : "Copy"}
+            </Text>
+          </Pressable>
+        </View>
         <TextInput
           value={body.title}
           onChangeText={(t) => setBody((d) => ({ ...d, title: t }))}
@@ -281,7 +305,23 @@ export default function ReviewScreen() {
             />
           </View>
         </View>
-        <Text style={[styles.label, { color: colors.zinc400 }]}>Description</Text>
+        <View style={styles.fieldHeader}>
+          <Text style={[styles.label, { color: colors.zinc400 }]}>Description</Text>
+          <Pressable
+            onPress={() => copyField("desc", body.description)}
+            hitSlop={10}
+            style={styles.copyBtn}
+          >
+            <Feather
+              name={copiedKey === "desc" ? "check" : "copy"}
+              size={13}
+              color={copiedKey === "desc" ? colors.brandCyan : colors.zinc500}
+            />
+            <Text style={[styles.copyLabel, { color: copiedKey === "desc" ? colors.brandCyan : colors.zinc500 }]}>
+              {copiedKey === "desc" ? "Copied" : "Copy"}
+            </Text>
+          </Pressable>
+        </View>
         <TextInput
           value={body.description}
           onChangeText={(t) => setBody((d) => ({ ...d, description: t }))}
@@ -365,15 +405,29 @@ export default function ReviewScreen() {
             }}
           />
           <BrandButton
-            label={
-              body.exported === "ebay" ? "✓ eBay payload saved" : "Save eBay draft"
-            }
+            label={copiedKey === "ebay-all" ? "✓ Copied to clipboard" : "Copy all for eBay"}
             variant="outline"
             onPress={() => {
+              const recPrice = body.pricing.recommended ? `£${body.pricing.recommended}` : "";
+              const allText = [
+                `Title: ${body.title}`,
+                body.brand ? `Brand: ${body.brand}` : "",
+                body.size ? `Size: ${body.size}` : "",
+                recPrice ? `Recommended price: ${recPrice}` : "",
+                "",
+                body.description,
+              ]
+                .filter((line) => line !== null && line !== undefined)
+                .join("\n")
+                .trim();
+              copyField("ebay-all", allText);
               setBody((d) => ({ ...d, exported: "ebay" }));
             }}
           />
         </View>
+        <Text style={[styles.exportHint, { color: colors.zinc600 }]}>
+          Copy the listing details to paste directly into the eBay app while direct publishing is being set up.
+        </Text>
       </Card>
 
       <Pressable onPress={() => router.replace("/(tabs)")} hitSlop={12}>
@@ -463,6 +517,30 @@ const styles = StyleSheet.create({
   specsRow: {
     flexDirection: "row",
     gap: 10,
+  },
+  fieldHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 4,
+    marginTop: 4,
+  },
+  copyBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  copyLabel: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+  },
+  exportHint: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+    marginTop: 10,
+    lineHeight: 16,
   },
   bulletRow: {
     flexDirection: "row",
