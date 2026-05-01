@@ -5,12 +5,40 @@ import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { ListingEditor } from "@/components/studio/listing-editor";
 import type { StudioOutput } from "@/lib/ai/schemas";
 import { useUpload } from "@workspace/object-storage-web";
 
 const MAX_PHOTOS = 8;
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
+
+/** Simulate smooth eased progress that approaches `target` without reaching it. */
+function useSimulatedProgress(active: boolean, target = 88, stepMs = 600) {
+  const [value, setValue] = useState(0);
+  const ref = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (!active) {
+      if (ref.current) clearInterval(ref.current);
+      setValue(0);
+      return;
+    }
+    ref.current = setInterval(() => {
+      setValue((prev) => {
+        if (prev >= target) return prev;
+        const remaining = target - prev;
+        const step = Math.max(0.5, remaining * 0.06 + Math.random() * 2);
+        return Math.min(target, prev + step);
+      });
+    }, stepMs);
+    return () => {
+      if (ref.current) clearInterval(ref.current);
+    };
+  }, [active, target, stepMs]);
+
+  return value;
+}
 
 export default function StudioItemPage() {
   const params = useParams<{ id: string }>();
@@ -25,9 +53,20 @@ export default function StudioItemPage() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { uploadFile, isUploading, progress } = useUpload({
+  // Upload progress (real XHR events from use-upload)
+  const [uploadLabel, setUploadLabel] = useState("");
+
+  const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
     onError: (err) => setError(`Upload failed: ${err.message}`),
   });
+
+  // Simulated AI analysis progress
+  const rawAnalysisProgress = useSimulatedProgress(loading, 88, 500);
+  const analysisProgress = loading
+    ? Math.round(rawAnalysisProgress)
+    : analysis
+    ? 100
+    : 0;
 
   useEffect(() => {
     fetch(`/api/items/${id}/analysis`)
@@ -67,7 +106,13 @@ export default function StudioItemPage() {
     }
     setError(null);
     const toUpload = arr.slice(0, slots);
-    for (const file of toUpload) {
+    for (let i = 0; i < toUpload.length; i++) {
+      const file = toUpload[i];
+      setUploadLabel(
+        toUpload.length > 1
+          ? `Uploading photo ${i + 1} of ${toUpload.length}`
+          : "Uploading photo"
+      );
       const result = await uploadFile(file);
       if (result) {
         const publicUrl = `${window.location.origin}/api/storage${result.objectPath}`;
@@ -76,6 +121,7 @@ export default function StudioItemPage() {
         );
       }
     }
+    setUploadLabel("");
   }
 
   const handleFileInput = useCallback(
@@ -83,6 +129,7 @@ export default function StudioItemPage() {
       if (e.target.files) processFiles(e.target.files);
       e.target.value = "";
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [photoUrls.length]
   );
 
@@ -92,6 +139,7 @@ export default function StudioItemPage() {
       setIsDragging(false);
       processFiles(e.dataTransfer.files);
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [photoUrls.length]
   );
 
@@ -145,7 +193,9 @@ export default function StudioItemPage() {
             <div className="brand-card p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="text-base font-semibold text-white">Add Photos</h2>
-                <span className="text-xs font-normal text-zinc-400">{photoUrls.length}/{MAX_PHOTOS} photos</span>
+                <span className="text-xs font-normal text-zinc-400">
+                  {photoUrls.length}/{MAX_PHOTOS} photos
+                </span>
               </div>
 
               {/* Drop zone */}
@@ -172,12 +222,12 @@ export default function StudioItemPage() {
                 />
 
                 {isUploading ? (
-                  <>
-                    <Spinner className="text-cyan-400 text-xl" />
-                    <p className="text-sm text-zinc-400">
-                      Uploading… {progress > 0 && progress < 100 ? `${progress}%` : ""}
-                    </p>
-                  </>
+                  <div className="w-full max-w-xs space-y-3">
+                    <ProgressBar
+                      value={uploadProgress}
+                      label={uploadLabel || "Uploading…"}
+                    />
+                  </div>
                 ) : (
                   <>
                     <svg
@@ -188,13 +238,20 @@ export default function StudioItemPage() {
                       stroke="currentColor"
                       strokeWidth={1.5}
                     >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                      />
                     </svg>
                     <div className="text-center">
                       <p className="text-sm text-zinc-300">
-                        <span className="text-cyan-400 font-medium">Click to upload</span> or drag & drop
+                        <span className="text-cyan-400 font-medium">Click to upload</span>{" "}
+                        or drag & drop
                       </p>
-                      <p className="text-xs text-zinc-500 mt-1">JPG, PNG, WebP — up to {MAX_PHOTOS} photos</p>
+                      <p className="text-xs text-zinc-500 mt-1">
+                        JPG, PNG, WebP — up to {MAX_PHOTOS} photos
+                      </p>
                     </div>
                   </>
                 )}
@@ -203,8 +260,19 @@ export default function StudioItemPage() {
               {/* URL input fallback */}
               <details className="group">
                 <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1">
-                  <svg className="h-3 w-3 transition-transform group-open:rotate-90" viewBox="0 0 6 10" fill="currentColor">
-                    <path d="M1 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+                  <svg
+                    className="h-3 w-3 transition-transform group-open:rotate-90"
+                    viewBox="0 0 6 10"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M1 1l4 4-4 4"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      fill="none"
+                    />
                   </svg>
                   Or paste an image URL
                 </summary>
@@ -216,7 +284,9 @@ export default function StudioItemPage() {
                     onChange={(e) => setUrlInput(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
                   />
-                  <Button onClick={handleAddUrl} variant="secondary" size="sm">Add</Button>
+                  <Button onClick={handleAddUrl} variant="secondary" size="sm">
+                    Add
+                  </Button>
                 </div>
               </details>
 
@@ -233,7 +303,8 @@ export default function StudioItemPage() {
                         alt={`Photo ${i + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display = "none";
+                          (e.currentTarget as HTMLImageElement).style.display =
+                            "none";
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
@@ -257,7 +328,9 @@ export default function StudioItemPage() {
             <div className="brand-card p-6">
               <h2 className="text-base font-semibold text-white mb-3">
                 Optional Hint{" "}
-                <span className="text-zinc-500 font-normal text-xs">(optional)</span>
+                <span className="text-zinc-500 font-normal text-xs">
+                  (optional)
+                </span>
               </h2>
               <textarea
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 resize-none"
@@ -267,6 +340,28 @@ export default function StudioItemPage() {
                 onChange={(e) => setHint(e.target.value)}
               />
             </div>
+
+            {/* AI analysis progress (shown while loading) */}
+            {loading && (
+              <div className="brand-card p-6 space-y-3">
+                <p className="text-xs font-mono-hud tracking-widest uppercase text-cyan-300">
+                  AI · Analysing
+                </p>
+                <ProgressBar
+                  value={analysisProgress}
+                  label="Running AI analysis"
+                  sublabel={
+                    analysisProgress < 30
+                      ? "Sending photos…"
+                      : analysisProgress < 60
+                      ? "Identifying item…"
+                      : analysisProgress < 80
+                      ? "Generating listing…"
+                      : "Finalising…"
+                  }
+                />
+              </div>
+            )}
 
             <Button
               onClick={handleAnalyse}
@@ -284,7 +379,13 @@ export default function StudioItemPage() {
           </>
         )}
 
-        {analysis && <ListingEditor itemId={id} analysis={analysis} onReset={() => setAnalysis(null)} />}
+        {analysis && (
+          <ListingEditor
+            itemId={id}
+            analysis={analysis}
+            onReset={() => setAnalysis(null)}
+          />
+        )}
       </main>
     </div>
   );

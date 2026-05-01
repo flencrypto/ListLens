@@ -3,9 +3,10 @@ import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
+  Modal,
   Platform,
   Pressable,
   StyleSheet,
@@ -15,6 +16,7 @@ import {
 
 import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { analyseItem, createItem } from "@/lib/api";
@@ -74,6 +76,9 @@ export default function CaptureScreen() {
   const isMeasureLens = lens === "MeasureLens";
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [busy, setBusy] = useState(false);
+  const [progressValue, setProgressValue] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [referenceObjectId, setReferenceObjectId] = useState<string>(
     MEASURE_REFERENCE_OBJECTS[0].id,
   );
@@ -155,12 +160,42 @@ export default function CaptureScreen() {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   }
 
+  function startProgressPhase(
+    label: string,
+    fromPct: number,
+    toPct: number,
+    durationMs: number,
+  ) {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    setProgressLabel(label);
+    setProgressValue(fromPct);
+    const tickMs = 300;
+    const totalTicks = durationMs / tickMs;
+    let tick = 0;
+    progressIntervalRef.current = setInterval(() => {
+      tick++;
+      const easedFraction = 1 - Math.exp((-4 * tick) / totalTicks);
+      const next = fromPct + (toPct - fromPct) * Math.min(easedFraction, 0.97);
+      setProgressValue(Math.round(next));
+      if (tick >= totalTicks * 1.5) {
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      }
+    }, tickMs);
+  }
+
+  function stopProgress() {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    progressIntervalRef.current = null;
+  }
+
   async function startAnalysis() {
     if (photos.length < MIN_PHOTOS) {
       notify(`Add at least ${MIN_PHOTOS} photos to analyse.`);
       return;
     }
     setBusy(true);
+    setProgressValue(0);
+    setProgressLabel("Preparing photos…");
     try {
       const photoUrls = photos.map(
         (p) => `data:${p.mimeType ?? "image/jpeg"};base64,${p.base64}`,
@@ -173,17 +208,33 @@ export default function CaptureScreen() {
           }. Use this to estimate item dimensions accurately.`
         : undefined;
 
+      // Phase 1: uploading photos (0→45%)
+      // Large base64 POST — estimated ~8–15 s per photo; animate 20s for 3 photos
+      const uploadEstimateMs = Math.max(12_000, photos.length * 5_000);
+      startProgressPhase("Uploading photos…", 0, 45, uploadEstimateMs);
+
       const { id } = await createItem({
         lens: String(lens),
         marketplace: String(marketplace),
         photoUrls,
       });
 
+      // Phase 2: AI analysing (45→95%) — typically 15–40 s
+      startProgressPhase("AI analysing…", 45, 95, 30_000);
+
       const { analysis } = await analyseItem(id, {
         lens: String(lens),
         photoUrls,
         ...(measureHint ? { hint: measureHint } : {}),
       });
+
+      // Done — snap to 100%
+      stopProgress();
+      setProgressLabel("Complete!");
+      setProgressValue(100);
+
+      // Brief pause so user sees 100%, then navigate
+      await new Promise((r) => setTimeout(r, 400));
 
       router.replace({
         pathname: "/studio/review",
@@ -195,8 +246,10 @@ export default function CaptureScreen() {
         },
       });
     } catch {
+      stopProgress();
       notify("AI analysis failed. Please check your connection and try again.");
       setBusy(false);
+      setProgressValue(0);
     }
   }
 
@@ -210,6 +263,33 @@ export default function CaptureScreen() {
 
   return (
     <ScreenContainer>
+      {/* Progress overlay */}
+      <Modal
+        visible={busy}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View style={styles.overlayBackdrop}>
+          <View style={[styles.overlayCard, { backgroundColor: colors.zinc900 }]}>
+            <Text
+              style={[styles.overlayEyebrow, { color: colors.cyan300 }]}
+            >
+              Studio · AI Analysis
+            </Text>
+            <Text style={[styles.overlayTitle, { color: colors.foreground }]}>
+              {progressLabel || "Processing…"}
+            </Text>
+            <View style={{ marginTop: 20 }}>
+              <ProgressBar value={progressValue} label={progressLabel} />
+            </View>
+            <Text style={[styles.overlayHint, { color: colors.zinc500 }]}>
+              This usually takes 20–60 seconds. Keep the app open.
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.intro}>
         <Text
           style={{
@@ -445,6 +525,37 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 11,
     textAlign: "center",
+  },
+  overlayBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.82)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  overlayCard: {
+    width: "100%",
+    borderRadius: 20,
+    padding: 28,
+    gap: 0,
+  },
+  overlayEyebrow: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 10,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  overlayTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 20,
+    letterSpacing: -0.3,
+  },
+  overlayHint: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    marginTop: 16,
+    lineHeight: 17,
   },
 });
 
