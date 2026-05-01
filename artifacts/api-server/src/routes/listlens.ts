@@ -392,7 +392,7 @@ async function runStudioAnalysis(
   ];
 
   const completion = await client.chat.completions.create({
-    model: useGrokVision ? "grok-2-vision-latest" : "gpt-4o",
+    model: useGrokVision ? "grok-4" : "gpt-4o",
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -401,7 +401,7 @@ async function runStudioAnalysis(
     max_tokens: 1200,
   });
 
-  const model = useGrokVision ? "grok-2-vision-latest" : "gpt-4o";
+  const model = useGrokVision ? "grok-4" : "gpt-4o";
   const promptTokens = completion.usage?.prompt_tokens ?? 0;
   const completionTokens = completion.usage?.completion_tokens ?? 0;
 
@@ -581,7 +581,7 @@ async function runGuardAnalysis(
   ];
 
   const completion = await client.chat.completions.create({
-    model: useGrokVision ? "grok-2-vision-latest" : "gpt-4o",
+    model: useGrokVision ? "grok-4" : "gpt-4o",
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -590,7 +590,7 @@ async function runGuardAnalysis(
     max_tokens: 2000,
   });
 
-  const model = useGrokVision ? "grok-2-vision-latest" : "gpt-4o";
+  const model = useGrokVision ? "grok-4" : "gpt-4o";
   const promptTokens = completion.usage?.prompt_tokens ?? 0;
   const completionTokens = completion.usage?.completion_tokens ?? 0;
 
@@ -638,7 +638,7 @@ Be precise. Read text exactly as it appears on the label. If a field is not visi
   ];
 
   const completion = await xai.chat.completions.create({
-    model: "grok-2-vision-latest",
+    model: "grok-4",
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
