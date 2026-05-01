@@ -299,20 +299,26 @@ async function extractRecordDetails(
   photoUrls: string[],
   clientInfo: VisionClientInfo,
 ): Promise<RecordExtraction> {
-  const systemPrompt = `You are a specialist vinyl record data extractor. Examine ALL photos carefully and extract every piece of identifying information. Return ONLY valid JSON (no markdown):
+  const systemPrompt = `You are a specialist vinyl record data extractor. Examine ALL photos with extreme care and extract every piece of identifying text. Return ONLY valid JSON (no markdown):
 {
-  "catalog_numbers": [ ...all catalogue/catalog numbers seen ],
-  "matrix_runout_a": "exact text of Side A matrix/runout etching or null",
-  "matrix_runout_b": "exact text of Side B matrix/runout etching or null",
-  "label_names": [ ...all record label names visible ],
-  "barcodes": [ ...any barcode numbers ],
-  "artist": "artist name or null",
-  "title": "album/single title or null",
-  "year": "year as string or null",
-  "country": "pressing country or null",
-  "readable_text": "all other readable text from labels and sleeve, verbatim"
+  "catalog_numbers": [ ...ALL catalogue/catalog numbers — typically printed on the label near the centre hole or on the label ring, e.g. "POLD 5046", "2383 449", "AWL 1002", "XLLP780" ],
+  "matrix_runout_a": "exact text hand-etched or stamped in the dead wax groove area (runout) on Side A — copy character-for-character or null",
+  "matrix_runout_b": "exact text hand-etched or stamped in the dead wax groove area (runout) on Side B — copy character-for-character or null",
+  "label_names": [ ...ALL record label names visible, e.g. "Polydor", "Harvest", "XL Recordings" ],
+  "barcodes": [ ...any barcode or EAN numbers ],
+  "artist": "artist name exactly as printed or null",
+  "title": "album or single title exactly as printed or null",
+  "year": "year printed on label as string or null",
+  "country": "country of manufacture if stated, e.g. 'Made in England', 'Made in EU' — extract the country name or null",
+  "readable_text": "all other text visible on labels and sleeves verbatim — include pressing plant codes, copyright notices, producer credits, track listings etc."
 }
-Be precise. Copy text exactly as it appears. Include all catalogue numbers even if multiple formats shown.`;
+
+CRITICAL RULES:
+- Catalogue numbers are MANDATORY to extract if visible — look at the label edge/ring, below the title, and near the spindle hole
+- Copy ALL text exactly as printed — do not paraphrase or abbreviate
+- A catalogue number that looks like 'POLY 238' may actually be a label code; also read surrounding text carefully
+- If the label shows both a matrix and a catalogue number, report both separately
+- Include ALL catalog numbers you see, even if they appear to be alternates or matrix-derived`;
 
   const userContent: Parameters<
     typeof clientInfo.client.chat.completions.create
@@ -333,7 +339,7 @@ Be precise. Copy text exactly as it appears. Include all catalogue numbers even 
       { role: "system", content: systemPrompt },
       { role: "user", content: userContent },
     ],
-    max_tokens: 700,
+    max_tokens: 1000,
   });
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
@@ -433,15 +439,35 @@ export interface RankedPressing {
   evidence: string[];
 }
 
+async function discogsSearchWithFallback(
+  artist: string | null,
+  title: string | null,
+  catno: string | null,
+  label: string | null,
+): Promise<DiscogsSearchResult[]> {
+  // Strategy: progressively relax constraints until we get results.
+  // Label names from OCR are often wrong/abbreviated — drop them first.
+  const attempts = [
+    { artist, title, catno, label },
+    { artist, title, catno, label: null },
+    { artist, title, catno: null, label: null },
+  ];
+  for (const q of attempts) {
+    const results = await searchDiscogs(q).catch(() => []);
+    if (results.length) return results;
+  }
+  return [];
+}
+
 async function identifyPressingViaDiscogs(
   extraction: RecordExtraction,
 ): Promise<{ top: PressingDetails | null; alternates: RankedPressing[] }> {
-  const searchResults = await searchDiscogs({
-    artist: extraction.artist,
-    title: extraction.title,
-    catno: extraction.catalog_numbers[0] ?? null,
-    label: extraction.label_names[0] ?? null,
-  }).catch(() => []);
+  const searchResults = await discogsSearchWithFallback(
+    extraction.artist,
+    extraction.title,
+    extraction.catalog_numbers[0] ?? null,
+    extraction.label_names[0] ?? null,
+  );
 
   if (!searchResults.length) return { top: null, alternates: [] };
 
@@ -592,7 +618,7 @@ async function identifyPressing(
   const { top: discogsTop, alternates: discogsAlternates } = await identifyPressingViaDiscogs(extraction);
   steps.push("discogs_search");
 
-  if (discogsTop && discogsTop.confidence >= 0.7) {
+  if (discogsTop && discogsTop.confidence >= 0.5) {
     steps.push("discogs_match_found");
     return { pressing: discogsTop, alternates: discogsAlternates, stepsCompleted: steps };
   }
@@ -851,6 +877,7 @@ export async function runRecordLensAnalysis(
     extractRecordDetails(photoUrls, clientInfo),
     gradeCondition(photoUrls, clientInfo),
   ]);
+  logger.info({ extracted: extraction }, "RecordLens extraction");
 
   if (hint) {
     const hintLower = hint.toLowerCase();

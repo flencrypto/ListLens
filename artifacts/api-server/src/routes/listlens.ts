@@ -615,16 +615,17 @@ async function extractRecordDetailsFromImage(
 ): Promise<XaiRecordExtraction> {
   const xai = getXaiClient();
 
-  const systemPrompt = `You are an expert in vinyl record identification. Examine the label photo(s) and extract the following details. Return ONLY valid JSON (no markdown):
+  const systemPrompt = `You are an expert in vinyl record identification. Examine ALL label and matrix photos with extreme care. Return ONLY valid JSON (no markdown):
 {
-  "artist": string|null,
-  "title": string|null,
-  "label": string|null,
-  "catalogue_number": string|null,
-  "matrix": string|null,
-  "additional_details": string|null
+  "artist": "artist name exactly as printed or null",
+  "title": "album or single title exactly as printed or null",
+  "label": "record label name exactly as printed, e.g. 'Polydor', 'Harvest', 'XL Recordings', 'AWL' — or null",
+  "catalogue_number": "the catalogue/catalog number printed on the label — typically near the centre hole or on the label ring, e.g. 'POLD 5046', '2383 449', 'AWL 1002', 'XLLP780' — copy EXACTLY or null",
+  "matrix": "exact text hand-etched or stamped in the dead wax (runout groove) — copy character-for-character, both sides if visible — or null",
+  "additional_details": "year, country of manufacture, RPM speed, pressing plant codes, copyright text, track listing, producer credits — anything else readable"
 }
-Be precise. Read text exactly as it appears on the label. If a field is not visible, return null.`;
+
+CRITICAL: The catalogue number is the most important field for identifying a pressing. It is usually printed in a distinct font on the label face, often near the centre hole or along the label edge. Do NOT confuse it with the matrix/runout etching. Read it character-by-character and copy exactly.`;
 
   const images = [...imageContent(labelUrls), ...imageContent(matrixUrls)];
   const userContent: Parameters<
@@ -644,13 +645,13 @@ Be precise. Read text exactly as it appears on the label. If a field is not visi
       { role: "system", content: systemPrompt },
       { role: "user", content: userContent },
     ],
-    max_tokens: 500,
+    max_tokens: 800,
   });
 
-  const usage = completion.usage;
-
   const raw = completion.choices[0]?.message?.content ?? "{}";
-  return JSON.parse(raw) as XaiRecordExtraction;
+  const result = JSON.parse(raw) as XaiRecordExtraction;
+  logger.info({ extracted: result }, "xAI record extraction");
+  return result;
 }
 
 function enrichMatchWithDiscogs(
@@ -696,8 +697,8 @@ async function identifyRecord(
   const hasMatrix = hasMatrixPhoto || hasMatrixText;
 
   // xAI extraction — hard-fail so the route returns 500 on model errors
+  // (extraction is logged inside extractRecordDetailsFromImage)
   const extracted = await extractRecordDetailsFromImage(labelUrls, matrixUrls);
-  logger.info({ extracted }, "xAI record extraction");
 
   // Inject text matrix overrides from the clarification form
   if (matrixText?.sideA && !extracted.matrix) {
@@ -707,13 +708,21 @@ async function identifyRecord(
     extracted.matrix = parts;
   }
 
-  // Discogs search — soft-degrade (errors already caught inside searchDiscogs)
-  const searchResults = await searchDiscogs({
-    artist: extracted.artist,
-    title: extracted.title,
-    catno: extracted.catalogue_number,
-    label: extracted.label,
-  });
+  // Discogs search — progressively relax constraints so a wrong label/catno
+  // from OCR doesn't silently block all results.
+  async function discogsWithFallback(): Promise<DiscogsSearchResult[]> {
+    const attempts = [
+      { artist: extracted.artist, title: extracted.title, catno: extracted.catalogue_number, label: extracted.label },
+      { artist: extracted.artist, title: extracted.title, catno: extracted.catalogue_number, label: null },
+      { artist: extracted.artist, title: extracted.title, catno: null, label: null },
+    ];
+    for (const q of attempts) {
+      const results = await searchDiscogs(q).catch(() => []);
+      if (results.length) return results;
+    }
+    return [];
+  }
+  const searchResults = await discogsWithFallback();
 
   const topSearchResult = searchResults[0];
   const altSearchResults = searchResults.slice(1, 3);
