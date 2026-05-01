@@ -19,6 +19,12 @@ import {
   type IdentificationInput,
   type IdentificationAgentResult,
 } from "./record-identification-agent";
+import {
+  generateEbayListing,
+  type ListingCreatorInput,
+  type StyleSystem,
+  type ComplianceAudit,
+} from "./ebay-listing-creator-agent";
 // ─── Vision model routing ─────────────────────────────────────────────────────
 
 type VisionMode = "vision" | "text_only";
@@ -137,6 +143,7 @@ export interface PressingDetails {
 }
 
 export interface ListingCopy {
+  // Core fields — backward compatible
   seo_keywords: string[];
   title: string;
   subtitle: string;
@@ -144,6 +151,13 @@ export interface ListingCopy {
   band_context: string;
   tracklist: string[];
   pressing_highlights: string[];
+  // eBay HTML Listing Creator Agent fields
+  html_description: string | null;
+  plain_text_description: string | null;
+  style_system: StyleSystem | null;
+  seo_title_options: string[];
+  item_specifics: Record<string, string>;
+  compliance_audit: ComplianceAudit | null;
 }
 
 export interface RecordLensAnalysis {
@@ -185,6 +199,8 @@ export interface RecordLensAnalysis {
       category: string;
       item_specifics: Record<string, string>;
       keywords: string[];
+      html_description: string | null;
+      seo_title_options: string[];
     };
     vinted: {
       title: string;
@@ -704,6 +720,10 @@ async function identifyPressing(
 }
 
 // ─── Step 4: Listing content generation ───────────────────────────────────────
+//
+// Uses the RecordLens eBay HTML Listing Creator Agent as the sole method for
+// generating listing content. Produces collector-grade HTML, plain text,
+// SEO titles, item specifics, style system, and compliance audit in one call.
 
 async function generateListingCopy(
   pressing: PressingDetails,
@@ -711,65 +731,60 @@ async function generateListingCopy(
   extraction: RecordExtraction,
   clientInfo: VisionClientInfo,
 ): Promise<ListingCopy> {
-  const systemPrompt = `You are an expert vinyl record seller copywriter optimised for eBay UK. Generate compelling, accurate listing content. Return ONLY valid JSON (no markdown):
-{
-  "seo_keywords": [ ...8-12 keywords for eBay search optimisation ],
-  "title": "eBay title max 80 chars — Artist, Title, Label, Year, Format, Grade",
-  "subtitle": "eBay subtitle max 55 chars — pressing highlight or condition",
-  "description": "3-4 sentences seller description — pressing notes, condition, what makes this special",
-  "band_context": "1-2 sentences of historical/cultural context about the artist/record",
-  "tracklist": [ ...formatted track list if known ],
-  "pressing_highlights": [ ...2-4 bullet points on what makes this pressing notable ]
-}`;
+  const tracklist = pressing.discogs_tracklist.length
+    ? pressing.discogs_tracklist
+    : [];
 
-  const userText = `Generate eBay listing copy for:
-Artist: ${pressing.artist ?? "Unknown Artist"}
-Title: ${pressing.title ?? "Unknown Title"}
-Label: ${pressing.label ?? "Unknown Label"}
-Catalogue No: ${pressing.catalogue_number ?? "unknown"}
-Year: ${pressing.year ?? "unknown"}
-Country: ${pressing.country ?? "unknown"}
-Format: ${pressing.format ?? "LP, Album"}
-Pressing notes: ${pressing.pressing_notes ?? "none"}
-Media grade: ${condition.media_grade}
-Sleeve grade: ${condition.sleeve_grade}
-Condition notes: ${condition.grading_notes}
-Defects: ${condition.defects.join(", ") || "none noted"}
-Matrix Side A: ${extraction.matrix_runout_a ?? "unknown"}
-Matrix Side B: ${extraction.matrix_runout_b ?? "unknown"}
-Discogs have/want: ${pressing.discogs_community_have ?? "?"} / ${pressing.discogs_community_want ?? "?"}`;
+  const input: ListingCreatorInput = {
+    artist: pressing.artist ?? extraction.artist,
+    title: pressing.title ?? extraction.title,
+    format: pressing.format ?? "LP, Album",
+    label: pressing.label ?? extraction.label_names[0] ?? null,
+    catalogue_number: pressing.catalogue_number ?? extraction.catalog_numbers[0] ?? null,
+    country: pressing.country ?? extraction.country,
+    year: pressing.year ?? extraction.year,
+    matrix_runout_side_a: extraction.matrix_runout_a,
+    matrix_runout_side_b: extraction.matrix_runout_b,
+    media_grade: condition.media_grade,
+    sleeve_grade: condition.sleeve_grade,
+    condition_notes: condition.grading_notes,
+    defects: condition.defects,
+    pressing_notes: pressing.pressing_notes,
+    likely_release: pressing.pressing_notes ?? null,
+    likelihood_percent: Math.round(pressing.confidence * 100),
+    identification_complete: pressing.confidence >= 0.9,
+    missing_evidence: [],
+    conflicts: [],
+    discogs_have: pressing.discogs_community_have,
+    discogs_want: pressing.discogs_community_want,
+    tracklist,
+    front_cover_description: null,
+  };
 
-  const completion = await clientInfo.client.chat.completions.create({
-    model: clientInfo.model,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userText },
-    ],
-    max_tokens: 800,
-  });
+  const agentResult = await generateEbayListing(
+    input,
+    clientInfo.client,
+    clientInfo.model,
+  );
 
-  const raw = completion.choices[0]?.message?.content ?? "{}";
-  let parsed: Partial<ListingCopy> = {};
-  try {
-    parsed = JSON.parse(raw) as Partial<ListingCopy>;
-  } catch (err) {
-    logger.warn({ err, raw: raw.slice(0, 200) }, "generateListingCopy JSON.parse failed — using fallback copy");
-  }
-
-  const tracklist =
-    parsed.tracklist?.length
-      ? parsed.tracklist
-      : pressing.discogs_tracklist;
+  const fallbackTitle = `${pressing.artist ?? ""} - ${pressing.title ?? ""} ${pressing.year ?? ""}`.trim();
 
   return {
-    seo_keywords: parsed.seo_keywords ?? [],
-    title: parsed.title ?? `${pressing.artist ?? ""} - ${pressing.title ?? ""} ${pressing.year ?? ""}`.trim(),
-    subtitle: parsed.subtitle ?? `${condition.media_grade} / ${condition.sleeve_grade}`,
-    description: parsed.description ?? condition.grading_notes,
-    band_context: parsed.band_context ?? "",
-    tracklist: tracklist ?? [],
-    pressing_highlights: parsed.pressing_highlights ?? [],
+    // Core backward-compat fields
+    seo_keywords: agentResult.seo_keywords,
+    title: (agentResult.seo.recommended_title ?? fallbackTitle).slice(0, 80),
+    subtitle: agentResult.seo.subtitle ?? `${condition.media_grade} / ${condition.sleeve_grade}`,
+    description: agentResult.plain_text_description ?? condition.grading_notes,
+    band_context: "",
+    tracklist: agentResult.tracklist,
+    pressing_highlights: [],
+    // New eBay HTML Listing Creator Agent fields
+    html_description: agentResult.html_description,
+    plain_text_description: agentResult.plain_text_description,
+    style_system: agentResult.style_system,
+    seo_title_options: agentResult.seo.title_options,
+    item_specifics: agentResult.item_specifics,
+    compliance_audit: agentResult.compliance_audit,
   };
 }
 
@@ -991,22 +1006,21 @@ export async function runRecordLensAnalysis(
   const title = pressing.title ?? extraction.title ?? null;
   const ebayTitle = listingCopy.title.slice(0, 80);
 
-  const itemSpecifics: Record<string, string> = {};
-  if (artist) itemSpecifics["Artist"] = artist;
-  if (pressing.label) itemSpecifics["Record Label"] = pressing.label;
-  if (pressing.catalogue_number) itemSpecifics["Catalogue Number"] = pressing.catalogue_number;
-  if (pressing.year) itemSpecifics["Year"] = pressing.year;
-  if (pressing.country) itemSpecifics["Country/Region of Manufacture"] = pressing.country;
-  if (pressing.format) itemSpecifics["Format"] = pressing.format;
-  if (condition.media_grade) itemSpecifics["Media Grade (Vinyl)"] = condition.media_grade;
-  if (condition.sleeve_grade) itemSpecifics["Sleeve Grade"] = condition.sleeve_grade;
+  // Prefer item_specifics from the eBay Listing Creator Agent; fall back to manual build
+  const agentSpecifics = listingCopy.item_specifics ?? {};
+  const itemSpecifics: Record<string, string> = { ...agentSpecifics };
+  // Ensure matrix data is always included (agent may omit it)
   if (extraction.matrix_runout_a) itemSpecifics["Matrix / Run Out (Side A)"] = extraction.matrix_runout_a;
   if (extraction.matrix_runout_b) itemSpecifics["Matrix / Run Out (Side B)"] = extraction.matrix_runout_b;
+  // Fill any gaps the agent missed
+  if (!itemSpecifics["Artist"] && artist) itemSpecifics["Artist"] = artist;
+  if (!itemSpecifics["Record Label"] && pressing.label) itemSpecifics["Record Label"] = pressing.label;
+  if (!itemSpecifics["Catalogue Number"] && pressing.catalogue_number) itemSpecifics["Catalogue Number"] = pressing.catalogue_number;
 
   const analysis: RecordLensAnalysis = {
     mode: "studio",
     lens: "RecordLens",
-    listing_description: condition.grading_notes || listingCopy.description,
+    listing_description: listingCopy.plain_text_description || condition.grading_notes || listingCopy.description,
     identity: {
       brand: artist,
       model: title,
@@ -1042,6 +1056,8 @@ export async function runRecordLensAnalysis(
         category: "Music > Records",
         item_specifics: itemSpecifics,
         keywords: listingCopy.seo_keywords,
+        html_description: listingCopy.html_description,
+        seo_title_options: listingCopy.seo_title_options,
       },
       vinted: {
         title: `${artist ?? ""} ${title ?? ""} ${pressing.year ?? ""}`.trim().slice(0, 60),
