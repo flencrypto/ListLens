@@ -246,12 +246,13 @@ function ReportRow({
   onPress: () => void;
 }) {
   const colors = useColors();
+  const level = report.risk?.level ?? "inconclusive";
   const tone =
-    report.level === "high"
+    level === "high"
       ? "red"
-      : report.level === "medium"
+      : level === "medium" || level === "medium_high"
       ? "amber"
-      : report.level === "low"
+      : level === "low"
       ? "emerald"
       : "neutral";
   const subjectLabel =
@@ -285,7 +286,7 @@ function ReportRow({
           {subjectLabel} · {formatDate(report.createdAt)}
         </Text>
       </View>
-      <Badge label={`${report.level} risk`} tone={tone} />
+      <Badge label={`${level} risk`} tone={tone} />
       <Feather name="chevron-right" size={18} color={colors.zinc500} />
     </Pressable>
   );

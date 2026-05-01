@@ -376,9 +376,12 @@ Analyse the provided listing URL and/or screenshots comprehensively and return O
 }
 
 Rules:
+- red_flags[*].message: cite specific observed evidence — not generic labels. Bad: "Missing photos." Good: "Only 2 photos visible: one main shot and one sole — no size label, no heel close-up, no tongue/insole shot."
+- risk_dimensions[*].verdict: write one complete sentence explaining WHY the score is what it is. Bad: "Low risk." Good: "Price sits 5% above the typical eBay sold range for this colourway, suggesting no pressure-sale motivation."
+- buy_recommendation.reasoning: end with 1–3 numbered action steps the buyer can take right now (e.g. "1. Request a close-up of the size tag. 2. Check seller feedback for previous trainer sales. 3. Use eBay buyer protection and pay via PayPal goods & services.")
 - red_flags: include ALL genuine concerns, no limit — be thorough
 - green_signals: include ALL genuine positives — balanced analysis builds trust
-- authenticity_signals: examine every visible authenticity marker, minimum 4 entries
+- authenticity_signals: examine every visible authenticity marker, minimum 4 entries; each "observed" field must describe exactly what you saw or could not see
 - seller_questions: 4-6 specific, targeted questions (not generic)
 - price_analysis: always attempt to estimate market value from your knowledge
 - Be specific — name exact models, colourways, pressing details. Vague statements are useless.
