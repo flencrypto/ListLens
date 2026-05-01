@@ -23,6 +23,7 @@ import { analyseItem, createItem, uploadPhoto } from "@/lib/api";
 
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
+const UPLOAD_CONCURRENCY = 3;
 
 const LENS_PHOTO_INSTRUCTIONS: Record<string, string> = {
   ShoeLens:
@@ -190,15 +191,20 @@ export default function CaptureScreen() {
     setUploadCount({ done: 0, total: photos.length });
 
     try {
-      // Phase 1: upload photos one-by-one so we can show live count (0→45%)
-      const photoUrls: string[] = [];
-      for (let i = 0; i < photos.length; i++) {
-        const p = photos[i];
-        const url = await uploadPhoto(p.uri, p.mimeType ?? "image/jpeg");
-        photoUrls.push(url);
-        const done = i + 1;
-        setUploadCount({ done, total: photos.length });
-        setProgressValue(Math.round((done / photos.length) * 45));
+      // Phase 1: upload photos in parallel batches so we can show live count (0→45%)
+      const photoUrls: string[] = new Array(photos.length);
+      let uploadsDone = 0;
+      for (let i = 0; i < photos.length; i += UPLOAD_CONCURRENCY) {
+        const batch = photos.slice(i, i + UPLOAD_CONCURRENCY);
+        await Promise.all(
+          batch.map(async (p, batchIdx) => {
+            const url = await uploadPhoto(p.uri, p.mimeType ?? "image/jpeg");
+            photoUrls[i + batchIdx] = url;
+            uploadsDone += 1;
+            setUploadCount({ done: uploadsDone, total: photos.length });
+            setProgressValue(Math.round((uploadsDone / photos.length) * 45));
+          }),
+        );
       }
 
       // Uploads complete — clear counter, move to AI phase (45→95%)
