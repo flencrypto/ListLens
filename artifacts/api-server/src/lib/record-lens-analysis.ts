@@ -30,7 +30,7 @@ function getVisionClientInfo(): VisionClientInfo {
   if (xaiKey) {
     return {
       client: new OpenAI({ apiKey: xaiKey, baseURL: "https://api.x.ai/v1" }),
-      model: "grok-2-vision-latest",
+      model: "grok-2-vision-1212",
       mode: "vision",
     };
   }

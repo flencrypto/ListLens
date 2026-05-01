@@ -443,7 +443,7 @@ Be precise. Read text exactly as it appears on the label. If a field is not visi
   ];
 
   const completion = await xai.chat.completions.create({
-    model: "grok-2-vision-latest",
+    model: "grok-2-vision-1212",
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
