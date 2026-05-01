@@ -19,7 +19,7 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
-import { analyseItem, createItem } from "@/lib/api";
+import { analyseItem, createItem, uploadPhoto } from "@/lib/api";
 
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
@@ -62,7 +62,6 @@ const MEASURE_REFERENCE_OBJECTS = [
 
 interface PhotoEntry {
   uri: string;
-  base64: string;
   mimeType?: string;
 }
 
@@ -99,14 +98,9 @@ export default function CaptureScreen() {
     const res = await ImagePicker.launchCameraAsync({
       mediaTypes: ["images"],
       quality: 0.8,
-      base64: true,
     });
     if (!res.canceled && res.assets[0]) {
       const asset = res.assets[0];
-      if (!asset.base64) {
-        notify("Could not read photo data. Please try again.");
-        return;
-      }
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(
         () => undefined,
       );
@@ -114,7 +108,6 @@ export default function CaptureScreen() {
         ...prev,
         {
           uri: asset.uri,
-          base64: asset.base64,
           mimeType: asset.mimeType ?? "image/jpeg",
         },
       ]);
@@ -141,14 +134,11 @@ export default function CaptureScreen() {
       allowsMultipleSelection: true,
       selectionLimit: remaining,
       quality: 0.8,
-      base64: true,
     });
     if (!res.canceled) {
       const next: PhotoEntry[] = res.assets
-        .filter((a) => !!a.base64)
         .map((a) => ({
           uri: a.uri,
-          base64: a.base64 as string,
           mimeType: a.mimeType ?? "image/jpeg",
         }))
         .slice(0, remaining);
@@ -197,8 +187,8 @@ export default function CaptureScreen() {
     setProgressValue(0);
     setProgressLabel("Preparing photos…");
     try {
-      const photoUrls = photos.map(
-        (p) => `data:${p.mimeType ?? "image/jpeg"};base64,${p.base64}`,
+      const photoUrls = await Promise.all(
+        photos.map((p) => uploadPhoto(p.uri, p.mimeType ?? "image/jpeg")),
       );
 
       const measureHint = isMeasureLens

@@ -4,6 +4,62 @@ function getApiBase(): string {
   return "http://localhost:8080";
 }
 
+const MIME_TO_EXT: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/jpg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "image/heic": "heic",
+  "image/heif": "heif",
+  "image/gif": "gif",
+};
+
+/**
+ * Upload a local photo URI to object storage and return the accessible URL.
+ * Uses the two-step presigned URL flow to avoid embedding base64 in JSON bodies.
+ */
+export async function uploadPhoto(
+  uri: string,
+  mimeType: string = "image/jpeg",
+): Promise<string> {
+  const apiBase = getApiBase();
+  const ext = MIME_TO_EXT[mimeType] ?? "jpg";
+
+  const localRes = await fetch(uri);
+  const blob = await localRes.blob();
+
+  const urlRes = await fetch(`${apiBase}/api/storage/uploads/request-url`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      name: `photo-${Date.now()}.${ext}`,
+      size: blob.size,
+      contentType: mimeType,
+    }),
+  });
+
+  if (!urlRes.ok) {
+    throw new Error(`Failed to get upload URL (${urlRes.status})`);
+  }
+
+  const { uploadURL, objectPath } = (await urlRes.json()) as {
+    uploadURL: string;
+    objectPath: string;
+  };
+
+  const putRes = await fetch(uploadURL, {
+    method: "PUT",
+    headers: { "Content-Type": mimeType },
+    body: blob,
+  });
+
+  if (!putRes.ok) {
+    throw new Error(`Failed to upload photo to storage (${putRes.status})`);
+  }
+
+  return `${apiBase}/api/storage${objectPath}`;
+}
+
 let _getAuthToken: (() => Promise<string | null>) | null = null;
 
 export function setAuthTokenProvider(fn: () => Promise<string | null>): void {
