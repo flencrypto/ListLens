@@ -1,7 +1,7 @@
 import { Router, type IRouter, type Request, type Response } from "express";
 import { z } from "zod";
 import { logger } from "../lib/logger";
-import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
+import { getXaiClient, getVisionClient } from "../lib/ai-clients";
 import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable } from "@workspace/db";
@@ -244,7 +244,7 @@ async function runStudioAnalysis(
     return StudioOutputSchema.parse(result);
   }
 
-  const openai = getOpenAIClient();
+  const { client: openai, model: visionModel } = getVisionClient();
   const { label: lensLabel } = getLensMeta(lens);
 
   const systemPrompt = buildLensSystemPrompt(lens);
@@ -262,7 +262,7 @@ async function runStudioAnalysis(
   ];
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: visionModel,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -273,14 +273,14 @@ async function runStudioAnalysis(
 
   const usage = completion.usage;
   captureServerEvent("server", "ai_job_completed", {
-    model: "gpt-4o",
+    model: visionModel,
     prompt_version: "studio_v1",
     lens,
     mode: "studio",
     prompt_tokens: usage?.prompt_tokens ?? 0,
     completion_tokens: usage?.completion_tokens ?? 0,
     estimated_cost_usd: estimateCostUsd(
-      "gpt-4o",
+      visionModel,
       usage?.prompt_tokens ?? 0,
       usage?.completion_tokens ?? 0,
     ),
@@ -406,7 +406,7 @@ async function runGuardAnalysis(
   url?: string,
   screenshotUrls?: string[],
 ): Promise<z.infer<typeof GuardOutputSchema>> {
-  const openai = getOpenAIClient();
+  const { client: openai, model: visionModel } = getVisionClient();
 
   const systemPrompt = buildGuardSystemPrompt(lens);
 
@@ -423,7 +423,7 @@ async function runGuardAnalysis(
   ];
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+    model: visionModel,
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -434,14 +434,14 @@ async function runGuardAnalysis(
 
   const usage = completion.usage;
   captureServerEvent("server", "ai_job_completed", {
-    model: "gpt-4o",
+    model: visionModel,
     prompt_version: "guard_v1",
     lens,
     mode: "guard",
     prompt_tokens: usage?.prompt_tokens ?? 0,
     completion_tokens: usage?.completion_tokens ?? 0,
     estimated_cost_usd: estimateCostUsd(
-      "gpt-4o",
+      visionModel,
       usage?.prompt_tokens ?? 0,
       usage?.completion_tokens ?? 0,
     ),

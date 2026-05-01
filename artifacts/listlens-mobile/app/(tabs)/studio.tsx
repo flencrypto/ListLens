@@ -61,7 +61,7 @@ export default function StudioScreen() {
           How it works
         </Text>
         <Text style={[styles.cardBody, { color: colors.zinc400 }]}>
-          Photos are sent securely to GPT-4o vision for analysis. The AI reads
+          Photos are sent securely to Grok vision AI for analysis. The AI reads
           your item and drafts a full listing. You review and edit before
           exporting to eBay or Vinted.
         </Text>
