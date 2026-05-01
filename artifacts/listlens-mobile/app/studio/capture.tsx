@@ -77,6 +77,7 @@ export default function CaptureScreen() {
   const [busy, setBusy] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
   const [progressLabel, setProgressLabel] = useState("");
+  const [uploadCount, setUploadCount] = useState<{ done: number; total: number } | null>(null);
   const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const [referenceObjectId, setReferenceObjectId] = useState<string>(
     MEASURE_REFERENCE_OBJECTS[0].id,
@@ -185,11 +186,24 @@ export default function CaptureScreen() {
     }
     setBusy(true);
     setProgressValue(0);
-    setProgressLabel("Preparing photos…");
+    setProgressLabel("Uploading photos…");
+    setUploadCount({ done: 0, total: photos.length });
+
     try {
-      const photoUrls = await Promise.all(
-        photos.map((p) => uploadPhoto(p.uri, p.mimeType ?? "image/jpeg")),
-      );
+      // Phase 1: upload photos one-by-one so we can show live count (0→45%)
+      const photoUrls: string[] = [];
+      for (let i = 0; i < photos.length; i++) {
+        const p = photos[i];
+        const url = await uploadPhoto(p.uri, p.mimeType ?? "image/jpeg");
+        photoUrls.push(url);
+        const done = i + 1;
+        setUploadCount({ done, total: photos.length });
+        setProgressValue(Math.round((done / photos.length) * 45));
+      }
+
+      // Uploads complete — clear counter, move to AI phase (45→95%)
+      setUploadCount(null);
+      setProgressLabel("Analysing with AI…");
 
       const measureHint = isMeasureLens
         ? `Reference object in photos: ${
@@ -198,19 +212,14 @@ export default function CaptureScreen() {
           }. Use this to estimate item dimensions accurately.`
         : undefined;
 
-      // Phase 1: uploading photos (0→45%)
-      // Large base64 POST — estimated ~8–15 s per photo; animate 20s for 3 photos
-      const uploadEstimateMs = Math.max(12_000, photos.length * 5_000);
-      startProgressPhase("Uploading photos…", 0, 45, uploadEstimateMs);
+      // Animate fake progress for the AI call (typically 15–40 s)
+      startProgressPhase("Analysing with AI…", 45, 95, 30_000);
 
       const { id } = await createItem({
         lens: String(lens),
         marketplace: String(marketplace),
         photoUrls,
       });
-
-      // Phase 2: AI analysing (45→95%) — typically 15–40 s
-      startProgressPhase("AI analysing…", 45, 95, 30_000);
 
       const { analysis } = await analyseItem(id, {
         lens: String(lens),
@@ -237,6 +246,7 @@ export default function CaptureScreen() {
       });
     } catch {
       stopProgress();
+      setUploadCount(null);
       notify("AI analysis failed. Please check your connection and try again.");
       setBusy(false);
       setProgressValue(0);
@@ -270,11 +280,18 @@ export default function CaptureScreen() {
             <Text style={[styles.overlayTitle, { color: colors.foreground }]}>
               {progressLabel || "Processing…"}
             </Text>
-            <View style={{ marginTop: 20 }}>
+            {uploadCount !== null && (
+              <Text style={[styles.overlayCounter, { color: colors.cyan300 }]}>
+                {uploadCount.done} / {uploadCount.total} uploaded
+              </Text>
+            )}
+            <View style={{ marginTop: uploadCount !== null ? 12 : 20 }}>
               <ProgressBar value={progressValue} label={progressLabel} />
             </View>
             <Text style={[styles.overlayHint, { color: colors.zinc500 }]}>
-              This usually takes 20–60 seconds. Keep the app open.
+              {uploadCount !== null
+                ? "Uploading over Wi-Fi is fastest. Keep the app open."
+                : "This usually takes 20–60 seconds. Keep the app open."}
             </Text>
           </View>
         </View>
@@ -403,7 +420,9 @@ export default function CaptureScreen() {
       <BrandButton
         label={
           busy
-            ? "Analysing with AI…"
+            ? uploadCount !== null
+              ? `Uploading… ${uploadCount.done} / ${uploadCount.total}`
+              : "Analysing with AI…"
             : photos.length < MIN_PHOTOS
               ? `Add ${MIN_PHOTOS - photos.length} more photo${
                   MIN_PHOTOS - photos.length === 1 ? "" : "s"
@@ -540,6 +559,12 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     fontSize: 20,
     letterSpacing: -0.3,
+  },
+  overlayCounter: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 32,
+    letterSpacing: -1,
+    marginTop: 10,
   },
   overlayHint: {
     fontFamily: "Inter_400Regular",
