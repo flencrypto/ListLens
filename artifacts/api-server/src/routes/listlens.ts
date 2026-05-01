@@ -669,12 +669,23 @@ function enrichMatchWithDiscogs(
 async function identifyRecord(
   labelUrls: string[],
   matrixUrls: string[] = [],
+  matrixText?: { sideA?: string; sideB?: string; sideCD?: string },
 ): Promise<Record<string, unknown>> {
-  const hasMatrix = matrixUrls.length > 0;
+  const hasMatrixPhoto = matrixUrls.length > 0;
+  const hasMatrixText = !!(matrixText?.sideA || matrixText?.sideB || matrixText?.sideCD);
+  const hasMatrix = hasMatrixPhoto || hasMatrixText;
 
   // xAI extraction — hard-fail so the route returns 500 on model errors
   const extracted = await extractRecordDetailsFromImage(labelUrls, matrixUrls);
   logger.info({ extracted }, "xAI record extraction");
+
+  // Inject text matrix overrides from the clarification form
+  if (matrixText?.sideA && !extracted.matrix) {
+    const parts = [matrixText.sideA, matrixText.sideB, matrixText.sideCD]
+      .filter(Boolean)
+      .join(" / ");
+    extracted.matrix = parts;
+  }
 
   // Discogs search — soft-degrade (errors already caught inside searchDiscogs)
   const searchResults = await searchDiscogs({
@@ -700,6 +711,17 @@ async function identifyRecord(
   const topCatno =
     topRelease?.labels?.[0]?.catno ?? extracted.catalogue_number ?? null;
 
+  const matrixEvidence = [
+    matrixText?.sideA ? `Side A matrix: ${matrixText.sideA}` : null,
+    matrixText?.sideB ? `Side B matrix: ${matrixText.sideB}` : null,
+    matrixText?.sideCD ? `Side C/D matrix: ${matrixText.sideCD}` : null,
+    !matrixText && extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
+  ].filter(Boolean) as string[];
+
+  const topLikelihood = topSearchResult
+    ? hasMatrixText ? 88 : 75
+    : hasMatrixText ? 55 : 40;
+
   let topMatch: Record<string, unknown> = {
     artist: topArtist,
     title: topTitle,
@@ -714,14 +736,14 @@ async function identifyRecord(
       ]
         .filter(Boolean)
         .join(", ") || "Unknown pressing",
-    likelihood_percent: topSearchResult ? 75 : 40,
+    likelihood_percent: topLikelihood,
     evidence: [
       extracted.artist ? `Artist "${extracted.artist}" read from label` : null,
       extracted.catalogue_number
         ? `Catalogue number "${extracted.catalogue_number}" read from label`
         : null,
       topRelease ? `Matched Discogs release #${topRelease.id}` : null,
-      extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
+      ...matrixEvidence,
     ].filter(Boolean) as string[],
   };
 
@@ -757,7 +779,20 @@ async function identifyRecord(
     }),
   );
 
-  const needsMatrix = !hasMatrix && !extracted.matrix;
+  const noMatrix = !hasMatrix && !extracted.matrix;
+  // Detect ambiguity: alternates share same label/catno as top, or
+  // runner-up is within 20 percentage points of the top match.
+  const secondLikelihood = alternateMatches[0]
+    ? (alternateMatches[0].likelihood_percent as number) ?? 0
+    : 0;
+  const sharedCatno = alternateMatches.some(
+    (alt) =>
+      alt.label === topLabel &&
+      alt.catalogue_number === topCatno &&
+      topCatno !== null,
+  );
+  const smallGap = alternateMatches.length > 0 && (topLikelihood - secondLikelihood) < 20;
+  const needsMatrix = noMatrix || sharedCatno || smallGap || topLikelihood < 80;
   const matrixQuestions = needsMatrix
     ? [
         "What does the matrix / runout etching read on Side A?",
@@ -765,11 +800,18 @@ async function identifyRecord(
       ]
     : [];
 
+  const pressedConfidence = hasMatrix
+    ? Math.min(95, topLikelihood + 5)
+    : topLikelihood;
+
   return {
     mode: "recordlens.identify",
     lens: "RecordLens",
     input_type: hasMatrix ? "label_and_matrix" : "single_label_photo",
-    top_match: topMatch,
+    top_match: {
+      ...topMatch,
+      likelihood_percent: pressedConfidence,
+    },
     alternate_matches: alternateMatches,
     needs_matrix_for_clarification: needsMatrix,
     matrix_clarification_questions: matrixQuestions,
@@ -1183,10 +1225,84 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
   const b = body(req);
   const labelUrls = (b["labelUrls"] as string[]) ?? [];
   const matrixUrls = (b["matrixUrls"] as string[]) ?? [];
+  const itemId = b["itemId"] as string | undefined;
+  const matrixSideA = (b["matrixSideA"] as string | undefined)?.trim() || undefined;
+  const matrixSideB = (b["matrixSideB"] as string | undefined)?.trim() || undefined;
+  const matrixSideCD = (b["matrixSideCD"] as string | undefined)?.trim() || undefined;
+  const matrixText = (matrixSideA || matrixSideB || matrixSideCD)
+    ? { sideA: matrixSideA, sideB: matrixSideB, sideCD: matrixSideCD }
+    : undefined;
+
   try {
-    const analysis = await identifyRecord(labelUrls, matrixUrls);
+    // Authorization: when itemId is provided, verify the caller owns the item
+    // before reading or updating any in-memory state associated with it.
+    if (itemId) {
+      const ownership = await fetchOwnedListing(itemId, req.user?.id);
+      if (ownership.dbError) {
+        res.status(503).json({ error: "Service temporarily unavailable." });
+        return;
+      }
+      if (ownership.denied) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+    }
+
+    let resolvedLabelUrls = labelUrls;
+
+    // When itemId is provided, retrieve stored label URLs for re-analysis
+    if (itemId && !labelUrls.length) {
+      const meta = itemMeta.get(itemId);
+      if (meta?.photoUrls?.length) {
+        resolvedLabelUrls = meta.photoUrls as string[];
+      }
+    }
+
+    // Run ranked identification (fast — uses xAI + Discogs search)
+    const identification = await identifyRecord(resolvedLabelUrls, matrixUrls, matrixText);
+
+    let updatedAnalysis: Record<string, unknown> | null = null;
+
+    // When itemId is provided, re-run full RecordLens pipeline with matrix text injected
+    // so listing wording, pricing, and attributes are all updated
+    if (itemId && matrixText && resolvedLabelUrls.length) {
+      try {
+        const fullAnalysis = await runRecordLensAnalysis(resolvedLabelUrls, undefined, matrixText);
+        const analysisRecord = fullAnalysis as unknown as Record<string, unknown>;
+        studioStore.set(itemId, analysisRecord);
+        updatedAnalysis = analysisRecord;
+
+        // Persist refreshed analysis to DB (matching /items/:id/analyse behaviour)
+        const ebayTitle = String(
+          (analysisRecord.marketplace_outputs as Record<string, unknown> | undefined)
+            ?.["ebay"] as string ?? "",
+        );
+        const identity = analysisRecord.identity as { brand?: string | null; model?: string | null } | undefined;
+        const title = ebayTitle || [identity?.brand, identity?.model].filter(Boolean).join(" ") || undefined;
+        const pricing = analysisRecord.pricing as { recommended?: number } | undefined;
+        const price = pricing?.recommended != null ? String(pricing.recommended) : null;
+        const description = (analysisRecord["listing_description"] as string | null) ?? null;
+        await db
+          .update(listingsTable)
+          .set({
+            analysis: analysisRecord,
+            ...(title ? { title } : {}),
+            ...(price ? { price } : {}),
+            ...(description ? { description } : {}),
+            status: "analysed",
+          })
+          .where(eq(listingsTable.id, itemId))
+          .catch((dbErr) =>
+            logger.warn({ dbErr, itemId }, "Could not persist matrix-refreshed analysis to DB (non-fatal)"),
+          );
+      } catch (pipelineErr) {
+        logger.warn({ pipelineErr, itemId }, "Full pipeline re-run failed — returning identification only");
+      }
+    }
+
     res.json({
-      analysis: { ...analysis, input_type: "label_and_matrix" },
+      identification: { ...identification, input_type: "label_and_matrix" },
+      ...(updatedAnalysis ? { analysis: updatedAnalysis } : {}),
     });
   } catch (err) {
     logger.error({ err }, "RecordLens identify-with-matrix failed");

@@ -195,6 +195,10 @@ export interface RecordLensAnalysis {
     listing_copy: ListingCopy;
     vision_model_used: string;
     pipeline_steps_completed: string[];
+    needs_matrix_for_clarification: boolean;
+    matrix_clarification_sides: string[];
+    top_match: RankedPressing;
+    alternate_matches: RankedPressing[];
   };
 }
 
@@ -409,9 +413,19 @@ If sleeve is missing or not visible, return "Not graded" for sleeve_grade.`;
 
 // ─── Step 3: Pressing identification ─────────────────────────────────────────
 
+export interface RankedPressing {
+  artist: string | null;
+  title: string | null;
+  label: string | null;
+  catalogue_number: string | null;
+  likely_release: string;
+  likelihood_percent: number;
+  evidence: string[];
+}
+
 async function identifyPressingViaDiscogs(
   extraction: RecordExtraction,
-): Promise<PressingDetails | null> {
+): Promise<{ top: PressingDetails | null; alternates: RankedPressing[] }> {
   const searchResults = await searchDiscogs({
     artist: extraction.artist,
     title: extraction.title,
@@ -419,46 +433,74 @@ async function identifyPressingViaDiscogs(
     label: extraction.label_names[0] ?? null,
   }).catch(() => []);
 
-  if (!searchResults.length) return null;
+  if (!searchResults.length) return { top: null, alternates: [] };
 
   const topResult = searchResults[0]!;
-  const release = await getDiscogsRelease(topResult.id).catch(() => null);
-  if (!release) return null;
+  const altResults = searchResults.slice(1, 4);
 
-  const artist = release.artists?.[0]?.name ?? extraction.artist ?? null;
-  const title = release.title ?? extraction.title ?? null;
-  const label = release.labels?.[0]?.name ?? extraction.label_names[0] ?? null;
-  const catno = release.labels?.[0]?.catno ?? extraction.catalog_numbers[0] ?? null;
+  const release = await getDiscogsRelease(topResult.id).catch(() => null);
+
+  const artist = release?.artists?.[0]?.name ?? extraction.artist ?? null;
+  const title = release?.title ?? extraction.title ?? null;
+  const label = release?.labels?.[0]?.name ?? extraction.label_names[0] ?? null;
+  const catno = release?.labels?.[0]?.catno ?? extraction.catalog_numbers[0] ?? null;
 
   const tracklist =
-    release.tracklist?.map(
+    release?.tracklist?.map(
       (t) => `${t.position}. ${t.title}${t.duration ? ` (${t.duration})` : ""}`,
     ) ?? [];
 
   const format =
-    release.formats
+    release?.formats
       ?.map((f) =>
         [f.name, ...(f.descriptions ?? [])].filter(Boolean).join(", "),
       )
       .join("; ") ?? null;
 
-  return {
-    artist,
-    title,
-    label,
-    catalogue_number: catno,
-    year: release.year ? String(release.year) : extraction.year,
-    country: release.country ?? extraction.country ?? null,
-    format,
-    pressing_notes: release.notes ?? null,
-    discogs_release_id: release.id,
-    discogs_lowest_price: release.lowest_price ?? null,
-    discogs_community_have: release.community?.have ?? null,
-    discogs_community_want: release.community?.want ?? null,
-    discogs_tracklist: tracklist,
-    confidence: 0.85,
-    source: "discogs",
-  };
+  const hasMatrix = !!(extraction.matrix_runout_a || extraction.matrix_runout_b);
+
+  const top: PressingDetails | null = release
+    ? {
+        artist,
+        title,
+        label,
+        catalogue_number: catno,
+        year: release.year ? String(release.year) : extraction.year,
+        country: release.country ?? extraction.country ?? null,
+        format,
+        pressing_notes: release.notes ?? null,
+        discogs_release_id: release.id,
+        discogs_lowest_price: release.lowest_price ?? null,
+        discogs_community_have: release.community?.have ?? null,
+        discogs_community_want: release.community?.want ?? null,
+        discogs_tracklist: tracklist,
+        // Without matrix evidence, confidence is capped at 0.65 so that ambiguous
+        // pressings (multiple versions on same label/catno) always trigger clarification.
+        confidence: hasMatrix ? 0.88 : 0.65,
+        source: "discogs",
+      }
+    : null;
+
+  const alternates: RankedPressing[] = await Promise.all(
+    altResults.map(async (sr, idx) => {
+      const altRelease = await getDiscogsRelease(sr.id).catch(() => null);
+      const altArtist = altRelease?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null;
+      const altTitle = altRelease?.title ?? sr.title?.split(" - ")[1] ?? null;
+      const altLabel = altRelease?.labels?.[0]?.name ?? null;
+      const altCatno = altRelease?.labels?.[0]?.catno ?? sr.catno ?? null;
+      return {
+        artist: altArtist,
+        title: altTitle,
+        label: altLabel,
+        catalogue_number: altCatno,
+        likely_release: [sr.year, sr.country, (sr.format ?? [])[0]].filter(Boolean).join(", ") || "Alternate pressing",
+        likelihood_percent: Math.max(8, 35 - idx * 10),
+        evidence: [`Discogs alternate match #${sr.id}`],
+      };
+    }),
+  );
+
+  return { top, alternates };
 }
 
 async function identifyPressingViaLLM(
@@ -529,29 +571,46 @@ Additional text: ${extraction.readable_text || "none"}`;
 async function identifyPressing(
   extraction: RecordExtraction,
   clientInfo: VisionClientInfo,
-): Promise<{ pressing: PressingDetails; stepsCompleted: string[] }> {
+): Promise<{ pressing: PressingDetails; alternates: RankedPressing[]; stepsCompleted: string[] }> {
   const steps: string[] = [];
 
-  const discogsResult = await identifyPressingViaDiscogs(extraction);
+  const { top: discogsTop, alternates: discogsAlternates } = await identifyPressingViaDiscogs(extraction);
   steps.push("discogs_search");
 
-  if (discogsResult && discogsResult.confidence >= 0.7) {
+  if (discogsTop && discogsTop.confidence >= 0.7) {
     steps.push("discogs_match_found");
-    return { pressing: discogsResult, stepsCompleted: steps };
+    return { pressing: discogsTop, alternates: discogsAlternates, stepsCompleted: steps };
   }
 
   logger.info("Discogs match not confident enough — falling back to LLM identification");
   steps.push("llm_identification_fallback");
   const llmResult = await identifyPressingViaLLM(extraction, clientInfo);
-  if (discogsResult) {
-    llmResult.discogs_release_id = discogsResult.discogs_release_id;
-    llmResult.discogs_lowest_price = discogsResult.discogs_lowest_price;
-    llmResult.discogs_community_have = discogsResult.discogs_community_have;
-    llmResult.discogs_community_want = discogsResult.discogs_community_want;
-    llmResult.discogs_tracklist = discogsResult.discogs_tracklist;
+  if (discogsTop) {
+    llmResult.discogs_release_id = discogsTop.discogs_release_id;
+    llmResult.discogs_lowest_price = discogsTop.discogs_lowest_price;
+    llmResult.discogs_community_have = discogsTop.discogs_community_have;
+    llmResult.discogs_community_want = discogsTop.discogs_community_want;
+    llmResult.discogs_tracklist = discogsTop.discogs_tracklist;
     llmResult.source = "llm";
   }
-  return { pressing: llmResult, stepsCompleted: steps };
+
+  // Convert discogsTop to alternate if LLM became the primary
+  const allAlternates: RankedPressing[] = discogsTop
+    ? [
+        {
+          artist: discogsTop.artist,
+          title: discogsTop.title,
+          label: discogsTop.label,
+          catalogue_number: discogsTop.catalogue_number,
+          likely_release: [discogsTop.year, discogsTop.country, discogsTop.format].filter(Boolean).join(", ") || "Discogs match",
+          likelihood_percent: Math.round(discogsTop.confidence * 100) - 10,
+          evidence: [`Discogs release #${discogsTop.discogs_release_id}`],
+        },
+        ...discogsAlternates,
+      ]
+    : discogsAlternates;
+
+  return { pressing: llmResult, alternates: allAlternates, stepsCompleted: steps };
 }
 
 // ─── Step 4: Listing content generation ───────────────────────────────────────
@@ -703,11 +762,15 @@ function detectMissingPhotos(
 export async function runRecordLensAnalysis(
   photoUrls: string[],
   hint?: string,
+  matrixOverride?: { sideA?: string; sideB?: string; sideCD?: string },
 ): Promise<RecordLensAnalysis> {
   const clientInfo = getVisionClientInfo();
   const stepsCompleted: string[] = [`vision_model: ${clientInfo.model}`];
 
   if (hint) stepsCompleted.push(`hint_provided: ${hint.slice(0, 50)}`);
+  if (matrixOverride?.sideA || matrixOverride?.sideB) {
+    stepsCompleted.push("matrix_text_override_provided");
+  }
 
   // Step 1: Photo classification
   stepsCompleted.push("step1_image_classification");
@@ -729,9 +792,17 @@ export async function runRecordLensAnalysis(
     }
   }
 
+  // Inject text matrix overrides (from clarification flow)
+  if (matrixOverride?.sideA) {
+    extraction.matrix_runout_a = matrixOverride.sideA.trim();
+  }
+  if (matrixOverride?.sideB) {
+    extraction.matrix_runout_b = matrixOverride.sideB.trim();
+  }
+
   // Step 3: Pressing identification
   stepsCompleted.push("step3_pressing_identification");
-  const { pressing, stepsCompleted: pressSteps } = await identifyPressing(
+  const { pressing, alternates: pressAlternates, stepsCompleted: pressSteps } = await identifyPressing(
     extraction,
     clientInfo,
   );
@@ -841,6 +912,38 @@ export async function runRecordLensAnalysis(
       listing_copy: listingCopy,
       vision_model_used: clientInfo.model,
       pipeline_steps_completed: stepsCompleted,
+      needs_matrix_for_clarification: (() => {
+        const noMatrix = !extraction.matrix_runout_a && !extraction.matrix_runout_b;
+        const topLikelihood = Math.round(pressing.confidence * 100);
+        const secondLikelihood = pressAlternates[0]?.likelihood_percent ?? 0;
+        // Ambiguous if: multiple versions share same label/catno, OR top result
+        // isn't clearly ahead of the runner-up (gap < 20 percentage points)
+        const sharedCatno = pressAlternates.some(
+          (alt) =>
+            alt.label === pressing.label &&
+            alt.catalogue_number === pressing.catalogue_number &&
+            alt.catalogue_number !== null,
+        );
+        const smallGap = pressAlternates.length > 0 && (topLikelihood - secondLikelihood) < 20;
+        return noMatrix || sharedCatno || smallGap || pressing.confidence < 0.8;
+      })(),
+      matrix_clarification_sides: ["Side A", "Side B"],
+      top_match: {
+        artist: pressing.artist,
+        title: pressing.title,
+        label: pressing.label,
+        catalogue_number: pressing.catalogue_number,
+        likely_release: [pressing.year, pressing.country, pressing.format].filter(Boolean).join(", ") || "Unknown pressing",
+        likelihood_percent: Math.round(pressing.confidence * 100),
+        evidence: [
+          pressing.source === "discogs"
+            ? `Matched Discogs release #${pressing.discogs_release_id}`
+            : "Identified by AI analysis",
+          extraction.matrix_runout_a ? `Side A matrix: ${extraction.matrix_runout_a}` : null,
+          extraction.matrix_runout_b ? `Side B matrix: ${extraction.matrix_runout_b}` : null,
+        ].filter(Boolean) as string[],
+      },
+      alternate_matches: pressAlternates,
     },
   };
 }

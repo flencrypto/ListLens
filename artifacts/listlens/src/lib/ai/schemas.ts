@@ -23,6 +23,7 @@ export const StudioOutputSchema = z.object({
     vinted: z.record(z.unknown()),
   }),
   warnings: z.array(z.string()),
+  record_analysis: z.record(z.unknown()).optional(),
 });
 
 export const DiscogsEnrichmentSchema = z.object({

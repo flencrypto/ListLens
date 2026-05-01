@@ -13,7 +13,6 @@ import { useUpload } from "@workspace/object-storage-web";
 const MAX_PHOTOS = 8;
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
 
-/** Simulate smooth eased progress that approaches `target` without reaching it. */
 function useSimulatedProgress(active: boolean, target = 88, stepMs = 600) {
   const [value, setValue] = useState(0);
   const ref = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -40,6 +39,96 @@ function useSimulatedProgress(active: boolean, target = 88, stepMs = 600) {
   return value;
 }
 
+interface RecordMatch {
+  artist?: string | null;
+  title?: string | null;
+  label?: string | null;
+  catalogue_number?: string | null;
+  likely_release?: string;
+  likelihood_percent?: number;
+  evidence?: string[];
+}
+
+interface RecordIdentification {
+  top_match?: RecordMatch;
+  alternate_matches?: RecordMatch[];
+  needs_matrix_for_clarification?: boolean;
+  warnings?: string[];
+  disclaimer?: string;
+}
+
+function LikelihoodBar({ percent }: { percent: number }) {
+  const color =
+    percent >= 80
+      ? "bg-emerald-500"
+      : percent >= 60
+      ? "bg-amber-500"
+      : "bg-zinc-500";
+  return (
+    <div className="w-full h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+      <div
+        className={`h-full rounded-full transition-all ${color}`}
+        style={{ width: `${percent}%` }}
+      />
+    </div>
+  );
+}
+
+function MatchCard({
+  match,
+  rank,
+}: {
+  match: RecordMatch;
+  rank: "top" | "alternate";
+}) {
+  const likelihood = match.likelihood_percent ?? 0;
+  const isTop = rank === "top";
+  return (
+    <div
+      className={[
+        "rounded-xl border p-4 space-y-3",
+        isTop
+          ? "border-emerald-800/60 bg-emerald-950/20"
+          : "border-zinc-800 bg-zinc-900/40",
+      ].join(" ")}
+    >
+      <div className="flex items-start justify-between gap-2 flex-wrap">
+        <div>
+          <p className="text-sm font-semibold text-white">
+            {match.artist ?? "Unknown artist"}{" "}
+            {match.title ? `— ${match.title}` : ""}
+          </p>
+          {match.label && (
+            <p className="text-xs text-zinc-400 mt-0.5">
+              {match.label}
+              {match.catalogue_number ? ` · ${match.catalogue_number}` : ""}
+            </p>
+          )}
+          {match.likely_release && (
+            <p className="text-xs text-zinc-500 mt-0.5">{match.likely_release}</p>
+          )}
+        </div>
+        <Badge
+          variant={likelihood >= 80 ? "success" : likelihood >= 60 ? "warning" : "secondary"}
+          className="shrink-0 text-xs"
+        >
+          {likelihood}% likely
+        </Badge>
+      </div>
+      <LikelihoodBar percent={likelihood} />
+      {match.evidence && match.evidence.length > 0 && (
+        <ul className="space-y-0.5">
+          {match.evidence.map((e, i) => (
+            <li key={i} className="text-xs text-zinc-400 flex items-center gap-1.5">
+              <span className="text-cyan-500 shrink-0">·</span> {e}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function StudioItemPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -53,20 +142,27 @@ export default function StudioItemPage() {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Upload progress (real XHR events from use-upload)
   const [uploadLabel, setUploadLabel] = useState("");
-
   const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
     onError: (err) => setError(`Upload failed: ${err.message}`),
   });
 
-  // Simulated AI analysis progress
   const rawAnalysisProgress = useSimulatedProgress(loading, 88, 500);
   const analysisProgress = loading
     ? Math.round(rawAnalysisProgress)
     : analysis
     ? 100
     : 0;
+
+  // Clarification state
+  const [matrixSideA, setMatrixSideA] = useState("");
+  const [matrixSideB, setMatrixSideB] = useState("");
+  const [matrixSideCD, setMatrixSideCD] = useState("");
+  const [clarifyLoading, setClarifyLoading] = useState(false);
+  const [clarifyError, setClarifyError] = useState<string | null>(null);
+  const [clarifyResult, setClarifyResult] = useState<RecordIdentification | null>(null);
+  const [clarifyDone, setClarifyDone] = useState(false);
+  const [stillNeedsMatrix, setStillNeedsMatrix] = useState(false);
 
   useEffect(() => {
     fetch(`/api/items/${id}/analysis`)
@@ -159,12 +255,72 @@ export default function StudioItemPage() {
       if (!res.ok) throw new Error("Analysis failed");
       const data = await res.json();
       setAnalysis(data.analysis);
+      setClarifyResult(null);
+      setClarifyDone(false);
+      setStillNeedsMatrix(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   }
+
+  async function handleClarifySubmit() {
+    if (!matrixSideA.trim() && !matrixSideB.trim()) {
+      setClarifyError("Enter at least one matrix / runout string (Side A or Side B).");
+      return;
+    }
+    setClarifyError(null);
+    setClarifyLoading(true);
+    try {
+      const res = await fetch("/api/lenses/record/identify-with-matrix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          itemId: id,
+          matrixSideA: matrixSideA.trim() || undefined,
+          matrixSideB: matrixSideB.trim() || undefined,
+          matrixSideCD: matrixSideCD.trim() || undefined,
+        }),
+      });
+      if (!res.ok) throw new Error("Clarification failed — please try again.");
+      const data = await res.json() as {
+        identification?: RecordIdentification;
+        analysis?: StudioOutput;
+      };
+      if (data.identification) {
+        setClarifyResult(data.identification);
+        // Keep clarification panel open if the API still needs more context
+        if (data.identification.needs_matrix_for_clarification) {
+          setStillNeedsMatrix(true);
+        } else {
+          setClarifyDone(true);
+          setStillNeedsMatrix(false);
+        }
+      } else {
+        setClarifyDone(true);
+      }
+      if (data.analysis) {
+        setAnalysis(data.analysis);
+      }
+    } catch (e) {
+      setClarifyError(e instanceof Error ? e.message : "Something went wrong");
+    } finally {
+      setClarifyLoading(false);
+    }
+  }
+
+  // Determine whether RecordLens clarification section should be shown
+  const isRecordLens = analysis?.lens === "RecordLens";
+  const recordAnalysis = analysis?.record_analysis as Record<string, unknown> | undefined;
+  const pressing = recordAnalysis?.pressing as Record<string, unknown> | undefined;
+  const pressingConfidence = typeof pressing?.confidence === "number"
+    ? pressing.confidence
+    : (analysis?.identity?.confidence ?? 1);
+  const needsClarification = isRecordLens && !clarifyDone && (
+    recordAnalysis?.needs_matrix_for_clarification === true ||
+    pressingConfidence < 0.8
+  );
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -198,7 +354,6 @@ export default function StudioItemPage() {
                 </span>
               </div>
 
-              {/* Drop zone */}
               <div
                 onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                 onDragLeave={() => setIsDragging(false)}
@@ -257,7 +412,6 @@ export default function StudioItemPage() {
                 )}
               </div>
 
-              {/* URL input fallback */}
               <details className="group">
                 <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1">
                   <svg
@@ -290,7 +444,6 @@ export default function StudioItemPage() {
                 </div>
               </details>
 
-              {/* Photo thumbnails */}
               {photoUrls.length > 0 && (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {photoUrls.map((u, i) => (
@@ -303,8 +456,7 @@ export default function StudioItemPage() {
                         alt={`Photo ${i + 1}`}
                         className="w-full h-full object-cover"
                         onError={(e) => {
-                          (e.currentTarget as HTMLImageElement).style.display =
-                            "none";
+                          (e.currentTarget as HTMLImageElement).style.display = "none";
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
@@ -328,9 +480,7 @@ export default function StudioItemPage() {
             <div className="brand-card p-6">
               <h2 className="text-base font-semibold text-white mb-3">
                 Optional Hint{" "}
-                <span className="text-zinc-500 font-normal text-xs">
-                  (optional)
-                </span>
+                <span className="text-zinc-500 font-normal text-xs">(optional)</span>
               </h2>
               <textarea
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 resize-none"
@@ -341,7 +491,6 @@ export default function StudioItemPage() {
               />
             </div>
 
-            {/* AI analysis progress (shown while loading) */}
             {loading && (
               <div className="brand-card p-6 space-y-3">
                 <p className="text-xs font-mono-hud tracking-widest uppercase text-cyan-300">
@@ -380,11 +529,233 @@ export default function StudioItemPage() {
         )}
 
         {analysis && (
-          <ListingEditor
-            itemId={id}
-            analysis={analysis}
-            onReset={() => setAnalysis(null)}
-          />
+          <>
+            {/* RecordLens — ranked likelihoods (always shown for RecordLens) */}
+            {isRecordLens && clarifyResult && (
+              <div className="brand-card p-6 space-y-4">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-xs font-mono-hud tracking-[0.2em] uppercase text-emerald-300">
+                    RecordLens · Pressing confirmed
+                  </p>
+                  {clarifyResult.needs_matrix_for_clarification === false && (
+                    <Badge variant="success" className="text-xs">Matrix matched</Badge>
+                  )}
+                </div>
+                <p className="text-zinc-400 text-xs">
+                  Ranked matches after matrix / runout analysis. The top result has been used to update your listing.
+                </p>
+
+                <div className="space-y-3">
+                  {clarifyResult.top_match && (
+                    <MatchCard match={clarifyResult.top_match} rank="top" />
+                  )}
+                  {clarifyResult.alternate_matches && clarifyResult.alternate_matches.length > 0 && (
+                    <details className="group">
+                      <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1 mt-1">
+                        <svg
+                          className="h-3 w-3 transition-transform group-open:rotate-90"
+                          viewBox="0 0 6 10"
+                          fill="currentColor"
+                        >
+                          <path d="M1 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                        </svg>
+                        {clarifyResult.alternate_matches.length} alternate match{clarifyResult.alternate_matches.length !== 1 ? "es" : ""}
+                      </summary>
+                      <div className="space-y-2 mt-2">
+                        {clarifyResult.alternate_matches.map((m, i) => (
+                          <MatchCard key={i} match={m} rank="alternate" />
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+
+                {clarifyResult.warnings && clarifyResult.warnings.length > 0 && (
+                  <div className="space-y-1">
+                    {clarifyResult.warnings.map((w, i) => (
+                      <p key={i} className="text-xs text-amber-400 flex items-center gap-1.5">
+                        <span>⚠</span> {w}
+                      </p>
+                    ))}
+                  </div>
+                )}
+
+                {clarifyResult.disclaimer && (
+                  <p className="text-xs text-zinc-600 italic">{clarifyResult.disclaimer}</p>
+                )}
+              </div>
+            )}
+
+            {/* RecordLens — initial ranked likelihoods (before clarification) */}
+            {isRecordLens && !clarifyResult && (() => {
+              const topMatch = recordAnalysis?.top_match as RecordMatch | undefined;
+              const altMatches = (recordAnalysis?.alternate_matches as RecordMatch[] | undefined) ?? [];
+              return (
+                <div className="brand-card p-6 space-y-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-xs font-mono-hud tracking-[0.2em] uppercase text-cyan-300">
+                      RecordLens · Pressing analysis
+                    </p>
+                    <Badge
+                      variant={pressingConfidence >= 0.8 ? "success" : pressingConfidence >= 0.6 ? "warning" : "secondary"}
+                      className="text-xs"
+                    >
+                      {Math.round(pressingConfidence * 100)}% confidence
+                    </Badge>
+                  </div>
+                  <p className="text-zinc-400 text-xs">
+                    Ranked release matches based on label photo and Discogs search. Add your matrix/runout text below to improve accuracy.
+                  </p>
+                  <div className="space-y-3">
+                    {topMatch && (
+                      <MatchCard match={topMatch} rank="top" />
+                    )}
+                    {altMatches.length > 0 && (
+                      <details className="group">
+                        <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1 mt-1">
+                          <svg
+                            className="h-3 w-3 transition-transform group-open:rotate-90"
+                            viewBox="0 0 6 10"
+                            fill="currentColor"
+                          >
+                            <path d="M1 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                          </svg>
+                          {altMatches.length} alternate match{altMatches.length !== 1 ? "es" : ""}
+                        </summary>
+                        <div className="space-y-2 mt-2">
+                          {altMatches.map((m, i) => (
+                            <MatchCard key={i} match={m} rank="alternate" />
+                          ))}
+                        </div>
+                      </details>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* RecordLens — matrix/runout clarification section */}
+            {needsClarification && (
+              <div className="brand-card p-6 space-y-5 border-amber-900/40">
+                <div>
+                  <p className="text-xs font-mono-hud tracking-[0.2em] uppercase text-amber-300 mb-1">
+                    RecordLens · Confirm pressing
+                  </p>
+                  <h2 className="text-base font-semibold text-white">
+                    Add matrix / runout to improve accuracy
+                  </h2>
+                </div>
+
+                {stillNeedsMatrix && (
+                  <div className="flex items-start gap-2 rounded-md border border-amber-700/50 bg-amber-950/40 px-3 py-2.5">
+                    <span className="text-amber-400 text-sm mt-0.5">⚠</span>
+                    <p className="text-xs text-amber-200 leading-relaxed">
+                      The pressing still couldn't be confirmed — there may be several close matches.
+                      Try adding more detail (e.g. Side B etching, cutting codes) to narrow it down.
+                    </p>
+                  </div>
+                )}
+
+                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
+                  <p className="text-sm text-zinc-300 font-medium">What is the matrix / runout?</p>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    The matrix (or runout) is a string of characters etched into the vinyl in the
+                    blank groove area — the shiny ring between the last track and the label. It
+                    identifies the specific pressing, cutting engineer, and generation. Look for text
+                    like <span className="text-zinc-300 font-mono">A-1 // Porky</span> or{" "}
+                    <span className="text-zinc-300 font-mono">YEX 123-1</span> on each side.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs text-zinc-400 font-medium block mb-1.5">
+                      Side A matrix / runout <span className="text-amber-400">*</span>
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 font-mono"
+                      placeholder="e.g. A-1 // PORKY or YEX 123-1"
+                      value={matrixSideA}
+                      onChange={(e) => setMatrixSideA(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-400 font-medium block mb-1.5">
+                      Side B matrix / runout <span className="text-zinc-600">(recommended)</span>
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 font-mono"
+                      placeholder="e.g. B-1 // PORKY or YEX 124-1"
+                      value={matrixSideB}
+                      onChange={(e) => setMatrixSideB(e.target.value)}
+                    />
+                  </div>
+                  <details className="group">
+                    <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1">
+                      <svg
+                        className="h-3 w-3 transition-transform group-open:rotate-90"
+                        viewBox="0 0 6 10"
+                        fill="currentColor"
+                      >
+                        <path d="M1 1l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                      </svg>
+                      Add Side C / D (double albums)
+                    </summary>
+                    <div className="mt-2">
+                      <input
+                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 font-mono"
+                        placeholder="e.g. C-1 / D-1 matrix strings"
+                        value={matrixSideCD}
+                        onChange={(e) => setMatrixSideCD(e.target.value)}
+                      />
+                    </div>
+                  </details>
+                </div>
+
+                {clarifyError && (
+                  <p className="text-red-400 text-sm">{clarifyError}</p>
+                )}
+
+                <Button
+                  onClick={handleClarifySubmit}
+                  disabled={clarifyLoading}
+                  className="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 border-0 text-white"
+                >
+                  {clarifyLoading ? (
+                    <span className="flex items-center gap-2">
+                      <Spinner className="text-amber-200" /> Confirming pressing…
+                    </span>
+                  ) : (
+                    "Confirm pressing →"
+                  )}
+                </Button>
+
+                {pressingConfidence >= 0.6 && (
+                  <button
+                    onClick={() => setClarifyDone(true)}
+                    className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors w-full text-center"
+                  >
+                    Skip — I'm happy with the current result
+                  </button>
+                )}
+              </div>
+            )}
+
+            {/* Listing editor (always shown when analysis is available) */}
+            <ListingEditor
+              itemId={id}
+              analysis={analysis}
+              onReset={() => {
+                setAnalysis(null);
+                setClarifyResult(null);
+                setClarifyDone(false);
+                setStillNeedsMatrix(false);
+                setMatrixSideA("");
+                setMatrixSideB("");
+                setMatrixSideCD("");
+              }}
+            />
+          </>
         )}
       </main>
     </div>
