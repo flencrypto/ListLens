@@ -930,6 +930,27 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
   }
 });
 
+/** List the authenticated user's guard checks (DB-backed, post-analysis only). */
+router.get("/guard/checks", async (req, res) => {
+  const userId = req.user?.id;
+  if (!userId) {
+    res.status(401).json({ error: "You must be logged in to view Guard checks." });
+    return;
+  }
+  try {
+    const checks = await db
+      .select()
+      .from(guardChecksTable)
+      .where(eq(guardChecksTable.userId, userId))
+      .orderBy(desc(guardChecksTable.createdAt))
+      .limit(50);
+    res.json({ checks });
+  } catch (err) {
+    logger.error({ err }, "guard_checks list failed");
+    res.status(500).json({ error: "Failed to load Guard checks" });
+  }
+});
+
 router.post("/guard/checks", (req, res) => {
   const b = body(req);
   const id = newId("guard");

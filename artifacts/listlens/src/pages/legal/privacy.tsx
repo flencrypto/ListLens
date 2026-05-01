@@ -16,7 +16,7 @@ export default function PrivacyPage() {
           <h2>What we collect</h2>
           <ul>
             <li>
-              <strong>Account data</strong> — name, email, avatar (via Clerk).
+              <strong>Account data</strong> — name, email, avatar (via Replit Auth).
             </li>
             <li>
               <strong>Listing data</strong> — photos, hints and AI output you create using Studio.

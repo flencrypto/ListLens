@@ -17,24 +17,57 @@ interface Listing {
   createdAt: string;
 }
 
+interface GuardCheck {
+  id: string;
+  lens: string;
+  url: string | null;
+  riskLevel: string | null;
+  status: string;
+  createdAt: string;
+}
+
+function riskBadgeClass(level: string | null) {
+  if (level === "high") return "bg-red-950/40 text-red-400 border border-red-800/30";
+  if (level === "medium") return "bg-amber-950/40 text-amber-400 border border-amber-800/30";
+  if (level === "low") return "bg-emerald-950/30 text-emerald-400 border border-emerald-800/30";
+  return "bg-zinc-800 text-zinc-400";
+}
+
 export default function HistoryPage() {
   const [listings, setListings] = useState<Listing[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [listingsLoading, setListingsLoading] = useState(true);
+  const [listingsError, setListingsError] = useState<string | null>(null);
+
+  const [checks, setChecks] = useState<GuardCheck[]>([]);
+  const [checksLoading, setChecksLoading] = useState(true);
+  const [checksError, setChecksError] = useState<string | null>(null);
 
   useEffect(() => {
     fetch("/api/items")
       .then(async (res) => {
         if (res.status === 401) {
-          setError("Sign in to see your history.");
+          setListingsError("Sign in to see your history.");
           return;
         }
         if (!res.ok) throw new Error("Failed to load listings");
         const data = await res.json();
         setListings(data.listings ?? []);
       })
-      .catch(() => setError("Could not load listings."))
-      .finally(() => setLoading(false));
+      .catch(() => setListingsError("Could not load listings."))
+      .finally(() => setListingsLoading(false));
+
+    fetch("/api/guard/checks")
+      .then(async (res) => {
+        if (res.status === 401) {
+          setChecksError("Sign in to see your Guard checks.");
+          return;
+        }
+        if (!res.ok) throw new Error("Failed to load checks");
+        const data = await res.json();
+        setChecks(data.checks ?? []);
+      })
+      .catch(() => setChecksError("Could not load Guard checks."))
+      .finally(() => setChecksLoading(false));
   }, []);
 
   function formatDate(iso: string) {
@@ -68,30 +101,32 @@ export default function HistoryPage() {
           </div>
         </div>
 
-        {/* Listings section */}
+        {/* Studio Listings */}
         <div className="brand-card p-6">
           <div className="flex items-center justify-between pb-3">
             <h2 className="text-base font-semibold text-white flex items-center gap-2">
               <span>📸</span> Studio Listings
             </h2>
-            {!loading && !error && (
-              <Badge variant="secondary">{listings.length} listing{listings.length !== 1 ? "s" : ""}</Badge>
+            {!listingsLoading && !listingsError && (
+              <Badge variant="secondary">
+                {listings.length} listing{listings.length !== 1 ? "s" : ""}
+              </Badge>
             )}
           </div>
 
-          {loading && (
+          {listingsLoading && (
             <div className="flex justify-center py-10">
               <Spinner className="text-cyan-400" />
             </div>
           )}
 
-          {!loading && error && (
+          {!listingsLoading && listingsError && (
             <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-400 text-sm">{error}</p>
+              <p className="text-zinc-400 text-sm">{listingsError}</p>
             </div>
           )}
 
-          {!loading && !error && listings.length === 0 && (
+          {!listingsLoading && !listingsError && listings.length === 0 && (
             <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
               <p className="text-zinc-500 text-sm">No listings yet.</p>
               <p className="text-zinc-600 text-xs max-w-xs text-center">
@@ -103,7 +138,7 @@ export default function HistoryPage() {
             </div>
           )}
 
-          {!loading && !error && listings.length > 0 && (
+          {!listingsLoading && !listingsError && listings.length > 0 && (
             <div className="space-y-3">
               {listings.map((listing) => (
                 <Link key={listing.id} href={`/studio/${listing.id}`}>
@@ -144,24 +179,74 @@ export default function HistoryPage() {
 
         <div className="hud-divider opacity-40" />
 
-        {/* Guard checks section */}
+        {/* Guard Checks */}
         <div className="brand-card brand-card-violet p-6">
           <div className="flex items-center justify-between pb-3">
             <h2 className="text-base font-semibold text-white flex items-center gap-2">
               <span>🛡️</span> Guard Checks
             </h2>
-            <Badge variant="secondary">0 checks</Badge>
+            {!checksLoading && !checksError && (
+              <Badge variant="secondary">
+                {checks.length} check{checks.length !== 1 ? "s" : ""}
+              </Badge>
+            )}
           </div>
-          <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-            <p className="text-zinc-500 text-sm">No Guard checks yet.</p>
-            <p className="text-zinc-600 text-xs max-w-xs text-center">
-              Check a listing before you buy. Saved reports will appear here.
-            </p>
-            <Button asChild size="sm" variant="outline">
-              <Link href="/guard/new">Check a listing</Link>
-            </Button>
-          </div>
+
+          {checksLoading && (
+            <div className="flex justify-center py-10">
+              <Spinner className="text-violet-400" />
+            </div>
+          )}
+
+          {!checksLoading && checksError && (
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
+              <p className="text-zinc-400 text-sm">{checksError}</p>
+            </div>
+          )}
+
+          {!checksLoading && !checksError && checks.length === 0 && (
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
+              <p className="text-zinc-500 text-sm">No Guard checks yet.</p>
+              <p className="text-zinc-600 text-xs max-w-xs text-center">
+                Check a listing before you buy. Saved reports will appear here.
+              </p>
+              <Button asChild size="sm" variant="outline">
+                <Link href="/guard/new">Check a listing</Link>
+              </Button>
+            </div>
+          )}
+
+          {!checksLoading && !checksError && checks.length > 0 && (
+            <div className="space-y-3">
+              {checks.map((check) => (
+                <Link key={check.id} href={`/guard/${check.id}`}>
+                  <div className="flex items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-3 hover:border-violet-800/50 hover:bg-zinc-900 transition-colors cursor-pointer">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-white truncate">
+                        {check.url
+                          ? check.url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60)
+                          : "Screenshot check"}
+                      </p>
+                      <p className="text-xs text-zinc-500 mt-0.5">{check.lens}</p>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      {check.riskLevel && (
+                        <Badge
+                          variant="secondary"
+                          className={riskBadgeClass(check.riskLevel)}
+                        >
+                          {check.riskLevel} risk
+                        </Badge>
+                      )}
+                      <span className="text-xs text-zinc-600">{formatDate(check.createdAt)}</span>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
+
         <div className="hud-divider opacity-30" />
         <div className="flex justify-center py-2">
           <BrandGlyph size={22} showSparks={false} />
