@@ -5,6 +5,7 @@ import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
   Alert,
   Modal,
   Platform,
@@ -83,6 +84,7 @@ export default function CaptureScreen() {
   const [referenceObjectId, setReferenceObjectId] = useState<string>(
     MEASURE_REFERENCE_OBJECTS[0].id,
   );
+  const [photoStates, setPhotoStates] = useState<Record<number, "uploading" | "uploaded">>({});
 
   async function takePhoto() {
     if (photos.length >= MAX_PHOTOS) {
@@ -189,6 +191,13 @@ export default function CaptureScreen() {
     setProgressValue(0);
     setProgressLabel("Uploading photos…");
     setUploadCount({ done: 0, total: photos.length });
+    // Mark all photos as uploading immediately
+    setPhotoStates(
+      photos.reduce<Record<number, "uploading" | "uploaded">>((acc, _, idx) => {
+        acc[idx] = "uploading";
+        return acc;
+      }, {}),
+    );
 
     try {
       // Phase 1: upload photos in parallel batches so we can show live count (0→45%)
@@ -198,17 +207,21 @@ export default function CaptureScreen() {
         const batch = photos.slice(i, i + UPLOAD_CONCURRENCY);
         await Promise.all(
           batch.map(async (p, batchIdx) => {
+            const globalIdx = i + batchIdx;
             const url = await uploadPhoto(p.uri, p.mimeType ?? "image/jpeg");
-            photoUrls[i + batchIdx] = url;
+            photoUrls[globalIdx] = url;
             uploadsDone += 1;
             setUploadCount({ done: uploadsDone, total: photos.length });
             setProgressValue(Math.round((uploadsDone / photos.length) * 45));
+            // Mark this specific photo as uploaded
+            setPhotoStates((prev) => ({ ...prev, [globalIdx]: "uploaded" }));
           }),
         );
       }
 
-      // Uploads complete — clear counter, move to AI phase (45→95%)
+      // Uploads complete — clear counter, clear per-photo states, move to AI phase (45→95%)
       setUploadCount(null);
+      setPhotoStates({});
       setProgressLabel("Analysing with AI…");
 
       const measureHint = isMeasureLens
@@ -253,6 +266,7 @@ export default function CaptureScreen() {
     } catch {
       stopProgress();
       setUploadCount(null);
+      setPhotoStates({});
       notify("AI analysis failed. Please check your connection and try again.");
       setBusy(false);
       setProgressValue(0);
@@ -349,6 +363,8 @@ export default function CaptureScreen() {
               key={`${entry.uri}-${idx}`}
               uri={entry.uri}
               onRemove={() => removePhoto(idx)}
+              uploading={photoStates[idx] === "uploading"}
+              uploaded={photoStates[idx] === "uploaded"}
             />
           ))}
           {photos.length < MAX_PHOTOS && (
@@ -578,16 +594,36 @@ const styles = StyleSheet.create({
     marginTop: 16,
     lineHeight: 17,
   },
+  thumbUploadOverlay: {
+    position: "absolute",
+    inset: 0,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  thumbUploadCheck: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: "rgba(6,182,212,0.85)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
 
 function CaptureThumb({
   uri,
   onRemove,
+  uploading = false,
+  uploaded = false,
 }: {
   uri: string;
   onRemove: () => void;
+  uploading?: boolean;
+  uploaded?: boolean;
 }) {
   const [error, setError] = useState(false);
+  const isActive = uploading || uploaded;
   return (
     <View style={styles.thumbWrap}>
       {error ? (
@@ -610,9 +646,26 @@ function CaptureThumb({
           onError={() => setError(true)}
         />
       )}
-      <Pressable onPress={onRemove} style={styles.thumbClose} hitSlop={8}>
-        <Feather name="x" size={12} color="#fff" />
-      </Pressable>
+
+      {/* Per-photo upload state overlay */}
+      {isActive && (
+        <View style={styles.thumbUploadOverlay}>
+          {uploading ? (
+            <ActivityIndicator size="small" color="#fff" />
+          ) : (
+            <View style={styles.thumbUploadCheck}>
+              <Feather name="check" size={14} color="#fff" />
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* Remove button — hidden while uploading/uploaded so it doesn't interfere */}
+      {!isActive && (
+        <Pressable onPress={onRemove} style={styles.thumbClose} hitSlop={8}>
+          <Feather name="x" size={12} color="#fff" />
+        </Pressable>
+      )}
     </View>
   );
 }
