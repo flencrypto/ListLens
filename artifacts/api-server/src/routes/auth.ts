@@ -182,18 +182,29 @@ router.get("/callback", async (req: Request, res: Response) => {
     return;
   }
 
-  const dbUser = await upsertUser(
-    claims as unknown as Record<string, unknown>,
-  );
+  let dbUser: Awaited<ReturnType<typeof upsertUser>> | null = null;
+  try {
+    dbUser = await upsertUser(claims as unknown as Record<string, unknown>);
+  } catch (err) {
+    req.log.warn({ err }, "upsertUser failed during OAuth callback — proceeding without DB record");
+  }
+
+  const userFromClaims = {
+    id: claims.sub as string,
+    email: (claims.email as string) || null,
+    firstName: (claims.first_name as string) || null,
+    lastName: (claims.last_name as string) || null,
+    profileImageUrl: ((claims.profile_image_url || claims.picture) as string) || null,
+  };
 
   const now = Math.floor(Date.now() / 1000);
   const sessionData: SessionData = {
     user: {
-      id: dbUser.id,
-      email: dbUser.email,
-      firstName: dbUser.firstName,
-      lastName: dbUser.lastName,
-      profileImageUrl: dbUser.profileImageUrl,
+      id: dbUser?.id ?? userFromClaims.id,
+      email: dbUser?.email ?? userFromClaims.email,
+      firstName: dbUser?.firstName ?? userFromClaims.firstName,
+      lastName: dbUser?.lastName ?? userFromClaims.lastName,
+      profileImageUrl: dbUser?.profileImageUrl ?? userFromClaims.profileImageUrl,
     },
     access_token: tokens.access_token,
     refresh_token: tokens.refresh_token,
@@ -252,18 +263,29 @@ router.post(
         return;
       }
 
-      const dbUser = await upsertUser(
-        claims as unknown as Record<string, unknown>,
-      );
+      let dbUser: Awaited<ReturnType<typeof upsertUser>> | null = null;
+      try {
+        dbUser = await upsertUser(claims as unknown as Record<string, unknown>);
+      } catch (err) {
+        req.log.warn({ err }, "upsertUser failed during mobile token exchange — proceeding without DB record");
+      }
+
+      const userFromClaims = {
+        id: claims.sub as string,
+        email: (claims.email as string) || null,
+        firstName: (claims.first_name as string) || null,
+        lastName: (claims.last_name as string) || null,
+        profileImageUrl: ((claims.profile_image_url || claims.picture) as string) || null,
+      };
 
       const now = Math.floor(Date.now() / 1000);
       const sessionData: SessionData = {
         user: {
-          id: dbUser.id,
-          email: dbUser.email,
-          firstName: dbUser.firstName,
-          lastName: dbUser.lastName,
-          profileImageUrl: dbUser.profileImageUrl,
+          id: dbUser?.id ?? userFromClaims.id,
+          email: dbUser?.email ?? userFromClaims.email,
+          firstName: dbUser?.firstName ?? userFromClaims.firstName,
+          lastName: dbUser?.lastName ?? userFromClaims.lastName,
+          profileImageUrl: dbUser?.profileImageUrl ?? userFromClaims.profileImageUrl,
         },
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
