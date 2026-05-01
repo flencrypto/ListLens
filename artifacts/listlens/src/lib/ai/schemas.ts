@@ -25,13 +25,6 @@ export const StudioOutputSchema = z.object({
   warnings: z.array(z.string()),
 });
 
-/**
- * RecordLens single-label-photo release identification output.
- *
- * Per the product spec the model must return a *ranked* set of likely
- * releases (top match + alternate matches) — never a single overconfident
- * answer — and a flag indicating whether matrix/runout input is needed.
- */
 export const DiscogsEnrichmentSchema = z.object({
   release_id: z.number(),
   tracklist: z.array(z.string()).default([]),
@@ -71,12 +64,25 @@ export const RecordReleaseIdentificationSchema = z.object({
   ),
 });
 
+const RiskDimensionSchema = z.object({
+  score: z.number().min(0).max(10),
+  verdict: z.string(),
+});
+
 export const GuardOutputSchema = z.object({
   mode: z.literal("guard"),
   lens: z.string(),
   risk: z.object({
     level: z.enum(["low", "medium", "medium_high", "high", "inconclusive"]),
     confidence: z.number().min(0).max(1),
+    summary: z.string(),
+  }),
+  risk_dimensions: z.object({
+    price: RiskDimensionSchema,
+    photos: RiskDimensionSchema,
+    listing_quality: RiskDimensionSchema,
+    item_authenticity: RiskDimensionSchema,
+    seller_signals: RiskDimensionSchema,
   }),
   red_flags: z.array(
     z.object({
@@ -85,13 +91,37 @@ export const GuardOutputSchema = z.object({
       message: z.string(),
     })
   ),
+  green_signals: z.array(
+    z.object({
+      type: z.string(),
+      message: z.string(),
+    })
+  ),
+  price_analysis: z.object({
+    asking_price: z.string().nullable(),
+    market_estimate: z.string().nullable(),
+    price_verdict: z.enum(["fair", "low_risk_deal", "suspiciously_low", "overpriced", "unknown"]),
+    price_note: z.string(),
+  }),
+  authenticity_signals: z.array(
+    z.object({
+      marker: z.string(),
+      observed: z.string(),
+      verdict: z.enum(["pass", "fail", "unclear"]),
+    })
+  ),
   missing_photos: z.array(z.string()),
   seller_questions: z.array(z.string()),
+  buy_recommendation: z.object({
+    verdict: z.enum(["proceed", "proceed_with_caution", "ask_questions_first", "avoid"]),
+    reasoning: z.string(),
+  }),
   disclaimer: z.literal("AI-assisted risk screen, not formal authentication."),
 });
 
 export type StudioOutput = z.infer<typeof StudioOutputSchema>;
 export type GuardOutput = z.infer<typeof GuardOutputSchema>;
+export type GuardRiskDimension = z.infer<typeof RiskDimensionSchema>;
 export type RecordReleaseIdentification = z.infer<typeof RecordReleaseIdentificationSchema>;
 export type RecordReleaseMatch = z.infer<typeof RecordReleaseMatchSchema>;
 export type DiscogsEnrichment = z.infer<typeof DiscogsEnrichmentSchema>;

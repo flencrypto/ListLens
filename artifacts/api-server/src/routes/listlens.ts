@@ -68,12 +68,25 @@ const StudioOutputSchema = z.object({
   record_analysis: z.record(z.unknown()).optional(),
 });
 
+const GuardRiskDimensionSchema = z.object({
+  score: z.number().min(0).max(10),
+  verdict: z.string(),
+});
+
 const GuardOutputSchema = z.object({
   mode: z.literal("guard"),
   lens: z.string(),
   risk: z.object({
     level: z.enum(["low", "medium", "medium_high", "high", "inconclusive"]),
     confidence: z.number().min(0).max(1),
+    summary: z.string(),
+  }),
+  risk_dimensions: z.object({
+    price: GuardRiskDimensionSchema,
+    photos: GuardRiskDimensionSchema,
+    listing_quality: GuardRiskDimensionSchema,
+    item_authenticity: GuardRiskDimensionSchema,
+    seller_signals: GuardRiskDimensionSchema,
   }),
   red_flags: z.array(
     z.object({
@@ -82,8 +95,31 @@ const GuardOutputSchema = z.object({
       message: z.string(),
     }),
   ),
+  green_signals: z.array(
+    z.object({
+      type: z.string(),
+      message: z.string(),
+    }),
+  ),
+  price_analysis: z.object({
+    asking_price: z.string().nullable(),
+    market_estimate: z.string().nullable(),
+    price_verdict: z.enum(["fair", "low_risk_deal", "suspiciously_low", "overpriced", "unknown"]),
+    price_note: z.string(),
+  }),
+  authenticity_signals: z.array(
+    z.object({
+      marker: z.string(),
+      observed: z.string(),
+      verdict: z.enum(["pass", "fail", "unclear"]),
+    }),
+  ),
   missing_photos: z.array(z.string()),
   seller_questions: z.array(z.string()),
+  buy_recommendation: z.object({
+    verdict: z.enum(["proceed", "proceed_with_caution", "ask_questions_first", "avoid"]),
+    reasoning: z.string(),
+  }),
   disclaimer: z.literal("AI-assisted risk screen, not formal authentication."),
 });
 
@@ -256,25 +292,123 @@ async function runStudioAnalysis(
   return validated;
 }
 
+function buildGuardSystemPrompt(lens: string): string {
+  const { label: lensLabel } = getLensMeta(lens);
+
+  const lensSpecificAuthMarkers: Record<string, string> = {
+    ShoeLens: `Authenticity markers to check for ${lensLabel}s:
+- Stitching: uniform, no loose threads, correct stitch count per inch for the brand
+- Font consistency: brand logos, text on tongue, insole, heel — correct typeface, spacing, sizing
+- Size tag: format, country of manufacture, material composition text, font, spacing
+- Sole unit: correct pattern, moulding sharpness, branding location and depth
+- Box: correct label format, barcode, colourway code, SKU matching shoe
+- Lace tips: correct colour, aglet material and finish
+- Insole: correct branding, stitching, cushioning logo placement
+- Colourway accuracy: pantone match of uppers, midsole, outsole vs official colourway`,
+    LPLens: `Authenticity / condition markers to check for ${lensLabel}s:
+- Label: correct font, layout, colour for the pressing era and territory
+- Catalogue number: format matches label and matrix, correct country variant
+- Matrix/runout etchings: hand-etched vs stamped, pressing plant codes, generation suffix
+- Vinyl: colour correct for pressing (black/coloured), weight/thickness consistent with claimed pressing
+- Sleeve: correct print quality, spine text, catalogue number matches label
+- Price vs discogs market: anomalously cheap first-pressings are almost always bootlegs`,
+    RecordLens: `Authenticity / condition markers to check for vinyl records:
+- Label authenticity: correct font, layout, and colour for the stated label and era
+- Catalogue number consistency: front sleeve, back sleeve, labels, and matrix all agree
+- Matrix/runout: visible etching matches claimed pressing generation
+- Vinyl condition vs description: visible scratches vs stated grade
+- Sleeve condition vs description: seam splits, ring wear, price stickers vs stated grade`,
+    ClothingLens: `Authenticity markers to check for clothing:
+- Care label: correct format, font, country of manufacture, fibre content
+- Brand tag: correct logo, font, thread colour, attachment method
+- Stitching: seam quality, thread colour match, stitch density
+- Zip: correct brand (YKK etc.), pull tab, slider dimensions
+- Buttons/hardware: weight, finish, engraving depth
+- Print/embroidery: correct registration, thread count, no pixelation`,
+    WatchLens: `Authenticity markers to check for watches:
+- Dial text: correct font, spacing, lume plot shape and colour, depth of printing
+- Cyclops lens: magnification correct (2.5x for Rolex), alignment
+- Case finishing: brushed vs polished surfaces in correct zones
+- Crown: correct size, logo engraving depth, threading
+- Bracelet: correct link profile, end-link fit, clasp mechanism and markings
+- Caseback: correct engravings, serial number format for claimed model and year
+- Hands: correct colour, finish, shape, lume application
+- Movement (if visible): correct rotor, finishing quality, engravings`,
+    CardLens: `Authenticity markers to check for trading cards:
+- Print quality: dot pattern, colour registration, no blurring at edges
+- Card stock: flex test consistency, correct thickness for the set
+- Hologram/foil: correct pattern depth and colour shift for authenticated cards
+- Centering: front-to-back and left-to-right ratios
+- Edges and corners: cutting precision, no whitening or chips on vintage cards
+- Black light test evidence: real cards fluoresce differently from reprints`,
+  };
+
+  const authMarkers = lensSpecificAuthMarkers[lens] ?? `Check key authenticity markers relevant to ${lensLabel}s including branding consistency, materials, construction quality, and condition vs description accuracy.`;
+
+  return `You are a senior fraud and risk analyst specialising in second-hand ${lensLabel} listings. You have deep expertise in spotting fakes, scams, and misrepresented items.
+
+${authMarkers}
+
+Analyse the provided listing URL and/or screenshots comprehensively and return ONLY valid JSON (no markdown, no code fences) conforming exactly to this schema:
+{
+  "mode": "guard",
+  "lens": "${lens}",
+  "risk": {
+    "level": "low"|"medium"|"medium_high"|"high"|"inconclusive",
+    "confidence": 0-1,
+    "summary": "2-3 sentence overall verdict explaining the risk level and key reasoning"
+  },
+  "risk_dimensions": {
+    "price":            { "score": 0-10 (10=safest), "verdict": "one-line verdict" },
+    "photos":           { "score": 0-10, "verdict": "one-line verdict" },
+    "listing_quality":  { "score": 0-10, "verdict": "one-line verdict" },
+    "item_authenticity":{ "score": 0-10, "verdict": "one-line verdict" },
+    "seller_signals":   { "score": 0-10, "verdict": "one-line verdict" }
+  },
+  "red_flags": [
+    { "severity": "low"|"medium"|"high", "type": "SHORT_CATEGORY_NAME", "message": "Specific, actionable observation" }
+  ],
+  "green_signals": [
+    { "type": "SHORT_CATEGORY_NAME", "message": "Specific positive signal that builds confidence" }
+  ],
+  "price_analysis": {
+    "asking_price": "detected price as string e.g. £85 or null if not visible",
+    "market_estimate": "expected price range for this item in stated condition e.g. £70–£110 or null",
+    "price_verdict": "fair"|"low_risk_deal"|"suspiciously_low"|"overpriced"|"unknown",
+    "price_note": "1-2 sentences explaining the price assessment"
+  },
+  "authenticity_signals": [
+    { "marker": "specific feature examined", "observed": "what you saw or could not see", "verdict": "pass"|"fail"|"unclear" }
+  ],
+  "missing_photos": [ "specific photo that would help verify authenticity" ],
+  "seller_questions": [ "specific question to ask the seller before buying" ],
+  "buy_recommendation": {
+    "verdict": "proceed"|"proceed_with_caution"|"ask_questions_first"|"avoid",
+    "reasoning": "2-3 sentences — clear, actionable buying advice"
+  },
+  "disclaimer": "AI-assisted risk screen, not formal authentication."
+}
+
+Rules:
+- red_flags: include ALL genuine concerns, no limit — be thorough
+- green_signals: include ALL genuine positives — balanced analysis builds trust
+- authenticity_signals: examine every visible authenticity marker, minimum 4 entries
+- seller_questions: 4-6 specific, targeted questions (not generic)
+- price_analysis: always attempt to estimate market value from your knowledge
+- Be specific — name exact models, colourways, pressing details. Vague statements are useless.
+- If screenshots show stock photos instead of actual item photos, flag this as HIGH severity
+- If price is more than 30% below market rate, flag as HIGH severity
+- score 8-10 = low risk, 5-7 = moderate risk, 2-4 = high risk, 0-1 = very high risk`;
+}
+
 async function runGuardAnalysis(
   lens: string,
   url?: string,
   screenshotUrls?: string[],
 ): Promise<z.infer<typeof GuardOutputSchema>> {
   const openai = getOpenAIClient();
-  const { label: lensLabel } = getLensMeta(lens);
 
-  const systemPrompt = `You are an expert fraud and risk analyst for second-hand ${lensLabel} listings. Analyse the provided listing URL and/or screenshots and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
-{
-  "mode": "guard",
-  "lens": "${lens}",
-  "risk": { "level": "low"|"medium"|"medium_high"|"high"|"inconclusive", "confidence": 0-1 },
-  "red_flags": [{ "severity": "low"|"medium"|"high", "type": string, "message": string }],
-  "missing_photos": [ ...strings listing photos that would help verify authenticity ],
-  "seller_questions": [ ...3-5 questions the buyer should ask the seller ],
-  "disclaimer": "AI-assisted risk screen, not formal authentication."
-}
-Be specific. If screenshots look stock or inconsistent, flag it. If price is anomalously low, flag it.`;
+  const systemPrompt = buildGuardSystemPrompt(lens);
 
   const userParts: Parameters<
     typeof openai.chat.completions.create
@@ -282,8 +416,8 @@ Be specific. If screenshots look stock or inconsistent, flag it. If price is ano
     {
       type: "text",
       text: url
-        ? `Check this listing for fraud/risk signals. Listing URL: ${url}`
-        : `Check this listing for fraud/risk signals.`,
+        ? `Perform a deep fraud and risk analysis on this listing. Listing URL: ${url}`
+        : `Perform a deep fraud and risk analysis on this listing.`,
     },
     ...imageContent(screenshotUrls ?? []),
   ];
@@ -295,7 +429,7 @@ Be specific. If screenshots look stock or inconsistent, flag it. If price is ano
       { role: "system", content: systemPrompt },
       { role: "user", content: userParts },
     ],
-    max_tokens: 1000,
+    max_tokens: 2000,
   });
 
   const usage = completion.usage;
