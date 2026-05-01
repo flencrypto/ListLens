@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import React, { useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
@@ -18,8 +18,13 @@ const MARKETPLACES = [
 export default function NewListingScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { lens: lensParam } = useLocalSearchParams<{ lens?: string }>();
   const liveLenses = LENS_REGISTRY.filter((l) => l.status === "live");
-  const [lens, setLens] = useState(liveLenses[0]?.id ?? "ShoeLens");
+  const initialLens =
+    lensParam && liveLenses.some((l) => l.id === lensParam)
+      ? lensParam
+      : (liveLenses[0]?.id ?? "ShoeLens");
+  const [lens, setLens] = useState(initialLens);
   const [marketplace, setMarketplace] = useState<string>("both");
 
   return (

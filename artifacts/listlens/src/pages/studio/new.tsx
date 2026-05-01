@@ -1,13 +1,24 @@
 
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens", desc: "Trainers, sneakers, shoes" },
   { id: "LPLens", icon: "🎵", name: "LPLens", desc: "Vinyl, CDs, cassettes" },
-] as const;
+  { id: "ClothingLens", icon: "👕", name: "ClothingLens", desc: "Clothing & vintage garments" },
+  { id: "CardLens", icon: "🎴", name: "CardLens", desc: "Trading cards & graded slabs" },
+  { id: "ToyLens", icon: "🧸", name: "ToyLens", desc: "Toys, figures & LEGO" },
+  { id: "WatchLens", icon: "⌚", name: "WatchLens", desc: "Watches & timepieces" },
+  { id: "MotorLens", icon: "🚗", name: "MotorLens", desc: "Vehicles & motor parts" },
+  { id: "MeasureLens", icon: "📐", name: "MeasureLens", desc: "Dimension estimation" },
+  { id: "TechLens", icon: "📱", name: "TechLens", desc: "Phones, laptops, cameras" },
+  { id: "BookLens", icon: "📚", name: "BookLens", desc: "Books & first editions" },
+  { id: "AntiquesLens", icon: "🏺", name: "AntiquesLens", desc: "Antiques & decorative objects" },
+  { id: "AutographLens", icon: "✍️", name: "AutographLens", desc: "Signed items & provenance" },
+];
 
 const MARKETPLACES = [
   { id: "both", label: "eBay + Vinted" },
@@ -17,9 +28,21 @@ const MARKETPLACES = [
 
 export default function NewStudioPage() {
   const [, setLocation] = useLocation();
-  const [selectedLens, setSelectedLens] = useState<string>("ShoeLens");
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const initialLens = params.get("lens") ?? "ShoeLens";
+  const [selectedLens, setSelectedLens] = useState<string>(
+    LENSES.some((l) => l.id === initialLens) ? initialLens : "ShoeLens"
+  );
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>("both");
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const lensParam = params.get("lens");
+    if (lensParam && LENSES.some((l) => l.id === lensParam)) {
+      setSelectedLens(lensParam);
+    }
+  }, [search]);
 
   async function handleStart() {
     setLoading(true);

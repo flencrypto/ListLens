@@ -1,30 +1,53 @@
 
-import { useState } from "react";
-import { useLocation } from "wouter";
+import { useState, useEffect } from "react";
+import { useLocation, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens" },
   { id: "LPLens", icon: "🎵", name: "LPLens" },
-] as const;
+  { id: "ClothingLens", icon: "👕", name: "ClothingLens" },
+  { id: "CardLens", icon: "🎴", name: "CardLens" },
+  { id: "ToyLens", icon: "🧸", name: "ToyLens" },
+  { id: "WatchLens", icon: "⌚", name: "WatchLens" },
+  { id: "MotorLens", icon: "🚗", name: "MotorLens" },
+  { id: "MeasureLens", icon: "📐", name: "MeasureLens" },
+  { id: "TechLens", icon: "📱", name: "TechLens" },
+  { id: "BookLens", icon: "📚", name: "BookLens" },
+  { id: "AntiquesLens", icon: "🏺", name: "AntiquesLens" },
+  { id: "AutographLens", icon: "✍️", name: "AutographLens" },
+];
 
 export default function NewGuardPage() {
   const [, setLocation] = useLocation();
+  const search = useSearch();
+  const params = new URLSearchParams(search);
+  const initialLens = params.get("lens") ?? "ShoeLens";
   const [tab, setTab] = useState<"url" | "screenshots">("url");
   const [url, setUrl] = useState("");
   const [screenshotUrls, setScreenshotUrls] = useState<string[]>([]);
   const [screenshotInput, setScreenshotInput] = useState("");
-  const [lens, setLens] = useState("ShoeLens");
+  const [lens, setLens] = useState(
+    LENSES.some((l) => l.id === initialLens) ? initialLens : "ShoeLens"
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const lensParam = params.get("lens");
+    if (lensParam && LENSES.some((l) => l.id === lensParam)) {
+      setLens(lensParam);
+    }
+  }, [search]);
 
   function handleAddScreenshot() {
     const trimmed = screenshotInput.trim();
     if (!trimmed) return;
     if (screenshotUrls.includes(trimmed)) {
       setScreenshotInput("");
-      return; // silently de-dupe
+      return;
     }
     if (screenshotUrls.length >= 6) {
       setError("Maximum 6 screenshots allowed.");
@@ -64,7 +87,6 @@ export default function NewGuardPage() {
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong. Please try again.");
     } finally {
-      // Keep the spinner during the navigation transition; otherwise always clear.
       if (!navigated) setLoading(false);
     }
   }
@@ -147,7 +169,7 @@ export default function NewGuardPage() {
         {/* Lens picker */}
         <div className="brand-card brand-card-violet p-5 mb-6">
           <h2 className="text-base font-semibold text-white mb-4">Choose Lens</h2>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-2">
             {LENSES.map((l) => (
               <button
                 key={l.id}
@@ -159,7 +181,7 @@ export default function NewGuardPage() {
                 }`}
               >
                 <div className="text-xl mb-1">{l.icon}</div>
-                <div className="font-medium text-sm text-white">{l.name}</div>
+                <div className="font-medium text-xs text-white leading-tight">{l.name}</div>
               </button>
             ))}
           </div>

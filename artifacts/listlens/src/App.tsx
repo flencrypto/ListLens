@@ -9,6 +9,10 @@ import BillingPage from "@/pages/billing";
 import HistoryPage from "@/pages/history";
 import LensesPage from "@/pages/lenses";
 import RecordLensPage from "@/pages/lenses/record";
+import TechLensPage from "@/pages/lenses/tech";
+import BookLensPage from "@/pages/lenses/book";
+import AntiquesLensPage from "@/pages/lenses/antiques";
+import AutographLensPage from "@/pages/lenses/autograph";
 import NewStudioPage from "@/pages/studio/new";
 import StudioItemPage from "@/pages/studio/detail";
 import NewGuardPage from "@/pages/guard/new";
@@ -31,6 +35,10 @@ function Router() {
       <Route path="/history" component={HistoryPage} />
       <Route path="/lenses" component={LensesPage} />
       <Route path="/lenses/record" component={RecordLensPage} />
+      <Route path="/lenses/tech" component={TechLensPage} />
+      <Route path="/lenses/book" component={BookLensPage} />
+      <Route path="/lenses/antiques" component={AntiquesLensPage} />
+      <Route path="/lenses/autograph" component={AutographLensPage} />
       <Route path="/studio/new" component={NewStudioPage} />
       <Route path="/studio/:id" component={StudioItemPage} />
       <Route path="/guard/new" component={NewGuardPage} />

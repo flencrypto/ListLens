@@ -67,6 +67,84 @@ const StudioOutputSchema = z.object({
   record_analysis: z.record(z.unknown()).optional(),
 });
 
+const TechLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  variant: z.string().nullable().optional(),
+  storage_or_spec: z.string().nullable().optional(),
+  model_number: z.string().nullable().optional(),
+  condition: z.string().nullable().optional(),
+  screen_damage: z.string().nullable().optional(),
+  body_damage: z.string().nullable().optional(),
+  ports_condition: z.string().nullable().optional(),
+  battery_health: z.string().nullable().optional(),
+  included_accessories: z.array(z.string()).optional(),
+  tested_or_untested: z.enum(["tested", "untested", "unknown"]).nullable().optional(),
+  fault_notes: z.string().nullable().optional(),
+  activation_lock_status: z.string().nullable().optional(),
+  network_lock_status: z.string().nullable().optional(),
+}).passthrough();
+
+const BookLensAttributesSchema = z.object({
+  title: z.string().nullable().optional(),
+  author: z.string().nullable().optional(),
+  publisher: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  edition: z.string().nullable().optional(),
+  isbn: z.string().nullable().optional(),
+  format: z.string().nullable().optional(),
+  dust_jacket_present: z.boolean().nullable().optional(),
+  dust_jacket_condition: z.string().nullable().optional(),
+  printing_statement: z.string().nullable().optional(),
+  spine_condition: z.string().nullable().optional(),
+  boards_condition: z.string().nullable().optional(),
+  pages_condition: z.string().nullable().optional(),
+  foxing: z.string().nullable().optional(),
+  annotations: z.string().nullable().optional(),
+  signatures: z.string().nullable().optional(),
+  completeness: z.string().nullable().optional(),
+}).passthrough();
+
+const AntiquesLensAttributesSchema = z.object({
+  object_type: z.string().nullable().optional(),
+  material: z.string().nullable().optional(),
+  era_or_style: z.string().nullable().optional(),
+  maker_marks: z.string().nullable().optional(),
+  dimensions: z.string().nullable().optional(),
+  chips_or_cracks_or_repairs: z.string().nullable().optional(),
+  patina: z.string().nullable().optional(),
+  missing_parts: z.string().nullable().optional(),
+  provenance: z.string().nullable().optional(),
+  estimated_price_range: z.string().nullable().optional(),
+}).passthrough();
+
+const AutographLensAttributesSchema = z.object({
+  signed_item_type: z.string().nullable().optional(),
+  claimed_signer: z.string().nullable().optional(),
+  signature_location: z.string().nullable().optional(),
+  ink_visibility: z.string().nullable().optional(),
+  certificate_or_provenance_present: z.boolean().nullable().optional(),
+  coa_issuer: z.string().nullable().optional(),
+  event_or_source_notes: z.string().nullable().optional(),
+  item_condition: z.string().nullable().optional(),
+}).passthrough();
+
+const LENS_ATTRIBUTE_SCHEMAS: Partial<Record<string, z.ZodTypeAny>> = {
+  TechLens: TechLensAttributesSchema,
+  BookLens: BookLensAttributesSchema,
+  AntiquesLens: AntiquesLensAttributesSchema,
+  AutographLens: AutographLensAttributesSchema,
+};
+
+function validateLensAttributes(lens: string, attributes: unknown): Record<string, unknown> {
+  const schema = LENS_ATTRIBUTE_SCHEMAS[lens];
+  if (!schema) return attributes as Record<string, unknown>;
+  const result = schema.safeParse(attributes);
+  if (result.success) return result.data as Record<string, unknown>;
+  logger.warn({ lens, issues: result.error.issues }, "Lens attribute validation had issues — using raw attributes");
+  return attributes as Record<string, unknown>;
+}
+
 const GuardRiskDimensionSchema = z.object({
   score: z.number().min(0).max(10),
   verdict: z.string(),
@@ -180,6 +258,30 @@ const LENS_META: Record<
     attributeHints:
       "make, model, year, part_name, part_number, oem_or_aftermarket, fitment_vehicles, condition_notes, mileage (if full vehicle), service_history_present",
   },
+  TechLens: {
+    label: "electronics / tech item",
+    category: "Computing, Tablets & Networking",
+    attributeHints:
+      "brand, model, variant, storage_or_spec, model_number, condition, screen_damage, body_damage, ports_condition, battery_health, included_accessories, tested_or_untested, fault_notes, activation_lock_status, network_lock_status",
+  },
+  BookLens: {
+    label: "book or collectable print",
+    category: "Books, Comics & Magazines",
+    attributeHints:
+      "title, author, publisher, year, edition, isbn, format (hardback/paperback/etc), dust_jacket_present, dust_jacket_condition, printing_statement, spine_condition, boards_condition, pages_condition, foxing, annotations, signatures, completeness",
+  },
+  AntiquesLens: {
+    label: "antique or vintage decorative object",
+    category: "Antiques > Decorative Objects",
+    attributeHints:
+      "object_type, material, era_or_style, maker_marks, dimensions, chips_or_cracks_or_repairs, patina, missing_parts, provenance, estimated_price_range",
+  },
+  AutographLens: {
+    label: "signed item or autograph memorabilia",
+    category: "Collectables > Autographs",
+    attributeHints:
+      "signed_item_type, claimed_signer, signature_location, ink_visibility, certificate_or_provenance_present, coa_issuer, event_or_source_notes, item_condition",
+  },
 };
 
 function getLensMeta(
@@ -194,8 +296,14 @@ function getLensMeta(
   );
 }
 
+const LENS_TRUST_RULES: Partial<Record<string, string>> = {
+  AntiquesLens: `CRITICAL TRUST RULES for AntiquesLens: Never make definitive attribution. Always use cautious language: "appears consistent with", "possibly", "style of", "in the manner of". If you cannot confirm a maker mark, say so explicitly. Flag any reproduction risk in warnings.`,
+  AutographLens: `CRITICAL TRUST RULES for AutographLens: You do NOT authenticate signatures. Your role is to produce a provenance and evidence risk report only. Never state a signature is genuine. In listing_description, describe the item and the provenance evidence present (COA, event photos, source). If the item is high-value, always include a warning recommending third-party authentication (PSA/DNA, Beckett, JSA, AFTAL). identity.brand should be the claimed signer; identity.model should be the signed item type.`,
+};
+
 function buildLensSystemPrompt(lens: string): string {
   const meta = getLensMeta(lens);
+  const trustRules = LENS_TRUST_RULES[lens] ?? "";
   return `You are an expert resale analyst specialising in ${meta.label}s. Analyse the provided photos and return ONLY valid JSON conforming exactly to this schema (no markdown, no code fences):
 {
   "mode": "studio",
@@ -211,7 +319,7 @@ function buildLensSystemPrompt(lens: string): string {
   },
   "warnings": [ ...any caveats about authenticity, condition or pricing confidence ]
 }
-Base prices on current UK resale market values. Be specific — name the exact model, colourway, edition or pressing.`;
+Base prices on current UK resale market values. Be specific — name the exact model, colourway, edition or pressing.${trustRules ? `\n\n${trustRules}` : ""}`;
 }
 
 const GPT4O_INPUT_COST_PER_TOKEN = 2.5 / 1_000_000;
@@ -232,6 +340,13 @@ function estimateCostUsd(
   return (promptTokens + completionTokens) * GROK_VISION_COST_PER_TOKEN;
 }
 
+const NEW_LENSES_USING_GROK_VISION = new Set([
+  "TechLens",
+  "BookLens",
+  "AntiquesLens",
+  "AutographLens",
+]);
+
 async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
@@ -243,13 +358,13 @@ async function runStudioAnalysis(
     return StudioOutputSchema.parse(result);
   }
 
-  const openai = getOpenAIClient();
   const { label: lensLabel } = getLensMeta(lens);
-
   const systemPrompt = buildLensSystemPrompt(lens);
+  const useGrokVision = NEW_LENSES_USING_GROK_VISION.has(lens);
+  const client = useGrokVision ? getXaiClient() : getOpenAIClient();
 
   const userContent: Parameters<
-    typeof openai.chat.completions.create
+    typeof client.chat.completions.create
   >[0]["messages"][0]["content"] = [
     {
       type: "text",
@@ -260,8 +375,8 @@ async function runStudioAnalysis(
     ...imageContent(photoUrls),
   ];
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const completion = await client.chat.completions.create({
+    model: useGrokVision ? "grok-2-vision-latest" : "gpt-4o",
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -275,6 +390,7 @@ async function runStudioAnalysis(
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as unknown;
   const validated = StudioOutputSchema.parse(parsed);
+  validated.attributes = validateLensAttributes(lens, validated.attributes);
   return validated;
 }
 
@@ -327,6 +443,40 @@ function buildGuardSystemPrompt(lens: string): string {
 - Centering: front-to-back and left-to-right ratios
 - Edges and corners: cutting precision, no whitening or chips on vintage cards
 - Black light test evidence: real cards fluoresce differently from reprints`,
+    TechLens: `Risk markers to check for electronics listings:
+- Model identification: does stated model, variant and spec match visible markings, IMEI sticker, or serial number?
+- Activation lock / network lock: no powered-on proof or missing unlock evidence is HIGH risk for phones
+- Missing powered-on photo: absence of a screen-on photo showing the device working is a major red flag
+- Condition vs photos: is stated condition grade consistent with visible wear on screen, body, ports and camera module?
+- Battery health: no screenshot of battery health stat for high-value laptops/phones is a gap
+- Accessories: cables, chargers, boxes and accessories must match the claimed set
+- Stolen/blacklisted risk: no IMEI check evidence on phone listings is a gap; flag as a question
+- Spec mismatch: storage, RAM, or colour that doesn't match the claimed model variant`,
+    BookLens: `Risk markers to check for book and collectable print listings:
+- First edition claim: must be evidenced by the copyright page printing statement (e.g. "First published…", "First edition"); absence is HIGH risk for premium pricing
+- Printing statement not shown: copyright page photo is essential for first edition / early printing claims — flag if missing
+- ISBN: does stated ISBN match the claimed edition and year?
+- Dust jacket: presence/condition greatly affects value — missing or undisclosed jacket damage is a red flag
+- Signature / provenance claim: if signature is the main value driver, route to AutographLens logic — treat as uncertain without COA
+- Condition vs description: spine cracks, foxing, tanning, annotations must match stated condition
+- Completeness: maps, plates, inserts missing in illustrated editions is a material defect`,
+    AntiquesLens: `Risk markers to check for antiques and vintage decorative object listings. Use cautious language: "appears consistent with", "possibly", "style of" — never make definitive attribution:
+- Maker marks / hallmarks: are marks photographed and legible? Absence of a close-up mark photo is a gap
+- Era consistency: do form, glaze, material, construction technique and patina appear consistent with the claimed era?
+- Reproduction / later copy risk: "style of" or "after" pieces are not originals — flag obvious reproduction indicators
+- Repairs and restoration: chips, cracks, filled repairs, re-gilding must be disclosed; UV light evidence of restoration is a gap without photos
+- Provenance: estate sale / auction house provenance adds confidence; private seller with no paper trail is a gap
+- Condition vs photos: chips, cracks, crazing or missing parts must match stated condition
+- Price vs market: anomalously cheap claimed rare items (e.g. Meissen, Clarice Cliff) are almost always reproductions`,
+    AutographLens: `Risk markers for signed item and autograph provenance checks. IMPORTANT: never authenticate signatures — only produce an evidence and provenance risk report. Always recommend third-party authentication (e.g. PSA, Beckett, JSA) for high-value items:
+- COA issuer credibility: generic or unknown COA issuers (self-issued, unknown companies) are HIGH risk; recognised issuers (PSA/DNA, Beckett, JSA, AFTAL) add confidence
+- COA evidence: is the COA shown in full with matching item description, date and hologram?
+- Provenance chain: event photos, purchase receipts, or verifiable source chain add confidence; absence is a gap
+- Signature consistency: does the visible signature appear consistent with known reference examples for the claimed signer? Note this is NOT authentication
+- Ink visibility and pen type: faded, smudged or inconsistent ink is a risk flag
+- Item condition: framing, mounting or storage affecting long-term preservation
+- Price vs market: anomalously cheap "signed" items from high-value signers are very high risk
+- Photo evidence: in-person signing photo or video is the strongest provenance signal`,
   };
 
   const authMarkers = lensSpecificAuthMarkers[lens] ?? `Check key authenticity markers relevant to ${lensLabel}s including branding consistency, materials, construction quality, and condition vs description accuracy.`;
@@ -395,12 +545,13 @@ async function runGuardAnalysis(
   url?: string,
   screenshotUrls?: string[],
 ): Promise<z.infer<typeof GuardOutputSchema>> {
-  const openai = getOpenAIClient();
+  const useGrokVision = NEW_LENSES_USING_GROK_VISION.has(lens);
+  const client = useGrokVision ? getXaiClient() : getOpenAIClient();
 
   const systemPrompt = buildGuardSystemPrompt(lens);
 
   const userParts: Parameters<
-    typeof openai.chat.completions.create
+    typeof client.chat.completions.create
   >[0]["messages"][0]["content"] = [
     {
       type: "text",
@@ -411,8 +562,8 @@ async function runGuardAnalysis(
     ...imageContent(screenshotUrls ?? []),
   ];
 
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o",
+  const completion = await client.chat.completions.create({
+    model: useGrokVision ? "grok-2-vision-latest" : "gpt-4o",
     response_format: { type: "json_object" },
     messages: [
       { role: "system", content: systemPrompt },
@@ -1126,6 +1277,46 @@ const LENS_REGISTRY_META = [
     description:
       "Vehicles, parts and campers. Image + dimension-based fitment checks.",
     status: "live",
+  },
+  {
+    id: "TechLens",
+    name: "TechLens",
+    icon: "📱",
+    category: "Electronics",
+    description:
+      "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
+    status: "live",
+    href: "/lenses/tech",
+  },
+  {
+    id: "BookLens",
+    name: "BookLens",
+    icon: "📚",
+    category: "Books",
+    description:
+      "Books, first editions and collectable print. ISBN, edition and condition.",
+    status: "live",
+    href: "/lenses/book",
+  },
+  {
+    id: "AntiquesLens",
+    name: "AntiquesLens",
+    icon: "🏺",
+    category: "Antiques & Vintage",
+    description:
+      "Antiques and decorative objects. Maker marks, era and reproduction risk.",
+    status: "live",
+    href: "/lenses/antiques",
+  },
+  {
+    id: "AutographLens",
+    name: "AutographLens",
+    icon: "✍️",
+    category: "Autographs",
+    description:
+      "Signed items and provenance. Evidence-led — never authenticates signatures.",
+    status: "live",
+    href: "/lenses/autograph",
   },
 ] as const;
 

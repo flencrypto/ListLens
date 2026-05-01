@@ -125,3 +125,77 @@ export type GuardRiskDimension = z.infer<typeof RiskDimensionSchema>;
 export type RecordReleaseIdentification = z.infer<typeof RecordReleaseIdentificationSchema>;
 export type RecordReleaseMatch = z.infer<typeof RecordReleaseMatchSchema>;
 export type DiscogsEnrichment = z.infer<typeof DiscogsEnrichmentSchema>;
+
+export const TechLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  variant: z.string().nullable().optional(),
+  storage_or_spec: z.string().nullable().optional(),
+  model_number: z.string().nullable().optional(),
+  condition: z.string().nullable().optional(),
+  screen_damage: z.string().nullable().optional(),
+  body_damage: z.string().nullable().optional(),
+  ports_condition: z.string().nullable().optional(),
+  battery_health: z.string().nullable().optional(),
+  included_accessories: z.array(z.string()).optional(),
+  tested_or_untested: z.enum(["tested", "untested", "unknown"]).nullable().optional(),
+  fault_notes: z.string().nullable().optional(),
+  activation_lock_status: z.string().nullable().optional(),
+  network_lock_status: z.string().nullable().optional(),
+}).passthrough();
+
+export const BookLensAttributesSchema = z.object({
+  title: z.string().nullable().optional(),
+  author: z.string().nullable().optional(),
+  publisher: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  edition: z.string().nullable().optional(),
+  isbn: z.string().nullable().optional(),
+  format: z.string().nullable().optional(),
+  dust_jacket_present: z.boolean().nullable().optional(),
+  dust_jacket_condition: z.string().nullable().optional(),
+  printing_statement: z.string().nullable().optional(),
+  spine_condition: z.string().nullable().optional(),
+  boards_condition: z.string().nullable().optional(),
+  pages_condition: z.string().nullable().optional(),
+  foxing: z.string().nullable().optional(),
+  annotations: z.string().nullable().optional(),
+  signatures: z.string().nullable().optional(),
+  completeness: z.string().nullable().optional(),
+}).passthrough();
+
+export const AntiquesLensAttributesSchema = z.object({
+  object_type: z.string().nullable().optional(),
+  material: z.string().nullable().optional(),
+  era_or_style: z.string().nullable().optional(),
+  maker_marks: z.string().nullable().optional(),
+  dimensions: z.string().nullable().optional(),
+  chips_or_cracks_or_repairs: z.string().nullable().optional(),
+  patina: z.string().nullable().optional(),
+  missing_parts: z.string().nullable().optional(),
+  provenance: z.string().nullable().optional(),
+  estimated_price_range: z.string().nullable().optional(),
+}).passthrough();
+
+export const AutographLensAttributesSchema = z.object({
+  signed_item_type: z.string().nullable().optional(),
+  claimed_signer: z.string().nullable().optional(),
+  signature_location: z.string().nullable().optional(),
+  ink_visibility: z.string().nullable().optional(),
+  certificate_or_provenance_present: z.boolean().nullable().optional(),
+  coa_issuer: z.string().nullable().optional(),
+  event_or_source_notes: z.string().nullable().optional(),
+  item_condition: z.string().nullable().optional(),
+}).passthrough();
+
+export const LENS_ATTRIBUTE_SCHEMAS: Partial<Record<string, z.ZodTypeAny>> = {
+  TechLens: TechLensAttributesSchema,
+  BookLens: BookLensAttributesSchema,
+  AntiquesLens: AntiquesLensAttributesSchema,
+  AutographLens: AutographLensAttributesSchema,
+};
+
+export type TechLensAttributes = z.infer<typeof TechLensAttributesSchema>;
+export type BookLensAttributes = z.infer<typeof BookLensAttributesSchema>;
+export type AntiquesLensAttributes = z.infer<typeof AntiquesLensAttributesSchema>;
+export type AutographLensAttributes = z.infer<typeof AutographLensAttributesSchema>;

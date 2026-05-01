@@ -112,7 +112,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Electronics",
     description: "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
     icon: "📱",
-    status: "planned",
+    status: "live",
+    href: "/lenses/tech",
   },
   {
     id: "BookLens",
@@ -120,7 +121,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Books",
     description: "Books, first editions and collectable print. ISBN, edition and condition.",
     icon: "📚",
-    status: "planned",
+    status: "live",
+    href: "/lenses/book",
   },
   {
     id: "AntiquesLens",
@@ -128,7 +130,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Antiques & Vintage",
     description: "Antiques and decorative objects. Maker marks, era and reproduction risk.",
     icon: "🏺",
-    status: "planned",
+    status: "live",
+    href: "/lenses/antiques",
   },
   {
     id: "AutographLens",
@@ -136,6 +139,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Autographs",
     description: "Signed items and provenance. Evidence-led — never authenticates signatures.",
     icon: "✍️",
-    status: "planned",
+    status: "live",
+    href: "/lenses/autograph",
   },
 ];

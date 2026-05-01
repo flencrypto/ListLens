@@ -103,7 +103,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
     icon: "📱",
-    status: "planned",
+    status: "live",
   },
   {
     id: "BookLens",
@@ -112,7 +112,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Books, first editions and collectable print. ISBN, edition and condition.",
     icon: "📚",
-    status: "planned",
+    status: "live",
   },
   {
     id: "AntiquesLens",
@@ -121,7 +121,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Antiques and decorative objects. Maker marks, era and reproduction risk.",
     icon: "🏺",
-    status: "planned",
+    status: "live",
   },
   {
     id: "AutographLens",
@@ -130,6 +130,6 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Signed items and provenance. Evidence-led — never authenticates signatures.",
     icon: "✍️",
-    status: "planned",
+    status: "live",
   },
 ];

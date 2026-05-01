@@ -116,6 +116,58 @@ const LENS_DETAILS: Record<string, { focus: string[]; tips: string[] }> = {
       "Photograph any engraved or stamped numbers clearly — avoid shadows.",
     ],
   },
+  TechLens: {
+    focus: [
+      "IMEI/serial sticker or About screen showing model and storage",
+      "Screen powered on — showing the home screen or settings",
+      "All four sides of the device, front, back and ports",
+      "Battery health screenshot (Settings > Battery) for phones and laptops",
+      "Any accessories, charger, box and original packaging",
+    ],
+    tips: [
+      "Capture the 'About' page in settings — it shows model, storage and serial clearly.",
+      "For phones, show the IMEI on screen (dial *#06#) and confirm network unlock status.",
+    ],
+  },
+  BookLens: {
+    focus: [
+      "Title page and copyright page — showing printing statement and date",
+      "Spine and all four edges of the book block",
+      "Dust jacket front, back and spine if present",
+      "Any signatures, dedications or bookplates inside",
+      "ISBN barcode or back cover",
+    ],
+    tips: [
+      "The copyright page is essential for first edition claims — always include it.",
+      "Photograph in natural daylight to show foxing, tanning or fading accurately.",
+    ],
+  },
+  AntiquesLens: {
+    focus: [
+      "Maker's mark, hallmark or factory stamp — close-up, well lit",
+      "Multiple angles showing form, glaze and overall condition",
+      "Any chips, cracks, hairlines, repairs or restoration work",
+      "Base or underside showing foot rim, glaze and marks",
+      "Any provenance paperwork, labels or auction stickers",
+    ],
+    tips: [
+      "Angle the light to reveal hairlines — shine a torch at 45° across the surface.",
+      "Use a macro mode or lens for maker marks — they must be legible in the photo.",
+    ],
+  },
+  AutographLens: {
+    focus: [
+      "Signature itself — close-up, in focus, full visibility",
+      "COA (Certificate of Authenticity) front and back if present",
+      "The full signed item — photo, book, shirt, ball, etc.",
+      "Any provenance documents, receipts or event photos",
+      "Hologram or authentication sticker from the COA issuer",
+    ],
+    tips: [
+      "Photograph the COA issuer name and hologram clearly — buyers verify these independently.",
+      "Include any in-person signing photos if you have them — they are the strongest provenance signal.",
+    ],
+  },
 };
 
 export default function LensDetailScreen() {
@@ -218,7 +270,7 @@ export default function LensDetailScreen() {
         <BrandButton
           label={`Use ${lens.name} in Studio`}
           size="lg"
-          onPress={() => router.push("/studio/new")}
+          onPress={() => router.push({ pathname: "/studio/new", params: { lens: lens.id } })}
           iconLeft={<Feather name="camera" size={18} color="#040a14" />}
         />
       ) : null}
