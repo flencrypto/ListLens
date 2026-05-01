@@ -132,26 +132,31 @@ export default function RootLayout() {
 
   if (!ready) return null;
 
+  const inner = (
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <SubscriptionProvider>
+          <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
+            <KeyboardProvider>
+              <StatusBar style="light" />
+              <RootLayoutNav />
+            </KeyboardProvider>
+          </GestureHandlerRootView>
+        </SubscriptionProvider>
+      </AuthProvider>
+    </QueryClientProvider>
+  );
+
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        <PostHogProvider
-          apiKey={POSTHOG_API_KEY}
-          options={{ host: POSTHOG_HOST, disabled: !POSTHOG_API_KEY }}
-        >
-          <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-              <SubscriptionProvider>
-                <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
-                  <KeyboardProvider>
-                    <StatusBar style="light" />
-                    <RootLayoutNav />
-                  </KeyboardProvider>
-                </GestureHandlerRootView>
-              </SubscriptionProvider>
-            </AuthProvider>
-          </QueryClientProvider>
-        </PostHogProvider>
+        {POSTHOG_API_KEY ? (
+          <PostHogProvider apiKey={POSTHOG_API_KEY} options={{ host: POSTHOG_HOST }}>
+            {inner}
+          </PostHogProvider>
+        ) : (
+          inner
+        )}
       </ErrorBoundary>
     </SafeAreaProvider>
   );
