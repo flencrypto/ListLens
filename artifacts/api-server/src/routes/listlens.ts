@@ -7,6 +7,7 @@ import type { DiscogsRelease } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { captureServerEvent } from "../lib/posthog";
+import { runRecordLensAnalysis } from "../lib/record-lens-analysis";
 
 const router: IRouter = Router();
 
@@ -64,6 +65,7 @@ const StudioOutputSchema = z.object({
     vinted: z.record(z.unknown()),
   }),
   warnings: z.array(z.string()),
+  record_analysis: z.record(z.unknown()).optional(),
 });
 
 const GuardOutputSchema = z.object({
@@ -200,6 +202,12 @@ async function runStudioAnalysis(
   photoUrls: string[],
   hint?: string,
 ): Promise<z.infer<typeof StudioOutputSchema>> {
+  // RecordLens uses its own dedicated 5-step pipeline
+  if (lens === "RecordLens") {
+    const result = await runRecordLensAnalysis(photoUrls, hint);
+    return StudioOutputSchema.parse(result);
+  }
+
   const openai = getOpenAIClient();
   const { label: lensLabel } = getLensMeta(lens);
 

@@ -1,0 +1,45 @@
+ AI analysis pipeline, in the order it runs:
+
+Step 1 — Photo upload
+You upload up to 10 photos of the record (front cover, back, labels, runout groove). Optionally:
+
+Auto image-type detection — a vision call classifies each photo (front cover / label / runout etc.)
+imgBB upload — if your imgBB key is set, photos are hosted for eBay listings
+Step 2 — Parallel AI analysis (on "Analyse" click)
+Two things run simultaneously:
+
+A) Batch vision extraction (image-analysis-ai.ts)
+Sends all photos to a vision model and extracts:
+
+Catalog numbers, matrix/runout numbers, label names, barcodes, and any readable text
+B) Condition grading (condition-grading-ai.ts)
+A separate vision call grades the physical condition — it identifies defects, assigns Media and Sleeve grades (VG+, NM, etc.) and generates seller-facing grading notes
+
+Step 3 — Pressing identification (two-path system)
+Fast path (Discogs lookup) — tried first:
+
+Takes the extracted catalog numbers / barcodes and queries Discogs directly
+If a confident match is found, it pulls pressing details + a market valuation
+Fallback (LLM identification):
+
+If Discogs returns nothing useful, a large specialist prompt is sent to the LLM with all extracted text, matrix numbers, and label info
+The model identifies the specific pressing, country of origin, year, and label
+Step 4 — Listing content generation
+Using the identified pressing + condition:
+
+SEO keywords — 8–12 keywords generated for eBay optimisation
+Listing copy — a structured title, subtitle, description, band context, tracklist, and pressing highlights
+Step 5 — Price suggestion
+If Discogs returned a valuation: that price is adjusted using a condition multiplier (NM = full price, VG+ = ~75%, etc.)
+Otherwise: a rules-based price estimate is used as the fallback
+Grok's role (newly added)
+Grok is separate from the above pipeline — it's a post-identification enrichment step triggered manually from the item's edit form. It looks up:
+
+UK chart peak position, total studio albums by the artist, whether it's a rare pressing, rarity tier, and 3–5 historical anecdotes
+Vision model routing
+The vision calls try credentials in this order:
+
+Your xAI (Grok) key → api.x.ai/v1
+Your DeepSeek key → api.deepseek.com/v1
+Fallback → the server's built-in Spark/OpenAI model (text-only; images are described rather than seen)
+So if you have your xAI key set in Settings, all vision analysis — image classification, extraction, and condition grading — runs through Grok Vision as the primary model.
