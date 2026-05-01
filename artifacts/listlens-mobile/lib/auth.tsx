@@ -19,6 +19,8 @@ interface AuthContextValue {
   user: User | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  loginError: string | null;
+  dbDegraded: boolean;
   login: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -27,6 +29,8 @@ const AuthContext = createContext<AuthContextValue>({
   user: null,
   isLoading: true,
   isAuthenticated: false,
+  loginError: null,
+  dbDegraded: false,
   login: async () => {},
   logout: async () => {},
 });
@@ -45,6 +49,8 @@ function getClientId(): string {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [loginError, setLoginError] = useState<string | null>(null);
+  const [dbDegraded, setDbDegraded] = useState(false);
 
   const discovery = AuthSession.useAutoDiscovery(ISSUER_URL);
 
@@ -65,6 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const token = await SecureStore.getItemAsync(AUTH_TOKEN_KEY);
       if (!token) {
         setUser(null);
+        setDbDegraded(false);
         setIsLoading(false);
         return;
       }
@@ -77,12 +84,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (data.user) {
         setUser(data.user);
+        setDbDegraded(!!data.dbDegraded);
       } else {
         await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
         setUser(null);
+        setDbDegraded(false);
       }
     } catch {
       setUser(null);
+      setDbDegraded(false);
     } finally {
       setIsLoading(false);
     }
@@ -102,6 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const apiBase = getApiBaseUrl();
         if (!apiBase) {
           console.error("API base URL is not configured.");
+          setLoginError("App is not configured correctly. Please contact support.");
+          setIsLoading(false);
           return;
         }
 
@@ -113,12 +125,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             code_verifier: request.codeVerifier,
             redirect_uri: redirectUri,
             state,
-            nonce: request.nonce,
+            nonce: (request as unknown as { nonce?: string }).nonce,
           }),
         });
 
         if (!exchangeRes.ok) {
-          console.error("Token exchange failed:", exchangeRes.status);
+          const status = exchangeRes.status;
+          console.error("Token exchange failed:", status);
+          if (status >= 500) {
+            setLoginError("The server encountered a problem. Please try again in a moment.");
+          } else {
+            setLoginError("Sign-in failed. Please try again.");
+          }
           setIsLoading(false);
           return;
         }
@@ -126,11 +144,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const data = await exchangeRes.json();
         if (data.token) {
           await SecureStore.setItemAsync(AUTH_TOKEN_KEY, data.token);
+          setLoginError(null);
           setIsLoading(true);
           await fetchUser();
+        } else {
+          setLoginError("Sign-in failed. Please try again.");
+          setIsLoading(false);
         }
       } catch (err) {
         console.error("Token exchange error:", err);
+        setLoginError("Could not reach the server. Please check your connection and try again.");
         setIsLoading(false);
       }
     })();
@@ -138,9 +161,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async () => {
     try {
+      setLoginError(null);
       await promptAsync();
     } catch (err) {
       console.error("Login error:", err);
+      setLoginError("Sign-in could not start. Please try again.");
     }
   }, [promptAsync]);
 
@@ -158,6 +183,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       await SecureStore.deleteItemAsync(AUTH_TOKEN_KEY);
       setUser(null);
+      setLoginError(null);
+      setDbDegraded(false);
     }
   }, []);
 
@@ -167,6 +194,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         isLoading,
         isAuthenticated: !!user,
+        loginError,
+        dbDegraded,
         login,
         logout,
       }}

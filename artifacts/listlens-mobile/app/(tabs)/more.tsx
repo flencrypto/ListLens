@@ -22,7 +22,7 @@ interface MoreLink {
 export default function MoreScreen() {
   const colors = useColors();
   const { isSubscribed } = useSubscription();
-  const { isAuthenticated, isLoading: authLoading, user, login, logout } = useAuth();
+  const { isAuthenticated, isLoading: authLoading, user, login, logout, loginError, dbDegraded } = useAuth();
 
   const LINKS: MoreLink[] = [
     {
@@ -108,7 +108,7 @@ export default function MoreScreen() {
           style={({ pressed }) => [
             styles.row,
             {
-              borderColor: colors.brandStroke,
+              borderColor: loginError ? "rgba(239,68,68,0.5)" : colors.brandStroke,
               backgroundColor: colors.cardSurfaceSoft,
               opacity: pressed || authLoading ? 0.75 : 1,
               borderRadius: colors.radius,
@@ -130,7 +130,7 @@ export default function MoreScreen() {
               <Feather
                 name={isAuthenticated ? "log-out" : "log-in"}
                 size={16}
-                color={colors.brandCyan}
+                color={loginError ? "#ef4444" : colors.brandCyan}
               />
             )}
           </View>
@@ -138,10 +138,14 @@ export default function MoreScreen() {
             <Text style={[styles.rowTitle, { color: colors.foreground }]}>
               {isAuthenticated ? "Log out" : "Log in"}
             </Text>
-            <Text style={[styles.rowDesc, { color: colors.zinc500 }]}>
-              {isAuthenticated && user
-                ? user.email ?? user.firstName ?? "Signed in"
-                : "Sign in to sync your data"}
+            <Text style={[styles.rowDesc, { color: loginError ? "#ef4444" : dbDegraded ? "#f59e0b" : colors.zinc500 }]}>
+              {loginError
+                ? loginError
+                : dbDegraded
+                  ? "Account data temporarily unavailable — some limits may not be accurate"
+                  : isAuthenticated && user
+                    ? user.email ?? user.firstName ?? "Signed in"
+                    : "Sign in to sync your data"}
             </Text>
           </View>
         </Pressable>

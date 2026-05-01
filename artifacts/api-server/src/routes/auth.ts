@@ -91,6 +91,7 @@ router.get("/auth/user", async (req: Request, res: Response) => {
 
   let credits = 0;
   let planTier = "free";
+  let dbDegraded = false;
   try {
     const [row] = await db
       .select({ credits: usersTable.credits, planTier: usersTable.planTier })
@@ -99,13 +100,17 @@ router.get("/auth/user", async (req: Request, res: Response) => {
     if (row) {
       credits = row.credits ?? 0;
       planTier = row.planTier ?? "free";
+    } else {
+      req.log.warn({ userId: req.user!.id }, "User row not found in DB — returning defaults");
+      dbDegraded = true;
     }
-  } catch {
-    // DB unavailable in dev — return defaults
+  } catch (err) {
+    req.log.warn({ err }, "DB unavailable when fetching credits/planTier — returning defaults");
+    dbDegraded = true;
   }
 
   const base = GetCurrentAuthUserResponse.parse({ user: req.user });
-  res.json({ ...base, credits, planTier });
+  res.json({ ...base, credits, planTier, dbDegraded });
 });
 
 router.get("/login", async (req: Request, res: Response) => {
@@ -267,25 +272,22 @@ router.post(
       try {
         dbUser = await upsertUser(claims as unknown as Record<string, unknown>);
       } catch (err) {
-        req.log.warn({ err }, "upsertUser failed during mobile token exchange — proceeding without DB record");
+        req.log.warn({ err }, "upsertUser failed during mobile token exchange — DB unavailable, returning 503");
+        res.status(503).json({
+          error: "DB_UNAVAILABLE",
+          message: "The service is temporarily unavailable. Please try again in a moment.",
+        });
+        return;
       }
-
-      const userFromClaims = {
-        id: claims.sub as string,
-        email: (claims.email as string) || null,
-        firstName: (claims.first_name as string) || null,
-        lastName: (claims.last_name as string) || null,
-        profileImageUrl: ((claims.profile_image_url || claims.picture) as string) || null,
-      };
 
       const now = Math.floor(Date.now() / 1000);
       const sessionData: SessionData = {
         user: {
-          id: dbUser?.id ?? userFromClaims.id,
-          email: dbUser?.email ?? userFromClaims.email,
-          firstName: dbUser?.firstName ?? userFromClaims.firstName,
-          lastName: dbUser?.lastName ?? userFromClaims.lastName,
-          profileImageUrl: dbUser?.profileImageUrl ?? userFromClaims.profileImageUrl,
+          id: dbUser.id,
+          email: dbUser.email,
+          firstName: dbUser.firstName,
+          lastName: dbUser.lastName,
+          profileImageUrl: dbUser.profileImageUrl,
         },
         access_token: tokens.access_token,
         refresh_token: tokens.refresh_token,
