@@ -23,6 +23,34 @@ import { captureEvent } from "@/lib/posthog";
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
 
+const LENS_PHOTO_INSTRUCTIONS: Record<string, string> = {
+  ShoeLens:
+    "Lateral (outer) side, medial (inner) side, toe box, heel, sole/outsole, size tag on tongue, and any scuffs or sole wear.",
+  RecordLens:
+    "Front sleeve, back sleeve, label Side A, label Side B, matrix/runout etching Side A, matrix/runout etching Side B, and any sleeve damage or vinyl marks.",
+  LPLens:
+    "Front sleeve, back sleeve, label Side A, label Side B, matrix/runout etching, inner sleeve, and any ring wear or seam splits.",
+  ClothingLens:
+    "Front, back, brand tag, care/wash label, close-up of any pilling, fading, or staining, collar, cuffs, and zip or buttons.",
+  CardLens:
+    "Card face, card reverse, all four corners (close-up), edges, surface under raking light, and hologram or stamp if present.",
+  ToyLens:
+    "Front, back, all loose accessories or parts, any play wear or paint loss, batch/serial number stamp, and packaging or box if present.",
+  WatchLens:
+    "Dial face (straight on), case side at 3 o'clock, crown, caseback (engravings visible), bracelet or strap, clasp, running proof video or seconds-hand movement, and any scratches or blemishes.",
+  MeasureLens:
+    "Item alongside your chosen reference object from front, side, and top. Keep the full reference object visible in every shot.",
+  MotorLens:
+    "Part number or casting stamp, front face, rear face, mounting points, connector or port (if applicable), and any corrosion, cracks, or damage.",
+};
+
+function getLensCaptureInstructions(lens: string): string {
+  return (
+    LENS_PHOTO_INSTRUCTIONS[lens] ??
+    "Front, back, and close-ups of any identifying marks, labels, or wear."
+  );
+}
+
 const MEASURE_REFERENCE_OBJECTS = [
   { id: "credit_card", label: "Credit card", hint: "credit card (85.6×54mm)" },
   { id: "a4_paper", label: "A4 paper", hint: "A4 paper sheet (297×210mm)" },
@@ -203,8 +231,8 @@ export default function CaptureScreen() {
           Capture Photos
         </Text>
         <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
-          {lens} · Add {MIN_PHOTOS}–{MAX_PHOTOS} angles. Front, back, label,
-          sole and any wear.
+          {lens} · Add {MIN_PHOTOS}–{MAX_PHOTOS} photos.{" "}
+          {getLensCaptureInstructions(String(lens))}
         </Text>
         <View
           style={{
