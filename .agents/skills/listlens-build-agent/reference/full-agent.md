@@ -1,13 +1,14 @@
 ---
+
 name: listlens-github-build-agent
 description: Full-stack GitHub build agent for the ListLens platform. Use when scaffolding, reviewing, refactoring, or extending the ListLens codebase across Next.js, React, TypeScript, AI agents, marketplace connectors, RecordLens, Studio, Guard, MeasureLens, browser extension, workers, billing, database architecture, and performance optimization.
 license: MIT
 metadata:
-  author: Ben Flowers / ListLens
-  version: "1.1.0"
-  project: "ListLens"
-  stack: "Next.js, React, TypeScript, Tailwind, shadcn/ui, Prisma, Postgres, Stripe, OpenAI, BullMQ, Redis, WXT/Plasmo"
----
+author: Ben Flowers / ListLens
+version: "1.1.0"
+project: "ListLens"
+stack: "Next.js, React, TypeScript, Tailwind, shadcn/ui, Prisma, Postgres, Stripe, OpenAI, BullMQ, Redis, WXT/Plasmo"
+---------------------------------------------------------------------------------------------------------------------
 
 # ListLens GitHub Build Agent
 
@@ -61,25 +62,25 @@ Build a layered intelligence system with typed data contracts, specialist agents
 
 Use this agent when working on:
 
-- ListLens GitHub repo setup
-- Next.js app architecture
-- React component implementation
-- React/Next.js performance reviews
-- Studio listing workflow
-- Guard risk-check workflow
-- RecordLens issue identification
-- Specialist Lens agents
-- Marketplace connectors
-- Browser extension app
-- AI orchestration
-- Browser Web Workers and server queue workers
-- Prisma/Postgres data model
-- Stripe billing and credits
-- Upload/image-processing workflow
-- MeasureLens / MotorMeasureLens CV flow
-- API contracts
-- Product-grade UI and navigation
-- Security, privacy and compliance-sensitive flows
+* ListLens GitHub repo setup
+* Next.js app architecture
+* React component implementation
+* React/Next.js performance reviews
+* Studio listing workflow
+* Guard risk-check workflow
+* RecordLens issue identification
+* Specialist Lens agents
+* Marketplace connectors
+* Browser extension app
+* AI orchestration
+* Browser Web Workers and server queue workers
+* Prisma/Postgres data model
+* Stripe billing and credits
+* Upload/image-processing workflow
+* MeasureLens / MotorMeasureLens CV flow
+* API contracts
+* Product-grade UI and navigation
+* Security, privacy and compliance-sensitive flows
 
 ---
 
@@ -104,13 +105,13 @@ RecordLens is the first POC Lens.
 
 RecordLens must support:
 
-- Record issue/release identification
-- Single record-label photo identification
-- Ranked possible versions with percentage likelihood
-- Matrix/runout clarification flow
-- Seller listing generation
-- Buyer misdescription/risk checks
-- Safe wording around pressings, rarity, grading and authenticity
+* Record issue/release identification
+* Single record-label photo identification
+* Ranked possible versions with percentage likelihood
+* Matrix/runout clarification flow
+* Seller listing generation
+* Buyer misdescription/risk checks
+* Safe wording around pressings, rarity, grading and authenticity
 
 ### Priority 2 — Second Wave
 
@@ -149,48 +150,48 @@ Depop / Facebook / Gumtree browser assist
 
 Do not prioritise in the first POC:
 
-- Native mobile app
-- Full cross-listing automation
-- Inventory sync
-- Auto-delisting
-- Full direct Vinted API
-- Formal authentication certificates
-- Full MotorLens vehicle workflow
-- Full WatchLens authentication
-- Marketplace automation that could violate terms
-- Unsupported “fake/genuine” claims
+* Native mobile app
+* Full cross-listing automation
+* Inventory sync
+* Auto-delisting
+* Full direct Vinted API
+* Formal authentication certificates
+* Full MotorLens vehicle workflow
+* Full WatchLens authentication
+* Marketplace automation that could violate terms
+* Unsupported “fake/genuine” claims
 
 ---
 
 ## Recommended Stack
 
-| Layer | Standard |
-|---|---|
-| Frontend | Next.js 15, React, TypeScript |
-| Rendering | App Router, React Server Components where useful |
-| Styling | Tailwind CSS, CSS variables, shadcn/ui |
-| Motion | Framer Motion |
-| Forms | React Hook Form + Zod |
-| Client state | Zustand |
+| Layer               | Standard                                              |
+| ------------------- | ----------------------------------------------------- |
+| Frontend            | Next.js 15, React, TypeScript                         |
+| Rendering           | App Router, React Server Components where useful      |
+| Styling             | Tailwind CSS, CSS variables, shadcn/ui                |
+| Motion              | Framer Motion                                         |
+| Forms               | React Hook Form + Zod                                 |
+| Client state        | Zustand                                               |
 | Server/client cache | TanStack Query or SWR where client fetching is needed |
-| Backend POC | Next.js Route Handlers + Server Actions |
-| Backend later | NestJS or Fastify service layer |
-| Database | Postgres via Supabase or Neon |
-| ORM | Prisma |
-| Auth | Clerk or Supabase Auth |
-| Storage | Supabase Storage / S3 / Cloudflare R2 |
-| Queue | BullMQ + Redis / Upstash |
-| Cache | Redis / Upstash / LRU where suitable |
-| Payments | Stripe |
-| AI | OpenAI multimodal + structured outputs |
-| Embeddings | OpenAI embeddings + pgvector |
-| CV/Measurement | OpenCV, marker detection, perspective transform |
-| Analytics | PostHog |
-| Errors | Sentry |
-| Logs | Axiom / Better Stack |
-| Email | Resend |
-| Deploy | Vercel + Supabase/Neon + Upstash |
-| Extension | WXT or Plasmo, React, TypeScript |
+| Backend POC         | Next.js Route Handlers + Server Actions               |
+| Backend later       | NestJS or Fastify service layer                       |
+| Database            | Postgres via Supabase or Neon                         |
+| ORM                 | Prisma                                                |
+| Auth                | Clerk or Supabase Auth                                |
+| Storage             | Supabase Storage / S3 / Cloudflare R2                 |
+| Queue               | BullMQ + Redis / Upstash                              |
+| Cache               | Redis / Upstash / LRU where suitable                  |
+| Payments            | Stripe                                                |
+| AI                  | OpenAI multimodal + structured outputs                |
+| Embeddings          | OpenAI embeddings + pgvector                          |
+| CV/Measurement      | OpenCV, marker detection, perspective transform       |
+| Analytics           | PostHog                                               |
+| Errors              | Sentry                                                |
+| Logs                | Axiom / Better Stack                                  |
+| Email               | Resend                                                |
+| Deploy              | Vercel + Supabase/Neon + Upstash                      |
+| Extension           | WXT or Plasmo, React, TypeScript                      |
 
 ---
 
@@ -262,29 +263,29 @@ If the repo already exists, adapt to its structure instead of blindly replacing 
 
 ### Non-negotiable standards
 
-- Use TypeScript strict mode.
-- Avoid `any` unless there is a written reason.
-- Use Zod schemas for API input, API output, AI JSON and marketplace payloads.
-- Keep business logic out of React components.
-- Put domain logic in services/packages.
-- Long-running AI/CV/marketplace jobs must use workers/queues.
-- All user-facing errors must be safe, useful and non-technical.
-- All AI outputs must include confidence, warnings and unsupported-claim checks.
-- All marketplace publishing/export actions require human review.
-- Every important mutation must log an analytics event.
-- Every AI job must store prompt version, model, schema version, output, warnings, cost estimate and confidence.
-- Write tests for pricing logic, schema validation, measurement geometry, marketplace formatters and Stripe webhooks.
-- Respect `prefers-reduced-motion`.
-- Build accessible UI: labels, focus states, keyboard navigation, semantic HTML, contrast-safe colours.
+* Use TypeScript strict mode.
+* Avoid `any` unless there is a written reason.
+* Use Zod schemas for API input, API output, AI JSON and marketplace payloads.
+* Keep business logic out of React components.
+* Put domain logic in services/packages.
+* Long-running AI/CV/marketplace jobs must use workers/queues.
+* All user-facing errors must be safe, useful and non-technical.
+* All AI outputs must include confidence, warnings and unsupported-claim checks.
+* All marketplace publishing/export actions require human review.
+* Every important mutation must log an analytics event.
+* Every AI job must store prompt version, model, schema version, output, warnings, cost estimate and confidence.
+* Write tests for pricing logic, schema validation, measurement geometry, marketplace formatters and Stripe webhooks.
+* Respect `prefers-reduced-motion`.
+* Build accessible UI: labels, focus states, keyboard navigation, semantic HTML, contrast-safe colours.
 
 ### Do not do this
 
-- Do not hardcode one marketplace into the core product.
-- Do not build AI output as untyped strings only.
-- Do not publish listings automatically without user confirmation.
-- Do not claim formal authentication.
-- Do not say an item is definitely fake, genuine, first pressing, mint, rare, unlocked, fully working or compatible unless evidence and user confirmation support it.
-- Do not scrape or automate marketplaces in ways that create legal, account, or terms-of-service risk.
+* Do not hardcode one marketplace into the core product.
+* Do not build AI output as untyped strings only.
+* Do not publish listings automatically without user confirmation.
+* Do not claim formal authentication.
+* Do not say an item is definitely fake, genuine, first pressing, mint, rare, unlocked, fully working or compatible unless evidence and user confirmation support it.
+* Do not scrape or automate marketplaces in ways that create legal, account, or terms-of-service risk.
 
 ---
 
@@ -313,19 +314,19 @@ Login
 
 Studio must output:
 
-- Title
-- Description
-- Bullet points
-- Category
-- Item specifics
-- Condition notes
-- Visible flaws
-- Quick sale price
-- Recommended price
-- High price
-- Pricing confidence
-- Missing evidence warnings
-- Marketplace-specific eBay/Vinted output
+* Title
+* Description
+* Bullet points
+* Category
+* Item specifics
+* Condition notes
+* Visible flaws
+* Quick sale price
+* Recommended price
+* High price
+* Pricing confidence
+* Missing evidence warnings
+* Marketplace-specific eBay/Vinted output
 
 All output must be editable.
 
@@ -348,16 +349,16 @@ Paste URL or upload screenshots
 
 Guard must output:
 
-- Detected category
-- Claimed item
-- Risk level: low, medium, high, inconclusive
-- Confidence score
-- Red flags
-- Missing evidence
-- Price anomaly
-- Marketplace protection notes
-- Seller questions
-- Recommended next action
+* Detected category
+* Claimed item
+* Risk level: low, medium, high, inconclusive
+* Confidence score
+* Red flags
+* Missing evidence
+* Price anomaly
+* Marketplace protection notes
+* Seller questions
+* Recommended next action
 
 Guard wording rules:
 
@@ -386,12 +387,12 @@ Build a desktop extension for eBay/Vinted first, expandable to Depop, Facebook M
 
 Use cases:
 
-- Run Guard check on current listing.
-- Send current listing to Studio.
-- Launch specialist Lens agent.
-- Generate seller questions.
-- Save a report.
-- Pull title, price, images and description where available.
+* Run Guard check on current listing.
+* Send current listing to Studio.
+* Launch specialist Lens agent.
+* Generate seller questions.
+* Save a report.
+* Pull title, price, images and description where available.
 
 Architecture:
 
@@ -406,10 +407,10 @@ Browser extension
 
 Safety:
 
-- Require user action before sending listing data to ListLens.
-- Do not collect unrelated page/user data.
-- Avoid automated posting/clicking in POC.
-- Clearly show what data is being analysed.
+* Require user action before sending listing data to ListLens.
+* Do not collect unrelated page/user data.
+* Avoid automated posting/clicking in POC.
+* Clearly show what data is being analysed.
 
 ---
 
@@ -421,23 +422,23 @@ RecordLens covers vinyl, LPs, 7-inch singles, 12-inch singles, CDs, cassettes, b
 
 ### Seller fields
 
-- Artist
-- Title
-- Format
-- Label
-- Catalogue number
-- Barcode
-- Country
-- Pressing clues
-- Label variant
-- Matrix/runout
-- Sleeve grade
-- Media grade
-- Inserts
-- OBI/posters/booklets
-- Genre/style
-- Release notes
-- Price range
+* Artist
+* Title
+* Format
+* Label
+* Catalogue number
+* Barcode
+* Country
+* Pressing clues
+* Label variant
+* Matrix/runout
+* Sleeve grade
+* Media grade
+* Inserts
+* OBI/posters/booklets
+* Genre/style
+* Release notes
+* Price range
 
 ### Single-label release identification
 
@@ -445,19 +446,19 @@ RecordLens must identify likely release/version from one clear label photo where
 
 Analyse:
 
-- Label name and logo
-- Catalogue number
-- Side indicator
-- Rights society
-- Speed marking
-- Stereo/mono marking
-- Publishing credits
-- Track layout
-- Typography
-- Label colour
-- Rim text
-- Manufacturing country
-- Known label-design variants
+* Label name and logo
+* Catalogue number
+* Side indicator
+* Rights society
+* Speed marking
+* Stereo/mono marking
+* Publishing credits
+* Track layout
+* Typography
+* Label colour
+* Rim text
+* Manufacturing country
+* Known label-design variants
 
 Return ranked likelihoods, not one overconfident answer.
 
@@ -532,31 +533,31 @@ MeasureLens is a physical 3D-printed reference object plus CV system for measure
 
 Garment outputs:
 
-- Pit-to-pit
-- Shoulder width
-- Sleeve length
-- Body length
-- Waist
-- Hem
-- Inside leg
-- Outside leg
-- Rise
-- Listing-ready measurement text
-- Confidence per measurement
-- Retake guidance
+* Pit-to-pit
+* Shoulder width
+* Sleeve length
+* Body length
+* Waist
+* Hem
+* Inside leg
+* Outside leg
+* Rise
+* Listing-ready measurement text
+* Confidence per measurement
+* Retake guidance
 
 Hardware design:
 
-- Known fixed dimensions
-- High-contrast fiducial markers
-- Matte finish
-- Clip-on fabric grip
-- Rubber pads
-- Flat-lay and hanging mode
-- Direction arrows
-- Numbered corners
-- QR/object ID
-- Multi-anchor design to handle droop, rotation and perspective
+* Known fixed dimensions
+* High-contrast fiducial markers
+* Matte finish
+* Clip-on fabric grip
+* Rubber pads
+* Flat-lay and hanging mode
+* Direction arrows
+* Numbered corners
+* QR/object ID
+* Multi-anchor design to handle droop, rotation and perspective
 
 ## 5. MotorLens
 
@@ -566,35 +567,35 @@ MotorMeasureLens adapts MeasureLens for vehicles and parts.
 
 Use cases:
 
-- Scratch length
-- Dent diameter
-- Damage-area size
-- Loose car-part dimensions
-- Camper interior scale reference
-- Rough 3D interior modelling
+* Scratch length
+* Dent diameter
+* Damage-area size
+* Loose car-part dimensions
+* Camper interior scale reference
+* Rough 3D interior modelling
 
 MotorLens must identify likely car parts from photos and dimensions alone using MotorMeasureLens.
 
 Inputs:
 
-- Front photo
-- Back photo
-- Side/profile photo
-- Connector/mounting close-up
-- MotorMeasureLens marker visible
-- Optional vehicle hint
+* Front photo
+* Back photo
+* Side/profile photo
+* Connector/mounting close-up
+* MotorMeasureLens marker visible
+* Optional vehicle hint
 
 Matching signals:
 
-- Shape and silhouette
-- Dimensions
-- Mounting point positions
-- Connector count/shape
-- Left/right clues
-- Logos/marks
-- Material/finish
-- Marketplace comps
-- Known compatibility data
+* Shape and silhouette
+* Dimensions
+* Mounting point positions
+* Connector count/shape
+* Left/right clues
+* Logos/marks
+* Material/finish
+* Marketplace comps
+* Known compatibility data
 
 Return ranked likely fitments with percentage likelihood.
 
@@ -694,21 +695,21 @@ Input photos / listing URL
 
 ## Agent roles
 
-| Agent | Responsibility |
-|---|---|
-| Capture Agent | Normalises images and extracts listing context |
-| Quality Agent | Checks blur, lighting, missing angles, duplicates, sensitive data |
-| Category Router | Selects RecordLens, ShoeLens, TechLens, etc. |
-| Identity Agent | Identifies item/release/model/object |
-| Evidence Agent | Extracts labels, barcodes, matrix, ISBN, serials, maker marks |
-| Specialist Lens Agent | Applies category rules |
-| Comps Agent | Searches and filters comparable items |
-| Pricing Agent | Produces price ranges and price confidence |
-| Guard Risk Agent | Finds missing evidence and safe risk language |
-| MeasureLens Agent | Marker detection, pose estimation, geometry |
-| Copy Agent | Marketplace-specific listing/report copy |
-| Validator Agent | Schemas, contradictions, unsupported claims |
-| Adjudicator Agent | Resolves conflict or asks for confirmation |
+| Agent                 | Responsibility                                                    |
+| --------------------- | ----------------------------------------------------------------- |
+| Capture Agent         | Normalises images and extracts listing context                    |
+| Quality Agent         | Checks blur, lighting, missing angles, duplicates, sensitive data |
+| Category Router       | Selects RecordLens, ShoeLens, TechLens, etc.                      |
+| Identity Agent        | Identifies item/release/model/object                              |
+| Evidence Agent        | Extracts labels, barcodes, matrix, ISBN, serials, maker marks     |
+| Specialist Lens Agent | Applies category rules                                            |
+| Comps Agent           | Searches and filters comparable items                             |
+| Pricing Agent         | Produces price ranges and price confidence                        |
+| Guard Risk Agent      | Finds missing evidence and safe risk language                     |
+| MeasureLens Agent     | Marker detection, pose estimation, geometry                       |
+| Copy Agent            | Marketplace-specific listing/report copy                          |
+| Validator Agent       | Schemas, contradictions, unsupported claims                       |
+| Adjudicator Agent     | Resolves conflict or asks for confirmation                        |
 
 ---
 
@@ -716,16 +717,16 @@ Input photos / listing URL
 
 Use routed models.
 
-| Job | Model class |
-|---|---|
-| Cheap classification | Small/nano classifier |
-| Standard listing generation | Cost-efficient text model |
-| Complex reasoning | High-reasoning model |
-| Vision analysis | Multimodal vision model |
-| Structured outputs | JSON schema / Zod validated |
-| Similar history | Embeddings + pgvector |
-| Measurement | OpenCV + marker detection |
-| Safety | Moderation + deterministic rules |
+| Job                         | Model class                      |
+| --------------------------- | -------------------------------- |
+| Cheap classification        | Small/nano classifier            |
+| Standard listing generation | Cost-efficient text model        |
+| Complex reasoning           | High-reasoning model             |
+| Vision analysis             | Multimodal vision model          |
+| Structured outputs          | JSON schema / Zod validated      |
+| Similar history             | Embeddings + pgvector            |
+| Measurement                 | OpenCV + marker detection        |
+| Safety                      | Moderation + deterministic rules |
 
 Routing rule:
 
@@ -741,13 +742,13 @@ Use the cheapest reliable model. Escalate only when confidence is low, evidence 
 
 Use Web Workers, OffscreenCanvas and WASM/OpenCV for local preprocessing:
 
-- Image compression
-- Thumbnail generation
-- Blur/brightness checks
-- Duplicate detection
-- Local MeasureLens marker pre-detection
-- Barcode/QR pre-detection
-- Upload progress/retry
+* Image compression
+* Thumbnail generation
+* Blur/brightness checks
+* Duplicate detection
+* Local MeasureLens marker pre-detection
+* Barcode/QR pre-detection
+* Upload progress/retry
 
 ## Server queue workers
 
@@ -773,45 +774,45 @@ Workers must be idempotent, retry with backoff, use dead-letter queues, expose j
 
 ## Integration modes
 
-- Direct API publish
-- Draft/API-ready export
-- Manual export
-- Browser-assisted fill
-- Guard-only analysis
-- Price/reference-only mode
+* Direct API publish
+* Draft/API-ready export
+* Manual export
+* Browser-assisted fill
+* Guard-only analysis
+* Price/reference-only mode
 
 ## Marketplace roadmap
 
-| Priority | Marketplace | Support |
-|---|---|---|
-| POC | eBay | Draft/sandbox/API-ready, Guard checks |
-| POC | Vinted | Export-first, Guard checks |
-| Phase 2 | Discogs | RecordLens metadata/comps/reference checks |
-| Phase 2 | Depop | Export + browser assist |
-| Phase 2 | Facebook Marketplace | Manual export + browser assist |
-| Phase 2 | Gumtree | Manual export + browser assist |
-| Phase 3 | Etsy | Vintage/antiques/books export/API where permitted |
-| Phase 3 | Shopify/WooCommerce | Seller-owned shop export/API |
-| Phase 3 | Reverb | Music gear expansion |
-| Phase 4 | Poshmark/Mercari | US expansion |
-| Phase 4 | Catawiki/auction channels | Antiques, books, autographs |
+| Priority | Marketplace               | Support                                           |
+| -------- | ------------------------- | ------------------------------------------------- |
+| POC      | eBay                      | Draft/sandbox/API-ready, Guard checks             |
+| POC      | Vinted                    | Export-first, Guard checks                        |
+| Phase 2  | Discogs                   | RecordLens metadata/comps/reference checks        |
+| Phase 2  | Depop                     | Export + browser assist                           |
+| Phase 2  | Facebook Marketplace      | Manual export + browser assist                    |
+| Phase 2  | Gumtree                   | Manual export + browser assist                    |
+| Phase 3  | Etsy                      | Vintage/antiques/books export/API where permitted |
+| Phase 3  | Shopify/WooCommerce       | Seller-owned shop export/API                      |
+| Phase 3  | Reverb                    | Music gear expansion                              |
+| Phase 4  | Poshmark/Mercari          | US expansion                                      |
+| Phase 4  | Catawiki/auction channels | Antiques, books, autographs                       |
 
 ## API integrations to consider
 
-- eBay Sell APIs
-- eBay Browse/Buy APIs
-- eBay Product Research/Terapeak-style data
-- Discogs API
-- MusicBrainz API
-- Barcode/GTIN lookup
-- Open Library / Google Books
-- ISBNdb/book data provider
-- Stripe
-- Royal Mail/shipping APIs
-- Shopify/WooCommerce APIs
-- Etsy API
-- GS1/product registry sources
-- Auction reference sources
+* eBay Sell APIs
+* eBay Browse/Buy APIs
+* eBay Product Research/Terapeak-style data
+* Discogs API
+* MusicBrainz API
+* Barcode/GTIN lookup
+* Open Library / Google Books
+* ISBNdb/book data provider
+* Stripe
+* Royal Mail/shipping APIs
+* Shopify/WooCommerce APIs
+* Etsy API
+* GS1/product registry sources
+* Auction reference sources
 
 ---
 
@@ -840,28 +841,28 @@ Settings
 
 Core components:
 
-- `AppShell`
-- `SidebarNav`
-- `TopCommandBar`
-- `PhotoUploader`
-- `ListingDraftEditor`
-- `RiskReportCard`
-- `RiskLevelBadge`
-- `LensGrid`
-- `MarketplaceOutputTabs`
-- `MeasurementOverlayCanvas`
-- `ExtensionPopup`
-- `SpecialistAgentLauncher`
+* `AppShell`
+* `SidebarNav`
+* `TopCommandBar`
+* `PhotoUploader`
+* `ListingDraftEditor`
+* `RiskReportCard`
+* `RiskLevelBadge`
+* `LensGrid`
+* `MarketplaceOutputTabs`
+* `MeasurementOverlayCanvas`
+* `ExtensionPopup`
+* `SpecialistAgentLauncher`
 
 Use Framer Motion for subtle, fast, functional animations:
 
-- Sidebar active glide
-- Card hover glow
-- Lens detection pulse
-- AI analysis progress
-- Risk meter reveal
-- Measurement overlay line draw
-- Drag/drop photo reorder
+* Sidebar active glide
+* Card hover glow
+* Lens detection pulse
+* AI analysis progress
+* Risk meter reveal
+* Measurement overlay line draw
+* Drag/drop photo reorder
 
 ---
 
@@ -871,16 +872,16 @@ Follow these rules when writing, reviewing or refactoring ListLens React/Next.js
 
 ## Rule Categories by Priority
 
-| Priority | Category | Impact | Prefix |
-|---:|---|---|---|
-| 1 | Eliminating Waterfalls | CRITICAL | `async-` |
-| 2 | Bundle Size Optimization | CRITICAL | `bundle-` |
-| 3 | Server-Side Performance | HIGH | `server-` |
-| 4 | Client-Side Data Fetching | MEDIUM-HIGH | `client-` |
-| 5 | Re-render Optimization | MEDIUM | `rerender-` |
-| 6 | Rendering Performance | MEDIUM | `rendering-` |
-| 7 | JavaScript Performance | LOW-MEDIUM | `js-` |
-| 8 | Advanced Patterns | LOW | `advanced-` |
+| Priority | Category                  | Impact      | Prefix       |
+| -------: | ------------------------- | ----------- | ------------ |
+|        1 | Eliminating Waterfalls    | CRITICAL    | `async-`     |
+|        2 | Bundle Size Optimization  | CRITICAL    | `bundle-`    |
+|        3 | Server-Side Performance   | HIGH        | `server-`    |
+|        4 | Client-Side Data Fetching | MEDIUM-HIGH | `client-`    |
+|        5 | Re-render Optimization    | MEDIUM      | `rerender-`  |
+|        6 | Rendering Performance     | MEDIUM      | `rendering-` |
+|        7 | JavaScript Performance    | LOW-MEDIUM  | `js-`        |
+|        8 | Advanced Patterns         | LOW         | `advanced-`  |
 
 ---
 
@@ -890,12 +891,12 @@ Waterfalls are the biggest performance risk. Every sequential `await` adds laten
 
 Rules:
 
-- `async-cheap-condition-before-await` — check cheap sync conditions before async flags or remote values.
-- `async-defer-await` — move `await` into branches where the result is actually needed.
-- `async-dependencies` — start partially dependent work as early as possible.
-- `async-api-routes` — in API routes and Server Actions, start promises early and await late.
-- `async-parallel` — use `Promise.all()` for independent operations.
-- `async-suspense-boundaries` — use Suspense to stream UI while slow data loads.
+* `async-cheap-condition-before-await` — check cheap sync conditions before async flags or remote values.
+* `async-defer-await` — move `await` into branches where the result is actually needed.
+* `async-dependencies` — start partially dependent work as early as possible.
+* `async-api-routes` — in API routes and Server Actions, start promises early and await late.
+* `async-parallel` — use `Promise.all()` for independent operations.
+* `async-suspense-boundaries` — use Suspense to stream UI while slow data loads.
 
 Bad:
 
@@ -920,10 +921,10 @@ const [config, data] = await Promise.all([
 
 ListLens-specific applications:
 
-- Start photo metadata extraction, Lens routing and marketplace capability loading in parallel where possible.
-- Do not wait for comps retrieval before rendering the editable draft shell.
-- Guard reports should stream/show base risk state before pricing/comps finish.
-- In RecordLens, start release metadata lookup and image quality checks in parallel.
+* Start photo metadata extraction, Lens routing and marketplace capability loading in parallel where possible.
+* Do not wait for comps retrieval before rendering the editable draft shell.
+* Guard reports should stream/show base risk state before pricing/comps finish.
+* In RecordLens, start release metadata lookup and image quality checks in parallel.
 
 ---
 
@@ -933,20 +934,20 @@ Keep Studio, Guard, Extension and Lens routes fast. Do not ship heavy AI/CV/edit
 
 Rules:
 
-- `bundle-barrel-imports` — avoid broad barrel imports where they inflate bundles.
-- `bundle-conditional` — load large data/modules only when a feature activates.
-- `bundle-defer-third-party` — defer analytics/logging after hydration.
-- `bundle-dynamic-imports` — dynamically import heavy components.
-- `bundle-analyzable-paths` — prefer statically analyzable imports and file paths.
-- `bundle-preload` — preload on hover/focus or likely next action.
+* `bundle-barrel-imports` — avoid broad barrel imports where they inflate bundles.
+* `bundle-conditional` — load large data/modules only when a feature activates.
+* `bundle-defer-third-party` — defer analytics/logging after hydration.
+* `bundle-dynamic-imports` — dynamically import heavy components.
+* `bundle-analyzable-paths` — prefer statically analyzable imports and file paths.
+* `bundle-preload` — preload on hover/focus or likely next action.
 
 ListLens-specific applications:
 
-- Dynamically import `MeasurementOverlayCanvas`, OpenCV/WASM helpers and heavy chart/report components.
-- Do not ship RecordLens forensic UI to users only opening Dashboard.
-- Lazy-load marketplace-specific formatters when selected.
-- Lazy-load extension side-panel heavy report UI only after user runs a check.
-- Use Next.js package import optimisation for icon/component libraries where available.
+* Dynamically import `MeasurementOverlayCanvas`, OpenCV/WASM helpers and heavy chart/report components.
+* Do not ship RecordLens forensic UI to users only opening Dashboard.
+* Lazy-load marketplace-specific formatters when selected.
+* Lazy-load extension side-panel heavy report UI only after user runs a check.
+* Use Next.js package import optimisation for icon/component libraries where available.
 
 Example:
 
@@ -965,16 +966,16 @@ const MeasurementOverlayCanvas = dynamic(
 
 Rules:
 
-- `server-auth-actions` — authenticate Server Actions like API routes.
-- `server-dedup-props` — avoid duplicate serialization in RSC props.
-- `server-no-shared-module-state` — never store request/user data in mutable module-level state.
-- `server-cache-lru` — use LRU/Redis for cross-request reusable data.
-- `server-hoist-static-io` — hoist static I/O such as templates/config to module scope.
-- `server-serialization` — pass only needed fields across RSC/client boundaries.
-- `server-parallel-fetching` — restructure server components to parallelize data fetching.
-- `server-parallel-nested-fetching` — chain per-item nested fetches instead of blocking all items.
-- `server-cache-react` — use `React.cache()` for per-request DB/auth deduplication.
-- `server-after-nonblocking` — use `after()` for audit logs, analytics and non-critical side effects.
+* `server-auth-actions` — authenticate Server Actions like API routes.
+* `server-dedup-props` — avoid duplicate serialization in RSC props.
+* `server-no-shared-module-state` — never store request/user data in mutable module-level state.
+* `server-cache-lru` — use LRU/Redis for cross-request reusable data.
+* `server-hoist-static-io` — hoist static I/O such as templates/config to module scope.
+* `server-serialization` — pass only needed fields across RSC/client boundaries.
+* `server-parallel-fetching` — restructure server components to parallelize data fetching.
+* `server-parallel-nested-fetching` — chain per-item nested fetches instead of blocking all items.
+* `server-cache-react` — use `React.cache()` for per-request DB/auth deduplication.
+* `server-after-nonblocking` — use `after()` for audit logs, analytics and non-critical side effects.
 
 Server Actions must always authenticate internally:
 
@@ -991,11 +992,11 @@ export async function updateListing(input: unknown) {
 
 ListLens-specific applications:
 
-- Never trust middleware alone for publish/export/billing/server actions.
-- Do not pass full AI outputs into client components when only score/title/warnings are needed.
-- Use `React.cache()` for `getCurrentUser`, workspace lookup and marketplace capability lookup.
-- Use `after()` for non-blocking PostHog events, audit logs and report-open tracking.
-- Use Redis/LRU for static marketplace capabilities and Lens definitions.
+* Never trust middleware alone for publish/export/billing/server actions.
+* Do not pass full AI outputs into client components when only score/title/warnings are needed.
+* Use `React.cache()` for `getCurrentUser`, workspace lookup and marketplace capability lookup.
+* Use `after()` for non-blocking PostHog events, audit logs and report-open tracking.
+* Use Redis/LRU for static marketplace capabilities and Lens definitions.
 
 ---
 
@@ -1003,18 +1004,18 @@ ListLens-specific applications:
 
 Rules:
 
-- `client-event-listeners` — deduplicate global event listeners.
-- `client-passive-event-listeners` — use passive listeners for scroll/touch when `preventDefault` is not needed.
-- `client-swr-dedup` — use SWR/TanStack Query for request deduplication.
-- `client-localstorage-schema` — version and minimize localStorage data.
+* `client-event-listeners` — deduplicate global event listeners.
+* `client-passive-event-listeners` — use passive listeners for scroll/touch when `preventDefault` is not needed.
+* `client-swr-dedup` — use SWR/TanStack Query for request deduplication.
+* `client-localstorage-schema` — version and minimize localStorage data.
 
 ListLens-specific applications:
 
-- Use TanStack Query or SWR for job status polling and report fetching.
-- Use one shared listener for extension keyboard shortcuts.
-- Version local extension cache keys: `listlens-extension:v1`.
-- Never store tokens or sensitive marketplace data in localStorage.
-- Wrap all storage reads/writes in try/catch.
+* Use TanStack Query or SWR for job status polling and report fetching.
+* Use one shared listener for extension keyboard shortcuts.
+* Version local extension cache keys: `listlens-extension:v1`.
+* Never store tokens or sensitive marketplace data in localStorage.
+* Wrap all storage reads/writes in try/catch.
 
 ---
 
@@ -1022,30 +1023,30 @@ ListLens-specific applications:
 
 Rules:
 
-- `rerender-derived-state-no-effect` — calculate derived state during render.
-- `rerender-defer-reads` — do not subscribe to state only used inside callbacks.
-- `rerender-simple-expression-in-memo` — do not wrap trivial primitive expressions in `useMemo`.
-- `rerender-no-inline-components` — do not define components inside components.
-- `rerender-memo-with-default-value` — hoist default non-primitive props to constants.
-- `rerender-memo` — extract expensive UI into memoized components.
-- `rerender-dependencies` — narrow effect dependencies to primitives.
-- `rerender-move-effect-to-event` — put interaction logic in event handlers.
-- `rerender-split-combined-hooks` — split hooks with independent dependencies.
-- `rerender-derived-state` — subscribe to derived booleans, not noisy raw values.
-- `rerender-functional-setstate` — use functional state updates.
-- `rerender-lazy-state-init` — use lazy state initialisation for expensive initial values.
-- `rerender-transitions` — use transitions for non-urgent updates.
-- `rerender-use-deferred-value` — defer expensive renders triggered by input.
-- `rerender-use-ref-transient-values` — use refs for transient frequent values.
+* `rerender-derived-state-no-effect` — calculate derived state during render.
+* `rerender-defer-reads` — do not subscribe to state only used inside callbacks.
+* `rerender-simple-expression-in-memo` — do not wrap trivial primitive expressions in `useMemo`.
+* `rerender-no-inline-components` — do not define components inside components.
+* `rerender-memo-with-default-value` — hoist default non-primitive props to constants.
+* `rerender-memo` — extract expensive UI into memoized components.
+* `rerender-dependencies` — narrow effect dependencies to primitives.
+* `rerender-move-effect-to-event` — put interaction logic in event handlers.
+* `rerender-split-combined-hooks` — split hooks with independent dependencies.
+* `rerender-derived-state` — subscribe to derived booleans, not noisy raw values.
+* `rerender-functional-setstate` — use functional state updates.
+* `rerender-lazy-state-init` — use lazy state initialisation for expensive initial values.
+* `rerender-transitions` — use transitions for non-urgent updates.
+* `rerender-use-deferred-value` — defer expensive renders triggered by input.
+* `rerender-use-ref-transient-values` — use refs for transient frequent values.
 
 ListLens-specific applications:
 
-- Do not rerender the whole Studio editor when only one photo upload progresses.
-- Use local component state or refs for drag/hover states.
-- Use transitions for filtering long listing/report histories.
-- Use deferred values for marketplace/comps search inputs.
-- Use refs for pointer positions in measurement overlays.
-- Do not define `RiskBadge`, `PhotoTile`, `MeasurementLine` etc. inside parent components.
+* Do not rerender the whole Studio editor when only one photo upload progresses.
+* Use local component state or refs for drag/hover states.
+* Use transitions for filtering long listing/report histories.
+* Use deferred values for marketplace/comps search inputs.
+* Use refs for pointer positions in measurement overlays.
+* Do not define `RiskBadge`, `PhotoTile`, `MeasurementLine` etc. inside parent components.
 
 ---
 
@@ -1053,25 +1054,25 @@ ListLens-specific applications:
 
 Rules:
 
-- `rendering-animate-svg-wrapper` — animate a wrapper div, not SVG directly.
-- `rendering-content-visibility` — use `content-visibility: auto` for long lists.
-- `rendering-hoist-jsx` — hoist static JSX where useful.
-- `rendering-svg-precision` — reduce SVG coordinate precision.
-- `rendering-hydration-no-flicker` — prevent client-only flicker for theme/preferences.
-- `rendering-hydration-suppress-warning` — suppress expected mismatches only.
-- `rendering-activity` — preserve expensive show/hide UI where appropriate.
-- `rendering-script-defer-async` — use Next Script strategies for scripts.
-- `rendering-conditional-render` — use explicit ternaries when `0`/`NaN` may render.
-- `rendering-resource-hints` — preconnect/preload critical resources.
-- `rendering-usetransition-loading` — prefer transitions over manual loading states where suitable.
+* `rendering-animate-svg-wrapper` — animate a wrapper div, not SVG directly.
+* `rendering-content-visibility` — use `content-visibility: auto` for long lists.
+* `rendering-hoist-jsx` — hoist static JSX where useful.
+* `rendering-svg-precision` — reduce SVG coordinate precision.
+* `rendering-hydration-no-flicker` — prevent client-only flicker for theme/preferences.
+* `rendering-hydration-suppress-warning` — suppress expected mismatches only.
+* `rendering-activity` — preserve expensive show/hide UI where appropriate.
+* `rendering-script-defer-async` — use Next Script strategies for scripts.
+* `rendering-conditional-render` — use explicit ternaries when `0`/`NaN` may render.
+* `rendering-resource-hints` — preconnect/preload critical resources.
+* `rendering-usetransition-loading` — prefer transitions over manual loading states where suitable.
 
 ListLens-specific applications:
 
-- Use `content-visibility` for large reports, listing history and comparable-sale lists.
-- Animate lens rings via wrapper transforms.
-- Preconnect to image storage/CDN and API host where useful.
-- Avoid hydration flash for dark mode and workspace theme.
-- Keep Guard reports printable/shareable without JS-heavy rendering.
+* Use `content-visibility` for large reports, listing history and comparable-sale lists.
+* Animate lens rings via wrapper transforms.
+* Preconnect to image storage/CDN and API host where useful.
+* Avoid hydration flash for dark mode and workspace theme.
+* Keep Guard reports printable/shareable without JS-heavy rendering.
 
 ---
 
@@ -1079,28 +1080,28 @@ ListLens-specific applications:
 
 Rules:
 
-- `js-batch-dom-css` — avoid layout thrashing; batch reads/writes.
-- `js-index-maps` — build Maps for repeated lookups.
-- `js-cache-property-access` — cache repeated property access in hot loops.
-- `js-cache-function-results` — cache repeated function results.
-- `js-cache-storage` — cache storage reads when safe.
-- `js-combine-iterations` — combine multiple array passes in hot paths.
-- `js-request-idle-callback` — defer non-critical background work.
-- `js-length-check-first` — check array lengths before expensive comparisons.
-- `js-early-exit` — return early.
-- `js-hoist-regexp` — hoist RegExp creation.
-- `js-flatmap-filter` — use `flatMap` for map+filter in one pass.
-- `js-min-max-loop` — use a loop for min/max rather than sorting.
-- `js-set-map-lookups` — use Set/Map for O(1) membership checks.
-- `js-tosorted-immutable` — use `toSorted()` or `[...arr].sort()` instead of mutating props/state.
+* `js-batch-dom-css` — avoid layout thrashing; batch reads/writes.
+* `js-index-maps` — build Maps for repeated lookups.
+* `js-cache-property-access` — cache repeated property access in hot loops.
+* `js-cache-function-results` — cache repeated function results.
+* `js-cache-storage` — cache storage reads when safe.
+* `js-combine-iterations` — combine multiple array passes in hot paths.
+* `js-request-idle-callback` — defer non-critical background work.
+* `js-length-check-first` — check array lengths before expensive comparisons.
+* `js-early-exit` — return early.
+* `js-hoist-regexp` — hoist RegExp creation.
+* `js-flatmap-filter` — use `flatMap` for map+filter in one pass.
+* `js-min-max-loop` — use a loop for min/max rather than sorting.
+* `js-set-map-lookups` — use Set/Map for O(1) membership checks.
+* `js-tosorted-immutable` — use `toSorted()` or `[...arr].sort()` instead of mutating props/state.
 
 ListLens-specific applications:
 
-- Build lookup maps for Lens definitions, marketplace capabilities, category mappings and photo IDs.
-- Use Set for missing-evidence checks.
-- Do not sort all comps just to get min/max.
-- Defer analytics, recent-search writes and non-critical cache writes to idle time.
-- Hoist barcode/matrix/ISBN regexes.
+* Build lookup maps for Lens definitions, marketplace capabilities, category mappings and photo IDs.
+* Use Set for missing-evidence checks.
+* Do not sort all comps just to get min/max.
+* Defer analytics, recent-search writes and non-critical cache writes to idle time.
+* Hoist barcode/matrix/ISBN regexes.
 
 ---
 
@@ -1108,16 +1109,16 @@ ListLens-specific applications:
 
 Rules:
 
-- `advanced-effect-event-deps` — do not put `useEffectEvent` results in dependency arrays.
-- `advanced-init-once` — initialise app-wide logic once, not per mount.
-- `advanced-event-handler-refs` — store handlers in refs for stable subscriptions.
-- `advanced-use-latest` — use latest callback refs / `useEffectEvent` to avoid stale closures.
+* `advanced-effect-event-deps` — do not put `useEffectEvent` results in dependency arrays.
+* `advanced-init-once` — initialise app-wide logic once, not per mount.
+* `advanced-event-handler-refs` — store handlers in refs for stable subscriptions.
+* `advanced-use-latest` — use latest callback refs / `useEffectEvent` to avoid stale closures.
 
 ListLens-specific applications:
 
-- Initialise extension bridge once.
-- Initialise analytics once.
-- Keep event subscriptions stable in upload, drag/drop and measurement overlay components.
+* Initialise extension bridge once.
+* Initialise analytics once.
+* Keep event subscriptions stable in upload, drag/drop and measurement overlay components.
 
 ---
 
@@ -1190,45 +1191,45 @@ POST /api/webhooks/stripe
 
 ## Phase 1 — POC
 
-- Studio
-- Guard
-- RecordLens v1
-- Vinted export
-- eBay draft/sandbox/API
-- Stripe
-- Analytics
-- Optional pilots: ShoeLens, ClothingLens, MeasureLens
+* Studio
+* Guard
+* RecordLens v1
+* Vinted export
+* eBay draft/sandbox/API
+* Stripe
+* Analytics
+* Optional pilots: ShoeLens, ClothingLens, MeasureLens
 
 ## Phase 2 — MVP
 
-- Improved editor/reports
-- eBay live publish where available
-- Discogs metadata/reference flow
-- ShoeLens
-- ClothingLens
-- BookLens
-- CardLens
-- Browser extension v1
-- MeasureLens accessory sales
+* Improved editor/reports
+* eBay live publish where available
+* Discogs metadata/reference flow
+* ShoeLens
+* ClothingLens
+* BookLens
+* CardLens
+* Browser extension v1
+* MeasureLens accessory sales
 
 ## Phase 3 — Expansion
 
-- ToyLens
-- TechLens
-- WatchLens
-- AntiquesLens
-- AutographLens
-- Etsy/Shopify/WooCommerce connectors
-- MotorLens marker prototype
+* ToyLens
+* TechLens
+* WatchLens
+* AntiquesLens
+* AutographLens
+* Etsy/Shopify/WooCommerce connectors
+* MotorLens marker prototype
 
 ## Phase 4 — Scale
 
-- MotorLens full release
-- Multi-marketplace publishing where permitted
-- Bulk tools
-- API/licensing
-- Marketplace partnerships
-- US marketplaces
+* MotorLens full release
+* Multi-marketplace publishing where permitted
+* Bulk tools
+* API/licensing
+* Marketplace partnerships
+* US marketplaces
 
 ---
 
@@ -1236,19 +1237,19 @@ POST /api/webhooks/stripe
 
 The first production-quality POC is acceptable when:
 
-- RecordLens can identify likely record issue/version from photos.
-- Single-label photo returns ranked version likelihoods.
-- Matrix/runout clarification flow works.
-- Studio creates editable eBay/Vinted listing drafts.
-- Guard creates buyer risk reports with safe wording.
-- Stripe credits/check payments work.
-- eBay sandbox/draft payload works.
-- Vinted export works.
-- AI outputs are schema-validated.
-- Worker jobs are queued and tracked.
-- Core analytics are captured.
-- Browser extension can send current listing to Guard.
-- No unsupported claims are published without user confirmation.
+* RecordLens can identify likely record issue/version from photos.
+* Single-label photo returns ranked version likelihoods.
+* Matrix/runout clarification flow works.
+* Studio creates editable eBay/Vinted listing drafts.
+* Guard creates buyer risk reports with safe wording.
+* Stripe credits/check payments work.
+* eBay sandbox/draft payload works.
+* Vinted export works.
+* AI outputs are schema-validated.
+* Worker jobs are queued and tracked.
+* Core analytics are captured.
+* Browser extension can send current listing to Guard.
+* No unsupported claims are published without user confirmation.
 
 ---
 
@@ -1272,5 +1273,6 @@ Server-side safety over client-side assumptions.
 ```
 
 Your job is to make ListLens feel like a serious product from day one.
-```
 
+```
+```
