@@ -759,12 +759,61 @@ function detectMissingPhotos(
 
 // ─── Master pipeline function ─────────────────────────────────────────────────
 
+export interface RecordLensAnalysisResult {
+  analysis: RecordLensAnalysis;
+  usage: { promptTokens: number; completionTokens: number; model: string };
+}
+
+interface TokenAccumulator {
+  promptTokens: number;
+  completionTokens: number;
+}
+
+/**
+ * Wraps a VisionClientInfo with a token-counting proxy.
+ * Returns a new clientInfo whose completions.create accumulates token counts,
+ * plus a `getUsage()` accessor — without mutating the original client.
+ */
+function createTrackedClientInfo(
+  clientInfo: VisionClientInfo,
+): { trackedInfo: VisionClientInfo; getUsage: () => TokenAccumulator } {
+  const acc: TokenAccumulator = { promptTokens: 0, completionTokens: 0 };
+  const originalCompletions = clientInfo.client.chat.completions;
+
+  const trackedCompletions: typeof originalCompletions = {
+    ...originalCompletions,
+    create: (async (...args: Parameters<typeof originalCompletions.create>) => {
+      const result = await originalCompletions.create(...args);
+      if (result && typeof result === "object" && "usage" in result) {
+        const usage = (result as { usage?: { prompt_tokens?: number; completion_tokens?: number } }).usage;
+        acc.promptTokens += usage?.prompt_tokens ?? 0;
+        acc.completionTokens += usage?.completion_tokens ?? 0;
+      }
+      return result;
+    }) as typeof originalCompletions.create,
+  };
+
+  const trackedClient = Object.create(clientInfo.client) as typeof clientInfo.client;
+  Object.defineProperty(trackedClient, "chat", {
+    value: { ...clientInfo.client.chat, completions: trackedCompletions },
+    writable: false,
+    configurable: true,
+  });
+
+  return {
+    trackedInfo: { ...clientInfo, client: trackedClient },
+    getUsage: () => ({ ...acc }),
+  };
+}
+
 export async function runRecordLensAnalysis(
   photoUrls: string[],
   hint?: string,
   matrixOverride?: { sideA?: string; sideB?: string; sideCD?: string },
-): Promise<RecordLensAnalysis> {
-  const clientInfo = getVisionClientInfo();
+): Promise<RecordLensAnalysisResult> {
+  const baseClientInfo = getVisionClientInfo();
+  const { trackedInfo: clientInfo, getUsage } = createTrackedClientInfo(baseClientInfo);
+
   const stepsCompleted: string[] = [`vision_model: ${clientInfo.model}`];
 
   if (hint) stepsCompleted.push(`hint_provided: ${hint.slice(0, 50)}`);
@@ -858,7 +907,7 @@ export async function runRecordLensAnalysis(
   if (extraction.matrix_runout_a) itemSpecifics["Matrix / Run Out (Side A)"] = extraction.matrix_runout_a;
   if (extraction.matrix_runout_b) itemSpecifics["Matrix / Run Out (Side B)"] = extraction.matrix_runout_b;
 
-  return {
+  const analysis: RecordLensAnalysis = {
     mode: "studio",
     lens: "RecordLens",
     listing_description: condition.grading_notes || listingCopy.description,
@@ -945,5 +994,11 @@ export async function runRecordLensAnalysis(
       },
       alternate_matches: pressAlternates,
     },
+  };
+
+  const { promptTokens, completionTokens } = getUsage();
+  return {
+    analysis,
+    usage: { promptTokens, completionTokens, model: clientInfo.model },
   };
 }

@@ -4,11 +4,16 @@ import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
 import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
-import { db, studioItemsTable, guardChecksTable, listingsTable } from "@workspace/db";
+import { db, studioItemsTable, guardChecksTable, listingsTable, aiJobLogsTable, usageEventsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { runRecordLensAnalysis } from "../lib/record-lens-analysis";
 
 const router: IRouter = Router();
+
+const STUDIO_PROMPT_VERSION = "studio-v1.1";
+const GUARD_PROMPT_VERSION = "guard-v1.1";
+const STUDIO_SCHEMA_VERSION = "studio-schema-v1";
+const GUARD_SCHEMA_VERSION = "guard-schema-v1";
 
 const newId = (prefix: string) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -325,19 +330,29 @@ Base prices on current UK resale market values. Be specific — name the exact m
 const GPT4O_INPUT_COST_PER_TOKEN = 2.5 / 1_000_000;
 const GPT4O_OUTPUT_COST_PER_TOKEN = 10.0 / 1_000_000;
 const GROK_VISION_COST_PER_TOKEN = 5.0 / 1_000_000;
+const USD_TO_GBP = 0.79;
+const PENCE_PER_GBP = 100;
 
-function estimateCostUsd(
+function estimateCostPence(
   model: string,
   promptTokens: number,
   completionTokens: number,
 ): number {
+  let costUsd: number;
   if (model.startsWith("gpt-4o")) {
-    return (
+    costUsd =
       promptTokens * GPT4O_INPUT_COST_PER_TOKEN +
-      completionTokens * GPT4O_OUTPUT_COST_PER_TOKEN
-    );
+      completionTokens * GPT4O_OUTPUT_COST_PER_TOKEN;
+  } else {
+    costUsd = (promptTokens + completionTokens) * GROK_VISION_COST_PER_TOKEN;
   }
-  return (promptTokens + completionTokens) * GROK_VISION_COST_PER_TOKEN;
+  return Math.round(costUsd * USD_TO_GBP * PENCE_PER_GBP);
+}
+
+interface AnalysisUsage {
+  promptTokens: number;
+  completionTokens: number;
+  model: string;
 }
 
 const NEW_LENSES_USING_GROK_VISION = new Set([
@@ -351,11 +366,12 @@ async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
   hint?: string,
-): Promise<z.infer<typeof StudioOutputSchema>> {
-  // RecordLens uses its own dedicated 5-step pipeline
+): Promise<{ result: z.infer<typeof StudioOutputSchema>; usage: AnalysisUsage }> {
+  // RecordLens uses its own dedicated 5-step xAI/grok pipeline
   if (lens === "RecordLens") {
-    const result = await runRecordLensAnalysis(photoUrls, hint);
-    return StudioOutputSchema.parse(result);
+    const { analysis: raw, usage: rlUsage } = await runRecordLensAnalysis(photoUrls, hint);
+    const result = StudioOutputSchema.parse(raw);
+    return { result, usage: rlUsage };
   }
 
   const { label: lensLabel } = getLensMeta(lens);
@@ -385,13 +401,15 @@ async function runStudioAnalysis(
     max_tokens: 1200,
   });
 
-  const usage = completion.usage;
+  const model = useGrokVision ? "grok-2-vision-latest" : "gpt-4o";
+  const promptTokens = completion.usage?.prompt_tokens ?? 0;
+  const completionTokens = completion.usage?.completion_tokens ?? 0;
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as unknown;
-  const validated = StudioOutputSchema.parse(parsed);
-  validated.attributes = validateLensAttributes(lens, validated.attributes);
-  return validated;
+  const result = StudioOutputSchema.parse(parsed);
+  result.attributes = validateLensAttributes(lens, result.attributes);
+  return { result, usage: { promptTokens, completionTokens, model } };
 }
 
 function buildGuardSystemPrompt(lens: string): string {
@@ -544,7 +562,7 @@ async function runGuardAnalysis(
   lens: string,
   url?: string,
   screenshotUrls?: string[],
-): Promise<z.infer<typeof GuardOutputSchema>> {
+): Promise<{ result: z.infer<typeof GuardOutputSchema>; usage: AnalysisUsage }> {
   const useGrokVision = NEW_LENSES_USING_GROK_VISION.has(lens);
   const client = useGrokVision ? getXaiClient() : getOpenAIClient();
 
@@ -572,12 +590,14 @@ async function runGuardAnalysis(
     max_tokens: 2000,
   });
 
-  const usage = completion.usage;
+  const model = useGrokVision ? "grok-2-vision-latest" : "gpt-4o";
+  const promptTokens = completion.usage?.prompt_tokens ?? 0;
+  const completionTokens = completion.usage?.completion_tokens ?? 0;
 
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as unknown;
-  const validated = GuardOutputSchema.parse(parsed);
-  return validated;
+  const result = GuardOutputSchema.parse(parsed);
+  return { result, usage: { promptTokens, completionTokens, model } };
 }
 
 interface XaiRecordExtraction {
@@ -867,6 +887,17 @@ router.post("/items", async (req, res) => {
     logger.warn({ err, id }, "Could not persist listing to DB (non-fatal)");
   }
 
+  if (userId) {
+    db.insert(usageEventsTable)
+      .values({
+        id: newId("evt"),
+        userId,
+        eventType: "item_created",
+        metadata: { itemId: id, lens, marketplace: marketplace ?? null },
+      })
+      .catch((err) => logger.warn({ err }, "usage_events item_created insert failed (non-fatal)"));
+  }
+
   res.json({ id, lens, marketplace, status: "draft" });
 });
 
@@ -895,7 +926,7 @@ router.post("/items/:id/analyse", async (req, res) => {
   const userId = req.user?.id;
 
   try {
-    const analysis = await runStudioAnalysis(lens, photoUrls, hint);
+    const { result: analysis, usage } = await runStudioAnalysis(lens, photoUrls, hint);
     studioStore.set(id, analysis);
 
     const ebayTitle = String((analysis.marketplace_outputs?.ebay as Record<string, unknown>)?.["title"] ?? "");
@@ -927,6 +958,42 @@ router.post("/items/:id/analyse", async (req, res) => {
         .where(eq(listingsTable.id, id));
     } catch (dbErr) {
       logger.warn({ dbErr, id }, "Could not persist analysis to DB (non-fatal)");
+    }
+
+    const confidencePct = Math.round((analysis.identity?.confidence ?? 0) * 100);
+    try {
+      await db.insert(aiJobLogsTable).values({
+        id: newId("aijob"),
+        userId: userId ?? null,
+        jobType: "studio",
+        itemId: id,
+        checkId: null,
+        lens,
+        model: usage.model,
+        promptVersion: STUDIO_PROMPT_VERSION,
+        schemaVersion: STUDIO_SCHEMA_VERSION,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        estimatedCostPence: estimateCostPence(usage.model, usage.promptTokens, usage.completionTokens),
+        confidence: confidencePct,
+        warnings: analysis.warnings ?? [],
+        fullOutput: analysis as unknown as Record<string, unknown>,
+      });
+    } catch (logErr) {
+      logger.warn({ logErr }, "ai_job_logs insert failed (non-fatal)");
+    }
+
+    if (userId) {
+      try {
+        await db.insert(usageEventsTable).values({
+          id: newId("evt"),
+          userId,
+          eventType: "analysis_run",
+          metadata: { jobType: "studio", lens, itemId: id, model: usage.model },
+        });
+      } catch (evtErr) {
+        logger.warn({ evtErr }, "usage_events insert failed (non-fatal)");
+      }
     }
 
     res.json({ analysis });
@@ -1030,6 +1097,17 @@ router.post("/items/:id/export/vinted", async (req, res) => {
     ].join(","),
     "",
   ].join("\n");
+  const userId = req.user?.id;
+  if (userId) {
+    db.insert(usageEventsTable)
+      .values({
+        id: newId("evt"),
+        userId,
+        eventType: "listing_exported",
+        metadata: { itemId: id, platform: "vinted" },
+      })
+      .catch((err) => logger.warn({ err }, "usage_events listing_exported insert failed (non-fatal)"));
+  }
   res.setHeader("Content-Type", "text/csv; charset=utf-8");
   res.setHeader(
     "Content-Disposition",
@@ -1084,7 +1162,7 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
     const resolvedDescription = description || String(stored["listing_description"] ?? ebayOutput["description"] ?? "");
     const resolvedCondition = String(ebayOutput["condition"] ?? stored["condition"] ?? "Used");
 
-    const photoUrls = (meta.photoUrls ?? []).filter(
+    const photoUrls = ((meta.photoUrls ?? []) as unknown[]).filter(
       (u): u is string => typeof u === "string" && u.startsWith("http"),
     );
 
@@ -1114,6 +1192,15 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
       res.status(502).json({ error: "eBay rejected the listing. Check your item details and try again." });
       return;
     }
+
+    db.insert(usageEventsTable)
+      .values({
+        id: newId("evt"),
+        userId,
+        eventType: "listing_exported",
+        metadata: { itemId: id, platform: "ebay", listingId: result.itemId },
+      })
+      .catch((err) => logger.warn({ err }, "usage_events listing_exported insert failed (non-fatal)"));
 
     res.json({
       ok: true,
@@ -1172,9 +1259,10 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
   const { id } = req.params;
   const meta = guardMeta.get(id) ?? {};
   const userId = req.user?.id;
+  const lens = meta.lens ?? "ShoeLens";
   try {
-    const report = await runGuardAnalysis(
-      meta.lens ?? "ShoeLens",
+    const { result: report, usage } = await runGuardAnalysis(
+      lens,
       meta.url,
       meta.screenshotUrls,
     );
@@ -1185,13 +1273,49 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
         .values({
           id,
           userId,
-          lens: meta.lens ?? "ShoeLens",
+          lens,
           url: meta.url ?? null,
           riskLevel: report.risk.level,
           status: "checked",
         })
         .onConflictDoUpdate({ target: guardChecksTable.id, set: { riskLevel: report.risk.level } })
         .catch((err) => logger.warn({ err }, "guard_checks insert failed (non-fatal)"));
+    }
+
+    const confidencePct = Math.round((report.risk?.confidence ?? 0) * 100);
+    try {
+      await db.insert(aiJobLogsTable).values({
+        id: newId("aijob"),
+        userId: userId ?? null,
+        jobType: "guard",
+        itemId: null,
+        checkId: id,
+        lens,
+        model: usage.model,
+        promptVersion: GUARD_PROMPT_VERSION,
+        schemaVersion: GUARD_SCHEMA_VERSION,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        estimatedCostPence: estimateCostPence(usage.model, usage.promptTokens, usage.completionTokens),
+        confidence: confidencePct,
+        warnings: report.red_flags.map((f) => f.message),
+        fullOutput: report as unknown as Record<string, unknown>,
+      });
+    } catch (logErr) {
+      logger.warn({ logErr }, "ai_job_logs insert failed (non-fatal)");
+    }
+
+    if (userId) {
+      try {
+        await db.insert(usageEventsTable).values({
+          id: newId("evt"),
+          userId,
+          eventType: "guard_check_run",
+          metadata: { lens, checkId: id, riskLevel: report.risk.level, model: usage.model },
+        });
+      } catch (evtErr) {
+        logger.warn({ evtErr }, "usage_events insert failed (non-fatal)");
+      }
     }
 
     res.json({ id, report });
@@ -1461,7 +1585,29 @@ async function handleLensAnalysis(
     .filter(Boolean)
     .join(" | ") || undefined;
   try {
-    const analysis = await runStudioAnalysis(lensId, photoUrls, combinedHint);
+    const { result: analysis, usage } = await runStudioAnalysis(lensId, photoUrls, combinedHint);
+    const userId = req.user?.id ?? null;
+    try {
+      await db.insert(aiJobLogsTable).values({
+        id: newId("aijob"),
+        userId,
+        jobType: "lens",
+        itemId: null,
+        checkId: null,
+        lens: lensId,
+        model: usage.model,
+        promptVersion: STUDIO_PROMPT_VERSION,
+        schemaVersion: STUDIO_SCHEMA_VERSION,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        estimatedCostPence: estimateCostPence(usage.model, usage.promptTokens, usage.completionTokens),
+        confidence: Math.round((analysis.identity?.confidence ?? 0) * 100),
+        warnings: analysis.warnings ?? [],
+        fullOutput: analysis as unknown as Record<string, unknown>,
+      });
+    } catch (logErr) {
+      logger.warn({ logErr }, "ai_job_logs insert failed (non-fatal)");
+    }
     res.json({ analysis });
   } catch (err) {
     logger.error({ err, lensId }, `${lensId} analysis failed`);

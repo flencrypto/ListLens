@@ -1,10 +1,13 @@
 import { Router, type IRouter, type Request, type Response } from "express";
-import { db, usersTable } from "@workspace/db";
+import { db, usersTable, usageEventsTable } from "@workspace/db";
 import { eq, sql } from "drizzle-orm";
 import { logger } from "../lib/logger";
 import { getStripeClient, isStripeConfigured } from "../lib/stripe";
 
 const router: IRouter = Router();
+
+const newId = (prefix: string) =>
+  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 function getOrigin(req: Request): string {
   // Prefer a trusted canonical URL (set via APP_BASE_URL secret) to avoid
@@ -343,6 +346,20 @@ router.post("/webhooks/stripe", async (req: Request, res: Response) => {
               .update(usersTable)
               .set({ credits: sql`${usersTable.credits} + ${creditsToAdd}` })
               .where(eq(usersTable.id, user.id));
+            // Durable audit trail for credit top-up (credit_consumed would be wired
+            // at the Guard pay-per-check deduction point once that feature is built).
+            db.insert(usageEventsTable)
+              .values({
+                id: newId("evt"),
+                userId: user.id,
+                eventType: "credit_added",
+                metadata: {
+                  creditsAdded: creditsToAdd,
+                  amountPence: amountTotal,
+                  stripeSessionId: session.id,
+                },
+              })
+              .catch((err) => logger.warn({ err }, "usage_events credit_added insert failed (non-fatal)"));
           }
         }
 
