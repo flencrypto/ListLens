@@ -7,6 +7,10 @@ import type { DiscogsRelease } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable, aiJobLogsTable, usageEventsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { runRecordLensAnalysis } from "../lib/record-lens-analysis";
+import {
+  runRecordIdentificationAgent,
+  type IdentificationInput,
+} from "../lib/record-identification-agent";
 
 const router: IRouter = Router();
 
@@ -747,15 +751,70 @@ async function identifyRecord(
     !matrixText && extracted.matrix ? `Matrix: ${extracted.matrix}` : null,
   ].filter(Boolean) as string[];
 
-  const topLikelihood = topSearchResult
-    ? hasMatrixText ? 88 : 75
-    : hasMatrixText ? 55 : 40;
+  // ─── Record Identification Intelligence Agent ────────────────────────────────
+  // Passes extracted OCR data + all Discogs candidates to the agent for
+  // evidence-hierarchy scoring, conflict detection, and % likelihood outputs.
+  const xai = getXaiClient();
+  const identificationInput: IdentificationInput = {
+    artist: extracted.artist ?? null,
+    title: extracted.title ?? null,
+    label: extracted.label ?? null,
+    catalogue_number: extracted.catalogue_number ?? null,
+    matrix_side_a: extracted.matrix ?? matrixText?.sideA ?? null,
+    matrix_side_b: matrixText?.sideB ?? null,
+    barcodes: [],
+    year: null,
+    country: null,
+    readable_text: extracted.additional_details ?? "",
+    discogs_candidates: [
+      topRelease
+        ? {
+            release_id: topRelease.id,
+            artist: topArtist,
+            title: topTitle,
+            label: topLabel,
+            catno: topCatno,
+            year: topRelease.year ? String(topRelease.year) : null,
+            country: topRelease.country ?? null,
+            format: topRelease.formats?.[0]?.name ?? null,
+          }
+        : null,
+      ...altSearchResults.map((sr) => ({
+        release_id: sr.id,
+        artist: sr.title?.split(" - ")[0] ?? null,
+        title: sr.title?.split(" - ")[1] ?? null,
+        label: (sr.label ?? [null])[0] ?? null,
+        catno: sr.catno ?? null,
+        year: sr.year ?? null,
+        country: sr.country ?? null,
+        format: (sr.format ?? [])[0] ?? null,
+      })),
+    ].filter(Boolean) as IdentificationInput["discogs_candidates"],
+  };
 
+  const agentResult = await runRecordIdentificationAgent(
+    identificationInput,
+    xai,
+    "grok-4-fast-non-reasoning",
+  ).catch((err) => {
+    logger.warn({ err }, "RecordIdentificationAgent failed — using Discogs-only result");
+    return null;
+  });
+
+  const agentTop = agentResult?.candidates[0];
+
+  // Use agent's likelihood if available, else fall back to heuristic
+  const topLikelihood = agentTop?.likelihood_percent
+    ?? (topSearchResult ? (hasMatrixText ? 88 : 75) : (hasMatrixText ? 55 : 40));
+
+  // Build top match — agent's top candidate wins; Discogs fills market data
   let topMatch: Record<string, unknown> = {
-    artist: topArtist,
-    title: topTitle,
-    label: topLabel,
-    catalogue_number: topCatno,
+    artist: agentTop?.artist ?? topArtist,
+    title: agentTop?.title ?? topTitle,
+    label: agentTop?.label ?? topLabel,
+    catalogue_number: agentTop?.catalogue_number ?? topCatno,
+    pressing_notes: agentTop?.pressing_notes ?? null,
+    bootleg_risk: agentTop?.bootleg_risk ?? "none",
     likely_release:
       [
         topRelease?.year ? `${topRelease.year}` : null,
@@ -766,72 +825,80 @@ async function identifyRecord(
         .filter(Boolean)
         .join(", ") || "Unknown pressing",
     likelihood_percent: topLikelihood,
-    evidence: [
-      extracted.artist ? `Artist "${extracted.artist}" read from label` : null,
-      extracted.catalogue_number
-        ? `Catalogue number "${extracted.catalogue_number}" read from label`
-        : null,
-      topRelease ? `Matched Discogs release #${topRelease.id}` : null,
-      ...matrixEvidence,
-    ].filter(Boolean) as string[],
+    evidence: agentTop?.evidence?.length
+      ? agentTop.evidence
+      : [
+          extracted.artist ? `Artist "${extracted.artist}" read from label` : null,
+          extracted.catalogue_number ? `Catalogue number "${extracted.catalogue_number}" read from label` : null,
+          topRelease ? `Matched Discogs release #${topRelease.id}` : null,
+          ...matrixEvidence,
+        ].filter(Boolean) as string[],
   };
 
   if (topRelease && topSearchResult) {
     topMatch = enrichMatchWithDiscogs(topMatch, topRelease, topSearchResult);
   }
 
-  const alternateMatches: Record<string, unknown>[] = await Promise.all(
-    altSearchResults.map(async (sr, idx) => {
-      const release = await getDiscogsRelease(sr.id).catch(() => null);
-      const artist =
-        release?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null;
-      const title =
-        release?.title ?? sr.title?.split(" - ")[1] ?? null;
-      let match: Record<string, unknown> = {
-        artist,
-        title,
-        label:
-          release?.labels?.[0]?.name ?? (sr.label ?? [null])[0] ?? null,
-        catalogue_number:
-          release?.labels?.[0]?.catno ?? sr.catno ?? null,
-        likely_release:
-          [sr.year, sr.country, (sr.format ?? [])[0]]
-            .filter(Boolean)
-            .join(", ") || "Alternate pressing",
-        likelihood_percent: Math.max(10, 40 - idx * 15),
-        evidence: [`Alternate Discogs match #${sr.id}`],
-      };
-      if (release) {
-        match = enrichMatchWithDiscogs(match, release, sr);
-      }
-      return match;
-    }),
-  );
+  // Build alternate matches from agent candidates (if available) or Discogs
+  const alternateMatches: Record<string, unknown>[] = agentResult?.candidates.slice(1).length
+    ? agentResult.candidates.slice(1).map((c) => ({
+        artist: c.artist,
+        title: c.title,
+        label: c.label,
+        catalogue_number: c.catalogue_number,
+        pressing_notes: c.pressing_notes,
+        bootleg_risk: c.bootleg_risk,
+        likely_release: [c.year, c.country, c.format].filter(Boolean).join(", ") || (c.pressing_notes ?? "Alternate pressing"),
+        likelihood_percent: c.likelihood_percent,
+        evidence: c.evidence,
+      }))
+    : await Promise.all(
+        altSearchResults.map(async (sr, idx) => {
+          const release = await getDiscogsRelease(sr.id).catch(() => null);
+          const artist = release?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null;
+          const title = release?.title ?? sr.title?.split(" - ")[1] ?? null;
+          let match: Record<string, unknown> = {
+            artist,
+            title,
+            label: release?.labels?.[0]?.name ?? (sr.label ?? [null])[0] ?? null,
+            catalogue_number: release?.labels?.[0]?.catno ?? sr.catno ?? null,
+            likely_release: [sr.year, sr.country, (sr.format ?? [])[0]].filter(Boolean).join(", ") || "Alternate pressing",
+            likelihood_percent: Math.max(10, 40 - idx * 15),
+            evidence: [`Alternate Discogs match #${sr.id}`],
+          };
+          if (release) match = enrichMatchWithDiscogs(match, release, sr);
+          return match;
+        }),
+      );
 
+  // Conflicts and missing evidence come from the agent; fall back to static logic
+  const agentConflicts = agentResult?.conflicts ?? [];
   const noMatrix = !hasMatrix && !extracted.matrix;
-  // Detect ambiguity: alternates share same label/catno as top, or
-  // runner-up is within 20 percentage points of the top match.
-  const secondLikelihood = alternateMatches[0]
-    ? (alternateMatches[0].likelihood_percent as number) ?? 0
-    : 0;
+
+  const secondLikelihood = (alternateMatches[0]?.likelihood_percent as number) ?? 0;
   const sharedCatno = alternateMatches.some(
-    (alt) =>
-      alt.label === topLabel &&
-      alt.catalogue_number === topCatno &&
-      topCatno !== null,
+    (alt) => alt.label === topLabel && alt.catalogue_number === topCatno && topCatno !== null,
   );
   const smallGap = alternateMatches.length > 0 && (topLikelihood - secondLikelihood) < 20;
   const needsMatrix = noMatrix || sharedCatno || smallGap || topLikelihood < 80;
-  const matrixQuestions = needsMatrix
-    ? [
-        "What does the matrix / runout etching read on Side A?",
-        "What does the matrix / runout etching read on Side B?",
-      ]
-    : [];
 
-  const pressedConfidence = hasMatrix
-    ? Math.min(95, topLikelihood + 5)
-    : topLikelihood;
+  // Agent provides specific photo prompts; fall back to generic matrix questions
+  const missingEvidence = agentResult?.missing_evidence?.length
+    ? agentResult.missing_evidence
+    : needsMatrix
+      ? [
+          "Photograph the hand-etched text in the dead wax (runout) on Side A — the smooth ring between the last track and the centre label",
+          "Photograph the dead wax on Side B as well",
+        ]
+      : [];
+
+  const pressedConfidence = hasMatrix ? Math.min(95, topLikelihood + 5) : topLikelihood;
+
+  const warnings: string[] = [];
+  if (!topSearchResult) warnings.push("Could not find a Discogs match — result is based on label reading only.");
+  if (agentTop?.bootleg_risk === "high") warnings.push("Bootleg risk detected — label or matrix inconsistencies noted.");
+  if (agentTop?.bootleg_risk === "medium") warnings.push("Pressing origin uncertain — verify authenticity before buying.");
+  if (agentConflicts.length) warnings.push(...agentConflicts);
 
   return {
     mode: "recordlens.identify",
@@ -843,12 +910,10 @@ async function identifyRecord(
     },
     alternate_matches: alternateMatches,
     needs_matrix_for_clarification: needsMatrix,
-    matrix_clarification_questions: matrixQuestions,
-    warnings: topSearchResult
-      ? []
-      : [
-          "Could not find a Discogs match — result is based on label reading only.",
-        ],
+    missing_evidence: missingEvidence,
+    safe_summary: agentResult?.safe_summary ?? null,
+    identification_complete: agentResult?.identification_complete ?? false,
+    warnings,
     disclaimer:
       "AI-assisted release identification — confirm pressing details before listing or buying.",
   };

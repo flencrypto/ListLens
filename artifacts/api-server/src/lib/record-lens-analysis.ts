@@ -14,6 +14,11 @@
 import OpenAI from "openai";
 import { logger } from "./logger";
 import { searchDiscogs, getDiscogsRelease } from "./discogs";
+import {
+  runRecordIdentificationAgent,
+  type IdentificationInput,
+  type IdentificationAgentResult,
+} from "./record-identification-agent";
 // ─── Vision model routing ─────────────────────────────────────────────────────
 
 type VisionMode = "vision" | "text_only";
@@ -539,74 +544,73 @@ async function identifyPressingViaDiscogs(
   return { top, alternates };
 }
 
-async function identifyPressingViaLLM(
+/**
+ * identifyPressingViaIdentificationAgent — replaces the old monolithic LLM prompt.
+ *
+ * Uses the Record Identification Intelligence Agent to:
+ *  - Score and re-rank Discogs candidates against OCR evidence
+ *  - Apply the evidence hierarchy (matrix > catno > label > year/country)
+ *  - Detect conflicts between OCR data and Discogs results
+ *  - Return % likelihood, missing evidence prompts, and bootleg risk
+ *
+ * Discogs candidates from a prior search are passed in so the agent can
+ * adjudicate between them rather than guessing from scratch.
+ */
+async function identifyPressingViaIdentificationAgent(
   extraction: RecordExtraction,
   clientInfo: VisionClientInfo,
-): Promise<PressingDetails> {
-  const systemPrompt = `You are a world-class vinyl record pressing specialist and discographer. Using the extracted data below, identify the specific pressing.
+  discogsCandidates: Array<{
+    release_id: number;
+    artist: string | null;
+    title: string | null;
+    label: string | null;
+    catno: string | null;
+    year: string | null;
+    country: string | null;
+    format: string | null;
+  }> = [],
+): Promise<{ pressing: PressingDetails; agentResult: IdentificationAgentResult }> {
+  const input: IdentificationInput = {
+    artist: extraction.artist,
+    title: extraction.title,
+    label: extraction.label_names[0] ?? null,
+    catalogue_number: extraction.catalog_numbers[0] ?? null,
+    matrix_side_a: extraction.matrix_runout_a,
+    matrix_side_b: extraction.matrix_runout_b,
+    barcodes: extraction.barcodes,
+    year: extraction.year,
+    country: extraction.country,
+    readable_text: extraction.readable_text,
+    discogs_candidates: discogsCandidates,
+  };
 
-Return ONLY valid JSON (no markdown):
-{
-  "artist": string|null,
-  "title": string|null,
-  "label": string|null,
-  "catalogue_number": string|null,
-  "year": string|null,
-  "country": string|null,
-  "format": string|null,
-  "pressing_notes": "specific pressing details — original vs reissue, numbering, special editions etc.",
-  "confidence": 0-1
-}
+  const agentResult = await runRecordIdentificationAgent(
+    input,
+    clientInfo.client,
+    clientInfo.model,
+  );
 
-Use matrix/runout etchings to determine pressing generation (1st press, 2nd press etc.).
-Consider label name variants, catalogue number formats, and matrix codes in your identification.`;
+  const top = agentResult.candidates[0];
 
-  const userText = `Identify this vinyl record pressing:
-Artist: ${extraction.artist ?? "unknown"}
-Title: ${extraction.title ?? "unknown"}
-Label(s): ${extraction.label_names.join(", ") || "unknown"}
-Catalogue number(s): ${extraction.catalog_numbers.join(", ") || "unknown"}
-Matrix Side A: ${extraction.matrix_runout_a ?? "not visible"}
-Matrix Side B: ${extraction.matrix_runout_b ?? "not visible"}
-Barcodes: ${extraction.barcodes.join(", ") || "none"}
-Year on label: ${extraction.year ?? "not visible"}
-Country on label: ${extraction.country ?? "not visible"}
-Additional text: ${extraction.readable_text || "none"}`;
-
-  const completion = await clientInfo.client.chat.completions.create({
-    model: clientInfo.model,
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userText },
-    ],
-    max_tokens: 600,
-  });
-
-  const raw = completion.choices[0]?.message?.content ?? "{}";
-  let parsed: Partial<PressingDetails> & { confidence?: number } = {};
-  try {
-    parsed = JSON.parse(raw) as Partial<PressingDetails> & { confidence?: number };
-  } catch (err) {
-    logger.warn({ err, raw: raw.slice(0, 200) }, "identifyPressingViaLLM JSON.parse failed — falling back to extraction data");
-  }
-  return {
-    artist: parsed.artist ?? extraction.artist,
-    title: parsed.title ?? extraction.title,
-    label: parsed.label ?? extraction.label_names[0] ?? null,
-    catalogue_number: parsed.catalogue_number ?? extraction.catalog_numbers[0] ?? null,
-    year: parsed.year ?? extraction.year,
-    country: parsed.country ?? extraction.country,
-    format: parsed.format ?? null,
-    pressing_notes: parsed.pressing_notes ?? null,
+  const pressing: PressingDetails = {
+    artist: top?.artist ?? extraction.artist,
+    title: top?.title ?? extraction.title,
+    label: top?.label ?? extraction.label_names[0] ?? null,
+    catalogue_number: top?.catalogue_number ?? extraction.catalog_numbers[0] ?? null,
+    year: top?.year ?? extraction.year,
+    country: top?.country ?? extraction.country,
+    format: top?.format ?? null,
+    pressing_notes: top?.pressing_notes ?? null,
     discogs_release_id: null,
     discogs_lowest_price: null,
     discogs_community_have: null,
     discogs_community_want: null,
     discogs_tracklist: [],
-    confidence: parsed.confidence ?? 0.5,
+    confidence: top ? top.likelihood_percent / 100 : 0.4,
     source: "llm",
   };
+
+  return { pressing, agentResult };
 }
 
 async function identifyPressing(
@@ -623,35 +627,80 @@ async function identifyPressing(
     return { pressing: discogsTop, alternates: discogsAlternates, stepsCompleted: steps };
   }
 
-  logger.info("Discogs match not confident enough — falling back to LLM identification");
-  steps.push("llm_identification_fallback");
-  const llmResult = await identifyPressingViaLLM(extraction, clientInfo);
-  if (discogsTop) {
-    llmResult.discogs_release_id = discogsTop.discogs_release_id;
-    llmResult.discogs_lowest_price = discogsTop.discogs_lowest_price;
-    llmResult.discogs_community_have = discogsTop.discogs_community_have;
-    llmResult.discogs_community_want = discogsTop.discogs_community_want;
-    llmResult.discogs_tracklist = discogsTop.discogs_tracklist;
-    llmResult.source = "llm";
-  }
+  // Discogs didn't return a confident match — hand off to the Record
+  // Identification Intelligence Agent which will adjudicate between
+  // whatever Discogs candidates were found (if any) and OCR evidence.
+  logger.info(
+    { discogs_found: !!discogsTop, candidate_count: discogsAlternates.length + (discogsTop ? 1 : 0) },
+    "Discogs confidence below threshold — delegating to Identification Agent",
+  );
+  steps.push("identification_agent_fallback");
 
-  // Convert discogsTop to alternate if LLM became the primary
-  const allAlternates: RankedPressing[] = discogsTop
-    ? [
-        {
+  // Collect all Discogs candidates (top + alternates) for the agent to score
+  const discogsCandidates = [
+    discogsTop
+      ? {
+          release_id: discogsTop.discogs_release_id ?? 0,
           artist: discogsTop.artist,
           title: discogsTop.title,
           label: discogsTop.label,
-          catalogue_number: discogsTop.catalogue_number,
-          likely_release: [discogsTop.year, discogsTop.country, discogsTop.format].filter(Boolean).join(", ") || "Discogs match",
-          likelihood_percent: Math.round(discogsTop.confidence * 100) - 10,
-          evidence: [`Discogs release #${discogsTop.discogs_release_id}`],
-        },
-        ...discogsAlternates,
-      ]
-    : discogsAlternates;
+          catno: discogsTop.catalogue_number,
+          year: discogsTop.year,
+          country: discogsTop.country,
+          format: discogsTop.format,
+        }
+      : null,
+    ...discogsAlternates.map((alt) => ({
+      release_id: 0,
+      artist: alt.artist,
+      title: alt.title,
+      label: alt.label,
+      catno: alt.catalogue_number,
+      year: null,
+      country: null,
+      format: null,
+    })),
+  ].filter(Boolean) as Array<{
+    release_id: number;
+    artist: string | null;
+    title: string | null;
+    label: string | null;
+    catno: string | null;
+    year: string | null;
+    country: string | null;
+    format: string | null;
+  }>;
 
-  return { pressing: llmResult, alternates: allAlternates, stepsCompleted: steps };
+  const { pressing: agentPressing, agentResult } = await identifyPressingViaIdentificationAgent(
+    extraction,
+    clientInfo,
+    discogsCandidates,
+  );
+
+  // If the Discogs top result had market data, carry it over to the agent result
+  if (discogsTop) {
+    agentPressing.discogs_release_id = discogsTop.discogs_release_id;
+    agentPressing.discogs_lowest_price = discogsTop.discogs_lowest_price;
+    agentPressing.discogs_community_have = discogsTop.discogs_community_have;
+    agentPressing.discogs_community_want = discogsTop.discogs_community_want;
+    agentPressing.discogs_tracklist = discogsTop.discogs_tracklist;
+  }
+
+  // Build alternates from the agent's ranked candidates (skip rank 1, already the pressing)
+  const agentAlternates: RankedPressing[] = agentResult.candidates.slice(1).map((c) => ({
+    artist: c.artist,
+    title: c.title,
+    label: c.label,
+    catalogue_number: c.catalogue_number,
+    likely_release: [c.year, c.country, c.format].filter(Boolean).join(", ") || (c.pressing_notes ?? "Alternate pressing"),
+    likelihood_percent: c.likelihood_percent,
+    evidence: c.evidence,
+  }));
+
+  // Merge with any Discogs alternates not captured by the agent
+  const allAlternates: RankedPressing[] = agentAlternates.length ? agentAlternates : discogsAlternates;
+
+  return { pressing: agentPressing, alternates: allAlternates, stepsCompleted: steps };
 }
 
 // ─── Step 4: Listing content generation ───────────────────────────────────────
