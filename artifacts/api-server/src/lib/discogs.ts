@@ -105,3 +105,34 @@ export async function getDiscogsRelease(
     return null;
   }
 }
+
+/**
+ * searchDiscogsViaMatrix — priority-one search when the user provides matrix/runout text.
+ *
+ * Matrix etchings uniquely identify a pressing, so when the user supplies them
+ * as corrections we search Discogs with the matrix text as a free-text query.
+ * This cuts through ambiguous label/catno matches and finds the exact pressing.
+ *
+ * @param matrixText  Combined matrix text (e.g. "HARVEST 1 A-1 // B-1")
+ * @param perPage     Number of results to request (default 8)
+ */
+export async function searchDiscogsViaMatrix(
+  matrixText: string,
+  perPage = 8,
+): Promise<DiscogsSearchResult[]> {
+  const trimmed = matrixText.trim();
+  if (!trimmed) return [];
+  const params = new URLSearchParams({
+    type: "release",
+    per_page: String(perPage),
+    q: trimmed,
+  });
+  const path = `/database/search?${params.toString()}`;
+  try {
+    const data = await discogsGet<{ results: DiscogsSearchResult[] }>(path);
+    return data.results ?? [];
+  } catch (err) {
+    logger.warn({ err, matrixText: trimmed.slice(0, 60) }, "Discogs matrix search failed — returning empty results");
+    return [];
+  }
+}

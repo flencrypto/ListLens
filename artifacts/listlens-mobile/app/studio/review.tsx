@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -24,6 +25,7 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis } from "@/lib/api";
+import { reanalyseItem, type AnalysisCorrections } from "@/lib/api";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -112,6 +114,15 @@ function analysisToBody(
   };
 }
 
+const EMPTY_CORRECTIONS: AnalysisCorrections = {
+  matrix_a: "",
+  matrix_b: "",
+  country: "",
+  year: "",
+  catalogue_number: "",
+  label: "",
+};
+
 export default function ReviewScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -121,6 +132,7 @@ export default function ReviewScreen() {
     photos?: string;
     draftId?: string;
     analysis?: string;
+    itemId?: string;
   }>();
 
   const paramPhotos = useMemo(
@@ -128,11 +140,21 @@ export default function ReviewScreen() {
     [params.photos],
   );
 
+  const itemId = params.itemId ? String(params.itemId) : null;
+  const isRecordLens = (params.lens ? String(params.lens) : "") === "RecordLens";
+
   const [draftId, setDraftId] = useState<string | null>(null);
   const [createdAt, setCreatedAt] = useState<number>(() => Date.now());
   const [body, setBody] = useState<DraftBody>(DEFAULT_BODY);
   const [hydrated, setHydrated] = useState(false);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
+
+  // Correction panel state
+  const [correctionOpen, setCorrectionOpen] = useState(false);
+  const [corrections, setCorrections] = useState<AnalysisCorrections>(EMPTY_CORRECTIONS);
+  const [reanalysing, setReanalysing] = useState(false);
+  const [reanalyseError, setReanalyseError] = useState<string | null>(null);
+  const [reanalysedAt, setReanalysedAt] = useState<number | null>(null);
 
   const copyField = useCallback(async (key: string, text: string) => {
     await Clipboard.setStringAsync(text);
@@ -169,7 +191,6 @@ export default function ReviewScreen() {
         }
       }
 
-      // New draft — use real AI analysis if provided, else fallback defaults
       const id = generateId();
       const now = Date.now();
       if (cancelled) return;
@@ -215,7 +236,7 @@ export default function ReviewScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [params.draftId]);
 
-  // Persist on every change once hydrated. Debounced lightly.
+  // Persist on every change once hydrated.
   useEffect(() => {
     if (!hydrated || !draftId) return;
     const handle = setTimeout(() => {
@@ -230,6 +251,36 @@ export default function ReviewScreen() {
     return () => clearTimeout(handle);
   }, [hydrated, draftId, createdAt, body]);
 
+  async function handleReanalyse() {
+    if (!itemId) return;
+    const hasAnyCorrection = Object.values(corrections).some((v) => v?.trim());
+    if (!hasAnyCorrection) {
+      setReanalyseError("Enter at least one correction before re-analysing.");
+      return;
+    }
+    setReanalysing(true);
+    setReanalyseError(null);
+    try {
+      const { analysis } = await reanalyseItem(itemId, corrections);
+      setBody((prev) =>
+        analysisToBody(
+          analysis,
+          prev.lens,
+          prev.marketplace,
+          prev.photos,
+        ),
+      );
+      setReanalysedAt(Date.now());
+      setCorrectionOpen(false);
+    } catch (err) {
+      setReanalyseError(
+        err instanceof Error ? err.message : "Re-analysis failed. Please try again.",
+      );
+    } finally {
+      setReanalysing(false);
+    }
+  }
+
   return (
     <ScreenContainer>
       <View style={styles.headerRow}>
@@ -240,6 +291,7 @@ export default function ReviewScreen() {
           <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
             {body.lens} · {body.photos.length} photo
             {body.photos.length === 1 ? "" : "s"}
+            {reanalysedAt ? "  ·  Re-analysed" : ""}
           </Text>
         </View>
         <Badge label="AI draft" tone="cyan" />
@@ -389,6 +441,120 @@ export default function ReviewScreen() {
         ))}
       </Card>
 
+      {/* Correct & Re-analyse — only shown for RecordLens when we have a server itemId */}
+      {isRecordLens && itemId && (
+        <Card>
+          <Pressable
+            onPress={() => setCorrectionOpen((o) => !o)}
+            style={styles.correctionHeader}
+            hitSlop={8}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.foreground, marginBottom: 2 }]}>
+                Correct identification
+              </Text>
+              <Text style={[styles.correctionSubtitle, { color: colors.zinc500 }]}>
+                {correctionOpen
+                  ? "Enter corrections and re-analyse"
+                  : "Tap to fix country, matrix, catalogue number…"}
+              </Text>
+            </View>
+            <Feather
+              name={correctionOpen ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.zinc500}
+            />
+          </Pressable>
+
+          {correctionOpen && (
+            <View style={{ marginTop: 12, gap: 10 }}>
+              <CorrectionField
+                label="Matrix — Side A"
+                placeholder="e.g. POLYDOR 2383 230 A-1"
+                value={corrections.matrix_a ?? ""}
+                onChange={(v) => setCorrections((c) => ({ ...c, matrix_a: v }))}
+                colors={colors}
+                mono
+              />
+              <CorrectionField
+                label="Matrix — Side B"
+                placeholder="e.g. POLYDOR 2383 230 B-1"
+                value={corrections.matrix_b ?? ""}
+                onChange={(v) => setCorrections((c) => ({ ...c, matrix_b: v }))}
+                colors={colors}
+                mono
+              />
+              <View style={styles.specsRow}>
+                <View style={{ flex: 1 }}>
+                  <CorrectionField
+                    label="Country"
+                    placeholder="e.g. Canada"
+                    value={corrections.country ?? ""}
+                    onChange={(v) => setCorrections((c) => ({ ...c, country: v }))}
+                    colors={colors}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <CorrectionField
+                    label="Year"
+                    placeholder="e.g. 1973"
+                    value={corrections.year ?? ""}
+                    onChange={(v) => setCorrections((c) => ({ ...c, year: v }))}
+                    colors={colors}
+                    keyboardType="numeric"
+                  />
+                </View>
+              </View>
+              <CorrectionField
+                label="Catalogue number"
+                placeholder="e.g. 2383 230"
+                value={corrections.catalogue_number ?? ""}
+                onChange={(v) => setCorrections((c) => ({ ...c, catalogue_number: v }))}
+                colors={colors}
+              />
+              <CorrectionField
+                label="Label"
+                placeholder="e.g. Polydor"
+                value={corrections.label ?? ""}
+                onChange={(v) => setCorrections((c) => ({ ...c, label: v }))}
+                colors={colors}
+              />
+
+              {reanalyseError && (
+                <View style={[styles.errorBanner, { backgroundColor: "rgba(220,38,38,0.12)", borderColor: colors.red400 }]}>
+                  <Feather name="alert-circle" size={13} color={colors.red400} />
+                  <Text style={[styles.errorText, { color: colors.red400 }]}>{reanalyseError}</Text>
+                </View>
+              )}
+
+              <View style={[styles.matrixHint, { backgroundColor: "rgba(8,51,68,0.35)", borderColor: colors.cyan700 }]}>
+                <Feather name="info" size={12} color={colors.cyan300} />
+                <Text style={[styles.matrixHintText, { color: colors.cyan300 }]}>
+                  Matrix etchings are the strongest evidence. The AI will search Discogs using them first to pinpoint the exact pressing and adjust the valuation.
+                </Text>
+              </View>
+
+              <BrandButton
+                label={reanalysing ? "Re-analysing…" : "Re-analyse with corrections"}
+                onPress={handleReanalyse}
+                disabled={reanalysing}
+                loading={reanalysing}
+              />
+
+              <Pressable
+                onPress={() => {
+                  setCorrections(EMPTY_CORRECTIONS);
+                  setReanalyseError(null);
+                }}
+                hitSlop={10}
+              >
+                <Text style={[styles.clearLink, { color: colors.zinc500 }]}>Clear corrections</Text>
+              </Pressable>
+            </View>
+          )}
+        </Card>
+      )}
+
       <Card>
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>
           Export
@@ -436,6 +602,48 @@ export default function ReviewScreen() {
         </Text>
       </Pressable>
     </ScreenContainer>
+  );
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function CorrectionField({
+  label,
+  placeholder,
+  value,
+  onChange,
+  colors,
+  mono = false,
+  keyboardType,
+}: {
+  label: string;
+  placeholder: string;
+  value: string;
+  onChange: (v: string) => void;
+  colors: ReturnType<typeof useColors>;
+  mono?: boolean;
+  keyboardType?: "default" | "numeric";
+}) {
+  return (
+    <View>
+      <Text style={[styles.label, { color: colors.zinc400 }]}>{label}</Text>
+      <TextInput
+        value={value}
+        onChangeText={onChange}
+        placeholder={placeholder}
+        placeholderTextColor={colors.zinc600}
+        keyboardType={keyboardType ?? "default"}
+        autoCapitalize="characters"
+        style={[
+          styles.input,
+          {
+            color: colors.foreground,
+            borderColor: colors.zinc700,
+            fontFamily: mono ? "Courier" : undefined,
+          },
+        ]}
+      />
+    </View>
   );
 }
 
@@ -594,6 +802,49 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_500Medium",
     fontSize: 13,
     paddingVertical: 8,
+  },
+  correctionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  correctionSubtitle: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+  },
+  matrixHint: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  matrixHintText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    lineHeight: 17,
+    flex: 1,
+  },
+  errorBanner: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "flex-start",
+    padding: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  errorText: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    lineHeight: 17,
+    flex: 1,
+  },
+  clearLink: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    textAlign: "center",
+    paddingVertical: 4,
   },
 });
 

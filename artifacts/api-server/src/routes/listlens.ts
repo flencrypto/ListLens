@@ -6,7 +6,7 @@ import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
 import type { DiscogsRelease } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable, aiJobLogsTable, usageEventsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
-import { runRecordLensAnalysis } from "../lib/record-lens-analysis";
+import { runRecordLensAnalysis, type AnalysisCorrections } from "../lib/record-lens-analysis";
 import {
   runRecordIdentificationAgent,
   type IdentificationInput,
@@ -1079,6 +1079,101 @@ router.post("/items/:id/analyse", async (req, res) => {
   }
 });
 
+// ─── Re-analyse with user corrections ────────────────────────────────────────
+//
+// Accepts user-supplied corrections (matrix, country, year, catno, etc.) and
+// re-runs the full RecordLens pipeline with those corrections applied.
+// Matrix corrections become the #1 priority Discogs search strategy.
+
+router.post("/items/:id/reanalyse", async (req, res) => {
+  const { id } = req.params;
+  const b = body(req);
+
+  const ownership = await fetchOwnedListing(id, req.user?.id);
+  if (ownership.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (ownership.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+
+  const corrections = (b["corrections"] as AnalysisCorrections | undefined) ?? {};
+  const userId = req.user?.id;
+
+  // Load photoUrls — try in-memory meta first, then DB
+  const meta = itemMeta.get(id) ?? {};
+  let photoUrls: string[] = meta.photoUrls ?? [];
+  const hint = meta.hint;
+  const lens = meta.lens ?? "RecordLens";
+
+  if (!photoUrls.length && ownership.row?.photoUrls?.length) {
+    photoUrls = ownership.row.photoUrls as string[];
+  }
+
+  if (!photoUrls.length) {
+    res.status(400).json({ error: "No photos found for this item. Please re-upload your photos." });
+    return;
+  }
+
+  if (lens !== "RecordLens") {
+    res.status(400).json({ error: "Re-analysis with corrections is only supported for RecordLens." });
+    return;
+  }
+
+  try {
+    logger.info({ id, corrections }, "Starting re-analysis with user corrections");
+    const { analysis: raw, usage } = await runRecordLensAnalysis(photoUrls, hint, corrections);
+    const analysis = StudioOutputSchema.parse(raw);
+
+    // Persist updated analysis
+    const ebayTitle = String((analysis.marketplace_outputs?.ebay as Record<string, unknown>)?.["title"] ?? "");
+    const identity = analysis.identity as { brand?: string | null; model?: string | null } | undefined;
+    const title = ebayTitle || [identity?.brand, identity?.model].filter(Boolean).join(" ") || "Untitled listing";
+    const price = (analysis.pricing as { recommended?: number } | undefined)?.recommended != null
+      ? String((analysis.pricing as { recommended: number }).recommended)
+      : null;
+    const description = (analysis as Record<string, unknown>)["listing_description"] as string | null ?? null;
+
+    try {
+      await db
+        .update(listingsTable)
+        .set({ analysis, title, price, description, status: "analysed" })
+        .where(eq(listingsTable.id, id));
+    } catch (dbErr) {
+      logger.warn({ dbErr, id }, "Could not persist re-analysis to DB (non-fatal)");
+    }
+
+    try {
+      await db.insert(aiJobLogsTable).values({
+        id: newId("aijob"),
+        userId: userId ?? null,
+        jobType: "studio",
+        itemId: id,
+        checkId: null,
+        lens,
+        model: usage.model,
+        promptVersion: STUDIO_PROMPT_VERSION,
+        schemaVersion: STUDIO_SCHEMA_VERSION,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+        estimatedCostPence: estimateCostPence(usage.model, usage.promptTokens, usage.completionTokens),
+        confidence: Math.round((analysis.identity?.confidence ?? 0) * 100),
+        warnings: analysis.warnings ?? [],
+        fullOutput: analysis as unknown as Record<string, unknown>,
+      });
+    } catch (logErr) {
+      logger.warn({ logErr }, "ai_job_logs re-analyse insert failed (non-fatal)");
+    }
+
+    res.json({ analysis });
+  } catch (err) {
+    logger.error({ err, id }, "Re-analysis failed");
+    res.status(500).json({ error: "Re-analysis failed. Please try again." });
+  }
+});
+
 type OwnedListingResult =
   | { row: typeof listingsTable.$inferSelect; denied: false; dbError: false; notFound: false }
   | { row: null; denied: false; dbError: false; notFound: true }
@@ -1465,7 +1560,10 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
     // so listing wording, pricing, and attributes are all updated
     if (itemId && matrixText && resolvedLabelUrls.length) {
       try {
-        const fullAnalysis = await runRecordLensAnalysis(resolvedLabelUrls, undefined, matrixText);
+        const fullAnalysis = await runRecordLensAnalysis(resolvedLabelUrls, undefined, {
+          matrix_a: matrixText.sideA,
+          matrix_b: matrixText.sideB,
+        });
         const analysisRecord = fullAnalysis as unknown as Record<string, unknown>;
         studioStore.set(itemId, analysisRecord);
         updatedAnalysis = analysisRecord;

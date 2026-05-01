@@ -25,6 +25,7 @@ import {
   type StyleSystem,
   type ComplianceAudit,
 } from "./ebay-listing-creator-agent";
+import { searchDiscogsViaMatrix } from "./discogs";
 // ─── Vision model routing ─────────────────────────────────────────────────────
 
 type VisionMode = "vision" | "text_only";
@@ -140,6 +141,21 @@ export interface PressingDetails {
   discogs_tracklist: string[];
   confidence: number;
   source: "discogs" | "llm" | "extraction_only";
+}
+
+/**
+ * User-supplied corrections that override OCR extraction data.
+ * When matrix fields are present they become the #1 priority Discogs search strategy.
+ */
+export interface AnalysisCorrections {
+  matrix_a?: string;
+  matrix_b?: string;
+  country?: string;
+  year?: string;
+  catalogue_number?: string;
+  label?: string;
+  artist?: string;
+  title?: string;
 }
 
 export interface ListingCopy {
@@ -632,9 +648,91 @@ async function identifyPressingViaIdentificationAgent(
 async function identifyPressing(
   extraction: RecordExtraction,
   clientInfo: VisionClientInfo,
+  corrections?: AnalysisCorrections,
 ): Promise<{ pressing: PressingDetails; alternates: RankedPressing[]; stepsCompleted: string[] }> {
   const steps: string[] = [];
 
+  // Apply user corrections — these always override OCR extraction data
+  if (corrections) {
+    if (corrections.matrix_a?.trim()) extraction.matrix_runout_a = corrections.matrix_a.trim();
+    if (corrections.matrix_b?.trim()) extraction.matrix_runout_b = corrections.matrix_b.trim();
+    if (corrections.country?.trim()) extraction.country = corrections.country.trim();
+    if (corrections.year?.trim()) extraction.year = corrections.year.trim();
+    if (corrections.catalogue_number?.trim()) {
+      extraction.catalog_numbers = [corrections.catalogue_number.trim(), ...extraction.catalog_numbers.filter((c) => c !== corrections.catalogue_number!.trim())];
+    }
+    if (corrections.label?.trim()) {
+      extraction.label_names = [corrections.label.trim(), ...extraction.label_names.filter((l) => l !== corrections.label!.trim())];
+    }
+    if (corrections.artist?.trim()) extraction.artist = corrections.artist.trim();
+    if (corrections.title?.trim()) extraction.title = corrections.title.trim();
+    steps.push("user_corrections_applied");
+  }
+
+  // ── PRIORITY 1: Matrix-text Discogs search ─────────────────────────────────
+  // Matrix/runout etchings are the most definitive pressing evidence.
+  // When the user provides matrix corrections we search by matrix text first —
+  // this cuts through ambiguous label/catno matches and pinpoints the exact pressing.
+  const hasMatrixCorrection = !!(corrections?.matrix_a?.trim() || corrections?.matrix_b?.trim());
+  if (hasMatrixCorrection) {
+    const matrixQuery = [corrections!.matrix_a, corrections!.matrix_b].filter(Boolean).join(" ");
+    steps.push("matrix_priority_discogs_search");
+    logger.info({ matrixQuery: matrixQuery.slice(0, 80) }, "Matrix correction provided — running matrix-priority Discogs search");
+
+    const matrixResults = await searchDiscogsViaMatrix(matrixQuery);
+    if (matrixResults.length) {
+      steps.push("matrix_search_found");
+      const topResult = matrixResults[0]!;
+      const release = await getDiscogsRelease(topResult.id).catch(() => null);
+      if (release) {
+        const artist = release.artists?.[0]?.name ?? extraction.artist ?? null;
+        const title = release.title ?? extraction.title ?? null;
+        const label = release.labels?.[0]?.name ?? extraction.label_names[0] ?? null;
+        const catno = release.labels?.[0]?.catno ?? extraction.catalog_numbers[0] ?? null;
+        const tracklist = release.tracklist?.map((t) => `${t.position}. ${t.title}${t.duration ? ` (${t.duration})` : ""}`) ?? [];
+        const format = release.formats?.map((f) => [f.name, ...(f.descriptions ?? [])].filter(Boolean).join(", ")).join("; ") ?? null;
+
+        const pressing: PressingDetails = {
+          artist, title, label,
+          catalogue_number: catno,
+          year: release.year ? String(release.year) : extraction.year,
+          country: release.country ?? extraction.country ?? null,
+          format,
+          pressing_notes: release.notes ?? null,
+          discogs_release_id: release.id,
+          discogs_lowest_price: release.lowest_price ?? null,
+          discogs_community_have: release.community?.have ?? null,
+          discogs_community_want: release.community?.want ?? null,
+          discogs_tracklist: tracklist,
+          // Matrix match is highest possible evidence — confidence 0.95
+          confidence: 0.95,
+          source: "discogs",
+        };
+
+        const altResults = matrixResults.slice(1, 4);
+        const alternates: RankedPressing[] = await Promise.all(
+          altResults.map(async (sr, idx) => {
+            const altRelease = await getDiscogsRelease(sr.id).catch(() => null);
+            return {
+              artist: altRelease?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null,
+              title: altRelease?.title ?? sr.title?.split(" - ")[1] ?? null,
+              label: altRelease?.labels?.[0]?.name ?? null,
+              catalogue_number: altRelease?.labels?.[0]?.catno ?? sr.catno ?? null,
+              likely_release: [sr.year, sr.country, (sr.format ?? [])[0]].filter(Boolean).join(", ") || "Alternate pressing",
+              likelihood_percent: Math.max(8, 30 - idx * 10),
+              evidence: [`Discogs matrix search alternate #${sr.id}`],
+            } satisfies RankedPressing;
+          }),
+        );
+        return { pressing, alternates, stepsCompleted: steps };
+      }
+    }
+    // Matrix search returned no results — fall through to standard search
+    logger.info({ matrixQuery: matrixQuery.slice(0, 80) }, "Matrix Discogs search found no results — falling back to standard search");
+    steps.push("matrix_search_no_results_fallback");
+  }
+
+  // ── PRIORITY 2: Standard Discogs search (with corrected extraction data) ───
   const { top: discogsTop, alternates: discogsAlternates } = await identifyPressingViaDiscogs(extraction);
   steps.push("discogs_search");
 
@@ -643,6 +741,7 @@ async function identifyPressing(
     return { pressing: discogsTop, alternates: discogsAlternates, stepsCompleted: steps };
   }
 
+  // ── PRIORITY 3: Identification Agent ──────────────────────────────────────
   // Discogs didn't return a confident match — hand off to the Record
   // Identification Intelligence Agent which will adjudicate between
   // whatever Discogs candidates were found (if any) and OCR evidence.
@@ -919,7 +1018,7 @@ function createTrackedClientInfo(
 export async function runRecordLensAnalysis(
   photoUrls: string[],
   hint?: string,
-  matrixOverride?: { sideA?: string; sideB?: string; sideCD?: string },
+  corrections?: AnalysisCorrections,
 ): Promise<RecordLensAnalysisResult> {
   const baseClientInfo = getVisionClientInfo();
   const { trackedInfo: clientInfo, getUsage } = createTrackedClientInfo(baseClientInfo);
@@ -927,8 +1026,8 @@ export async function runRecordLensAnalysis(
   const stepsCompleted: string[] = [`vision_model: ${clientInfo.model}`];
 
   if (hint) stepsCompleted.push(`hint_provided: ${hint.slice(0, 50)}`);
-  if (matrixOverride?.sideA || matrixOverride?.sideB) {
-    stepsCompleted.push("matrix_text_override_provided");
+  if (corrections && Object.values(corrections).some(Boolean)) {
+    stepsCompleted.push("corrections_provided");
   }
 
   // Step 1: Photo classification
@@ -952,19 +1051,12 @@ export async function runRecordLensAnalysis(
     }
   }
 
-  // Inject text matrix overrides (from clarification flow)
-  if (matrixOverride?.sideA) {
-    extraction.matrix_runout_a = matrixOverride.sideA.trim();
-  }
-  if (matrixOverride?.sideB) {
-    extraction.matrix_runout_b = matrixOverride.sideB.trim();
-  }
-
-  // Step 3: Pressing identification
+  // Step 3: Pressing identification (corrections passed in — matrix is priority #1 when provided)
   stepsCompleted.push("step3_pressing_identification");
   const { pressing, alternates: pressAlternates, stepsCompleted: pressSteps } = await identifyPressing(
     extraction,
     clientInfo,
+    corrections,
   );
   stepsCompleted.push(...pressSteps);
 

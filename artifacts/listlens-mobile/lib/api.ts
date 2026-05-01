@@ -180,6 +180,24 @@ export async function analyseItem(
   return post(`/api/items/${id}/analyse`, params);
 }
 
+export interface AnalysisCorrections {
+  matrix_a?: string;
+  matrix_b?: string;
+  country?: string;
+  year?: string;
+  catalogue_number?: string;
+  label?: string;
+  artist?: string;
+  title?: string;
+}
+
+export async function reanalyseItem(
+  id: string,
+  corrections: AnalysisCorrections,
+): Promise<{ analysis: StudioAnalysis }> {
+  return post(`/api/items/${id}/reanalyse`, { corrections });
+}
+
 export async function identifyRecord(params: {
   labelUrls: string[];
   matrixUrls?: string[];

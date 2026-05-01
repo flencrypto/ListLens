@@ -261,6 +261,7 @@ export default function CaptureScreen() {
           marketplace: String(marketplace),
           photos: photos.map((p) => p.uri).join("|"),
           analysis: JSON.stringify(analysis),
+          itemId: id,
         },
       });
     } catch {
