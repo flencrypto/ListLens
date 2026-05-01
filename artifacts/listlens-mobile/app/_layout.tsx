@@ -9,7 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -85,14 +85,24 @@ function RootLayoutNav() {
 }
 
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    ...Feather.font,
+  const [interFontsLoaded, interFontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
     Inter_700Bold,
   });
-  const [subscriptionCacheReady, setSubscriptionCacheReady] = React.useState(false);
+
+  const [featherReady, setFeatherReady] = useState(false);
+  const [subscriptionCacheReady, setSubscriptionCacheReady] = useState(false);
+
+  useEffect(() => {
+    Feather.loadFont()
+      .then(() => setFeatherReady(true))
+      .catch((err) => {
+        console.warn("Feather font load failed:", err);
+        setFeatherReady(true);
+      });
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -118,7 +128,10 @@ export default function RootLayout() {
     };
   }, []);
 
-  const ready = (fontsLoaded || fontError) && subscriptionCacheReady;
+  const ready =
+    (interFontsLoaded || interFontError) &&
+    featherReady &&
+    subscriptionCacheReady;
 
   useEffect(() => {
     if (ready) {
