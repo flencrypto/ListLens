@@ -20,7 +20,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#040a14",
-        "monochromeImage": "./assets/images/monochrome-icon.png"
+        "monochromeImage": "./assets/images/monochrome-icon.png",
+        "roundIcon": "./assets/images/round-icon.png"
       }
     },
     "web": {
