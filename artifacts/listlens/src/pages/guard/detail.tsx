@@ -125,6 +125,20 @@ export default function GuardCheckPage() {
 
         {report && revealed && (
           <div className="reveal-stagger space-y-5">
+            <div className="flex items-center justify-between flex-wrap gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setReport(null);
+                  setRevealed(false);
+                  setSaved(false);
+                  setError(null);
+                }}
+              >
+                ↩ Re-analyse
+              </Button>
+            </div>
             <RiskReport report={report} />
             <div className="flex gap-3 pt-2">
               <Button

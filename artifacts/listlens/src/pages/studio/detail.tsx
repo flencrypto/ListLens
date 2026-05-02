@@ -726,6 +726,26 @@ export default function StudioItemPage() {
 
         {analysis && revealed && (
           <div className="reveal-stagger space-y-6">
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setAnalysis(null);
+                  setRevealed(false);
+                  setClarifyResult(null);
+                  setClarifyDone(false);
+                  setStillNeedsMatrix(false);
+                  setMatrixSideA("");
+                  setMatrixSideB("");
+                  setMatrixSideCD("");
+                  setError(null);
+                  setClarifyError(null);
+                }}
+              >
+                ↩ Re-analyse
+              </Button>
+            </div>
             {/* WatchLens — Chrono24 market reference pricing */}
             {analysis.lens === "WatchLens" && (() => {
               const wm = analysis.watch_market;
