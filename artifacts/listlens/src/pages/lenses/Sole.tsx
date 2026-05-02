@@ -928,9 +928,9 @@ export default function SoleLensPrototype() {
       <GlowBlob className="left-1/2 top-0 h-96 w-96 -translate-x-1/2 bg-cyan-500/20" />
       <GlowBlob className="bottom-0 right-0 h-80 w-80 bg-blue-600/10" />
       <div className="relative z-10 mx-auto max-w-6xl">
-        <Link href="/lenses" className="inline-flex items-center gap-1.5 mb-6 text-sm text-white/50 hover:text-white/90 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
-          Lenses
+        <Link href="/" className="inline-flex items-center gap-1.5 mb-6 text-xs text-zinc-400 hover:text-cyan-300 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Back to Home
         </Link>
       </div>
       <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1fr_430px]">
