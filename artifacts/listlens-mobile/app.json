@@ -14,7 +14,8 @@
       "backgroundColor": "#040a14"
     },
     "ios": {
-      "supportsTablet": false
+      "supportsTablet": false,
+      "icon": "./assets/images/ios-icon.png"
     },
     "android": {
       "adaptiveIcon": {
