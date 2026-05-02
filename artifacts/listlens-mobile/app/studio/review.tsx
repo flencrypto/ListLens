@@ -149,6 +149,8 @@ export default function ReviewScreen() {
   const [hydrated, setHydrated] = useState(false);
 
   const isRecordLens = body.lens === "RecordLens" || (params.lens ? String(params.lens) : "") === "RecordLens";
+  const isWatchLens = body.lens === "WatchLens" || (params.lens ? String(params.lens) : "") === "WatchLens";
+  const [watchMarketData, setWatchMarketData] = useState<import("@/lib/api").WatchMarketData | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Correction panel state
@@ -246,6 +248,9 @@ export default function ReviewScreen() {
           setDraftId(apiItemId);
           setCreatedAt(createdTs);
           setBody(apiBody);
+          if (listing.lens === "WatchLens" && apiAnalysis?.watch_market) {
+            setWatchMarketData(apiAnalysis.watch_market);
+          }
           setHydrated(true);
           return;
         } catch {
@@ -290,6 +295,9 @@ export default function ReviewScreen() {
             if (confidence < 0.8 || needsMatrix) {
               setNeedsMatrixConfirm(true);
             }
+          }
+          if (lensName === "WatchLens" && parsed.watch_market) {
+            setWatchMarketData(parsed.watch_market);
           }
         } catch {
           setBody({
@@ -651,6 +659,33 @@ export default function ReviewScreen() {
           <PriceTile label="High" value={body.pricing.high} tone={colors.brandGreen} />
         </View>
       </Card>
+
+      {isWatchLens && watchMarketData && watchMarketData.listing_count > 0 && (
+        <Card>
+          <View style={styles.confirmHeader}>
+            <Text style={[styles.cardTitle, { color: colors.foreground, flex: 1 }]}>
+              Market reference
+            </Text>
+            <View style={{ backgroundColor: "rgba(8,51,68,0.5)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
+              <Text style={{ color: colors.cyan300, fontSize: 10, fontWeight: "600" }}>
+                {watchMarketData.source}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.correctionSubtitle, { color: colors.zinc500, marginBottom: 12 }]}>
+            {watchMarketData.total_count.toLocaleString()} active pre-owned listings
+            {watchMarketData.search_query ? ` · "${watchMarketData.search_query}"` : ""}
+          </Text>
+          <View style={styles.pricingRow}>
+            <PriceTile label="Min" value={watchMarketData.price_min_gbp ?? 0} tone={colors.zinc400} />
+            <PriceTile label="Median" value={watchMarketData.price_median_gbp ?? 0} tone={colors.brandCyan} highlight />
+            <PriceTile label="Max" value={watchMarketData.price_max_gbp ?? 0} tone={colors.brandGreen} />
+          </View>
+          <Text style={{ color: colors.zinc600, fontSize: 10, marginTop: 8 }}>
+            Pricing anchored to market median · data from {watchMarketData.source}
+          </Text>
+        </Card>
+      )}
 
       <Card>
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>

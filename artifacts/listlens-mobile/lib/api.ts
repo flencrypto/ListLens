@@ -137,6 +137,17 @@ export async function getDashboard(): Promise<DashboardData> {
   return get<DashboardData>("/api/dashboard");
 }
 
+export interface WatchMarketData {
+  source: string;
+  search_query: string;
+  listing_count: number;
+  total_count: number;
+  price_min_gbp: number | null;
+  price_median_gbp: number | null;
+  price_max_gbp: number | null;
+  currency: "GBP";
+}
+
 export interface StudioAnalysis {
   mode: "studio";
   lens: string;
@@ -160,6 +171,7 @@ export interface StudioAnalysis {
     vinted: { title?: string; category?: string; [k: string]: unknown };
   };
   warnings: string[];
+  watch_market?: WatchMarketData | null;
 }
 
 export interface RecordAnalysis {

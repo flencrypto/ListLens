@@ -16,6 +16,11 @@ import {
   runShoeIdentificationAgent,
   type ShoeIdentificationInput,
 } from "../lib/shoe-identification-agent";
+import { searchWatchMarket } from "../lib/watch-market-client";
+import {
+  runWatchIdentificationAgent,
+  type WatchIdentificationInput,
+} from "../lib/watch-identification-agent";
 
 const router: IRouter = Router();
 
@@ -82,6 +87,17 @@ const StudioOutputSchema = z.object({
   marketplace_candidates: z.array(z.record(z.unknown())).optional(),
   kickscrew_product: z.record(z.unknown()).nullable().optional(),
   shoe_identification: z.record(z.unknown()).nullable().optional(),
+  watch_market: z.object({
+    source: z.string(),
+    search_query: z.string(),
+    listing_count: z.number(),
+    total_count: z.number(),
+    price_min_gbp: z.number().nullable(),
+    price_median_gbp: z.number().nullable(),
+    price_max_gbp: z.number().nullable(),
+    currency: z.literal("GBP"),
+  }).nullable().optional(),
+  watch_identification: z.record(z.unknown()).nullable().optional(),
 });
 
 const TechLensAttributesSchema = z.object({
@@ -618,6 +634,127 @@ async function enrichShoeLensWithKicksCrew(
   return result;
 }
 
+async function enrichWatchLensWithMarketData(
+  result: StudioAnalysisResult,
+): Promise<StudioAnalysisResult> {
+  const attrs = result.attributes as Record<string, unknown>;
+  const brand = stringValue(result.identity.brand) ?? stringValue(attrs["brand"]);
+  const modelReference =
+    stringValue(attrs["model_reference"]) ??
+    stringValue(result.identity.model);
+
+  if (!brand && !modelReference) {
+    logger.debug("[WatchLens] No brand or model_reference — skipping market lookup.");
+    return result;
+  }
+
+  const marketData = await searchWatchMarket(brand, modelReference).catch((err) => {
+    logger.warn({ err }, "[WatchLens] searchWatchMarket errored — skipping.");
+    return null;
+  });
+
+  if (!marketData) return result;
+
+  const watchCandidates: WatchIdentificationInput["watch_candidates"] = marketData.listings
+    .slice(0, 10)
+    .map((l) => ({
+      source: "Chrono24" as const,
+      product_id: l.listing_id,
+      brand: l.brand,
+      model: l.model,
+      reference_number: l.reference_number,
+      movement_type: null,
+      movement_calibre: null,
+      case_material: l.case_material,
+      case_size_mm: null,
+      dial_colour: null,
+      bracelet_or_strap: null,
+      production_era: l.year_of_production ? String(l.year_of_production) : null,
+      country_or_region: null,
+    }));
+
+  const watchInput: WatchIdentificationInput = {
+    brand,
+    model: stringValue(result.identity.model) ?? stringValue(attrs["model_reference"]),
+    reference_number: stringValue(attrs["model_reference"]),
+    serial_number_partial: null,
+    movement_type: stringValue(attrs["movement_type"]),
+    movement_calibre: null,
+    case_material: stringValue(attrs["case_material"]),
+    case_size_mm: attrs["case_diameter_mm"] != null ? String(attrs["case_diameter_mm"]) : null,
+    dial_colour: stringValue(attrs["dial_colour"]),
+    bracelet_or_strap: stringValue(attrs["bracelet_type"]),
+    clasp_code: null,
+    lug_width_mm: attrs["lug_width_mm"] != null ? String(attrs["lug_width_mm"]) : null,
+    production_era: stringValue(attrs["year_approx"]),
+    country_or_region: null,
+    dial_text: null,
+    caseback_text: null,
+    movement_text: null,
+    clasp_text: null,
+    bracelet_endlink_text: null,
+    crown_text_or_logo: null,
+    box_papers_text: stringValue(attrs["box_papers"]),
+    readable_text: [
+      stringValue(attrs["condition_notes"]),
+      stringValue(attrs["service_history"]),
+    ].filter(Boolean).join("\n"),
+    visible_features: stringArrayValue(attrs["visible_features"]),
+    watch_candidates: watchCandidates.length > 0 ? watchCandidates : undefined,
+  };
+
+  const watchIdentification = await runWatchIdentificationAgent(
+    watchInput,
+    getOpenAIClient(),
+    "gpt-4o",
+  ).catch((err) => {
+    logger.warn({ err }, "[WatchLens] WatchIdentificationAgent failed after Chrono24 candidate injection.");
+    return null;
+  });
+
+  if (watchIdentification?.candidates?.[0]) {
+    const top = watchIdentification.candidates[0];
+    result.identity = {
+      ...result.identity,
+      brand: top.brand ?? result.identity.brand,
+      model: top.model ?? top.reference_number ?? result.identity.model,
+      confidence: Math.max(result.identity.confidence, top.likelihood_percent / 100),
+    };
+  }
+
+  if (marketData.listing_count >= 3 && marketData.price_median_gbp !== null) {
+    const median = marketData.price_median_gbp;
+    const currentRecommended = result.pricing.recommended;
+
+    const BLEND_WEIGHT_MARKET = 0.65;
+    const blended = Math.round(
+      median * BLEND_WEIGHT_MARKET + currentRecommended * (1 - BLEND_WEIGHT_MARKET),
+    );
+
+    result.pricing = {
+      ...result.pricing,
+      recommended: blended,
+      quick_sale: Math.round(blended * 0.87),
+      high: Math.round(blended * 1.15),
+      confidence: Math.min(0.95, result.pricing.confidence + 0.15),
+    };
+  }
+
+  result.watch_market = {
+    source: marketData.source,
+    search_query: marketData.search_query,
+    listing_count: marketData.listing_count,
+    total_count: marketData.total_count,
+    price_min_gbp: marketData.price_min_gbp,
+    price_median_gbp: marketData.price_median_gbp,
+    price_max_gbp: marketData.price_max_gbp,
+    currency: "GBP",
+  };
+  result.watch_identification = watchIdentification as unknown as Record<string, unknown> | null;
+
+  return result;
+}
+
 async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
@@ -669,6 +806,10 @@ async function runStudioAnalysis(
 
   if (lens === "ShoeLens") {
     await enrichShoeLensWithKicksCrew(result, options);
+  }
+
+  if (lens === "WatchLens") {
+    await enrichWatchLensWithMarketData(result);
   }
 
   return { result, usage: { promptTokens, completionTokens, model } };

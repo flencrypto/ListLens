@@ -529,6 +529,53 @@ export default function StudioItemPage() {
 
         {analysis && (
           <>
+            {/* WatchLens — Chrono24 market reference pricing */}
+            {analysis.lens === "WatchLens" && (() => {
+              const wm = analysis.watch_market;
+              if (!wm || wm.listing_count === 0) return null;
+              return (
+                <div className="brand-card p-6 space-y-4">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="text-xs font-mono-hud tracking-[0.2em] uppercase text-cyan-300">
+                      WatchLens · Market reference
+                    </p>
+                    <Badge variant="secondary" className="text-xs">{wm.source}</Badge>
+                  </div>
+                  <p className="text-zinc-400 text-xs">
+                    Live pre-owned pricing from {wm.total_count.toLocaleString()} active listings
+                    {wm.search_query ? ` for "${wm.search_query}"` : ""}. Pricing has been adjusted to reflect this market data.
+                  </p>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { label: "Min", value: wm.price_min_gbp, color: "text-zinc-300" },
+                      { label: "Median", value: wm.price_median_gbp, color: "text-cyan-300", highlight: true },
+                      { label: "Max", value: wm.price_max_gbp, color: "text-emerald-300" },
+                    ].map(({ label, value, color, highlight }) => (
+                      <div
+                        key={label}
+                        className={[
+                          "rounded-xl border p-3 text-center",
+                          highlight
+                            ? "border-cyan-800/60 bg-cyan-950/20"
+                            : "border-zinc-800 bg-zinc-900/40",
+                        ].join(" ")}
+                      >
+                        <p className="text-xs text-zinc-500 mb-1">{label}</p>
+                        <p className={`text-base font-semibold ${color}`}>
+                          {value !== null && value !== undefined
+                            ? `£${value.toLocaleString()}`
+                            : "—"}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <p className="text-xs text-zinc-600">
+                    Market data from {wm.source} · {wm.listing_count} listings retrieved · Used to anchor recommended price
+                  </p>
+                </div>
+              );
+            })()}
+
             {/* RecordLens — ranked likelihoods (always shown for RecordLens) */}
             {isRecordLens && clarifyResult && (
               <div className="brand-card p-6 space-y-4">

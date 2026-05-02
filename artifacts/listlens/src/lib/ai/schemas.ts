@@ -24,6 +24,17 @@ export const StudioOutputSchema = z.object({
   }),
   warnings: z.array(z.string()),
   record_analysis: z.record(z.unknown()).optional(),
+  watch_market: z.object({
+    source: z.string(),
+    search_query: z.string(),
+    listing_count: z.number(),
+    total_count: z.number(),
+    price_min_gbp: z.number().nullable(),
+    price_median_gbp: z.number().nullable(),
+    price_max_gbp: z.number().nullable(),
+    currency: z.literal("GBP"),
+  }).nullable().optional(),
+  watch_identification: z.record(z.unknown()).nullable().optional(),
 });
 
 export const DiscogsEnrichmentSchema = z.object({
