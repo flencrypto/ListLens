@@ -48,7 +48,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
       "LP vinyl albums. Sleeve and media grading, matrix runout, pressing country and edition details.",
     icon: "🎵",
     status: "live",
-    href: "/studio/new",
+    href: "/lenses/lp",
   },
   {
     id: "ClothingLens",
@@ -56,8 +56,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Apparel",
     description: "Clothing, vintage garments and apparel. Size label, fit and measurements.",
     icon: "👕",
-    status: "planned",
-    href: "/studio/new",
+    status: "live",
+    href: "/lenses/clothing",
   },
   {
     id: "CardLens",
@@ -65,8 +65,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Trading Cards",
     description: "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
     icon: "🎴",
-    status: "planned",
-    href: "/studio/new",
+    status: "live",
+    href: "/lenses/card",
   },
   {
     id: "ToyLens",
@@ -74,8 +74,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Toys & Collectibles",
     description: "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
     icon: "🧸",
-    status: "planned",
-    href: "/studio/new",
+    status: "live",
+    href: "/lenses/toy",
   },
   {
     id: "WatchLens",
@@ -83,8 +83,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Watches",
     description: "Watches and timepieces. Reference, dial and provenance evidence checks.",
     icon: "⌚",
-    status: "planned",
-    href: "/studio/new",
+    status: "live",
+    href: "/lenses/watch",
   },
   {
     id: "MeasureLens",
@@ -93,8 +93,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Physical reference object for accurate dimension estimation. Ideal for garments and parts.",
     icon: "📐",
-    status: "planned",
-    href: "/studio/new",
+    status: "live",
+    href: "/lenses/measure",
   },
   {
     id: "MotorLens",
@@ -103,8 +103,8 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Vehicles, parts and campers. Image + dimension-based fitment checks.",
     icon: "🚗",
-    status: "planned",
-    href: "/studio/new",
+    status: "live",
+    href: "/lenses/motor",
   },
   {
     id: "TechLens",
