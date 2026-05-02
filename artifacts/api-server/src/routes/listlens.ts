@@ -1134,7 +1134,7 @@ router.post("/items/:id/analyse", async (req, res) => {
   const meta = itemMeta.get(id) ?? {};
   const lens = (b["lens"] as string) ?? meta.lens ?? "ShoeLens";
   const hint = (b["hint"] as string) ?? meta.hint;
-  const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? [];
+  const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? (ownership.row?.photoUrls as string[] | undefined) ?? [];
   const kickscrewUrl = typeof b["kickscrewUrl"] === "string" ? b["kickscrewUrl"].trim() : undefined;
   const marketplaceCandidates = Array.isArray(b["marketplace_candidates"])
     ? (b["marketplace_candidates"] as ShoeIdentificationInput["marketplace_candidates"])
