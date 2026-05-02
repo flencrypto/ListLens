@@ -5,5 +5,6 @@ export const modules: ModuleMap = {
   "./components/mockups/landing/VariantB.tsx": () => import("../components/mockups/landing/VariantB.tsx"),
   "./components/mockups/mobile/HomeV1.tsx": () => import("../components/mockups/mobile/HomeV1.tsx"),
   "./components/mockups/mobile/HomeV2.tsx": () => import("../components/mockups/mobile/HomeV2.tsx"),
-  "./components/mockups/mobile/HomeV3.tsx": () => import("../components/mockups/mobile/HomeV3.tsx")
+  "./components/mockups/mobile/HomeV3.tsx": () => import("../components/mockups/mobile/HomeV3.tsx"),
+  "./components/mockups/mobile/HomeV4.tsx": () => import("../components/mockups/mobile/HomeV4.tsx")
 };
