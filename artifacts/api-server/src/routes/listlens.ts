@@ -2540,6 +2540,38 @@ const LENS_REGISTRY_META = [
   },
 ] as const;
 
+router.get("/lenses/watch/lookup", async (req, res) => {
+  const ref = (req.query["ref"] as string | undefined)?.trim();
+  if (!ref || ref.length < 3) {
+    res.status(400).json({ error: "Enter at least 3 characters for the reference number." });
+    return;
+  }
+  try {
+    const result = await searchWatchMarket(null, ref);
+    if (!result || result.listing_count === 0) {
+      res.json({ found: false, ref });
+      return;
+    }
+    const top = result.listings[0] ?? null;
+    res.json({
+      found: true,
+      ref,
+      brand: top?.brand ?? null,
+      model: top?.model ?? null,
+      reference_number: top?.reference_number ?? ref,
+      case_material: top?.case_material ?? null,
+      price_min_gbp: result.price_min_gbp,
+      price_median_gbp: result.price_median_gbp,
+      price_max_gbp: result.price_max_gbp,
+      total_count: result.total_count,
+      search_query: result.search_query,
+    });
+  } catch (err) {
+    logger.warn({ err, ref }, "[watch/lookup] Chrono24 lookup failed.");
+    res.status(502).json({ error: "Chrono24 lookup failed — please try again." });
+  }
+});
+
 router.get("/lenses", (_req, res) => {
   res.json({
     lenses: LENS_REGISTRY_META.map((l) => l.id),

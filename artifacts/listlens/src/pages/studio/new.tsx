@@ -33,6 +33,34 @@ const MARKETPLACES = [
 const MAX_PHOTOS = 8;
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
 
+interface WatchLookupResult {
+  found: boolean;
+  ref: string;
+  brand?: string | null;
+  model?: string | null;
+  reference_number?: string | null;
+  case_material?: string | null;
+  price_min_gbp?: number | null;
+  price_median_gbp?: number | null;
+  price_max_gbp?: number | null;
+  total_count?: number;
+  search_query?: string;
+}
+
+function buildWatchHint(r: WatchLookupResult): string {
+  const parts: string[] = [];
+  if (r.brand) parts.push(`Brand: ${r.brand}`);
+  if (r.model) parts.push(`Model: ${r.model}`);
+  if (r.reference_number) parts.push(`Reference: ${r.reference_number}`);
+  if (r.case_material) parts.push(`Case material: ${r.case_material}`);
+  if (r.price_median_gbp != null) {
+    parts.push(
+      `Chrono24 market price: £${r.price_min_gbp ?? "?"}–£${r.price_max_gbp ?? "?"} (median £${r.price_median_gbp})`
+    );
+  }
+  return parts.join(". ");
+}
+
 export default function NewStudioPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -48,9 +76,15 @@ export default function NewStudioPage() {
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [uploadLabel, setUploadLabel] = useState("");
   const [analysisLabel, setAnalysisLabel] = useState("");
+  const [hint, setHint] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const createStudioItem = useCreateStudioItem();
   const analyseStudioItem = useAnalyseStudioItem();
+
+  const [refInput, setRefInput] = useState("");
+  const [refLoading, setRefLoading] = useState(false);
+  const [refError, setRefError] = useState<string | null>(null);
+  const [refResult, setRefResult] = useState<WatchLookupResult | null>(null);
 
   const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
     onError: (err) => setError(`Upload failed: ${err.message}`),
@@ -62,6 +96,41 @@ export default function NewStudioPage() {
       setSelectedLens(lensParam);
     }
   }, [search]);
+
+  useEffect(() => {
+    if (selectedLens !== "WatchLens") {
+      setRefInput("");
+      setRefResult(null);
+      setRefError(null);
+    }
+  }, [selectedLens]);
+
+  async function handleRefLookup() {
+    const trimmed = refInput.trim();
+    if (trimmed.length < 3) {
+      setRefError("Enter at least 3 characters.");
+      return;
+    }
+    setRefError(null);
+    setRefResult(null);
+    setRefLoading(true);
+    try {
+      const res = await fetch(`/api/lenses/watch/lookup?ref=${encodeURIComponent(trimmed)}`);
+      const data = (await res.json()) as WatchLookupResult;
+      if (!res.ok) {
+        setRefError((data as { error?: string }).error ?? "Lookup failed.");
+        return;
+      }
+      setRefResult(data);
+      if (data.found) {
+        setHint(buildWatchHint(data));
+      }
+    } catch {
+      setRefError("Could not reach Chrono24 — please try again.");
+    } finally {
+      setRefLoading(false);
+    }
+  }
 
   async function processFiles(files: FileList | File[]) {
     const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
@@ -118,7 +187,6 @@ export default function NewStudioPage() {
     setLoading(true);
     setError(null);
     try {
-      // Step 1: create the item using the generated hook
       setAnalysisLabel("Creating listing…");
       const createData = await createStudioItem.mutateAsync({
         data: {
@@ -129,13 +197,16 @@ export default function NewStudioPage() {
       });
       const itemId = createData.id;
 
-      // Step 2: if photos were selected, trigger analysis immediately
       if (photoUrls.length > 0) {
         setAnalysisLabel("Analysing with AI…");
         try {
           await analyseStudioItem.mutateAsync({
             id: itemId,
-            data: { lens: selectedLens, photoUrls },
+            data: {
+              lens: selectedLens,
+              photoUrls,
+              ...(hint.trim() ? { hint: hint.trim() } : {}),
+            },
           });
         } catch {
           // Navigate to detail even if analysis fails — user can retry there
@@ -153,6 +224,7 @@ export default function NewStudioPage() {
 
   const hasPhotos = photoUrls.length > 0;
   const isBusy = loading || isUploading;
+  const isWatchLens = selectedLens === "WatchLens";
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -194,6 +266,92 @@ export default function NewStudioPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* WatchLens — Chrono24 reference lookup */}
+        {isWatchLens && (
+          <Card className="mb-4 border-cyan-900/40">
+            <CardHeader>
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-mono-hud tracking-[0.18em] uppercase text-cyan-300">
+                  WatchLens · Reference lookup
+                </p>
+              </div>
+              <p className="text-zinc-400 text-xs mt-1">
+                Know the reference number? Search Chrono24 to auto-fill watch details and live pricing.
+              </p>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex gap-2">
+                <input
+                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                  placeholder="e.g. 116610LN, 5711/1A, 3135…"
+                  value={refInput}
+                  onChange={(e) => setRefInput(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && !refLoading && handleRefLookup()}
+                  disabled={refLoading}
+                />
+                <Button
+                  onClick={handleRefLookup}
+                  disabled={refLoading || refInput.trim().length < 3}
+                  variant="secondary"
+                  size="sm"
+                  className="shrink-0"
+                >
+                  {refLoading ? <Spinner className="text-xs" /> : "Search"}
+                </Button>
+              </div>
+
+              {refError && (
+                <p className="text-red-400 text-xs">{refError}</p>
+              )}
+
+              {refResult && !refResult.found && (
+                <p className="text-zinc-500 text-xs">
+                  No Chrono24 listings found for "{refResult.ref}". Check the reference number or continue without it.
+                </p>
+              )}
+
+              {refResult?.found && (
+                <div className="rounded-xl border border-cyan-800/50 bg-cyan-950/20 p-4 space-y-2">
+                  <div className="flex items-start justify-between gap-2 flex-wrap">
+                    <div>
+                      <p className="text-sm font-semibold text-white">
+                        {refResult.brand ?? "Unknown brand"}{refResult.model ? ` · ${refResult.model}` : ""}
+                      </p>
+                      {refResult.reference_number && (
+                        <p className="text-xs text-zinc-400 mt-0.5">Ref {refResult.reference_number}</p>
+                      )}
+                      {refResult.case_material && (
+                        <p className="text-xs text-zinc-500">Case: {refResult.case_material}</p>
+                      )}
+                    </div>
+                    {refResult.price_median_gbp != null && (
+                      <div className="text-right shrink-0">
+                        <p className="text-xs text-zinc-500 mb-0.5">Chrono24 median</p>
+                        <p className="text-base font-semibold text-cyan-300">
+                          £{refResult.price_median_gbp.toLocaleString()}
+                        </p>
+                        {refResult.price_min_gbp != null && refResult.price_max_gbp != null && (
+                          <p className="text-xs text-zinc-500">
+                            £{refResult.price_min_gbp.toLocaleString()}–£{refResult.price_max_gbp.toLocaleString()}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {refResult.total_count != null && (
+                    <p className="text-xs text-zinc-600">
+                      Based on {refResult.total_count.toLocaleString()} active Chrono24 listings
+                    </p>
+                  )}
+                  <p className="text-xs text-emerald-400">
+                    Details auto-filled into hint — AI will use this for accurate pricing.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Marketplace picker */}
         <Card className="mb-4">

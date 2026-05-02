@@ -69,9 +69,10 @@ interface PhotoEntry {
 export default function CaptureScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { lens = "ShoeLens", marketplace = "both" } = useLocalSearchParams<{
+  const { lens = "ShoeLens", marketplace = "both", hint: hintParam } = useLocalSearchParams<{
     lens?: string;
     marketplace?: string;
+    hint?: string;
   }>();
   const isMeasureLens = lens === "MeasureLens";
   const { mutateAsync: createStudioItemAsync } = useCreateStudioItem();
@@ -232,6 +233,8 @@ export default function CaptureScreen() {
           }. Use this to estimate item dimensions accurately.`
         : undefined;
 
+      const combinedHint = [hintParam, measureHint].filter(Boolean).join(" | ") || undefined;
+
       // Animate fake progress for the AI call (typically 5–30 s)
       startProgressPhase("Analysing with AI…", 45, 95, 30_000);
 
@@ -248,7 +251,7 @@ export default function CaptureScreen() {
         data: {
           lens: String(lens),
           photoUrls,
-          ...(measureHint ? { hint: measureHint } : {}),
+          ...(combinedHint ? { hint: combinedHint } : {}),
         },
       });
 

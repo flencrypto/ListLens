@@ -4,6 +4,10 @@ function getApiBase(): string {
   return "http://localhost:8080";
 }
 
+export function getApiUrl(): string {
+  return `${getApiBase()}/api`;
+}
+
 const MIME_TO_EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/jpg": "jpg",
