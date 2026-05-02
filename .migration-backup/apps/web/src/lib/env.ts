@@ -44,7 +44,7 @@ const EnvSchema = z.object({
   REDIS_URL: optionalString,
 
   // OpenAI
-  OPENAI_API_KEY: optionalString, // optional: triggers mock-mode in studio/guard
+  OPENAI_API_KEY:const mySecret = process.env['OPENAI_API_KEY']
 
   // Stripe
   STRIPE_SECRET_KEY: requiredInProd("STRIPE_SECRET_KEY"),

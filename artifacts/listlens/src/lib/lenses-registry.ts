@@ -26,7 +26,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     name: "RecordLens",
     category: "Music Media",
     description:
-      "Vinyl, CDs and cassettes. Identifies release from a label photo, with a matrix runout clarification flow.",
+      "Identifies vinyl release from a label photo, with a matrix runout clarification flow.",
     icon: "💿",
     status: "live",
     href: "/lenses/record",
@@ -38,7 +38,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description: "Trainers, sneakers and shoes. Style code, size label and sole checks.",
     icon: "👟",
     status: "live",
-    href: "/studio/new",
+    href: "/lenses/sole",
   },
   {
     id: "LPLens",
@@ -56,7 +56,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Apparel",
     description: "Clothing, vintage garments and apparel. Size label, fit and measurements.",
     icon: "👕",
-    status: "live",
+    status: "planned",
     href: "/studio/new",
   },
   {
@@ -65,7 +65,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Trading Cards",
     description: "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
     icon: "🎴",
-    status: "live",
+    status: "planned",
     href: "/studio/new",
   },
   {
@@ -74,7 +74,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Toys & Collectibles",
     description: "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
     icon: "🧸",
-    status: "live",
+    status: "planned",
     href: "/studio/new",
   },
   {
@@ -83,7 +83,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Watches",
     description: "Watches and timepieces. Reference, dial and provenance evidence checks.",
     icon: "⌚",
-    status: "live",
+    status: "planned",
     href: "/studio/new",
   },
   {
@@ -93,7 +93,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Physical reference object for accurate dimension estimation. Ideal for garments and parts.",
     icon: "📐",
-    status: "live",
+    status: "planned",
     href: "/studio/new",
   },
   {
@@ -103,7 +103,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Vehicles, parts and campers. Image + dimension-based fitment checks.",
     icon: "🚗",
-    status: "live",
+    status: "planned",
     href: "/studio/new",
   },
   {
@@ -112,7 +112,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Electronics",
     description: "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
     icon: "📱",
-    status: "live",
+    status: "planned",
     href: "/lenses/tech",
   },
   {
@@ -121,7 +121,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Books",
     description: "Books, first editions and collectable print. ISBN, edition and condition.",
     icon: "📚",
-    status: "live",
+    status: "planned",
     href: "/lenses/book",
   },
   {
@@ -130,7 +130,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Antiques & Vintage",
     description: "Antiques and decorative objects. Maker marks, era and reproduction risk.",
     icon: "🏺",
-    status: "live",
+    status: "planned",
     href: "/lenses/antiques",
   },
   {
@@ -139,7 +139,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     category: "Autographs",
     description: "Signed items and provenance. Evidence-led — never authenticates signatures.",
     icon: "✍️",
-    status: "live",
+    status: "planned",
     href: "/lenses/autograph",
   },
 ];

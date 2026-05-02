@@ -6,12 +6,12 @@ import { BrandGlyph } from "@/components/brand/brand-glyph";
 import { BrandBackground } from "@/components/brand/brand-background";
 
 const LENSES = [
-  { name: "ShoeLens",      icon: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
-  { name: "LPLens",        icon: "🎵", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
-  { name: "TechLens",      icon: "💻", desc: "Electronics & gadgets",   status: "live",  href: "/lenses/tech" },
-  { name: "BookLens",      icon: "📚", desc: "Books & editions",        status: "live",  href: "/lenses/book" },
-  { name: "AntiquesLens",  icon: "🏺", desc: "Antiques & collectibles", status: "live",  href: "/lenses/antiques" },
-  { name: "AutographLens", icon: "✍️", desc: "Signed memorabilia",      status: "live",  href: "/lenses/autograph" },
+  { name: "ShoeLens",      icon: "👟", desc: "Trainers & sneakers",     status: "live" },
+  { name: "LPLens",        icon: "🎵", desc: "Vinyl, CDs, cassettes",   status: "live" },
+  { name: "TechLens",      icon: "💻", desc: "Electronics & gadgets",   status: "live" },
+  { name: "BookLens",      icon: "📚", desc: "Books & editions",        status: "live" },
+  { name: "AntiquesLens",  icon: "🏺", desc: "Antiques & collectibles", status: "live" },
+  { name: "AutographLens", icon: "✍️", desc: "Signed memorabilia",      status: "live" },
   { name: "WatchLens",     icon: "⌚", desc: "Watches & timepieces",    status: "soon" },
   { name: "CardLens",      icon: "🃏", desc: "Trading & sports cards",  status: "soon" },
   { name: "ToyLens",       icon: "🧸", desc: "Toys, LEGO, figures",     status: "soon" },
@@ -375,42 +375,31 @@ export default function HomePage() {
 
           {/* Right — 5-col grid */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {LENSES.map((lens) => {
-              const card = (
-                <div
-                  className={`rounded-2xl border p-3.5 text-center transition-all ${
-                    lens.status === "live"
-                      ? "border-cyan-700/50 bg-cyan-950/25 shadow-[0_0_28px_-12px_rgba(34,211,238,0.5)] hover:border-cyan-600/70 hover:shadow-[0_0_32px_-8px_rgba(34,211,238,0.7)] cursor-pointer"
-                      : "border-zinc-800/60 bg-zinc-900/30 opacity-50 cursor-default"
-                  }`}
-                >
-                  <div className="text-2xl mb-1.5">{lens.icon}</div>
-                  <p className="text-xs font-semibold text-white">{lens.name}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.desc}</p>
-                  <div className="mt-2">
-                    {lens.status === "live" && (
-                      <span className="inline-block text-[9px] bg-cyan-900/70 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-700/40">Live</span>
-                    )}
-                    {lens.status === "soon" && (
-                      <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>
-                    )}
-                    {lens.status === "later" && (
-                      <span className="inline-block text-[9px] bg-zinc-900 text-zinc-700 px-2 py-0.5 rounded-full">Planned</span>
-                    )}
-                  </div>
+            {LENSES.map((lens) => (
+              <div
+                key={lens.name}
+                className={`rounded-2xl border p-3.5 text-center transition-all ${
+                  lens.status === "live"
+                    ? "border-cyan-700/50 bg-cyan-950/25 shadow-[0_0_28px_-12px_rgba(34,211,238,0.5)] hover:border-cyan-600/70 hover:shadow-[0_0_32px_-8px_rgba(34,211,238,0.7)] cursor-default"
+                    : "border-zinc-800/60 bg-zinc-900/30 opacity-50"
+                }`}
+              >
+                <div className="text-2xl mb-1.5">{lens.icon}</div>
+                <p className="text-xs font-semibold text-white">{lens.name}</p>
+                <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.desc}</p>
+                <div className="mt-2">
+                  {lens.status === "live" && (
+                    <span className="inline-block text-[9px] bg-cyan-900/70 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-700/40">Live</span>
+                  )}
+                  {lens.status === "soon" && (
+                    <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>
+                  )}
+                  {lens.status === "later" && (
+                    <span className="inline-block text-[9px] bg-zinc-900 text-zinc-700 px-2 py-0.5 rounded-full">Planned</span>
+                  )}
                 </div>
-              );
-
-              if (lens.status === "live" && lens.href) {
-                return (
-                  <Link key={lens.name} href={lens.href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#040a14] rounded-2xl">
-                    {card}
-                  </Link>
-                );
-              }
-
-              return <div key={lens.name}>{card}</div>;
-            })}
+              </div>
+            ))}
           </div>
         </div>
       </section>

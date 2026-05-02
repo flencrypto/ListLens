@@ -11,11 +11,6 @@ import {
   runRecordIdentificationAgent,
   type IdentificationInput,
 } from "../lib/record-identification-agent";
-import { fetchKicksCrewByUrl, type KickCrewProduct } from "../lib/kickscrew-client";
-import {
-  runShoeIdentificationAgent,
-  type ShoeIdentificationInput,
-} from "../lib/shoe-identification-agent";
 
 const router: IRouter = Router();
 
@@ -79,9 +74,6 @@ const StudioOutputSchema = z.object({
   }),
   warnings: z.array(z.string()),
   record_analysis: z.record(z.unknown()).optional(),
-  marketplace_candidates: z.array(z.record(z.unknown())).optional(),
-  kickscrew_product: z.record(z.unknown()).nullable().optional(),
-  shoe_identification: z.record(z.unknown()).nullable().optional(),
 });
 
 const TechLensAttributesSchema = z.object({
@@ -374,135 +366,10 @@ const NEW_LENSES_USING_GROK_VISION = new Set([
   "AutographLens",
 ]);
 
-
-type StudioAnalysisOptions = {
-  kickscrewUrl?: string;
-  marketplaceCandidates?: ShoeIdentificationInput["marketplace_candidates"];
-};
-
-type StudioAnalysisResult = z.infer<typeof StudioOutputSchema>;
-
-function stringValue(value: unknown): string | null {
-  return typeof value === "string" && value.trim() ? value.trim() : null;
-}
-
-function stringArrayValue(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.map((entry) => String(entry)).filter(Boolean)
-    : [];
-}
-
-function mapKicksCrewToShoeCandidate(product: KickCrewProduct): NonNullable<ShoeIdentificationInput["marketplace_candidates"]>[number] {
-  return {
-    source: "KicksCrew",
-    product_id: product.product_url,
-    title: product.name,
-    brand: product.brand,
-    model: product.name,
-    colourway: product.colourway,
-    style_code: product.style_code ?? product.sku,
-    sku: product.sku ?? product.style_code,
-    size: product.sizes[0] ?? null,
-    gender_category: null,
-    release_year: null,
-    product_line: product.brand,
-    retail_price: product.retail_price,
-    price: product.retail_price,
-    currency: product.currency,
-    sizes: product.sizes,
-    image_url: product.image_url,
-    product_url: product.product_url,
-    evidence: [
-      "Fetched from KicksCrew RapidAPI by product URL.",
-      product.style_code || product.sku ? `Style/SKU: ${product.style_code ?? product.sku}` : null,
-      product.colourway ? `Colourway: ${product.colourway}` : null,
-      product.retail_price !== null
-        ? `Retail price: ${product.currency ?? ""} ${product.retail_price}`.trim()
-        : null,
-    ].filter(Boolean) as string[],
-  };
-}
-
-async function enrichShoeLensWithKicksCrew(
-  result: StudioAnalysisResult,
-  options?: StudioAnalysisOptions,
-): Promise<StudioAnalysisResult> {
-  const kickscrewProduct = options?.kickscrewUrl
-    ? await fetchKicksCrewByUrl(options.kickscrewUrl)
-    : null;
-
-  const marketplaceCandidates: NonNullable<ShoeIdentificationInput["marketplace_candidates"]> = [
-    ...(kickscrewProduct ? [mapKicksCrewToShoeCandidate(kickscrewProduct)] : []),
-    ...(options?.marketplaceCandidates ?? []),
-  ];
-
-  if (!marketplaceCandidates.length) return result;
-
-  const attributes = result.attributes as Record<string, unknown>;
-  const readableText = [
-    stringValue(attributes["readable_text"]),
-    stringValue(attributes["ocr_text"]),
-    stringValue(attributes["label_text"]),
-    stringValue(attributes["box_label_text"]),
-    stringValue(attributes["size_label_text"]),
-  ].filter(Boolean).join("\n");
-
-  const shoeInput: ShoeIdentificationInput = {
-    brand: result.identity.brand ?? stringValue(attributes["brand"]),
-    model: result.identity.model ?? stringValue(attributes["model"]),
-    colourway: stringValue(attributes["colourway"]) ?? stringValue(attributes["colorway"]),
-    style_code: stringValue(attributes["style_code"]) ?? stringValue(attributes["styleCode"]),
-    sku: stringValue(attributes["sku"]),
-    upc: stringValue(attributes["upc"]) ?? stringValue(attributes["barcode"]),
-    size: stringValue(attributes["size"]),
-    gender_category: stringValue(attributes["gender_category"]) ?? stringValue(attributes["gender"]),
-    release_year: stringValue(attributes["release_year"]) ?? stringValue(attributes["year"]),
-    country_or_region: stringValue(attributes["country_or_region"]) ?? stringValue(attributes["country"]),
-    box_label_text: stringValue(attributes["box_label_text"]),
-    size_label_text: stringValue(attributes["size_label_text"]) ?? stringValue(attributes["tongue_label_text"]),
-    insole_text: stringValue(attributes["insole_text"]),
-    outsole_text: stringValue(attributes["outsole_text"]),
-    tongue_label_text: stringValue(attributes["tongue_label_text"]),
-    heel_text: stringValue(attributes["heel_text"]),
-    readable_text: readableText,
-    visible_features: [
-      ...stringArrayValue(attributes["visible_features"]),
-      ...stringArrayValue(attributes["features"]),
-    ],
-    marketplace_candidates: marketplaceCandidates,
-  };
-
-  const shoeIdentification = await runShoeIdentificationAgent(
-    shoeInput,
-    getOpenAIClient(),
-    "gpt-4o",
-  ).catch((err) => {
-    logger.warn({ err }, "ShoeIdentificationAgent failed after KicksCrew candidate injection");
-    return null;
-  });
-
-  if (shoeIdentification?.candidates?.[0]) {
-    const top = shoeIdentification.candidates[0];
-    result.identity = {
-      ...result.identity,
-      brand: top.brand ?? result.identity.brand,
-      model: top.model ?? result.identity.model,
-      confidence: Math.max(result.identity.confidence, top.likelihood_percent / 100),
-    };
-  }
-
-  result.marketplace_candidates = marketplaceCandidates as unknown as Record<string, unknown>[];
-  result.kickscrew_product = kickscrewProduct as unknown as Record<string, unknown> | null;
-  result.shoe_identification = shoeIdentification as unknown as Record<string, unknown> | null;
-
-  return result;
-}
-
 async function runStudioAnalysis(
   lens: string,
   photoUrls: string[],
   hint?: string,
-  options?: StudioAnalysisOptions,
 ): Promise<{ result: z.infer<typeof StudioOutputSchema>; usage: AnalysisUsage }> {
   // RecordLens uses its own dedicated 5-step xAI/grok pipeline
   if (lens === "RecordLens") {
@@ -546,11 +413,6 @@ async function runStudioAnalysis(
   const parsed = JSON.parse(raw) as unknown;
   const result = StudioOutputSchema.parse(parsed);
   result.attributes = validateLensAttributes(lens, result.attributes);
-
-  if (lens === "ShoeLens") {
-    await enrichShoeLensWithKicksCrew(result, options);
-  }
-
   return { result, usage: { promptTokens, completionTokens, model } };
 }
 
@@ -1135,17 +997,10 @@ router.post("/items/:id/analyse", async (req, res) => {
   const lens = (b["lens"] as string) ?? meta.lens ?? "ShoeLens";
   const hint = (b["hint"] as string) ?? meta.hint;
   const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? [];
-  const kickscrewUrl = typeof b["kickscrewUrl"] === "string" ? b["kickscrewUrl"].trim() : undefined;
-  const marketplaceCandidates = Array.isArray(b["marketplace_candidates"])
-    ? (b["marketplace_candidates"] as ShoeIdentificationInput["marketplace_candidates"])
-    : undefined;
   const userId = req.user?.id;
 
   try {
-    const { result: analysis, usage } = await runStudioAnalysis(lens, photoUrls, hint, {
-      kickscrewUrl,
-      marketplaceCandidates,
-    });
+    const { result: analysis, usage } = await runStudioAnalysis(lens, photoUrls, hint);
     studioStore.set(id, analysis);
 
     const ebayTitle = String((analysis.marketplace_outputs?.ebay as Record<string, unknown>)?.["title"] ?? "");

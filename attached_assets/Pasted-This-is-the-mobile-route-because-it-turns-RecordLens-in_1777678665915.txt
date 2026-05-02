@@ -1,0 +1,117 @@
+This is the mobile route because it turns RecordLens into a camera-first listing machine: snap the vinyl, resolve the Discogs release, map the fields, then generate an eBay-ready draft.
+
+Best mobile setup
+
+Use Expo / React Native as the front end. expo-image-picker supports camera and photo-library capture, so it fits perfectly for record sleeves, labels, barcodes and matrix shots. 
+
+The key rule
+
+Do not put Discogs secrets in the mobile app.
+
+Use the app as the capture layer, then send requests to a Netlify Function:
+
+Mobile app
+  ↓ photo / barcode / title / matrix
+Netlify Function
+  ↓ signed Discogs request
+Discogs API
+  ↓ release metadata
+RecordLens field mapper
+  ↓
+Listing draft
+
+Expo warns that EXPO_PUBLIC_ variables are visible in the compiled app, so Discogs keys, OAuth secrets and signing logic must stay server-side. 
+
+Mobile v1 flow
+
+1. Capture
+
+Front cover
+
+Back cover
+
+Label side A/B
+
+Matrix/runout close-up
+
+
+
+2. Extract
+
+OCR title, artist, label, barcode, catalogue number
+
+Optional manual matrix input
+
+
+
+3. Resolve
+
+Call /database/search
+
+Pick best Discogs match
+
+Fetch /releases/{release_id}
+
+
+
+
+Discogs database search requires authentication, and Discogs also expects a unique User-Agent for best request limits.  
+
+4. Map
+
+Discogs fields → RecordLens listing object
+
+Matrix/runout → sku_variant
+
+Condition → Mr.FLEN grading taxonomy
+
+
+
+5. Draft
+
+SEO title
+
+Condition notes
+
+Collector description
+
+Suggested price
+
+eBay draft payload
+
+
+
+
+Tiny mobile client shape
+
+// app/services/recordlens.ts
+
+export async function analyseRecord(formData: FormData) {
+  const res = await fetch(`${process.env.EXPO_PUBLIC_API_URL}/analyse-record`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) {
+    throw new Error("RecordLens analysis failed");
+  }
+
+  return res.json();
+}
+
+Only store short-lived user/session tokens on-device. For sensitive local values, Expo SecureStore encrypts key-value pairs locally on the device. 
+
+The killer mobile feature
+
+Add a “Confidence Screen” before draft generation:
+
+Possible match:
+Radiohead – OK Computer
+UK / 1997 / Parlophone
+Catalogue: NODATA 02
+Confidence: 87%
+
+Buttons:
+[Use this release] [Show alternatives] [Manual search]
+
+That stops bad metadata sneaking into listings — proper reseller-grade, not toy app energy.
