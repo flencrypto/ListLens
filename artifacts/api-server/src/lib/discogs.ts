@@ -79,7 +79,7 @@ export async function searchDiscogs(query: {
   catno?: string | null;
   label?: string | null;
 }): Promise<DiscogsSearchResult[]> {
-  const params = new URLSearchParams({ type: "release", per_page: "5" });
+  const params = new URLSearchParams({ type: "release", per_page: "8" });
   if (query.artist) params.set("artist", query.artist);
   if (query.title) params.set("release_title", query.title);
   if (query.catno) params.set("catno", query.catno);
@@ -104,6 +104,20 @@ export async function getDiscogsRelease(
     logger.warn({ err, releaseId }, "Discogs release fetch failed — skipping enrichment");
     return null;
   }
+}
+
+/**
+ * enrichDiscogsResults — fetches up to 4 Discogs release records in parallel.
+ *
+ * Used by the pressing identification pipeline to give the Identification Agent
+ * full year / country / format / tracklist data for every candidate, not just
+ * the top-ranked result.
+ */
+export async function enrichDiscogsResults(ids: number[]): Promise<DiscogsRelease[]> {
+  const releases = await Promise.all(
+    ids.slice(0, 4).map((id) => getDiscogsRelease(id).catch(() => null)),
+  );
+  return releases.filter((r): r is DiscogsRelease => r !== null);
 }
 
 /**
