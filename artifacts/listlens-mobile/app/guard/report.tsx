@@ -6,6 +6,7 @@ import { Linking, Pressable, StyleSheet, Text, View, type DimensionValue } from 
 import { Badge } from "@/components/ui/Badge";
 import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import {
@@ -460,9 +461,8 @@ export default function GuardReportScreen() {
           />
         </View>
         <View style={{ flex: 1 }}>
-          <BrandButton
+          <GuardCheckButton
             label="New check"
-            variant="guard"
             onPress={() => router.replace("/guard/check")}
           />
         </View>

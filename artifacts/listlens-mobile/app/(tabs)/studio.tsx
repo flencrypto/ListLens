@@ -3,9 +3,9 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
+import { StudioButton } from "@/components/ui/StudioButton";
 import { useColors } from "@/hooks/useColors";
 
 const FEATURES = [
@@ -49,11 +49,9 @@ export default function StudioScreen() {
         </View>
       </Card>
 
-      <BrandButton
-        label="Start a new listing"
-        size="lg"
+      <StudioButton
+        label="Enter Studio"
         onPress={() => router.push("/studio/new")}
-        iconLeft={<Feather name="plus" size={18} color="#040a14" />}
       />
 
       <Card>

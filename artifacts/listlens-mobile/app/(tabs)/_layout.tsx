@@ -1,6 +1,6 @@
-import { Feather } from "@expo/vector-icons";
 import { BlurView } from "expo-blur";
 import { Tabs } from "expo-router";
+import { Archive, Grid2x2, Layers, Shield, Video } from "lucide-react-native";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
 
@@ -9,9 +9,54 @@ import { useColors } from "@/hooks/useColors";
 
 const NAVY = "#040a14";
 
+function TabIcon({
+  icon,
+  focused,
+}: {
+  icon: React.ReactNode;
+  focused: boolean;
+}) {
+  const colors = useColors();
+  return (
+    <View style={styles.iconContainer}>
+      {focused && (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.iconGlow,
+            Platform.select({
+              web: {
+                boxShadow: "0 0 14px rgba(34,211,238,0.55)",
+              },
+              default: {
+                shadowColor: colors.brandCyan,
+                shadowOpacity: 0.55,
+                shadowRadius: 10,
+                shadowOffset: { width: 0, height: 0 },
+              },
+            }),
+          ]}
+        />
+      )}
+      <View
+        style={[
+          styles.iconBubble,
+          focused && {
+            backgroundColor: "rgba(34,211,238,0.12)",
+            borderColor: "rgba(34,211,238,0.45)",
+            borderWidth: 1,
+          },
+        ]}
+      >
+        {icon}
+      </View>
+    </View>
+  );
+}
+
 /**
  * Tab layout — five primary destinations matching the web nav structure:
- * Home (dashboard), Lenses, Studio, Guard, More. Custom Inter-styled header
+ * Home (dashboard), Lenses, Studio, Guard, Vault. Custom Inter-styled header
  * with the brand wordmark replaces a stock title bar. A 1px cyan glow strip
  * above the tab bar matches the web navbar's HUD divider.
  */
@@ -25,17 +70,19 @@ export default function TabLayout() {
         tabBarActiveTintColor: colors.brandCyan,
         tabBarInactiveTintColor: colors.zinc500,
         tabBarLabelStyle: {
-          fontFamily: "Inter_600SemiBold",
+          fontFamily: "Inter_700Bold",
           fontSize: 10,
-          letterSpacing: 0.4,
+          letterSpacing: 0.5,
           textTransform: "uppercase",
+          marginTop: 2,
         },
         tabBarStyle: {
           position: "absolute",
           backgroundColor: Platform.OS === "ios" ? "transparent" : NAVY,
           borderTopWidth: 0,
           elevation: 0,
-          ...(isWeb ? { height: 84 } : {}),
+          height: isWeb ? 84 : 72,
+          paddingBottom: isWeb ? 8 : 6,
         },
         tabBarBackground: () => (
           <View style={StyleSheet.absoluteFill}>
@@ -74,7 +121,6 @@ export default function TabLayout() {
                 },
                 Platform.select({
                   web: {
-                    // RN-web prefers boxShadow over the deprecated shadow* props.
                     boxShadow: "0 0 6px rgba(34,211,238,0.6)",
                   },
                   default: {
@@ -99,9 +145,12 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="grid" color={color} size={size - 2} />
+          title: "Home",
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              icon={<Grid2x2 size={20} color={color} strokeWidth={focused ? 2.5 : 1.8} />}
+            />
           ),
         }}
       />
@@ -109,8 +158,11 @@ export default function TabLayout() {
         name="lenses"
         options={{
           title: "Lenses",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="aperture" color={color} size={size - 2} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              icon={<Layers size={20} color={color} strokeWidth={focused ? 2.5 : 1.8} />}
+            />
           ),
         }}
       />
@@ -118,8 +170,11 @@ export default function TabLayout() {
         name="studio"
         options={{
           title: "Studio",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="camera" color={color} size={size - 2} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              icon={<Video size={20} color={color} strokeWidth={focused ? 2.5 : 1.8} />}
+            />
           ),
         }}
       />
@@ -127,20 +182,51 @@ export default function TabLayout() {
         name="guard"
         options={{
           title: "Guard",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="shield" color={color} size={size - 2} />
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              icon={<Shield size={20} color={color} strokeWidth={focused ? 2.5 : 1.8} />}
+            />
           ),
         }}
       />
       <Tabs.Screen
         name="more"
         options={{
-          title: "More",
-          tabBarIcon: ({ color, size }) => (
-            <Feather name="more-horizontal" color={color} size={size - 2} />
+          title: "Vault",
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon
+              focused={focused}
+              icon={<Archive size={20} color={color} strokeWidth={focused ? 2.5 : 1.8} />}
+            />
           ),
         }}
       />
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  iconContainer: {
+    width: 36,
+    height: 36,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  iconGlow: {
+    position: "absolute",
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: "rgba(34,211,238,0.08)",
+  },
+  iconBubble: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 0,
+    borderColor: "transparent",
+  },
+});

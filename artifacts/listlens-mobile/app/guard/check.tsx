@@ -15,8 +15,8 @@ import {
   View,
 } from "react-native";
 
-import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
@@ -468,13 +468,10 @@ export default function GuardCheckScreen() {
         </View>
       </Card>
 
-      <BrandButton
+      <GuardCheckButton
         label="Run Guard Check"
-        size="lg"
-        variant="guard"
-        loading={busy}
+        isRunning={busy}
         onPress={handleStart}
-        iconLeft={<Feather name="search" size={18} color="#040a14" />}
       />
 
       <Text style={[styles.disclaimer, { color: colors.zinc500 }]}>

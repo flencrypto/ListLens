@@ -14,8 +14,9 @@ import { useFocusEffect } from "expo-router";
 
 import { BrandLens } from "@/components/brand/BrandLens";
 import { Badge } from "@/components/ui/Badge";
-import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
+import { StudioButton } from "@/components/ui/StudioButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { formatRemainingCredits, useSubscription } from "@/lib/revenuecat";
@@ -253,9 +254,8 @@ export default function HomeScreen() {
             <Text style={[styles.emptyText, { color: colors.zinc500 }]}>
               No listings yet
             </Text>
-            <BrandButton
-              label="Create first listing"
-              size="sm"
+            <StudioButton
+              label="Enter Studio"
               onPress={() => router.push("/(tabs)/studio")}
             />
           </View>
@@ -307,10 +307,8 @@ export default function HomeScreen() {
             <Text style={[styles.emptyText, { color: colors.zinc500 }]}>
               No checks yet
             </Text>
-            <BrandButton
+            <GuardCheckButton
               label="Check a listing"
-              variant="guard"
-              size="sm"
               onPress={() => router.push("/(tabs)/guard")}
             />
           </View>
@@ -329,9 +327,8 @@ export default function HomeScreen() {
             </Text>
           </View>
           <View style={{ minWidth: 110 }}>
-            <BrandButton
+            <StudioButton
               label={ctaLabel}
-              size="sm"
               onPress={() => router.push("/more/billing")}
             />
           </View>

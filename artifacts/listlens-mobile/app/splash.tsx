@@ -1,4 +1,3 @@
-import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React from "react";
 import {
@@ -25,7 +24,8 @@ import { BrandBackground } from "@/components/brand/BrandBackground";
 import { BrandGlyph } from "@/components/brand/BrandGlyph";
 import { BrandLens } from "@/components/brand/BrandLens";
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
-import { BrandButton } from "@/components/ui/Button";
+import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
+import { StudioButton } from "@/components/ui/StudioButton";
 import { useColors } from "@/hooks/useColors";
 
 export default function SplashScreenRoute() {
@@ -126,19 +126,14 @@ export default function SplashScreenRoute() {
           entering={FadeInDown.delay(680).duration(700)}
           style={styles.actions}
         >
-          <BrandButton
+          <StudioButton
             label="Enter Studio"
-            size="lg"
             onPress={() => router.replace("/(tabs)/studio")}
-            iconLeft={<Feather name="camera" size={18} color="#040a14" />}
           />
           <View style={{ height: 12 }} />
-          <BrandButton
+          <GuardCheckButton
             label="Run a Guard check"
-            variant="outline"
-            size="lg"
             onPress={() => router.replace("/(tabs)/guard")}
-            iconLeft={<Feather name="shield" size={18} color={colors.cyan100} />}
           />
         </Animated.View>
 

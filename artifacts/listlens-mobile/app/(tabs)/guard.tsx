@@ -3,8 +3,8 @@ import { useRouter } from "expo-router";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
-import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 
@@ -61,12 +61,9 @@ export default function GuardScreen() {
         </View>
       </Card>
 
-      <BrandButton
+      <GuardCheckButton
         label="Run a Guard check"
-        size="lg"
-        variant="guard"
         onPress={() => router.push("/guard/check")}
-        iconLeft={<Feather name="search" size={18} color="#040a14" />}
       />
 
       {/* Trust language — mirrors the home page block */}
