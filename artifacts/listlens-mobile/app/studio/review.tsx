@@ -22,6 +22,7 @@ import {
   generateId,
   getDraft,
   saveDraft,
+  type PressingMatch,
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis, ItemSpecific } from "@/lib/api";
@@ -123,14 +124,6 @@ const EMPTY_CORRECTIONS: AnalysisCorrections = {
   label: "",
 };
 
-type PressingMatch = {
-  likely_release: string;
-  likelihood_percent: number;
-  artist: string | null;
-  title: string | null;
-  label: string | null;
-};
-
 export default function ReviewScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -149,12 +142,13 @@ export default function ReviewScreen() {
   );
 
   const itemId = params.itemId ? String(params.itemId) : null;
-  const isRecordLens = (params.lens ? String(params.lens) : "") === "RecordLens";
 
   const [draftId, setDraftId] = useState<string | null>(null);
   const [createdAt, setCreatedAt] = useState<number>(() => Date.now());
   const [body, setBody] = useState<DraftBody>(DEFAULT_BODY);
   const [hydrated, setHydrated] = useState(false);
+
+  const isRecordLens = body.lens === "RecordLens" || (params.lens ? String(params.lens) : "") === "RecordLens";
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Correction panel state
@@ -214,6 +208,15 @@ export default function ReviewScreen() {
             flags: existing.flags,
             exported: existing.exported,
           });
+          if (existing.lens === "RecordLens" && (existing.matrixSideA || existing.matrixSideB || existing.matrixSideCD || existing.pressingMatches)) {
+            setNeedsMatrixConfirm(true);
+            setMatrixSideA(existing.matrixSideA ?? "");
+            setMatrixSideB(existing.matrixSideB ?? "");
+            setMatrixSideCD(existing.matrixSideCD ?? "");
+            if (existing.pressingMatches && existing.pressingMatches.length > 0) {
+              setMatrixLikelihoods(existing.pressingMatches);
+            }
+          }
           setHydrated(true);
           return;
         }
@@ -324,11 +327,15 @@ export default function ReviewScreen() {
         createdAt,
         updatedAt: Date.now(),
         ...body,
+        matrixSideA: matrixSideA || undefined,
+        matrixSideB: matrixSideB || undefined,
+        matrixSideCD: matrixSideCD || undefined,
+        pressingMatches: matrixLikelihoods ?? undefined,
       };
       saveDraft(draft).catch(() => undefined);
     }, 250);
     return () => clearTimeout(handle);
-  }, [hydrated, draftId, createdAt, body]);
+  }, [hydrated, draftId, createdAt, body, matrixSideA, matrixSideB, matrixSideCD, matrixLikelihoods]);
 
   // Fetch eBay item specifics from the server once we have an itemId.
   useEffect(() => {

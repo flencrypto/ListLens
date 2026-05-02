@@ -3,6 +3,14 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const DRAFTS_KEY = "listlens.history.drafts.v1";
 const REPORTS_KEY = "listlens.history.reports.v1";
 
+export type PressingMatch = {
+  likely_release: string;
+  likelihood_percent: number;
+  artist: string | null;
+  title: string | null;
+  label: string | null;
+};
+
 export interface StudioDraft {
   id: string;
   createdAt: number;
@@ -18,6 +26,10 @@ export interface StudioDraft {
   pricing: { quick: number; recommended: number; high: number };
   flags: { severity: "high" | "medium" | "low"; text: string }[];
   exported: "none" | "ebay" | "vinted";
+  matrixSideA?: string;
+  matrixSideB?: string;
+  matrixSideCD?: string;
+  pressingMatches?: PressingMatch[];
 }
 
 export type RiskLevel = "low" | "medium" | "medium_high" | "high" | "inconclusive";
