@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400;1,700&family=Inter:wght@400;500;600;700&display=swap');
+
+.speed-claim-page {
+  font-family: 'Inter', sans-serif;
+  background-color: #040a14;
+  color: #ffffff;
+}
+
+.font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.animate-flash {
+  animation: flash 2s infinite;
+}
+
+@keyframes progress-fill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+.animate-progress {
+  animation: progress-fill 2s ease-out forwards;
+}
+
+.timer-digit {
+  font-variant-numeric: tabular-nums;
+}

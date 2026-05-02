@@ -12,3 +12,27 @@ id = "qwr7Eu5Uvqb9lUS0y5Pkr"
 uri = "file://artifacts/listlens-mobile/assets/images/splash.png"
 type = "image"
 title = "mobile splash brain cart"
+
+[[generated]]
+id = "KXbWctyf_EoJ4h19aZg27"
+uri = "file://artifacts/mockup-sandbox/public/images/studio-app-mockup.png"
+type = "image"
+title = "AI selling app interface mockup"
+
+[[generated]]
+id = "aZgzZVA4CilMGZOQYlgg6"
+uri = "file://artifacts/mockup-sandbox/public/images/lens-grid-bg.png"
+type = "image"
+title = "Abstract cyan and violet tech background"
+
+[[generated]]
+id = "ua7M5h88Hu77lUidxsQfh"
+uri = "file://artifacts/mockup-sandbox/public/images/shoe-mockup-1.png"
+type = "image"
+title = "Shoe photo 1"
+
+[[generated]]
+id = "E0rW_uTUMgTAkfOd5-NBw"
+uri = "file://artifacts/mockup-sandbox/public/images/shoe-mockup-2.png"
+type = "image"
+title = "Shoe photo 2"
