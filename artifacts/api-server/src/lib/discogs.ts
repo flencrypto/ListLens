@@ -26,22 +26,9 @@ function pruneReleaseCache(): void {
 
 setInterval(pruneReleaseCache, 5 * 60_000).unref();
 
-// Validate credentials at module load — fail fast with a clear message rather than
-// silently sending unsigned requests that will be rate-limited or rejected by Discogs.
-const DISCOGS_KEY = process.env["DISCOGS_CONSUMER_KEY"];
-const DISCOGS_SECRET = process.env["DISCOGS_CONSUMER_SECRET"];
-if (!DISCOGS_KEY || !DISCOGS_SECRET) {
-  logger.error(
-    { has_key: !!DISCOGS_KEY, has_secret: !!DISCOGS_SECRET },
-    "Discogs credentials missing — set DISCOGS_CONSUMER_KEY and DISCOGS_CONSUMER_SECRET in environment secrets",
-  );
-} else {
-  logger.info({ key_prefix: DISCOGS_KEY.slice(0, 4) + "…" }, "Discogs credentials loaded");
-}
-
 function makeOAuth(): OAuth {
-  const key = DISCOGS_KEY!;
-  const secret = DISCOGS_SECRET!;
+  const key = process.env["DISCOGS_CONSUMER_KEY"]!;
+  const secret = process.env["DISCOGS_CONSUMER_SECRET"]!;
   return new OAuth({
     consumer: { key, secret },
     signature_method: "HMAC-SHA1",
