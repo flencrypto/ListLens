@@ -1376,6 +1376,48 @@ router.get("/items/:id/analysis", async (req, res) => {
   res.status(404).json({ error: "Not found" });
 });
 
+router.patch("/items/:id", async (req, res) => {
+  const { id } = req.params;
+  const b = body(req);
+
+  const ownership = await fetchOwnedListing(id, req.user?.id);
+  if (ownership.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (ownership.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  if (ownership.notFound) {
+    res.status(404).json({ error: "Listing not found." });
+    return;
+  }
+
+  const updates: Partial<{ title: string; description: string; price: string }> = {};
+  if (typeof b["title"] === "string") updates.title = b["title"].trim();
+  if (typeof b["description"] === "string") updates.description = b["description"];
+  if (b["price"] !== undefined) updates.price = String(b["price"]);
+
+  if (Object.keys(updates).length === 0) {
+    res.status(400).json({ error: "No valid fields provided." });
+    return;
+  }
+
+  try {
+    await db
+      .update(listingsTable)
+      .set(updates)
+      .where(eq(listingsTable.id, id));
+
+    const [updated] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
+    res.json({ listing: updated });
+  } catch (err) {
+    logger.error({ err, id }, "Failed to update listing");
+    res.status(500).json({ error: "Failed to update listing." });
+  }
+});
+
 router.post("/items/:id/export/vinted", async (req, res) => {
   const { id } = req.params;
   const result = await fetchOwnedListing(id, req.user?.id);

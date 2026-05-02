@@ -3,6 +3,7 @@ import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Spinner } from "@/components/ui/spinner";
 import { formatPrice } from "@/lib/pricing";
 import type { StudioOutput } from "@/lib/ai/schemas";
 import { generateEbayHtml } from "@/lib/ebay-html";
@@ -29,6 +30,14 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   );
   const [price, setPrice] = useState<number>(analysis.pricing.recommended);
 
+  const initialTitle = getInitialTitle(analysis.marketplace_outputs.ebay, analysis);
+  const initialDescription = analysis.listing_description || (analysis.marketplace_outputs.ebay.description as string | undefined) || "";
+  const initialPrice = analysis.pricing.recommended;
+
+  const [saving, setSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saved" | "error">("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
+
   const [exporting, setExporting] = useState(false);
   const [exported, setExported] = useState(false);
   const [publishing, setPublishing] = useState(false);
@@ -40,10 +49,37 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
   const [htmlCopied, setHtmlCopied] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  const isDirty =
+    title !== initialTitle || description !== initialDescription || price !== initialPrice;
+
   const needsConfirmation =
     analysis.identity.confidence < 0.7 || analysis.pricing.confidence < 0.6;
 
   const ebayHtml = generateEbayHtml(analysis, title, description, price);
+
+  async function handleSave() {
+    setSaveError(null);
+    setSaving(true);
+    setSaveStatus("idle");
+    try {
+      const res = await fetch(`/api/items/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, price }),
+      });
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error((errData as { error?: string }).error ?? `Save failed (${res.status})`);
+      }
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus("idle"), 3000);
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : "Save failed.");
+      setSaveStatus("error");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   async function handleVintedExport() {
     setActionError(null);
@@ -151,6 +187,35 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           )}
         </CardContent>
       </Card>
+
+      {/* Save bar */}
+      {(isDirty || saveStatus !== "idle") && (
+        <div className="flex items-center justify-between gap-4 rounded-xl border border-cyan-800/40 bg-cyan-950/20 px-4 py-3">
+          <div className="flex items-center gap-2 min-w-0">
+            {saveStatus === "saved" ? (
+              <span className="text-emerald-400 text-sm font-medium">✓ Changes saved</span>
+            ) : saveStatus === "error" ? (
+              <span className="text-red-400 text-sm truncate">{saveError ?? "Save failed"}</span>
+            ) : (
+              <span className="text-cyan-300 text-sm">Unsaved changes</span>
+            )}
+          </div>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !isDirty}
+            size="sm"
+            className="bg-cyan-600 hover:bg-cyan-500 shrink-0"
+          >
+            {saving ? (
+              <span className="flex items-center gap-2">
+                <Spinner className="text-cyan-200 text-xs" /> Saving…
+              </span>
+            ) : (
+              "Save changes"
+            )}
+          </Button>
+        </div>
+      )}
 
       {/* Editable title */}
       <Card>
