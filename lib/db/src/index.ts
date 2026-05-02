@@ -20,7 +20,10 @@ function buildPoolConfig(): pg.PoolConfig {
       database: process.env.PGDATABASE,
     };
   }
-  return { connectionString: process.env.DATABASE_URL };
+  return {
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false },
+  };
 }
 
 export const pool = new Pool(buildPoolConfig());
