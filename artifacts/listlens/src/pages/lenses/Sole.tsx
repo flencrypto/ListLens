@@ -866,7 +866,6 @@ function HeroCard({ icon, title, text }: { icon: IconName; title: string; text: 
 }
 
 export default function SoleLensPrototype() {
-  const [active, setActive] = useState("scan");
   const [kickscrewUrl, setKickscrewUrl] = useState("");
   const [analysisResult, setAnalysisResult] = useState<LiveAnalysis>(null);
   const [isAnalysing, setIsAnalysing] = useState(false);
@@ -899,60 +898,149 @@ export default function SoleLensPrototype() {
       if (!analyseResponse.ok) throw new Error("ShoeLens analysis failed.");
       const payload = await analyseResponse.json() as { analysis?: Record<string, unknown> };
       setAnalysisResult(payload.analysis ?? null);
-      setActive("result");
     } catch (error) {
       setAnalysisError(error instanceof Error ? error.message : "ShoeLens analysis failed.");
-      setActive("result");
     } finally {
       setIsAnalysing(false);
     }
   }
 
-  const currentScreen = useMemo(() => {
-    if (active === "scan") return (
-      <ScanScreen
-        kickscrewUrl={kickscrewUrl}
-        setKickscrewUrl={setKickscrewUrl}
-        onAnalyse={handleAnalyse}
-        isAnalysing={isAnalysing}
-        error={analysisError}
-      />
-    );
-    if (active === "result") return <ResultScreen setActive={setActive} sneaker={displaySneaker} />;
-    if (active === "listing") return <ListingScreen sneaker={displaySneaker} />;
-    return <DashboardScreen />;
-  }, [active, kickscrewUrl, isAnalysing, analysisError, displaySneaker]);
+  const hasResult = analysisResult !== null;
 
   return (
-    <div className={cx(fontSystem.app, "relative min-h-screen overflow-hidden bg-[#03050a] px-4 py-8 text-white")}>
-      <GlowBlob className="left-1/2 top-0 h-96 w-96 -translate-x-1/2 bg-cyan-500/20" />
-      <GlowBlob className="bottom-0 right-0 h-80 w-80 bg-blue-600/10" />
-      <div className="relative z-10 mx-auto max-w-6xl">
-        <Link href="/" className="inline-flex items-center gap-1.5 mb-6 text-xs text-zinc-400 hover:text-cyan-300 transition-colors">
+    <div className={cx(fontSystem.app, "relative min-h-screen overflow-hidden bg-[#03050a] text-white")}>
+      <GlowBlob className="left-1/3 -top-40 h-[450px] w-[450px] bg-cyan-500/12" />
+      <GlowBlob className="bottom-0 right-0 h-80 w-80 bg-blue-600/8" />
+
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-10">
+
+        <Link href="/" className="inline-flex items-center gap-1.5 mb-8 text-xs text-zinc-400 hover:text-cyan-300 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Back to Home
         </Link>
-      </div>
-      <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1fr_430px]">
-        <div className="hidden lg:block">
-          <Badge tone="cyan" icon="sparkles" className="mb-5">AI resale operating system · vertical prototype</Badge>
-          <h1 className={cx(fontSystem.display, "max-w-3xl text-6xl font-black leading-[0.94] tracking-[-0.065em]")}>Turn a trainer photo into a sell-ready listing.</h1>
-          <p className="mt-5 max-w-2xl text-lg leading-8 tracking-[-0.01em] text-white/60">SOLE-LENS™ identifies sneakers, checks risk, prices against live comps and generates platform-ready listings with a camera-first UX built for casual sellers and power resellers.</p>
-          <div className="mt-8 grid max-w-2xl grid-cols-3 gap-3">
-            <HeroCard icon="camera" title="Scan" text={`${demoSneakers.length} demo records`} />
-            <HeroCard icon="layers" title="Analyse" text={`${comps.length} live-style comps`} />
-            <HeroCard icon="bag" title="List" text={`${marketplaceDrafts.length} marketplace drafts`} />
-          </div>
-        </div>
 
-        <PhoneFrame>
-          <AnimatePresence mode="wait">
-            <motion.div key={active} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -18 }} transition={{ duration: 0.22 }}>
-              {currentScreen}
-            </motion.div>
-          </AnimatePresence>
-          <BottomNav active={active} setActive={setActive} />
-        </PhoneFrame>
+        {/* Bento grid — 12 columns, 2 rows */}
+        <div className="grid grid-cols-12 gap-4">
+
+          {/* ── Row 1 ── */}
+
+          {/* Copy panel */}
+          <div className="col-span-12 lg:col-span-5">
+            <div className="relative flex h-full min-h-[380px] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+              <GlowBlob className="right-0 top-0 h-48 w-48 bg-cyan-500/12" />
+              <div className="relative z-10">
+                <Badge tone="cyan" icon="sparkles">AI resale operating system · vertical prototype</Badge>
+                <h1 className={cx(fontSystem.display, "mt-5 text-4xl font-black leading-[0.92] tracking-[-0.065em]")}>
+                  Turn a trainer photo into a sell-ready listing.
+                </h1>
+                <p className="mt-4 max-w-xs text-sm leading-6 text-white/50">
+                  SOLE-LENS™ identifies sneakers, checks risk, prices against live comps and generates platform-ready listings.
+                </p>
+              </div>
+              <div className="relative z-10 mt-6 flex flex-wrap gap-2.5">
+                <Button onClick={handleAnalyse} className="h-11 px-5">
+                  <Icon name="scan" size={15} className="mr-2" />
+                  {isAnalysing ? "Analysing…" : "Try SOLE-LENS"}
+                </Button>
+                <Link href="/lenses">
+                  <Button variant="outline" className="h-11 px-5">See all Lenses</Button>
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          {/* Scan panel */}
+          <div className="col-span-12 lg:col-span-7">
+            <div className="relative flex h-full flex-col gap-0 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-black p-5">
+              <GlowBlob className="-right-10 -top-10 h-48 w-48 bg-cyan-500/15" />
+              <div className="relative z-10 space-y-4">
+                <HeroNotice />
+                <DemoScanStrip />
+                <ScanViewport />
+                <GlassPanel className="p-4">
+                  <label className="block">
+                    <span className={cx(fontSystem.mono, "mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/45")}>KicksCrew product URL · optional</span>
+                    <input
+                      value={kickscrewUrl}
+                      onChange={(e) => setKickscrewUrl(e.target.value)}
+                      placeholder="Paste a KicksCrew product URL"
+                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
+                    />
+                  </label>
+                  {analysisError ? <p className="mt-2 text-xs text-amber-200">{analysisError}</p> : null}
+                </GlassPanel>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button onClick={handleAnalyse} className="h-14">
+                    <Icon name="scan" className="mr-2" size={19} />
+                    {isAnalysing ? "Analysing..." : "Scan now"}
+                  </Button>
+                  <Button variant="outline" className="h-14">
+                    <Icon name="upload" className="mr-2" size={19} /> Upload
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* ── Row 2 ── */}
+
+          {/* Result panel */}
+          <div className="col-span-12 lg:col-span-5">
+            <div className="relative h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              <GlowBlob className="-right-8 -top-8 h-28 w-28 bg-cyan-400/15" />
+              <div className="relative z-10">
+                {!hasResult && (
+                  <div className={cx(fontSystem.mono, "mb-3 text-[9px] font-bold uppercase tracking-[0.18em] text-white/30")}>
+                    Demo data · scan to update
+                  </div>
+                )}
+                <ResultHero sneaker={displaySneaker} />
+                <AuthenticityPanel sneaker={displaySneaker} />
+              </div>
+            </div>
+          </div>
+
+          {/* Comps panel */}
+          <div className="col-span-12 lg:col-span-4">
+            <div className="h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+              <CompsPanel />
+            </div>
+          </div>
+
+          {/* Listing panel */}
+          <div className="col-span-12 lg:col-span-3">
+            <div className="relative h-full overflow-hidden rounded-3xl border border-cyan-300/20 bg-cyan-300/[0.04] p-5">
+              <GlowBlob className="-left-8 -top-8 h-24 w-24 bg-cyan-400/15" />
+              <div className="relative z-10">
+                <ListingScoreCard sneaker={displaySneaker} />
+                <div className={cx(fontSystem.mono, "mb-2 mt-4 text-[9px] font-bold uppercase tracking-[0.16em] text-white/35")}>
+                  Marketplace drafts
+                </div>
+                <div className="space-y-2">
+                  {marketplaceDrafts.map((draft) => (
+                    <div
+                      key={draft.platform}
+                      className={cx(
+                        "flex items-center justify-between rounded-2xl border p-3 transition",
+                        draft.selected ? "border-cyan-300/30 bg-cyan-300/[0.08]" : "border-white/8 bg-white/[0.02]",
+                      )}
+                    >
+                      <div>
+                        <div className={cx(fontSystem.display, "text-xs font-black")}>{draft.platform}</div>
+                        <div className="mt-0.5 text-[10px] text-white/40">{draft.fee} · {draft.reach}</div>
+                      </div>
+                      <div className="text-right">
+                        <div className={cx(fontSystem.display, "text-sm font-black text-cyan-200")}>{draft.price}</div>
+                        {draft.selected && <Badge tone="cyan">Selected</Badge>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
       </div>
     </div>
   );
