@@ -73,6 +73,13 @@ export interface GuardReport {
     market_estimate: string | null;
     price_verdict: "fair" | "low_risk_deal" | "suspiciously_low" | "overpriced" | "unknown";
     price_note: string;
+    market_data?: {
+      source: string;
+      listing_count: number;
+      price_min_gbp: number | null;
+      price_median_gbp: number | null;
+      price_max_gbp: number | null;
+    } | null;
   };
   authenticity_signals: Array<{
     marker: string;

@@ -326,6 +326,29 @@ export default function GuardReportScreen() {
             </Text>
           </View>
         </View>
+        {report.price_analysis.market_data && (
+          <View style={[styles.marketDataRow, { borderColor: "rgba(34,211,238,0.25)", backgroundColor: "rgba(8,51,68,0.35)" }]}>
+            <Text style={[styles.marketDataSource, { color: "rgba(34,211,238,0.65)" }]}>
+              {report.price_analysis.market_data.source.toUpperCase()}
+            </Text>
+            <Text style={[styles.marketDataItem, { color: colors.zinc400 }]}>
+              {report.price_analysis.market_data.listing_count} live listing{report.price_analysis.market_data.listing_count !== 1 ? "s" : ""}
+            </Text>
+            {report.price_analysis.market_data.price_min_gbp !== null && report.price_analysis.market_data.price_max_gbp !== null && (
+              <Text style={[styles.marketDataItem, { color: colors.zinc300 }]}>
+                £{report.price_analysis.market_data.price_min_gbp}–£{report.price_analysis.market_data.price_max_gbp}
+              </Text>
+            )}
+            {report.price_analysis.market_data.price_median_gbp !== null && (
+              <Text style={[styles.marketDataItem, { color: colors.zinc400 }]}>
+                median{" "}
+                <Text style={{ color: colors.brandCyan, fontFamily: "Inter_600SemiBold" }}>
+                  £{report.price_analysis.market_data.price_median_gbp}
+                </Text>
+              </Text>
+            )}
+          </View>
+        )}
         <Text style={[styles.priceNote, { color: colors.zinc400 }]}>{report.price_analysis.price_note}</Text>
       </Card>
 
@@ -666,6 +689,26 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     lineHeight: 17,
+  },
+  marketDataRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  marketDataSource: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 9,
+    letterSpacing: 1.4,
+  },
+  marketDataItem: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
   },
   flagRow: {
     flexDirection: "row",

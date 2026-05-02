@@ -204,6 +204,26 @@ export function RiskReport({ report }: RiskReportProps) {
             <p className={`text-sm font-semibold ${priceStyle.color}`}>{priceStyle.label}</p>
           </div>
         </div>
+        {report.price_analysis.market_data && (
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 mt-1 mb-3 px-3 py-2.5 rounded-lg bg-cyan-950/25 border border-cyan-800/30">
+            <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400/70 shrink-0">
+              {report.price_analysis.market_data.source}
+            </span>
+            <span className="text-xs text-zinc-400">
+              {report.price_analysis.market_data.listing_count} live listing{report.price_analysis.market_data.listing_count !== 1 ? "s" : ""}
+            </span>
+            {report.price_analysis.market_data.price_min_gbp !== null && report.price_analysis.market_data.price_max_gbp !== null && (
+              <span className="text-xs text-zinc-300 font-medium">
+                £{report.price_analysis.market_data.price_min_gbp}–£{report.price_analysis.market_data.price_max_gbp}
+              </span>
+            )}
+            {report.price_analysis.market_data.price_median_gbp !== null && (
+              <span className="text-xs text-zinc-400">
+                median <span className="text-cyan-300 font-semibold">£{report.price_analysis.market_data.price_median_gbp}</span>
+              </span>
+            )}
+          </div>
+        )}
         <p className="text-sm text-zinc-400 leading-relaxed">{report.price_analysis.price_note}</p>
       </div>
 

@@ -346,6 +346,13 @@ const GuardOutputSchema = z.object({
     market_estimate: z.string().nullable(),
     price_verdict: z.enum(["fair", "low_risk_deal", "suspiciously_low", "overpriced", "unknown"]),
     price_note: z.string(),
+    market_data: z.object({
+      source: z.string(),
+      listing_count: z.number(),
+      price_min_gbp: z.number().nullable(),
+      price_median_gbp: z.number().nullable(),
+      price_max_gbp: z.number().nullable(),
+    }).nullable().optional(),
   }),
   authenticity_signals: z.array(
     z.object({
@@ -1205,6 +1212,14 @@ async function runGuardAnalysis(
           result.price_analysis.price_verdict = "fair";
         }
       }
+
+      result.price_analysis.market_data = {
+        source: watchMarketData.source,
+        listing_count: watchMarketData.listing_count,
+        price_min_gbp,
+        price_median_gbp,
+        price_max_gbp,
+      };
     }
   }
 
