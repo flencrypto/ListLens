@@ -1,157 +1,114 @@
-import { Feather } from "@expo/vector-icons";
-import { Link } from "expo-router";
 import React from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 
 import { BrandGlyph } from "@/components/brand/BrandGlyph";
-import { Badge } from "@/components/ui/Badge";
-import { Card } from "@/components/ui/Card";
+import { MoreActionButton } from "@/components/more/MoreActionButton";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/lib/auth";
 import { useSubscription } from "@/lib/revenuecat";
 
-interface MoreLink {
-  href: "/more/history" | "/more/billing" | "/more/legal" | "/splash";
-  label: string;
-  desc: string;
-  icon: React.ComponentProps<typeof Feather>["name"];
-  badge?: string;
-}
-
 export default function MoreScreen() {
   const colors = useColors();
   const { isSubscribed } = useSubscription();
-  const { isAuthenticated, isLoading: authLoading, user, login, logout, loginError, dbDegraded } = useAuth();
+  const {
+    isAuthenticated,
+    isLoading: authLoading,
+    user,
+    login,
+    logout,
+    loginError,
+    dbDegraded,
+  } = useAuth();
 
-  const LINKS: MoreLink[] = [
-    {
-      href: "/more/history",
-      label: "History",
-      desc: "Your saved listings and Guard checks",
-      icon: "clock",
-    },
-    {
-      href: "/more/billing",
-      label: "Billing & Plans",
-      desc: "Manage subscription and credits",
-      icon: "credit-card",
-      badge: isSubscribed ? "Pro" : "Free trial",
-    },
-    {
-      href: "/more/legal",
-      label: "Legal",
-      desc: "Privacy, terms, AI disclaimer",
-      icon: "file-text",
-    },
-    {
-      href: "/splash",
-      label: "Replay splash",
-      desc: "See the brand intro again",
-      icon: "play-circle",
-    },
-  ];
+  const authDescription = loginError
+    ? loginError
+    : dbDegraded
+      ? "Account data temporarily unavailable — some limits may not be accurate"
+      : isAuthenticated && user
+        ? user.email ?? user.firstName ?? "Signed in"
+        : "Sign in to sync your data";
+
   return (
     <ScreenContainer withTabPadding>
+      {/* Header */}
       <View style={styles.header}>
+        <Text style={[styles.eyebrow, { color: colors.brandCyan }]}>List-LENS System</Text>
         <Text style={[styles.title, { color: colors.foreground }]}>More</Text>
         <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
-          Account, history and the rest of List-LENS.
+          Account, settings and everything else.
         </Text>
       </View>
 
+      {/* Action buttons */}
       <View style={{ gap: 10 }}>
-        {LINKS.map((link) => (
-          <Link key={link.href} href={link.href} asChild>
-            <Pressable
-              style={({ pressed }) => [
-                styles.row,
-                {
-                  borderColor: colors.brandStroke,
-                  backgroundColor: colors.cardSurfaceSoft,
-                  opacity: pressed ? 0.85 : 1,
-                  borderRadius: colors.radius,
-                },
-              ]}
-            >
-              <View
-                style={[
-                  styles.rowIcon,
-                  {
-                    backgroundColor: "rgba(8,51,68,0.55)",
-                    borderColor: "rgba(34,211,238,0.25)",
-                  },
-                ]}
-              >
-                <Feather name={link.icon} size={16} color={colors.brandCyan} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.rowTitleLine}>
-                  <Text style={[styles.rowTitle, { color: colors.foreground }]}>
-                    {link.label}
-                  </Text>
-                  {link.badge ? <Badge label={link.badge} tone="cyan" /> : null}
-                </View>
-                <Text style={[styles.rowDesc, { color: colors.zinc500 }]}>
-                  {link.desc}
-                </Text>
-              </View>
-              <Feather name="chevron-right" size={18} color={colors.zinc500} />
-            </Pressable>
-          </Link>
-        ))}
+        <MoreActionButton
+          label="History"
+          description="Your saved listings and Guard checks"
+          icon="clock"
+          variant="default"
+          href="/more/history"
+        />
 
-        {/* Auth row */}
-        <Pressable
+        <MoreActionButton
+          label="Billing & Plans"
+          description="Manage subscription and credits"
+          icon="credit-card"
+          variant="premium"
+          badge={isSubscribed ? "Pro" : "Free Trial"}
+          href="/more/billing"
+        />
+
+        <MoreActionButton
+          label="Legal"
+          description="Privacy, terms and AI disclaimer"
+          icon="file-text"
+          variant="default"
+          href="/more/legal"
+        />
+
+        <MoreActionButton
+          label="Replay Splash"
+          description="See the brand intro again"
+          icon="play-circle"
+          variant="default"
+          href="/splash"
+        />
+
+        <MoreActionButton
+          label={isAuthenticated ? "Log out" : "Log in"}
+          description={authDescription}
+          icon={isAuthenticated ? "log-out" : "log-in"}
+          variant={loginError ? "danger" : "account"}
           onPress={isAuthenticated ? logout : login}
           disabled={authLoading}
-          style={({ pressed }) => [
-            styles.row,
-            {
-              borderColor: loginError ? "rgba(239,68,68,0.5)" : colors.brandStroke,
-              backgroundColor: colors.cardSurfaceSoft,
-              opacity: pressed || authLoading ? 0.75 : 1,
-              borderRadius: colors.radius,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.rowIcon,
-              {
-                backgroundColor: "rgba(8,51,68,0.55)",
-                borderColor: "rgba(34,211,238,0.25)",
-              },
-            ]}
-          >
-            {authLoading ? (
-              <ActivityIndicator size="small" color={colors.brandCyan} />
-            ) : (
-              <Feather
-                name={isAuthenticated ? "log-out" : "log-in"}
-                size={16}
-                color={loginError ? "#ef4444" : colors.brandCyan}
-              />
-            )}
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.rowTitle, { color: colors.foreground }]}>
-              {isAuthenticated ? "Log out" : "Log in"}
-            </Text>
-            <Text style={[styles.rowDesc, { color: loginError ? "#ef4444" : dbDegraded ? "#f59e0b" : colors.zinc500 }]}>
-              {loginError
-                ? loginError
-                : dbDegraded
-                  ? "Account data temporarily unavailable — some limits may not be accurate"
-                  : isAuthenticated && user
-                    ? user.email ?? user.firstName ?? "Signed in"
-                    : "Sign in to sync your data"}
-            </Text>
-          </View>
-        </Pressable>
+          loading={authLoading}
+        />
       </View>
 
-      <Card style={{ alignItems: "center", paddingVertical: 22 }}>
+      {/* Brand footer card — dark-glass treatment */}
+      <View
+        style={[
+          styles.brandCard,
+          {
+            backgroundColor: "rgba(10, 22, 40, 0.72)",
+            borderColor: colors.brandStroke,
+            borderRadius: colors.radius,
+          },
+          Platform.select({
+            web: {
+              boxShadow: `0 8px 20px ${colors.brandGlow}`,
+            } as object,
+            default: {
+              shadowColor: colors.brandGlow,
+              shadowOpacity: 0.55,
+              shadowRadius: 16,
+              shadowOffset: { width: 0, height: 6 },
+              elevation: 5,
+            },
+          }),
+        ]}
+      >
         <BrandGlyph size={48} />
         <Text style={[styles.brandTitle, { color: colors.foreground }]}>
           MR.FLENS · LIST-LENS
@@ -162,7 +119,7 @@ export default function MoreScreen() {
         <Text style={[styles.brandFooter, { color: colors.zinc500 }]}>
           © 2026 Mr.FLENS · v1.0.0
         </Text>
-      </Card>
+      </View>
     </ScreenContainer>
   );
 }
@@ -170,45 +127,30 @@ export default function MoreScreen() {
 const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 4,
-    gap: 6,
+    gap: 4,
+  },
+  eyebrow: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 10,
+    letterSpacing: 2.5,
+    textTransform: "uppercase",
   },
   title: {
     fontFamily: "Inter_700Bold",
     fontSize: 28,
     letterSpacing: -0.6,
+    marginTop: 2,
   },
   subtitle: {
     fontFamily: "Inter_400Regular",
     fontSize: 13,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 14,
-    borderWidth: 1,
-    gap: 12,
-  },
-  rowIcon: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rowTitleLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-  },
-  rowTitle: {
-    fontFamily: "Inter_600SemiBold",
-    fontSize: 14,
-  },
-  rowDesc: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 12,
     marginTop: 2,
+  },
+  brandCard: {
+    alignItems: "center",
+    paddingVertical: 24,
+    paddingHorizontal: 18,
+    borderWidth: 1,
   },
   brandTitle: {
     fontFamily: "Inter_700Bold",
