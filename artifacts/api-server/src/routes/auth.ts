@@ -216,7 +216,14 @@ router.get("/callback", async (req: Request, res: Response) => {
     expires_at: tokens.expiresIn() ? now + tokens.expiresIn()! : claims.exp,
   };
 
-  const sid = await createSession(sessionData);
+  let sid: string;
+  try {
+    sid = await createSession(sessionData);
+  } catch (err) {
+    req.log.error({ err }, "createSession failed during OAuth callback — login aborted");
+    res.redirect("/api/login");
+    return;
+  }
   setSessionCookie(res, sid);
   res.redirect(returnTo);
 });

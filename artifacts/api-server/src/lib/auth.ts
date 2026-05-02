@@ -1,9 +1,9 @@
 import * as client from "openid-client";
 import crypto from "crypto";
 import { type Request, type Response } from "express";
-import { db, sessionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { pool } from "@workspace/db";
 import type { AuthUser } from "@workspace/api-zod";
+import { logger } from "./logger";
 
 export const ISSUER_URL = process.env.ISSUER_URL ?? "https://replit.com/oidc";
 export const SESSION_COOKIE = "sid";
@@ -30,43 +30,46 @@ export async function getOidcConfig(): Promise<client.Configuration> {
 
 export async function createSession(data: SessionData): Promise<string> {
   const sid = crypto.randomBytes(32).toString("hex");
-  await db.insert(sessionsTable).values({
-    sid,
-    sess: data as unknown as Record<string, unknown>,
-    expire: new Date(Date.now() + SESSION_TTL),
-  });
+  const expire = new Date(Date.now() + SESSION_TTL);
+  try {
+    await pool.query(
+      'INSERT INTO sessions (sid, sess, expire) VALUES ($1, $2, $3)',
+      [sid, data, expire],
+    );
+  } catch (err: unknown) {
+    const cause = (err as { cause?: unknown })?.cause ?? err;
+    logger.error({ err, cause }, "createSession: pool INSERT failed");
+    throw err;
+  }
   return sid;
 }
 
 export async function getSession(sid: string): Promise<SessionData | null> {
-  const [row] = await db
-    .select()
-    .from(sessionsTable)
-    .where(eq(sessionsTable.sid, sid));
-
+  const result = await pool.query<{ sess: SessionData; expire: Date }>(
+    'SELECT sess, expire FROM sessions WHERE sid = $1',
+    [sid],
+  );
+  const row = result.rows[0];
   if (!row || row.expire < new Date()) {
     if (row) await deleteSession(sid);
     return null;
   }
-
-  return row.sess as unknown as SessionData;
+  return row.sess;
 }
 
 export async function updateSession(
   sid: string,
   data: SessionData,
 ): Promise<void> {
-  await db
-    .update(sessionsTable)
-    .set({
-      sess: data as unknown as Record<string, unknown>,
-      expire: new Date(Date.now() + SESSION_TTL),
-    })
-    .where(eq(sessionsTable.sid, sid));
+  const expire = new Date(Date.now() + SESSION_TTL);
+  await pool.query(
+    'UPDATE sessions SET sess = $1, expire = $2 WHERE sid = $3',
+    [data, expire, sid],
+  );
 }
 
 export async function deleteSession(sid: string): Promise<void> {
-  await db.delete(sessionsTable).where(eq(sessionsTable.sid, sid));
+  await pool.query('DELETE FROM sessions WHERE sid = $1', [sid]);
 }
 
 export async function clearSession(

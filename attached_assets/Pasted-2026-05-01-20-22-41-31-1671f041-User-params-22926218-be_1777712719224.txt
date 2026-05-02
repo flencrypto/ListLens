@@ -1,0 +1,152 @@
+2026-05-01 20:22:41.31
+1671f041
+User
+params: 22926218,ben@flencrypto.com,,,22926218,ben@flencrypto.com,,,2026-05-01T19:22:41.304Z
+2026-05-01 20:22:41.31
+1671f041
+User
+at async <anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:185:18)
+2026-05-01 20:22:41.31
+1671f041
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+2026-05-01 20:22:41.31
+1671f041
+User
+at async upsertUser (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:72:18)
+2026-05-01 20:22:41.31
+1671f041
+User
+Error: Failed query: insert into "users" ("id", "email", "first_name", "last_name", "profile_image_url", "stripe_customer_id", "credits", "plan_tier", "created_at", "updated_at") values ($1, $2, $3, $4, default, default, default, default, default, default) on conflict ("id") do update set "id" = $5, "email" = $6, "first_name" = $7, "last_name" = $8, "updated_at" = $9 returning "id", "email", "first_name", "last_name", "profile_image_url", "stripe_customer_id", "credits", "plan_tier", "created_at", "updated_at"
+2026-05-01 20:22:41.31
+1671f041
+User
+at async <anonymous> (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/node-postgres/session.ts:154:19)
+2026-05-01 20:22:41.31
+1671f041
+User
+at NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/pg-core/session.ts:73:11)
+2026-05-01 20:25:35.99
+c41eee8c
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-05-01 20:32:22.94
+1671f041
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+2026-05-01 20:32:22.94
+1671f041
+User
+Error: Failed query: insert into "users" ("id", "email", "first_name", "last_name", "profile_image_url", "stripe_customer_id", "credits", "plan_tier", "created_at", "updated_at") values ($1, $2, $3, $4, default, default, default, default, default, default) on conflict ("id") do update set "id" = $5, "email" = $6, "first_name" = $7, "last_name" = $8, "updated_at" = $9 returning "id", "email", "first_name", "last_name", "profile_image_url", "stripe_customer_id", "credits", "plan_tier", "created_at", "updated_at"
+2026-05-01 20:32:22.94
+1671f041
+User
+at async <anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:185:18)
+2026-05-01 20:32:22.94
+1671f041
+User
+at async upsertUser (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:72:18)
+2026-05-01 20:32:22.94
+1671f041
+User
+at NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/pg-core/session.ts:73:11)
+2026-05-01 20:32:22.94
+1671f041
+User
+params: 22926218,ben@flencrypto.com,,,22926218,ben@flencrypto.com,,,2026-05-01T19:32:22.936Z
+2026-05-01 20:32:22.94
+1671f041
+User
+at async <anonymous> (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/node-postgres/session.ts:154:19)
+2026-05-01 20:48:54.57
+1671f041
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-05-01 22:40:36.94
+b339f5c5
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-05-02 06:12:58.16
+b339f5c5
+System
+artifact process exited with error error=signal: terminated artifact=artifacts/api-server
+2026-05-02 06:28:19.59
+98898f3f
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+2026-05-02 06:28:19.59
+98898f3f
+User
+params: eb74b627f2655d63ef915d27154d9cd02923bbecbeb6409cbaad1af2b3a1fe9c,{"user":{"id":"22926218","email":"ben@flencrypto.com","firstName":null,"lastName":null,"profileImageUrl":null},"access_token":"cGvVk6WnVZAM22CG525Nu5AbVf8brYM8lPGlN2w4Q3j","refresh_token":"odNwwJstLfwKVSgvHjKNednkD_rJ0J98DMoXCv6-xfs","expires_at":1777703298},2026-05-09T05:28:19.561Z
+2026-05-02 06:28:19.59
+98898f3f
+User
+at async <anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:219:15)
+2026-05-02 06:28:19.59
+98898f3f
+User
+Error: Failed query: insert into "sessions" ("sid", "sess", "expire") values ($1, $2, $3)
+2026-05-02 06:28:19.59
+98898f3f
+User
+at NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/pg-core/session.ts:73:11)
+2026-05-02 06:28:19.59
+98898f3f
+User
+at async createSession (/home/runner/workspace/artifacts/api-server/src/lib/auth.ts:33:3)
+2026-05-02 06:29:22.68
+98898f3f
+User
+at NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/pg-core/session.ts:73:11)
+2026-05-02 06:29:22.68
+98898f3f
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+2026-05-02 06:29:22.68
+98898f3f
+User
+at async <anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:219:15)
+2026-05-02 06:29:22.68
+98898f3f
+User
+Error: Failed query: insert into "sessions" ("sid", "sess", "expire") values ($1, $2, $3)
+2026-05-02 06:29:22.68
+98898f3f
+User
+params: 2452cf9941093b7a31449a6f36d110f5688148cb4696ff8aa3004362beec5d16,{"user":{"id":"22926218","email":"ben@flencrypto.com","firstName":null,"lastName":null,"profileImageUrl":null},"access_token":"4Bg3JuGzkSAJ3sk9xYBJ9rnnRucWMBeNjwIGpj8ArVC","refresh_token":"oXPlFSMkEiwY-kDHuUX33izF8DAn-KVCSl-GFYyown7","expires_at":1777703361},2026-05-09T05:29:22.655Z
+2026-05-02 06:29:22.68
+98898f3f
+User
+at async createSession (/home/runner/workspace/artifacts/api-server/src/lib/auth.ts:33:3)
+2026-05-02 06:34:05.72
+98898f3f
+User
+at async createSession (/home/runner/workspace/artifacts/api-server/src/lib/auth.ts:33:3)
+2026-05-02 06:34:05.72
+98898f3f
+User
+params: 96b1bbe9e9056b7a49eb541e0f2aeaa3738bcb2c0a61ba4da440272b0b1489f7,{"user":{"id":"22926218","email":"ben@flencrypto.com","firstName":null,"lastName":null,"profileImageUrl":null},"access_token":"pKbbQLfdwv0QHfg1TAm3vJyMRo4CcZOFtqQ2IrqAs4E","refresh_token":"-G-Mgzct_FPS9t7XehCYIcCJOCXNucCR70cN0BcBulh","expires_at":1777703644},2026-05-09T05:34:05.695Z
+2026-05-02 06:34:05.72
+98898f3f
+User
+at NodePgPreparedQuery.queryWithCache (/home/runner/workspace/node_modules/.pnpm/drizzle-orm@0.45.2_@opentelemetry+api@1.9.1_@types+pg@8.18.0_pg@8.20.0/node_modules/src/pg-core/session.ts:73:11)
+2026-05-02 06:34:05.72
+98898f3f
+User
+at async <anonymous> (/home/runner/workspace/artifacts/api-server/src/routes/auth.ts:219:15)
+2026-05-02 06:34:05.72
+98898f3f
+User
+at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+2026-05-02 06:34:05.72
+98898f3f
+User
+Error: Failed query: insert into "sessions" ("sid", "sess", "expire") values ($1, $2, $3)
+2026-05-02 09:57:45.14
+98898f3f
+System
+artifact process exited with error artifact=artifacts/api-server error=signal: terminated
+2026-05-02 09:58:00.59
+db14437d
+System
+artifact process exited with error artifact=artifacts/api-server error=signal: terminated
