@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -110,6 +111,11 @@ export default function CaptureScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(
         () => undefined,
       );
+      // Auto-save to device so photos are available in Guard and the system library
+      const libPerm = await MediaLibrary.requestPermissionsAsync();
+      if (libPerm.granted) {
+        await MediaLibrary.saveToLibraryAsync(asset.uri).catch(() => undefined);
+      }
       setPhotos((prev) => [
         ...prev,
         {

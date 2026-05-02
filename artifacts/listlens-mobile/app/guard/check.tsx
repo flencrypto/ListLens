@@ -1,5 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
+import * as MediaLibrary from "expo-media-library";
 import { useRouter } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
@@ -69,6 +70,38 @@ export default function GuardCheckScreen() {
   function stopProgress() {
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     progressIntervalRef.current = null;
+  }
+
+  async function takePhoto() {
+    if (photos.length >= MAX_PHOTOS) {
+      notify(`Maximum ${MAX_PHOTOS} photos allowed.`);
+      return;
+    }
+    if (Platform.OS === "web") {
+      return pickPhotos();
+    }
+    const perm = await ImagePicker.requestCameraPermissionsAsync();
+    if (!perm.granted) {
+      notify("Camera permission was declined. You can enable it in Settings.");
+      return;
+    }
+    try {
+      const result = await ImagePicker.launchCameraAsync({
+        mediaTypes: ["images"],
+        quality: 0.85,
+      });
+      if (!result.canceled && result.assets[0]) {
+        const uri = result.assets[0].uri;
+        // Auto-save to device so it's available in Studio and the system library
+        const libPerm = await MediaLibrary.requestPermissionsAsync();
+        if (libPerm.granted) {
+          await MediaLibrary.saveToLibraryAsync(uri).catch(() => undefined);
+        }
+        setPhotos((prev) => [...prev, uri].slice(0, MAX_PHOTOS));
+      }
+    } catch {
+      notify("Could not open camera. Please try again.");
+    }
   }
 
   async function pickPhotos() {
@@ -398,28 +431,46 @@ export default function GuardCheckScreen() {
             )}
 
             {photos.length < MAX_PHOTOS && (
-              <Pressable
-                onPress={pickPhotos}
-                style={({ pressed }) => [
-                  styles.addPhotoBtn,
-                  {
-                    borderColor: pressed
-                      ? colors.brandViolet
-                      : colors.zinc700,
-                    backgroundColor: pressed
-                      ? "rgba(76,29,149,0.15)"
-                      : "rgba(24,24,27,0.4)",
-                    opacity: pressed ? 0.85 : 1,
-                  },
-                ]}
-              >
-                <Feather name="plus" size={18} color={colors.zinc400} />
-                <Text
-                  style={[styles.addPhotoLabel, { color: colors.zinc400 }]}
+              <View style={styles.addPhotoRow}>
+                <Pressable
+                  onPress={takePhoto}
+                  style={({ pressed }) => [
+                    styles.addPhotoBtn,
+                    styles.addPhotoBtnHalf,
+                    {
+                      borderColor: pressed ? colors.brandViolet : colors.zinc700,
+                      backgroundColor: pressed
+                        ? "rgba(76,29,149,0.15)"
+                        : "rgba(24,24,27,0.4)",
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
                 >
-                  {photos.length === 0 ? "Add photos" : "Add more"}
-                </Text>
-              </Pressable>
+                  <Feather name="camera" size={16} color={colors.zinc400} />
+                  <Text style={[styles.addPhotoLabel, { color: colors.zinc400 }]}>
+                    Camera
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={pickPhotos}
+                  style={({ pressed }) => [
+                    styles.addPhotoBtn,
+                    styles.addPhotoBtnHalf,
+                    {
+                      borderColor: pressed ? colors.brandViolet : colors.zinc700,
+                      backgroundColor: pressed
+                        ? "rgba(76,29,149,0.15)"
+                        : "rgba(24,24,27,0.4)",
+                      opacity: pressed ? 0.85 : 1,
+                    },
+                  ]}
+                >
+                  <Feather name="image" size={16} color={colors.zinc400} />
+                  <Text style={[styles.addPhotoLabel, { color: colors.zinc400 }]}>
+                    {photos.length === 0 ? "Library" : "Add more"}
+                  </Text>
+                </Pressable>
+              </View>
             )}
 
             {photos.length === 0 && (
@@ -568,6 +619,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
     paddingVertical: 1,
   },
+  addPhotoRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
   addPhotoBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -577,6 +632,9 @@ const styles = StyleSheet.create({
     borderStyle: "dashed",
     borderRadius: 10,
     paddingVertical: 18,
+  },
+  addPhotoBtnHalf: {
+    flex: 1,
   },
   addPhotoLabel: {
     fontFamily: "Inter_500Medium",
