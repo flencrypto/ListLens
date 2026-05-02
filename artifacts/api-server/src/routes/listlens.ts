@@ -3,7 +3,7 @@ import { z } from "zod";
 import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
 import { searchDiscogs, getDiscogsRelease } from "../lib/discogs";
-import type { DiscogsRelease } from "../lib/discogs";
+import type { DiscogsRelease, DiscogsSearchResult } from "../lib/discogs";
 import { db, studioItemsTable, guardChecksTable, listingsTable, aiJobLogsTable, usageEventsTable } from "@workspace/db";
 import { eq, desc } from "drizzle-orm";
 import { runRecordLensAnalysis, type AnalysisCorrections } from "../lib/record-lens-analysis";

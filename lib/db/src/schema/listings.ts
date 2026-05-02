@@ -1,7 +1,5 @@
 import { sql } from "drizzle-orm";
 import { jsonb, pgTable, text, timestamp, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
 
 export const listingsTable = pgTable("listings", {
   id: varchar("id").primaryKey(),
@@ -19,10 +17,5 @@ export const listingsTable = pgTable("listings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
-export const insertListingSchema = createInsertSchema(listingsTable).omit({
-  createdAt: true,
-  updatedAt: true,
-});
-
-export type InsertListing = z.infer<typeof insertListingSchema>;
+export type InsertListing = typeof listingsTable.$inferInsert;
 export type Listing = typeof listingsTable.$inferSelect;

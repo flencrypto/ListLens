@@ -19,6 +19,7 @@ import {
   searchDiscogsViaMatrix,
   enrichDiscogsResults,
   type DiscogsRelease,
+  type DiscogsSearchResult,
 } from "./discogs";
 import {
   runRecordIdentificationAgent,
@@ -1019,7 +1020,7 @@ function createTrackedClientInfo(
   const acc: TokenAccumulator = { promptTokens: 0, completionTokens: 0 };
   const originalCompletions = clientInfo.client.chat.completions;
 
-  const trackedCompletions: typeof originalCompletions = {
+  const trackedCompletions = {
     ...originalCompletions,
     create: (async (...args: Parameters<typeof originalCompletions.create>) => {
       const result = await originalCompletions.create(...args);
