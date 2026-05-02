@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { ListingEditor } from "@/components/studio/listing-editor";
+import { AnalysisReveal } from "@/components/ui/analysis-reveal";
 import type { StudioOutput } from "@/lib/ai/schemas";
 import { useUpload } from "@workspace/object-storage-web";
 import { useAnalyseStudioItem } from "@workspace/api-client-react";
@@ -160,6 +161,8 @@ export default function StudioItemPage() {
   const [matrixSideA, setMatrixSideA] = useState("");
   const [matrixSideB, setMatrixSideB] = useState("");
   const [matrixSideCD, setMatrixSideCD] = useState("");
+  const [showReveal, setShowReveal] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const [clarifyLoading, setClarifyLoading] = useState(false);
   const [clarifyError, setClarifyError] = useState<string | null>(null);
   const [clarifyResult, setClarifyResult] = useState<RecordIdentification | null>(null);
@@ -171,7 +174,10 @@ export default function StudioItemPage() {
       .then(async (res) => {
         if (res.ok) {
           const data = await res.json();
-          if (data.analysis) setAnalysis(data.analysis as StudioOutput);
+          if (data.analysis) {
+            setAnalysis(data.analysis as StudioOutput);
+            setRevealed(true);
+          }
         }
       })
       .catch(() => {})
@@ -257,12 +263,19 @@ export default function StudioItemPage() {
       setClarifyResult(null);
       setClarifyDone(false);
       setStillNeedsMatrix(false);
+      setShowReveal(true);
+      setRevealed(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setLoading(false);
     }
   }
+
+  const handleRevealDone = useCallback(() => {
+    setShowReveal(false);
+    setRevealed(true);
+  }, []);
 
   async function handleClarifySubmit() {
     if (!matrixSideA.trim() && !matrixSideB.trim()) {
@@ -324,6 +337,11 @@ export default function StudioItemPage() {
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
+
+      {showReveal && (
+        <AnalysisReveal variant="studio" onDone={handleRevealDone} />
+      )}
+
       <main className="max-w-4xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
@@ -527,8 +545,8 @@ export default function StudioItemPage() {
           </>
         )}
 
-        {analysis && (
-          <>
+        {analysis && revealed && (
+          <div className="reveal-stagger space-y-6">
             {/* WatchLens — Chrono24 market reference pricing */}
             {analysis.lens === "WatchLens" && (() => {
               const wm = analysis.watch_market;
@@ -575,7 +593,6 @@ export default function StudioItemPage() {
                 </div>
               );
             })()}
-
             {/* RecordLens — ranked likelihoods (always shown for RecordLens) */}
             {isRecordLens && clarifyResult && (
               <div className="brand-card p-6 space-y-4">
@@ -801,7 +818,7 @@ export default function StudioItemPage() {
                 setMatrixSideCD("");
               }}
             />
-          </>
+          </div>
         )}
       </main>
     </div>

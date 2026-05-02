@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -7,8 +7,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskReport } from "@/components/guard/risk-report";
+import { AnalysisReveal } from "@/components/ui/analysis-reveal";
 import type { GuardOutput } from "@/lib/ai/schemas";
 import { useAnalyseGuardCheck } from "@workspace/api-client-react";
+
 export default function GuardCheckPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -17,6 +19,8 @@ export default function GuardCheckPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [showReveal, setShowReveal] = useState(false);
+  const [revealed, setRevealed] = useState(false);
   const analyseGuardCheck = useAnalyseGuardCheck();
 
   useEffect(() => {
@@ -29,6 +33,7 @@ export default function GuardCheckPage() {
           if (data.report) {
             setReport(data.report as GuardOutput);
             setSaved(true);
+            setRevealed(true);
           }
         }
       } catch {
@@ -47,6 +52,8 @@ export default function GuardCheckPage() {
     try {
       const data = await analyseGuardCheck.mutateAsync({ id });
       setReport(data.report as GuardOutput);
+      setShowReveal(true);
+      setRevealed(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
     } finally {
@@ -59,9 +66,19 @@ export default function GuardCheckPage() {
     setSaved(true);
   }
 
+  const handleRevealDone = useCallback(() => {
+    setShowReveal(false);
+    setRevealed(true);
+  }, []);
+
   return (
     <div className="min-h-screen bg-zinc-950">
       <Navbar />
+
+      {showReveal && (
+        <AnalysisReveal variant="guard" onDone={handleRevealDone} />
+      )}
+
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <h1 className="text-2xl font-bold text-white">Guard Report</h1>
@@ -106,8 +123,8 @@ export default function GuardCheckPage() {
           </Card>
         )}
 
-        {report && (
-          <>
+        {report && revealed && (
+          <div className="reveal-stagger space-y-5">
             <RiskReport report={report} />
             <div className="flex gap-3 pt-2">
               <Button
@@ -126,7 +143,7 @@ export default function GuardCheckPage() {
                 Print / PDF
               </Button>
             </div>
-          </>
+          </div>
         )}
       </main>
     </div>
