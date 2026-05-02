@@ -24,6 +24,149 @@ const LENSES = [
   { id: "AutographLens", icon: "✍️", name: "AutographLens", desc: "Signed items & provenance" },
 ];
 
+const LENS_UPLOAD_SHOTS: Record<string, string[]> = {
+  ShoeLens: [
+    "Lateral (outer) side of both shoes",
+    "Medial (inner) side of both shoes",
+    "Toe box — straight on",
+    "Heel — straight on",
+    "Sole / outsole (lay flat)",
+    "Size tag on the tongue",
+    "Close-up of any scuffs, creasing, or sole wear",
+  ],
+  RecordLens: [
+    "Front sleeve",
+    "Back sleeve",
+    "Label on Side A",
+    "Label on Side B",
+    "Matrix / runout etching on Side A",
+    "Matrix / runout etching on Side B",
+    "Any sleeve damage, seam splits, or vinyl marks",
+  ],
+  ClothingLens: [
+    "Front of the garment (laid flat or on hanger)",
+    "Back of the garment",
+    "Brand label",
+    "Care / wash label",
+    "Collar and cuffs",
+    "Zip, buttons, or fastenings",
+    "Close-up of any pilling, fading, or staining",
+  ],
+  CardLens: [
+    "Card face — well lit, no glare",
+    "Card reverse",
+    "All four corners (close-up)",
+    "Edges — top and bottom",
+    "Surface under raking light to reveal surface wear",
+    "Hologram, stamp, or authentication label if present",
+  ],
+  ToyLens: [
+    "Front of item",
+    "Back of item",
+    "All loose accessories or parts",
+    "Any play wear, paint loss, or damage",
+    "Batch / serial number stamp (usually moulded into the base)",
+    "Packaging or box, if present",
+  ],
+  WatchLens: [
+    "Dial face — straight on, in good light",
+    "Case side at the 3 o'clock position",
+    "Crown (close-up)",
+    "Caseback — engravings or serial number visible",
+    "Bracelet or strap — top and underside",
+    "Clasp",
+    "Any scratches, blemishes, or polishing marks",
+  ],
+  MeasureLens: [
+    "Item alongside your reference object — front view (keep the full reference visible)",
+    "Item alongside your reference object — side view",
+    "Item alongside your reference object — top / overhead view",
+  ],
+  MotorLens: [
+    "Part number or casting stamp (close-up)",
+    "Front face",
+    "Rear face",
+    "Mounting points or bolt holes",
+    "Connector, port, or coupling (if applicable)",
+    "Any corrosion, cracks, or damage",
+  ],
+  TechLens: [
+    "Front / screen",
+    "Back / chassis",
+    "All ports and connectors",
+    "Model and serial number label",
+    "Any screen damage, scratches, or dents",
+    "Accessories or cables included",
+  ],
+  BookLens: [
+    "Front cover",
+    "Back cover",
+    "Spine",
+    "Title page",
+    "Copyright / colophon page",
+    "Any foxing, inscriptions, or condition issues",
+  ],
+  AntiquesLens: [
+    "Front face",
+    "Back / underside",
+    "All four sides",
+    "Maker's mark, signature, or hallmark (close-up)",
+    "Any damage, chips, or repairs",
+    "Scale reference — item alongside a coin or ruler",
+  ],
+  AutographLens: [
+    "The autograph — close-up, well lit",
+    "Full item showing the autograph in context",
+    "Certificate of authenticity or provenance document",
+    "Any authentication hologram or stamp",
+    "Back of item if relevant",
+  ],
+};
+
+const WATCH_LOOKUP_REMINDER =
+  "Tip: use the Reference Lookup panel above to search Chrono24 and auto-fill watch details before uploading.";
+
+function LensGuidancePanel({
+  lensId,
+  hasPhotos,
+}: {
+  lensId: string;
+  hasPhotos: boolean;
+}) {
+  const shots = LENS_UPLOAD_SHOTS[lensId];
+  if (!shots) return null;
+
+  const isWatch = lensId === "WatchLens";
+
+  return (
+    <div
+      className={[
+        "overflow-hidden transition-all duration-500 ease-in-out",
+        hasPhotos ? "max-h-0 opacity-0 mb-0" : "max-h-[600px] opacity-100 mb-4",
+      ].join(" ")}
+    >
+      <div className="rounded-xl border border-cyan-900/50 bg-cyan-950/20 px-4 py-3">
+        <p className="text-xs font-mono-hud tracking-[0.18em] uppercase text-cyan-400 mb-2">
+          {lensId} · Suggested shots
+        </p>
+        <ul className="space-y-1.5">
+          {shots.map((shot) => (
+            <li key={shot} className="flex items-start gap-2 text-xs text-zinc-300">
+              <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-500/70" />
+              Include a photo of the <span className="text-white">{shot}</span>
+            </li>
+          ))}
+        </ul>
+        {isWatch && (
+          <p className="mt-3 text-xs text-cyan-300/70 border-t border-cyan-900/40 pt-2">
+            {WATCH_LOOKUP_REMINDER}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
 const MARKETPLACES = [
   { id: "both", label: "eBay + Vinted" },
   { id: "ebay", label: "eBay only" },
@@ -352,6 +495,9 @@ export default function NewStudioPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Lens-specific photo guidance */}
+        <LensGuidancePanel lensId={selectedLens} hasPhotos={hasPhotos} />
 
         {/* Marketplace picker */}
         <Card className="mb-4">
