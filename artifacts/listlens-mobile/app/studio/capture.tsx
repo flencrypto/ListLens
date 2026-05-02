@@ -268,6 +268,7 @@ export default function CaptureScreen() {
           photos: photos.map((p) => p.uri).join("|"),
           analysis: JSON.stringify(analysis),
           itemId: id,
+          fresh: "1",
         },
       });
     } catch {

@@ -1,12 +1,13 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Linking, Pressable, StyleSheet, Text, View, type DimensionValue } from "react-native";
+import { Animated, Easing, Linking, Pressable, StyleSheet, Text, View, type DimensionValue } from "react-native";
 
 import { Badge } from "@/components/ui/Badge";
 import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
+import { AnalysisReveal } from "@/components/ui/AnalysisReveal";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import {
@@ -114,10 +115,17 @@ export default function GuardReportScreen() {
     url?: string;
     shots?: string;
     reportId?: string;
+    fresh?: string;
   }>();
+
+  const isFresh = params.fresh === "1";
+  const [showReveal, setShowReveal] = useState(false);
+  const contentAnim = useRef(new Animated.Value(isFresh ? 0 : 1)).current;
+  const contentTranslate = useRef(new Animated.Value(isFresh ? 18 : 0)).current;
 
   const [report, setReport] = useState<GuardReport | null>(null);
   const initialised = useRef(false);
+  const revealTriggered = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -146,6 +154,31 @@ export default function GuardReportScreen() {
     if (!initialised.current || !report) return;
     saveReport(report).catch(() => undefined);
   }, [report]);
+
+  // Trigger reveal once the report is loaded and this is a fresh analysis
+  useEffect(() => {
+    if (!report || !isFresh || revealTriggered.current) return;
+    revealTriggered.current = true;
+    setShowReveal(true);
+  }, [report, isFresh]);
+
+  function handleRevealDone() {
+    setShowReveal(false);
+    Animated.parallel([
+      Animated.timing(contentAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslate, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }
 
   if (!report) {
     const notFound = initialised.current;
@@ -189,7 +222,16 @@ export default function GuardReportScreen() {
   const authUnclear = report.authenticity_signals.filter((s) => s.verdict === "unclear").length;
 
   return (
-    <ScreenContainer>
+    <>
+      {showReveal && <AnalysisReveal variant="guard" onDone={handleRevealDone} />}
+      <ScreenContainer>
+      <Animated.View
+        style={{
+          gap: 16,
+          opacity: contentAnim,
+          transform: [{ translateY: contentTranslate }],
+        }}
+      >
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
@@ -475,7 +517,9 @@ export default function GuardReportScreen() {
       <Text style={[styles.disclaimer, { color: colors.zinc500 }]}>
         AI-assisted risk screen, not formal authentication.
       </Text>
+      </Animated.View>
     </ScreenContainer>
+    </>
   );
 }
 

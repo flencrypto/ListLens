@@ -200,6 +200,7 @@ export default function GuardCheckScreen() {
         pathname: "/guard/report",
         params: {
           reportId: localId,
+          fresh: "1",
         },
       });
     } catch {

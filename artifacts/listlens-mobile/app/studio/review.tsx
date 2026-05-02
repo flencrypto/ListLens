@@ -2,9 +2,11 @@ import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
+  Easing,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -16,6 +18,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { AnalysisReveal } from "@/components/ui/AnalysisReveal";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import {
@@ -134,7 +137,14 @@ export default function ReviewScreen() {
     draftId?: string;
     analysis?: string;
     itemId?: string;
+    fresh?: string;
   }>();
+
+  const isFresh = params.fresh === "1";
+  const [showReveal, setShowReveal] = useState(false);
+  const revealTriggered = useRef(false);
+  const contentAnim = useRef(new Animated.Value(isFresh ? 0 : 1)).current;
+  const contentTranslate = useRef(new Animated.Value(isFresh ? 18 : 0)).current;
 
   const paramPhotos = useMemo(
     () => (params.photos ? String(params.photos).split("|").filter(Boolean) : []),
@@ -371,6 +381,31 @@ export default function ReviewScreen() {
     };
   }, [itemId]);
 
+  // Trigger reveal once hydrated for a fresh analysis
+  useEffect(() => {
+    if (!hydrated || !isFresh || revealTriggered.current) return;
+    revealTriggered.current = true;
+    setShowReveal(true);
+  }, [hydrated, isFresh]);
+
+  function handleRevealDone() {
+    setShowReveal(false);
+    Animated.parallel([
+      Animated.timing(contentAnim, {
+        toValue: 1,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentTranslate, {
+        toValue: 0,
+        duration: 500,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }
+
   async function handlePublishToEbay() {
     if (!itemId) return;
     setPublishing(true);
@@ -528,7 +563,16 @@ export default function ReviewScreen() {
   }
 
   return (
-    <ScreenContainer>
+    <>
+      {showReveal && <AnalysisReveal variant="studio" onDone={handleRevealDone} />}
+      <ScreenContainer>
+      <Animated.View
+        style={{
+          gap: 16,
+          opacity: contentAnim,
+          transform: [{ translateY: contentTranslate }],
+        }}
+      >
       <View style={styles.headerRow}>
         <View style={{ flex: 1 }}>
           <Text style={[styles.title, { color: colors.foreground }]}>
@@ -1127,7 +1171,9 @@ export default function ReviewScreen() {
           ← Back to dashboard
         </Text>
       </Pressable>
+      </Animated.View>
     </ScreenContainer>
+    </>
   );
 }
 
