@@ -10,8 +10,8 @@
 
 import { logger } from "./logger";
 
-const CHRONO24_HOST = "chrono24.p.rapidapi.com";
-const CHRONO24_SEARCH_URL = `https://${CHRONO24_HOST}/api/v1/search`;
+const CHRONO24_HOST = "chrono24-api.p.rapidapi.com";
+const CHRONO24_SEARCH_URL = `https://${CHRONO24_HOST}/search`;
 
 const CACHE_TTL_MS = 30 * 60 * 1000;
 const CACHE_MAX_SIZE = 200;
