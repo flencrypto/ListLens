@@ -24,6 +24,9 @@ export const REVENUECAT_ENTITLEMENT_IDENTIFIER = "pro";
 const CUSTOMER_INFO_CACHE_KEY = "listlens.revenuecat.customerInfo.v1";
 const CUSTOMER_INFO_QUERY_KEY = ["revenuecat", "customer-info"] as const;
 
+const OFFERINGS_CACHE_KEY = "listlens.revenuecat.offerings.v1";
+const OFFERINGS_QUERY_KEY = ["revenuecat", "offerings"] as const;
+
 async function loadCachedCustomerInfo(): Promise<CustomerInfo | null> {
   try {
     const raw = await AsyncStorage.getItem(CUSTOMER_INFO_CACHE_KEY);
@@ -52,6 +55,26 @@ async function clearCachedCustomerInfo(): Promise<void> {
   }
 }
 
+async function loadCachedOfferings(): Promise<PurchasesOfferings | null> {
+  try {
+    const raw = await AsyncStorage.getItem(OFFERINGS_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return null;
+    return parsed as PurchasesOfferings;
+  } catch {
+    return null;
+  }
+}
+
+async function saveCachedOfferings(offerings: PurchasesOfferings): Promise<void> {
+  try {
+    await AsyncStorage.setItem(OFFERINGS_CACHE_KEY, JSON.stringify(offerings));
+  } catch {
+    // Ignore persistence errors — cache is a best-effort optimization.
+  }
+}
+
 function hasActiveEntitlements(info: CustomerInfo | undefined | null): boolean {
   if (!info) return false;
   return Object.keys(info.entitlements?.active ?? {}).length > 0;
@@ -71,13 +94,26 @@ let hydrationCompleted = false;
 export function hydrateSubscriptionCache(queryClient: QueryClient): Promise<void> {
   if (hydrationPromise) return hydrationPromise;
   hydrationPromise = (async () => {
-    const cached = await loadCachedCustomerInfo();
-    if (cached) {
-      const existing = queryClient.getQueryData<CustomerInfo>(CUSTOMER_INFO_QUERY_KEY);
-      if (!existing) {
-        queryClient.setQueryData(CUSTOMER_INFO_QUERY_KEY, cached);
-      }
-    }
+    await Promise.all([
+      (async () => {
+        const cached = await loadCachedCustomerInfo();
+        if (cached) {
+          const existing = queryClient.getQueryData<CustomerInfo>(CUSTOMER_INFO_QUERY_KEY);
+          if (!existing) {
+            queryClient.setQueryData(CUSTOMER_INFO_QUERY_KEY, cached);
+          }
+        }
+      })(),
+      (async () => {
+        const cached = await loadCachedOfferings();
+        if (cached) {
+          const existing = queryClient.getQueryData<PurchasesOfferings>(OFFERINGS_QUERY_KEY);
+          if (!existing) {
+            queryClient.setQueryData(OFFERINGS_QUERY_KEY, cached);
+          }
+        }
+      })(),
+    ]);
     hydrationCompleted = true;
   })();
   return hydrationPromise;
@@ -185,11 +221,21 @@ function useSubscriptionContextValue(): SubscriptionContextValue {
   }, [customerInfoQuery.isSuccess, customerInfoQuery.data]);
 
   const offeringsQuery = useQuery({
-    queryKey: ["revenuecat", "offerings"],
+    queryKey: OFFERINGS_QUERY_KEY,
     queryFn: () => Purchases.getOfferings(),
     staleTime: 5 * 60 * 1000,
-    enabled: revenueCatConfigured,
+    // Hydration via setQueryData marks the query as fresh, which would
+    // suppress the network call for up to staleTime. Force a refetch on
+    // mount so the UI renders the cached plans instantly but still
+    // reconciles against the live catalog in the background.
+    refetchOnMount: "always",
+    enabled: revenueCatConfigured && cacheHydrated,
   });
+
+  useEffect(() => {
+    if (!offeringsQuery.isSuccess || !offeringsQuery.data) return;
+    void saveCachedOfferings(offeringsQuery.data);
+  }, [offeringsQuery.isSuccess, offeringsQuery.data]);
 
   const purchaseMutation = useMutation({
     mutationFn: async (pkg: PurchasesPackage) => {
