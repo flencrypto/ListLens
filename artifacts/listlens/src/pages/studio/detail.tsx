@@ -203,6 +203,11 @@ export default function StudioItemPage() {
   const [refError, setRefError] = useState<string | null>(null);
   const [refResult, setRefResult] = useState<WatchLookupResult | null>(null);
 
+  // Status management
+  const [itemStatus, setItemStatus] = useState<string>("draft");
+  const [statusSaving, setStatusSaving] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
   useEffect(() => {
     Promise.all([
       fetch(`/api/items/${id}/analysis`).then(async (res) => {
@@ -218,6 +223,7 @@ export default function StudioItemPage() {
         if (res.ok) {
           const data = await res.json();
           if (data.listing?.lens) setItemLens(data.listing.lens as string);
+          if (data.listing?.status) setItemStatus(data.listing.status as string);
         }
       }).catch(() => {}),
     ]).finally(() => setLoadingExisting(false));
@@ -255,6 +261,33 @@ export default function StudioItemPage() {
     }, 400);
     return () => clearTimeout(timer);
   }, [photoUrls, id]);
+
+  async function handleStatusUpdate(newStatus: "draft" | "listed") {
+    setStatusSaving(true);
+    setStatusMessage(null);
+    try {
+      const res = await fetch(`/api/items/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setStatusMessage({ type: "error", text: (data as { error?: string }).error ?? "Could not update status." });
+        return;
+      }
+      setItemStatus(newStatus);
+      setStatusMessage({
+        type: "success",
+        text: newStatus === "listed" ? "Marked as listed!" : "Saved as draft.",
+      });
+      setTimeout(() => setStatusMessage(null), 3000);
+    } catch {
+      setStatusMessage({ type: "error", text: "Could not update status — check your connection." });
+    } finally {
+      setStatusSaving(false);
+    }
+  }
 
   async function handleRefLookup() {
     const trimmed = refInput.trim();
@@ -1017,6 +1050,71 @@ export default function StudioItemPage() {
                 setMatrixSideCD("");
               }}
             />
+
+            {/* Status action bar */}
+            <div className="brand-card p-5 space-y-4">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className="text-xs font-mono-hud tracking-[0.18em] uppercase text-zinc-400">
+                  Listing status
+                </p>
+                <Badge
+                  variant={
+                    itemStatus === "listed"
+                      ? "success"
+                      : itemStatus === "draft"
+                      ? "secondary"
+                      : "outline"
+                  }
+                  className="text-xs"
+                >
+                  {itemStatus === "listed"
+                    ? "Listed"
+                    : itemStatus === "draft"
+                    ? "Draft"
+                    : itemStatus}
+                </Badge>
+              </div>
+
+              <div className="flex gap-3 flex-wrap">
+                <Button
+                  variant="secondary"
+                  className="flex-1 sm:flex-none"
+                  disabled={statusSaving || itemStatus === "draft"}
+                  onClick={() => handleStatusUpdate("draft")}
+                >
+                  {statusSaving && itemStatus !== "draft" ? (
+                    <span className="flex items-center gap-2"><Spinner className="text-sm" /> Saving…</span>
+                  ) : (
+                    "Save as Draft"
+                  )}
+                </Button>
+                <Button
+                  className="flex-1 sm:flex-none bg-gradient-to-r from-emerald-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 border-0 text-white"
+                  disabled={statusSaving || itemStatus === "listed"}
+                  onClick={() => handleStatusUpdate("listed")}
+                >
+                  {statusSaving && itemStatus !== "listed" ? (
+                    <span className="flex items-center gap-2"><Spinner className="text-sm" /> Saving…</span>
+                  ) : itemStatus === "listed" ? (
+                    "Listed ✓"
+                  ) : (
+                    "Mark as Listed →"
+                  )}
+                </Button>
+              </div>
+
+              {statusMessage && (
+                <p
+                  className={
+                    statusMessage.type === "success"
+                      ? "text-emerald-400 text-sm"
+                      : "text-red-400 text-sm"
+                  }
+                >
+                  {statusMessage.text}
+                </p>
+              )}
+            </div>
           </div>
         )}
       </main>

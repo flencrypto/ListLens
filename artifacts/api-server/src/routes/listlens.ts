@@ -1902,11 +1902,19 @@ router.patch("/items/:id", async (req, res) => {
     return;
   }
 
-  const updates: Partial<{ title: string; description: string; price: string; photoUrls: string[] }> = {};
+  const ALLOWED_STATUSES = ["draft", "listed"] as const;
+  const updates: Partial<{ title: string; description: string; price: string; photoUrls: string[]; status: string }> = {};
   if (typeof b["title"] === "string") updates.title = b["title"].trim();
   if (typeof b["description"] === "string") updates.description = b["description"];
   if (b["price"] !== undefined) updates.price = String(b["price"]);
   if (Array.isArray(b["photoUrls"])) updates.photoUrls = b["photoUrls"] as string[];
+  if (typeof b["status"] === "string") {
+    if (!ALLOWED_STATUSES.includes(b["status"] as typeof ALLOWED_STATUSES[number])) {
+      res.status(400).json({ error: `Invalid status. Allowed: ${ALLOWED_STATUSES.join(", ")}` });
+      return;
+    }
+    updates.status = b["status"];
+  }
 
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No valid fields provided." });
