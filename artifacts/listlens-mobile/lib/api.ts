@@ -277,7 +277,7 @@ export async function getItemSpecifics(itemId: string): Promise<{ specifics: Ite
 
 export async function updateItem(
   id: string,
-  fields: { title?: string; description?: string; price?: string },
+  fields: { title?: string; description?: string; price?: string; photoUrls?: string[] },
 ): Promise<{ listing: ApiListing }> {
   return patch<{ listing: ApiListing }>(`/api/items/${id}`, fields);
 }

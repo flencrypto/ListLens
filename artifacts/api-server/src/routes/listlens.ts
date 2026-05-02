@@ -1887,10 +1887,11 @@ router.patch("/items/:id", async (req, res) => {
     return;
   }
 
-  const updates: Partial<{ title: string; description: string; price: string }> = {};
+  const updates: Partial<{ title: string; description: string; price: string; photoUrls: string[] }> = {};
   if (typeof b["title"] === "string") updates.title = b["title"].trim();
   if (typeof b["description"] === "string") updates.description = b["description"];
   if (b["price"] !== undefined) updates.price = String(b["price"]);
+  if (Array.isArray(b["photoUrls"])) updates.photoUrls = b["photoUrls"] as string[];
 
   if (Object.keys(updates).length === 0) {
     res.status(400).json({ error: "No valid fields provided." });
@@ -1902,6 +1903,12 @@ router.patch("/items/:id", async (req, res) => {
       .update(listingsTable)
       .set(updates)
       .where(eq(listingsTable.id, id));
+
+    // Keep in-memory meta in sync so subsequent analysis picks up the new photos
+    if (updates.photoUrls) {
+      const existing = itemMeta.get(id) ?? {};
+      itemMeta.set(id, { ...existing, photoUrls: updates.photoUrls });
+    }
 
     const [updated] = await db.select().from(listingsTable).where(eq(listingsTable.id, id));
     res.json({ listing: updated });

@@ -184,6 +184,39 @@ export default function StudioItemPage() {
       .finally(() => setLoadingExisting(false));
   }, [id]);
 
+  // Persist photoUrls to the DB on every user-driven change so the dashboard
+  // thumbnail stays current regardless of whether analysis has run.
+  // A mount ref skips the initial render (photoUrls = []) to avoid a no-op
+  // write; every subsequent change — including removing all photos — is always
+  // persisted without being gated on analysis state.
+  // The ref resets when `id` changes to guard against cross-item state bleed
+  // if the component is ever reused instead of remounted.
+  const photoUrlsMounted = useRef(false);
+  useEffect(() => {
+    photoUrlsMounted.current = false;
+  }, [id]);
+  useEffect(() => {
+    if (!photoUrlsMounted.current) {
+      photoUrlsMounted.current = true;
+      return;
+    }
+    const timer = setTimeout(() => {
+      fetch(`/api/items/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ photoUrls }),
+      }).then(async (res) => {
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          setError((data as { error?: string }).error ?? "Could not save photo changes.");
+        }
+      }).catch(() => {
+        setError("Could not save photo changes — please check your connection.");
+      });
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [photoUrls, id]);
+
   function handleAddUrl() {
     const trimmed = urlInput.trim();
     if (!trimmed || photoUrls.includes(trimmed)) return;
