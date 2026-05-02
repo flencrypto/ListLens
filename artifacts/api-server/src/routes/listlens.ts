@@ -16,7 +16,7 @@ import {
   runShoeIdentificationAgent,
   type ShoeIdentificationInput,
 } from "../lib/shoe-identification-agent";
-import { searchWatchMarket } from "../lib/watch-market-client";
+import { searchWatchMarket, type WatchMarketResult } from "../lib/watch-market-client";
 import {
   runWatchIdentificationAgent,
   type WatchIdentificationInput,
@@ -961,6 +961,109 @@ Rules:
 - score 8-10 = low risk, 5-7 = moderate risk, 2-4 = high risk, 0-1 = very high risk`;
 }
 
+/**
+ * Quickly extracts watch brand + model from listing screenshots / URL for Guard
+ * so we can look up Chrono24 market data before running the full Guard analysis.
+ * Returns null on failure — caller must treat this as best-effort.
+ */
+async function extractWatchIdentityForGuard(
+  url?: string,
+  screenshotUrls?: string[],
+): Promise<{ brand: string | null; model: string | null }> {
+  try {
+    const client = getOpenAIClient();
+
+    const textPart = url
+      ? `From this watch listing (URL: ${url}), extract the watch brand and model reference. Return ONLY valid JSON: {"brand": "...", "model": "..."}.`
+      : `From this watch listing, extract the watch brand and model reference. Return ONLY valid JSON: {"brand": "...", "model": "..."}.`;
+
+    const content: Parameters<
+      typeof client.chat.completions.create
+    >[0]["messages"][0]["content"] = [
+      { type: "text", text: textPart },
+      ...imageContent((screenshotUrls ?? []).slice(0, 3)),
+    ];
+
+    const completion = await client.chat.completions.create({
+      model: "gpt-4o",
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content:
+            "You are a watch expert. Extract only the brand and model reference from the provided listing. If unsure, return your best guess. Return ONLY: {\"brand\": \"string or null\", \"model\": \"string or null\"}",
+        },
+        { role: "user", content },
+      ],
+      max_tokens: 100,
+    });
+
+    const raw = completion.choices[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    return {
+      brand: typeof parsed["brand"] === "string" ? parsed["brand"] : null,
+      model: typeof parsed["model"] === "string" ? parsed["model"] : null,
+    };
+  } catch (err) {
+    logger.warn({ err }, "[Guard/WatchLens] extractWatchIdentityForGuard failed — skipping.");
+    return { brand: null, model: null };
+  }
+}
+
+/**
+ * For WatchLens Guard checks: extract brand/model, query Chrono24, and return
+ * a market context string to inject into the Guard prompt plus the raw result.
+ */
+async function fetchWatchMarketForGuard(
+  url?: string,
+  screenshotUrls?: string[],
+): Promise<{ marketContextText: string; marketData: WatchMarketResult | null }> {
+  if (!process.env["RAPIDAPI_WATCH_KEY"]) {
+    logger.debug("[Guard/WatchLens] RAPIDAPI_WATCH_KEY not set — skipping market lookup.");
+    return { marketContextText: "", marketData: null };
+  }
+
+  const { brand, model } = await extractWatchIdentityForGuard(url, screenshotUrls);
+
+  if (!brand && !model) {
+    logger.debug("[Guard/WatchLens] Could not extract brand/model — skipping market lookup.");
+    return { marketContextText: "", marketData: null };
+  }
+
+  const marketData = await searchWatchMarket(brand, model).catch((err) => {
+    logger.warn({ err }, "[Guard/WatchLens] searchWatchMarket errored — skipping.");
+    return null;
+  });
+
+  if (!marketData || marketData.listing_count === 0) {
+    return { marketContextText: "", marketData: null };
+  }
+
+  const parts: string[] = [
+    `\n\nCHRONO24 MARKET DATA (live pre-owned listings — use this for price_analysis):`,
+    `- Search query: "${marketData.search_query}"`,
+    `- Listings found: ${marketData.listing_count} (of ${marketData.total_count} total on Chrono24)`,
+  ];
+
+  if (marketData.price_median_gbp !== null) {
+    parts.push(`- Median pre-owned price: £${marketData.price_median_gbp}`);
+  }
+  if (marketData.price_min_gbp !== null && marketData.price_max_gbp !== null) {
+    parts.push(`- Observed price range: £${marketData.price_min_gbp}–£${marketData.price_max_gbp}`);
+  }
+
+  parts.push(
+    `\nInstruction: Set price_analysis.market_estimate to a range derived from this Chrono24 data (e.g. "£${marketData.price_min_gbp ?? "?"}–£${marketData.price_max_gbp ?? "?"}"). Base price_verdict on how the asking price compares to the Chrono24 median of £${marketData.price_median_gbp ?? "unknown"}.`,
+  );
+
+  logger.info(
+    { brand, model, median: marketData.price_median_gbp, listings: marketData.listing_count },
+    "[Guard/WatchLens] Chrono24 market data injected into Guard prompt.",
+  );
+
+  return { marketContextText: parts.join("\n"), marketData };
+}
+
 async function runGuardAnalysis(
   lens: string,
   url?: string,
@@ -971,14 +1074,27 @@ async function runGuardAnalysis(
 
   const systemPrompt = buildGuardSystemPrompt(lens);
 
+  let marketContextText = "";
+  let watchMarketData: WatchMarketResult | null = null;
+
+  if (lens === "WatchLens") {
+    const fetched = await fetchWatchMarketForGuard(url, screenshotUrls);
+    marketContextText = fetched.marketContextText;
+    watchMarketData = fetched.marketData;
+  }
+
+  const listingIntro = url
+    ? `Perform a deep fraud and risk analysis on this listing. Listing URL: ${url}`
+    : `Perform a deep fraud and risk analysis on this listing.`;
+
   const userParts: Parameters<
     typeof client.chat.completions.create
   >[0]["messages"][0]["content"] = [
     {
       type: "text",
-      text: url
-        ? `Perform a deep fraud and risk analysis on this listing. Listing URL: ${url}`
-        : `Perform a deep fraud and risk analysis on this listing.`,
+      text: marketContextText
+        ? `${listingIntro}${marketContextText}`
+        : listingIntro,
     },
     ...imageContent(screenshotUrls ?? []),
   ];
@@ -1000,6 +1116,31 @@ async function runGuardAnalysis(
   const raw = completion.choices[0]?.message?.content ?? "{}";
   const parsed = JSON.parse(raw) as unknown;
   const result = GuardOutputSchema.parse(parsed);
+
+  if (lens === "WatchLens" && watchMarketData && watchMarketData.listing_count >= 3) {
+    const { price_min_gbp, price_median_gbp, price_max_gbp } = watchMarketData;
+    if (price_min_gbp !== null && price_max_gbp !== null && price_median_gbp !== null) {
+      result.price_analysis.market_estimate = `£${price_min_gbp}–£${price_max_gbp} (Chrono24 median £${price_median_gbp})`;
+
+      const askingRaw = result.price_analysis.asking_price;
+      const askingNum = askingRaw
+        ? parseFloat(askingRaw.replace(/[^0-9.]/g, ""))
+        : null;
+      if (askingNum !== null && Number.isFinite(askingNum)) {
+        const ratio = askingNum / price_median_gbp;
+        if (ratio < 0.6) {
+          result.price_analysis.price_verdict = "suspiciously_low";
+        } else if (ratio < 0.9) {
+          result.price_analysis.price_verdict = "low_risk_deal";
+        } else if (ratio > 1.25) {
+          result.price_analysis.price_verdict = "overpriced";
+        } else {
+          result.price_analysis.price_verdict = "fair";
+        }
+      }
+    }
+  }
+
   return { result, usage: { promptTokens, completionTokens, model } };
 }
 
