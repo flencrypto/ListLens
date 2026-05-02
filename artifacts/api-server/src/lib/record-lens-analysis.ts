@@ -533,19 +533,15 @@ async function identifyPressingViaDiscogs(
 
   if (!searchResults.length) return { top: null, alternates: [], enrichedReleases: [] };
 
-  // Enrich top 4 results in parallel, preserving index alignment with topResults.
-  // Nulls are intentionally kept in rawReleases so position 0 always maps to
-  // topResults[0], etc — collapsed filtering would shift the indices when any
-  // individual fetch fails.
+  // Enrich top 4 results in parallel using the shared helper (exported for reuse).
+  // A Map keyed by release ID is used for all lookups so that individual fetch
+  // failures (filtered out by enrichDiscogsResults) never shift positional indices.
   const topResults = searchResults.slice(0, 4);
-  const rawReleases = await Promise.all(
-    topResults.map((sr) => getDiscogsRelease(sr.id).catch(() => null)),
-  );
-  // enrichedReleases: non-null releases for agent candidate building
-  const enrichedReleases: DiscogsRelease[] = rawReleases.filter((r): r is DiscogsRelease => r !== null);
+  const enrichedReleases = await enrichDiscogsResults(topResults.map((sr) => sr.id));
+  const releaseById = new Map(enrichedReleases.map((r) => [r.id, r]));
 
-  // Top result is positionally aligned — rawReleases[0] is the #1 search result's release
-  const release = rawReleases[0] ?? null;
+  // Top result: look up by the search result's ID, not by array position
+  const release = releaseById.get(topResults[0]!.id) ?? null;
 
   const artist = release?.artists?.[0]?.name ?? extraction.artist ?? null;
   const title = release?.title ?? extraction.title ?? null;
@@ -576,9 +572,10 @@ async function identifyPressingViaDiscogs(
       }
     : null;
 
-  // Build display-level alternates from rawReleases[1..3], positionally aligned to topResults
-  const alternates: RankedPressing[] = rawReleases.slice(1).map((altRelease, idx) => {
-    const sr = topResults[idx + 1]!;
+  // Build display-level alternates using Map lookup per search result ID —
+  // safe when any individual release fetch fails (absent from map → null fallback)
+  const alternates: RankedPressing[] = topResults.slice(1).map((sr, idx) => {
+    const altRelease = releaseById.get(sr.id) ?? null;
     const altYear = altRelease?.year ? String(altRelease.year) : (sr.year ?? null);
     const altCountry = altRelease?.country ?? sr.country ?? null;
     const altFormat = (altRelease ? buildReleaseFormat(altRelease) : null) ?? (sr.format ?? [])[0] ?? null;
