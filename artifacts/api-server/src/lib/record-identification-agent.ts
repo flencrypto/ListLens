@@ -101,6 +101,33 @@ Final score capped at 100, floor at 5.
 - 30–49%: Possible — limited evidence, significant ambiguity  
 - <30%: Low confidence — specific photos required before identification
 
+## Minimum Likelihood Floors — MANDATORY
+These are hard minimums. If the evidence conditions are met, the top candidate MUST be assigned at least this likelihood, regardless of the raw point score. Do not hedge downward out of caution.
+
+| Evidence available                                          | Minimum likelihood |
+|-------------------------------------------------------------|--------------------|
+| Matrix side A confirmed + catno confirmed + label confirmed | 95%                |
+| Matrix side A confirmed + catno confirmed                   | 90%                |
+| Matrix side A confirmed alone (no catno conflict)           | 80%                |
+| Catno confirmed + label confirmed + country confirmed       | 85%                |
+| Catno confirmed + label confirmed                           | 75%                |
+| Catno confirmed alone (no conflict with readable text)      | 70%                |
+| Label confirmed + year + country (no catno available)       | 60%                |
+| Artist + title readable, no catno, no matrix                | 45%                |
+
+"Confirmed" means the OCR value is non-null AND it matches (or is consistent with) the Discogs candidate being scored. A conflict (OCR value present but contradicts the candidate) removes the floor for that candidate.
+
+## identification_complete Rules — MANDATORY
+Set identification_complete = true when ALL of the following hold:
+1. There is exactly one candidate at rank 1 whose likelihood_percent ≥ 75%.
+2. No other candidate is within 15 percentage points of rank 1 (i.e. the lead is decisive).
+3. The conflicts array is empty or contains only minor/resolved conflicts.
+
+Set identification_complete = false when:
+- The top candidate is below 75%.
+- Two or more candidates are within 15 points of each other.
+- There are unresolved conflicts that could change the ranking.
+
 ## Missing Evidence Prompts
 When key evidence is absent, add specific prompts to missing_evidence. Be concrete:
 - No matrix: "Photograph the hand-etched or stamped text in the dead wax (runout) on Side A — the smooth ring between the last track groove and the centre label"
