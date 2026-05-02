@@ -25,7 +25,7 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis } from "@/lib/api";
-import { reanalyseItem, type AnalysisCorrections } from "@/lib/api";
+import { confirmPressing, reanalyseItem, type AnalysisCorrections } from "@/lib/api";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -123,6 +123,14 @@ const EMPTY_CORRECTIONS: AnalysisCorrections = {
   label: "",
 };
 
+type PressingMatch = {
+  likely_release: string;
+  likelihood_percent: number;
+  artist: string | null;
+  title: string | null;
+  label: string | null;
+};
+
 export default function ReviewScreen() {
   const colors = useColors();
   const router = useRouter();
@@ -155,6 +163,15 @@ export default function ReviewScreen() {
   const [reanalysing, setReanalysing] = useState(false);
   const [reanalyseError, setReanalyseError] = useState<string | null>(null);
   const [reanalysedAt, setReanalysedAt] = useState<number | null>(null);
+
+  // Confirm pressing (matrix/runout) state
+  const [needsMatrixConfirm, setNeedsMatrixConfirm] = useState(false);
+  const [matrixSideA, setMatrixSideA] = useState("");
+  const [matrixSideB, setMatrixSideB] = useState("");
+  const [matrixSideCD, setMatrixSideCD] = useState("");
+  const [matrixSubmitting, setMatrixSubmitting] = useState(false);
+  const [matrixError, setMatrixError] = useState<string | null>(null);
+  const [matrixLikelihoods, setMatrixLikelihoods] = useState<PressingMatch[] | null>(null);
 
   const copyField = useCallback(async (key: string, text: string) => {
     await Clipboard.setStringAsync(text);
@@ -200,7 +217,12 @@ export default function ReviewScreen() {
       const rawAnalysis = params.analysis ? String(params.analysis) : null;
       if (rawAnalysis) {
         try {
-          const parsed = JSON.parse(rawAnalysis) as StudioAnalysis;
+          const parsed = JSON.parse(rawAnalysis) as StudioAnalysis & {
+            needs_matrix_for_clarification?: boolean;
+            record_analysis?: {
+              needs_matrix_for_clarification?: boolean;
+            };
+          };
           setBody(
             analysisToBody(
               parsed,
@@ -209,6 +231,20 @@ export default function ReviewScreen() {
               paramPhotos,
             ),
           );
+          // Show the Confirm pressing card when RecordLens confidence is below 80%
+          // or the analysis says matrix clarification is needed.
+          // The flag lives at record_analysis.needs_matrix_for_clarification in the
+          // full RecordLens pipeline output; also check top-level for compatibility.
+          const lensName = params.lens ? String(params.lens) : DEFAULT_BODY.lens;
+          if (lensName === "RecordLens") {
+            const confidence = parsed.identity?.confidence ?? 1;
+            const needsMatrix =
+              (parsed.record_analysis?.needs_matrix_for_clarification ?? false) ||
+              (parsed.needs_matrix_for_clarification ?? false);
+            if (confidence < 0.8 || needsMatrix) {
+              setNeedsMatrixConfirm(true);
+            }
+          }
         } catch {
           setBody({
             ...DEFAULT_BODY,
@@ -278,6 +314,55 @@ export default function ReviewScreen() {
       );
     } finally {
       setReanalysing(false);
+    }
+  }
+
+  async function handleConfirmPressing() {
+    if (!itemId) return;
+    const hasAny = matrixSideA.trim() || matrixSideB.trim() || matrixSideCD.trim();
+    if (!hasAny) {
+      setMatrixError("Enter at least one matrix etching before confirming.");
+      return;
+    }
+    setMatrixSubmitting(true);
+    setMatrixError(null);
+    try {
+      const result = await confirmPressing({
+        itemId,
+        matrixSideA: matrixSideA.trim() || undefined,
+        matrixSideB: matrixSideB.trim() || undefined,
+        matrixSideCD: matrixSideCD.trim() || undefined,
+      });
+      const ident = result.identification;
+      const matches: PressingMatch[] = [
+        {
+          likely_release: ident.top_match.likely_release,
+          likelihood_percent: ident.top_match.likelihood_percent,
+          artist: ident.top_match.artist,
+          title: ident.top_match.title,
+          label: ident.top_match.label,
+        },
+        ...(ident.alternate_matches ?? []).map((m) => ({
+          likely_release: (m["likely_release"] as string | undefined) ?? "",
+          likelihood_percent: (m["likelihood_percent"] as number | undefined) ?? 0,
+          artist: (m["artist"] as string | null | undefined) ?? null,
+          title: (m["title"] as string | null | undefined) ?? null,
+          label: (m["label"] as string | null | undefined) ?? null,
+        })),
+      ];
+      setMatrixLikelihoods(matches);
+      if (result.analysis) {
+        setBody((prev) =>
+          analysisToBody(result.analysis!, prev.lens, prev.marketplace, prev.photos),
+        );
+        setReanalysedAt(Date.now());
+      }
+    } catch (err) {
+      setMatrixError(
+        err instanceof Error ? err.message : "Pressing confirmation failed. Please try again.",
+      );
+    } finally {
+      setMatrixSubmitting(false);
     }
   }
 
@@ -440,6 +525,127 @@ export default function ReviewScreen() {
           </View>
         ))}
       </Card>
+
+      {/* Confirm pressing — shown for RecordLens when confidence < 80% or needs_matrix_for_clarification */}
+      {isRecordLens && itemId && needsMatrixConfirm && (
+        <Card>
+          {matrixLikelihoods ? (
+            /* Results view — ranked pressing likelihoods */
+            <View>
+              <View style={styles.confirmHeader}>
+                <Feather name="disc" size={16} color={colors.brandCyan} />
+                <Text style={[styles.cardTitle, { color: colors.foreground, flex: 1 }]}>
+                  Pressing confirmed
+                </Text>
+              </View>
+              <Text style={[styles.correctionSubtitle, { color: colors.zinc500, marginBottom: 12 }]}>
+                Ranked by likelihood based on your matrix etchings
+              </Text>
+              {matrixLikelihoods.map((match, i) => (
+                <View
+                  key={i}
+                  style={[
+                    styles.likelihoodRow,
+                    {
+                      borderColor: i === 0 ? colors.cyan700 : colors.zinc800,
+                      backgroundColor: i === 0 ? "rgba(8,51,68,0.35)" : "rgba(24,24,27,0.35)",
+                    },
+                  ]}
+                >
+                  <View style={styles.likelihoodPct}>
+                    <Text style={[styles.likelihoodPctText, { color: i === 0 ? colors.brandCyan : colors.zinc400 }]}>
+                      {match.likelihood_percent}%
+                    </Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.likelihoodTitle, { color: colors.foreground }]}>
+                      {[match.artist, match.title].filter(Boolean).join(" – ") || "Unknown release"}
+                    </Text>
+                    <Text style={[styles.likelihoodMeta, { color: colors.zinc500 }]}>
+                      {[match.label, match.likely_release].filter(Boolean).join(" · ")}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+              <Pressable
+                onPress={() => {
+                  setMatrixLikelihoods(null);
+                  setMatrixSideA("");
+                  setMatrixSideB("");
+                  setMatrixSideCD("");
+                }}
+                hitSlop={10}
+                style={{ marginTop: 10 }}
+              >
+                <Text style={[styles.clearLink, { color: colors.zinc500 }]}>Re-enter matrix etchings</Text>
+              </Pressable>
+            </View>
+          ) : (
+            /* Input form */
+            <View>
+              <View style={styles.confirmHeader}>
+                <Feather name="disc" size={16} color={colors.brandCyan} />
+                <Text style={[styles.cardTitle, { color: colors.foreground, flex: 1 }]}>
+                  Confirm pressing
+                </Text>
+              </View>
+              <View style={[styles.matrixHint, { backgroundColor: "rgba(8,51,68,0.35)", borderColor: colors.cyan700, marginBottom: 12 }]}>
+                <Feather name="info" size={12} color={colors.cyan300} />
+                <Text style={[styles.matrixHintText, { color: colors.cyan300 }]}>
+                  The matrix/runout is the text hand-etched into the dead wax (the blank area between the last groove and the label). It identifies the exact pressing plant, country, and generation. Enter what you see on each side to pinpoint the pressing.
+                </Text>
+              </View>
+              <View style={{ gap: 10 }}>
+                <CorrectionField
+                  label="Matrix — Side A"
+                  placeholder="e.g. POLYDOR 2383 230 A-1 △"
+                  value={matrixSideA}
+                  onChange={setMatrixSideA}
+                  colors={colors}
+                  mono
+                />
+                <CorrectionField
+                  label="Matrix — Side B"
+                  placeholder="e.g. POLYDOR 2383 230 B-1 △"
+                  value={matrixSideB}
+                  onChange={setMatrixSideB}
+                  colors={colors}
+                  mono
+                />
+                <CorrectionField
+                  label="Matrix — Side C / D (optional, for doubles)"
+                  placeholder="e.g. POLYDOR 2383 230 C-1"
+                  value={matrixSideCD}
+                  onChange={setMatrixSideCD}
+                  colors={colors}
+                  mono
+                />
+              </View>
+              {matrixError && (
+                <View style={[styles.errorBanner, { backgroundColor: "rgba(220,38,38,0.12)", borderColor: colors.red400, marginTop: 10 }]}>
+                  <Feather name="alert-circle" size={13} color={colors.red400} />
+                  <Text style={[styles.errorText, { color: colors.red400 }]}>{matrixError}</Text>
+                </View>
+              )}
+              <View style={{ marginTop: 12 }}>
+                <BrandButton
+                  label={matrixSubmitting ? "Confirming pressing…" : "Confirm pressing"}
+                  onPress={handleConfirmPressing}
+                  disabled={matrixSubmitting}
+                  loading={matrixSubmitting}
+                />
+              </View>
+              <Pressable
+                onPress={() => setNeedsMatrixConfirm(false)}
+                hitSlop={10}
+                style={{ marginTop: 10 }}
+              >
+                <Text style={[styles.clearLink, { color: colors.zinc500 }]}>Skip for now</Text>
+              </Pressable>
+            </View>
+          )}
+        </Card>
+      )}
 
       {/* Correct & Re-analyse — only shown for RecordLens when we have a server itemId */}
       {isRecordLens && itemId && (
@@ -845,6 +1051,38 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     paddingVertical: 4,
+  },
+  confirmHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  likelihoodRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderWidth: 1,
+    borderRadius: 10,
+    padding: 10,
+    marginBottom: 6,
+  },
+  likelihoodPct: {
+    width: 46,
+    alignItems: "center",
+  },
+  likelihoodPctText: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 15,
+  },
+  likelihoodTitle: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 13,
+    marginBottom: 2,
+  },
+  likelihoodMeta: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
   },
 });
 

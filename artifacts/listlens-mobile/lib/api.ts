@@ -209,6 +209,20 @@ export async function identifyRecord(params: {
   return post(path, params);
 }
 
+export interface PressingConfirmResult {
+  identification: RecordAnalysis;
+  analysis?: StudioAnalysis;
+}
+
+export async function confirmPressing(params: {
+  itemId: string;
+  matrixSideA?: string;
+  matrixSideB?: string;
+  matrixSideCD?: string;
+}): Promise<PressingConfirmResult> {
+  return post("/api/lenses/record/identify-with-matrix", params);
+}
+
 export interface ApiLensEntry {
   id: string;
   name: string;
