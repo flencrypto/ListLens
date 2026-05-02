@@ -280,12 +280,20 @@ Score each Discogs candidate against the OCR evidence, re-rank, and return your 
   logger.info(
     {
       release_family: result.release_family,
+      top_likelihood_percent: top?.likelihood_percent ?? null,
+      identification_complete: result.identification_complete,
+      evidence_signals_present: {
+        catalogue_number: input.catalogue_number != null,
+        matrix_side_a: input.matrix_side_a != null,
+        matrix_side_b: input.matrix_side_b != null,
+        label: input.label != null,
+      },
+      candidate_count: candidates.length,
       top_candidate: top
         ? { rank: top.rank, likelihood: top.likelihood_percent, catno: top.catalogue_number }
         : null,
       conflicts: result.conflicts.length,
       missing_evidence: result.missing_evidence.length,
-      identification_complete: result.identification_complete,
     },
     "RecordIdentificationAgent: complete",
   );
