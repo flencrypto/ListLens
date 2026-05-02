@@ -533,12 +533,19 @@ async function identifyPressingViaDiscogs(
 
   if (!searchResults.length) return { top: null, alternates: [], enrichedReleases: [] };
 
-  // Enrich top 4 results in parallel — gives the Identification Agent full
-  // year / country / format / tracklist data for every candidate, not just #1.
+  // Enrich top 4 results in parallel, preserving index alignment with topResults.
+  // Nulls are intentionally kept in rawReleases so position 0 always maps to
+  // topResults[0], etc — collapsed filtering would shift the indices when any
+  // individual fetch fails.
   const topResults = searchResults.slice(0, 4);
-  const enrichedReleases = await enrichDiscogsResults(topResults.map((sr) => sr.id));
+  const rawReleases = await Promise.all(
+    topResults.map((sr) => getDiscogsRelease(sr.id).catch(() => null)),
+  );
+  // enrichedReleases: non-null releases for agent candidate building
+  const enrichedReleases: DiscogsRelease[] = rawReleases.filter((r): r is DiscogsRelease => r !== null);
 
-  const release = enrichedReleases[0] ?? null;
+  // Top result is positionally aligned — rawReleases[0] is the #1 search result's release
+  const release = rawReleases[0] ?? null;
 
   const artist = release?.artists?.[0]?.name ?? extraction.artist ?? null;
   const title = release?.title ?? extraction.title ?? null;
@@ -569,17 +576,17 @@ async function identifyPressingViaDiscogs(
       }
     : null;
 
-  // Build display-level alternates from the remaining enriched results
-  const alternates: RankedPressing[] = enrichedReleases.slice(1).map((altRelease, idx) => {
+  // Build display-level alternates from rawReleases[1..3], positionally aligned to topResults
+  const alternates: RankedPressing[] = rawReleases.slice(1).map((altRelease, idx) => {
     const sr = topResults[idx + 1]!;
-    const altYear = altRelease.year ? String(altRelease.year) : (sr.year ?? null);
-    const altCountry = altRelease.country ?? sr.country ?? null;
-    const altFormat = buildReleaseFormat(altRelease) ?? (sr.format ?? [])[0] ?? null;
+    const altYear = altRelease?.year ? String(altRelease.year) : (sr.year ?? null);
+    const altCountry = altRelease?.country ?? sr.country ?? null;
+    const altFormat = (altRelease ? buildReleaseFormat(altRelease) : null) ?? (sr.format ?? [])[0] ?? null;
     return {
-      artist: altRelease.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null,
-      title: altRelease.title ?? sr.title?.split(" - ")[1] ?? null,
-      label: altRelease.labels?.[0]?.name ?? null,
-      catalogue_number: altRelease.labels?.[0]?.catno ?? sr.catno ?? null,
+      artist: altRelease?.artists?.[0]?.name ?? sr.title?.split(" - ")[0] ?? null,
+      title: altRelease?.title ?? sr.title?.split(" - ")[1] ?? null,
+      label: altRelease?.labels?.[0]?.name ?? null,
+      catalogue_number: altRelease?.labels?.[0]?.catno ?? sr.catno ?? null,
       likely_release: [altYear, altCountry, altFormat].filter(Boolean).join(", ") || "Alternate pressing",
       likelihood_percent: Math.max(8, 35 - idx * 10),
       evidence: [`Discogs alternate match #${sr.id}`],
@@ -788,26 +795,33 @@ async function identifyPressing(
     discogsCandidates,
   );
 
-  // Resolve Discogs market data by matching the agent's top pick back to the
-  // enriched releases. Try catalogue number first (most specific), then
-  // title + year, then fall back to the highest-ranked enriched result.
+  // Resolve Discogs market data strictly by release ID.
+  //
+  // The identification agent returns IdentificationCandidate (no release_id field),
+  // so we first match the agent's top pick back to the discogsCandidates we passed in
+  // (which DO carry release_id) — using catno, then title+year as discriminators —
+  // then look up the enriched release by that ID for an exact match.
   const topCandidate = agentResult.candidates[0];
-  const matchedRelease =
+  const matchedCandidateEntry =
     (topCandidate?.catalogue_number
-      ? enrichedReleases.find((r) =>
-          r.labels?.some(
-            (l) =>
-              l.catno.toLowerCase().trim() ===
-              topCandidate.catalogue_number!.toLowerCase().trim(),
-          ),
+      ? discogsCandidates.find(
+          (c) =>
+            c.catno?.toLowerCase().trim() ===
+            topCandidate.catalogue_number!.toLowerCase().trim(),
         )
       : undefined) ??
     (topCandidate?.title && topCandidate?.year
-      ? enrichedReleases.find(
-          (r) =>
-            r.title?.toLowerCase() === topCandidate.title!.toLowerCase() &&
-            r.year === parseInt(topCandidate.year!, 10),
+      ? discogsCandidates.find(
+          (c) =>
+            c.title?.toLowerCase() === topCandidate.title!.toLowerCase() &&
+            c.year === topCandidate.year,
         )
+      : undefined) ??
+    discogsCandidates[0];
+
+  const matchedRelease =
+    (matchedCandidateEntry?.release_id
+      ? enrichedReleases.find((r) => r.id === matchedCandidateEntry.release_id)
       : undefined) ??
     enrichedReleases[0] ??
     null;
