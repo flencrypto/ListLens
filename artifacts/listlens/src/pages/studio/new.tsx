@@ -1,9 +1,12 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import { Spinner } from "@/components/ui/spinner";
+import { useUpload } from "@workspace/object-storage-web";
 
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens", desc: "Trainers, sneakers, shoes" },
@@ -26,6 +29,9 @@ const MARKETPLACES = [
   { id: "vinted", label: "Vinted only" },
 ] as const;
 
+const MAX_PHOTOS = 8;
+const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
+
 export default function NewStudioPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
@@ -36,6 +42,16 @@ export default function NewStudioPage() {
   );
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>("both");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [photoUrls, setPhotoUrls] = useState<string[]>([]);
+  const [uploadLabel, setUploadLabel] = useState("");
+  const [analysisLabel, setAnalysisLabel] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
+    onError: (err) => setError(`Upload failed: ${err.message}`),
+  });
 
   useEffect(() => {
     const lensParam = params.get("lens");
@@ -44,26 +60,105 @@ export default function NewStudioPage() {
     }
   }, [search]);
 
+  async function processFiles(files: FileList | File[]) {
+    const arr = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (arr.length === 0) return;
+    const slots = MAX_PHOTOS - photoUrls.length;
+    if (slots <= 0) {
+      setError(`Maximum ${MAX_PHOTOS} photos already added.`);
+      return;
+    }
+    setError(null);
+    const toUpload = arr.slice(0, slots);
+    for (let i = 0; i < toUpload.length; i++) {
+      const file = toUpload[i];
+      setUploadLabel(
+        toUpload.length > 1
+          ? `Uploading photo ${i + 1} of ${toUpload.length}`
+          : "Uploading photo"
+      );
+      const result = await uploadFile(file);
+      if (result) {
+        const publicUrl = `${window.location.origin}/api/storage${result.objectPath}`;
+        setPhotoUrls((prev) =>
+          prev.length < MAX_PHOTOS ? [...prev, publicUrl] : prev
+        );
+      }
+    }
+    setUploadLabel("");
+  }
+
+  const handleFileInput = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) processFiles(e.target.files);
+      e.target.value = "";
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [photoUrls.length]
+  );
+
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragging(false);
+      processFiles(e.dataTransfer.files);
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [photoUrls.length]
+  );
+
+  function removePhoto(url: string) {
+    setPhotoUrls((prev) => prev.filter((u) => u !== url));
+  }
+
   async function handleStart() {
     setLoading(true);
+    setError(null);
     try {
-      const res = await fetch("/api/items", {
+      // Step 1: create the item
+      setAnalysisLabel("Creating listing…");
+      const createRes = await fetch("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lens: selectedLens, marketplace: selectedMarketplace }),
+        body: JSON.stringify({
+          lens: selectedLens,
+          marketplace: selectedMarketplace,
+          photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
+        }),
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
+      if (!createRes.ok) {
+        const errData = await createRes.json().catch(() => ({}));
         throw new Error((errData as { error?: string }).error ?? "Failed to create listing");
       }
-      const data = await res.json();
-      setLocation(`/studio/${data.id}`);
+      const data = await createRes.json();
+      const itemId: string = data.id;
+
+      // Step 2: if photos were selected, trigger analysis immediately
+      if (photoUrls.length > 0) {
+        setAnalysisLabel("Analysing with AI…");
+        const analyseRes = await fetch(`/api/items/${itemId}/analyse`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lens: selectedLens, photoUrls }),
+        });
+        if (!analyseRes.ok) {
+          // Navigate to detail even if analysis fails — user can retry there
+          setLocation(`/studio/${itemId}`);
+          return;
+        }
+      }
+
+      setLocation(`/studio/${itemId}`);
     } catch (e) {
-      console.error("Failed to start Studio listing:", e);
+      setError(e instanceof Error ? e.message : "Failed to start listing");
     } finally {
       setLoading(false);
+      setAnalysisLabel("");
     }
   }
+
+  const hasPhotos = photoUrls.length > 0;
+  const isBusy = loading || isUploading;
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -74,7 +169,9 @@ export default function NewStudioPage() {
             Studio · New listing
           </p>
           <h1 className="text-2xl font-bold text-white mb-1">New Listing</h1>
-          <p className="text-zinc-400 text-sm">Choose your lens and marketplace, then upload photos.</p>
+          <p className="text-zinc-400 text-sm">
+            Choose your lens and marketplace, then upload photos for instant AI analysis.
+          </p>
           <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
@@ -105,7 +202,7 @@ export default function NewStudioPage() {
         </Card>
 
         {/* Marketplace picker */}
-        <Card className="mb-6">
+        <Card className="mb-4">
           <CardHeader>
             <CardTitle className="text-base">Marketplace</CardTitle>
           </CardHeader>
@@ -128,13 +225,142 @@ export default function NewStudioPage() {
           </CardContent>
         </Card>
 
+        {/* Photo upload */}
+        <Card className="mb-6">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-base">Upload Photos</CardTitle>
+              <span className="text-xs text-zinc-400">{photoUrls.length}/{MAX_PHOTOS}</span>
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div
+              onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={handleDrop}
+              className={[
+                "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 transition-colors cursor-pointer",
+                isDragging
+                  ? "border-cyan-500 bg-cyan-950/30"
+                  : "border-zinc-700 bg-zinc-900/40 hover:border-zinc-600",
+              ].join(" ")}
+              onClick={() => !isBusy && fileInputRef.current?.click()}
+            >
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPT}
+                multiple
+                className="sr-only"
+                onChange={handleFileInput}
+                disabled={isBusy || photoUrls.length >= MAX_PHOTOS}
+              />
+
+              {isUploading ? (
+                <div className="w-full max-w-xs space-y-3">
+                  <ProgressBar
+                    value={uploadProgress}
+                    label={uploadLabel || "Uploading…"}
+                  />
+                </div>
+              ) : (
+                <>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-8 w-8 text-zinc-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
+                    />
+                  </svg>
+                  <div className="text-center">
+                    <p className="text-sm text-zinc-300">
+                      <span className="text-cyan-400 font-medium">Click to upload</span>{" "}
+                      or drag & drop
+                    </p>
+                    <p className="text-xs text-zinc-500 mt-1">
+                      JPG, PNG, WebP — up to {MAX_PHOTOS} photos
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {photoUrls.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {photoUrls.map((u, i) => (
+                  <div
+                    key={i}
+                    className="relative group aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900"
+                  >
+                    <img
+                      src={u}
+                      alt={`Photo ${i + 1}`}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
+                      <span className="text-xs text-zinc-300">{i + 1}</span>
+                    </div>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removePhoto(u); }}
+                      className="absolute top-1 right-1 bg-black/70 rounded-full w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {!hasPhotos && (
+              <p className="text-xs text-zinc-500 text-center">
+                Optional — you can also add photos on the next page.
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
+        {error && (
+          <p className="text-red-400 text-sm mb-4">{error}</p>
+        )}
+
+        {loading && (
+          <div className="brand-card p-4 mb-4">
+            <ProgressBar value={hasPhotos ? 60 : 30} label={analysisLabel || "Processing…"} />
+          </div>
+        )}
+
         <Button
           onClick={handleStart}
-          disabled={loading}
+          disabled={isBusy}
           className="w-full bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 border-0 h-12 text-base"
         >
-          {loading ? "Creating listing…" : `Continue with ${selectedLens} →`}
+          {loading ? (
+            <span className="flex items-center gap-2">
+              <Spinner className="text-base text-cyan-200" />
+              {analysisLabel || "Processing…"}
+            </span>
+          ) : hasPhotos ? (
+            `Analyse with AI →`
+          ) : (
+            `Continue with ${selectedLens} →`
+          )}
         </Button>
+
+        {hasPhotos && (
+          <p className="text-xs text-zinc-500 text-center mt-3">
+            {photoUrls.length} photo{photoUrls.length !== 1 ? "s" : ""} ready · AI analysis starts immediately
+          </p>
+        )}
       </main>
     </div>
   );
