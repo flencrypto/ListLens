@@ -16,6 +16,7 @@ import {
   runShoeIdentificationAgent,
   type ShoeIdentificationInput,
 } from "../lib/shoe-identification-agent";
+import { fetchSneakerMarketPrice } from "../lib/sneaker-price-client";
 import { searchWatchMarket, type WatchMarketResult } from "../lib/watch-market-client";
 import {
   runWatchIdentificationAgent,
@@ -98,6 +99,16 @@ const StudioOutputSchema = z.object({
     currency: z.literal("GBP"),
   }).nullable().optional(),
   watch_identification: z.record(z.unknown()).nullable().optional(),
+  sneaker_market: z.object({
+    source: z.string(),
+    search_query: z.string(),
+    listing_count: z.number(),
+    price_min_gbp: z.number().nullable(),
+    price_median_gbp: z.number().nullable(),
+    price_max_gbp: z.number().nullable(),
+    source_listings: z.number(),
+    currency: z.literal("GBP"),
+  }).nullable().optional(),
 });
 
 const TechLensAttributesSchema = z.object({
@@ -549,8 +560,6 @@ async function enrichShoeLensWithKicksCrew(
     ...(options?.marketplaceCandidates ?? []),
   ];
 
-  if (!marketplaceCandidates.length) return result;
-
   const attributes = result.attributes as Record<string, unknown>;
   const readableText = [
     stringValue(attributes["readable_text"]),
@@ -607,6 +616,53 @@ async function enrichShoeLensWithKicksCrew(
   result.marketplace_candidates = marketplaceCandidates as unknown as Record<string, unknown>[];
   result.kickscrew_product = kickscrewProduct as unknown as Record<string, unknown> | null;
   result.shoe_identification = shoeIdentification as unknown as Record<string, unknown> | null;
+
+  const topCandidate = shoeIdentification?.candidates?.[0];
+  const styleCode =
+    topCandidate?.style_code ??
+    topCandidate?.sku ??
+    stringValue(result.attributes["style_code"] as unknown) ??
+    stringValue(result.attributes["sku"] as unknown);
+  const brandModel =
+    result.identity.brand && result.identity.model
+      ? `${result.identity.brand} ${result.identity.model}`
+      : result.identity.brand ?? result.identity.model ?? null;
+
+  const sneakerMarket = await fetchSneakerMarketPrice(styleCode, brandModel).catch((err) => {
+    logger.warn({ err }, "[ShoeLens] fetchSneakerMarketPrice errored — skipping.");
+    return null;
+  });
+
+  if (sneakerMarket) {
+    if (sneakerMarket.listing_count >= 3 && sneakerMarket.price_median_gbp !== null) {
+      const median = sneakerMarket.price_median_gbp;
+      const currentRecommended = result.pricing.recommended;
+
+      const BLEND_WEIGHT_MARKET = 0.65;
+      const blended = Math.round(
+        median * BLEND_WEIGHT_MARKET + currentRecommended * (1 - BLEND_WEIGHT_MARKET),
+      );
+
+      result.pricing = {
+        ...result.pricing,
+        recommended: blended,
+        quick_sale: Math.round(blended * 0.87),
+        high: Math.round(blended * 1.15),
+        confidence: Math.min(0.95, result.pricing.confidence + 0.15),
+      };
+    }
+
+    result.sneaker_market = {
+      source: sneakerMarket.source,
+      search_query: sneakerMarket.search_query,
+      listing_count: sneakerMarket.listing_count,
+      price_min_gbp: sneakerMarket.price_min_gbp,
+      price_median_gbp: sneakerMarket.price_median_gbp,
+      price_max_gbp: sneakerMarket.price_max_gbp,
+      source_listings: sneakerMarket.source_listings,
+      currency: "GBP",
+    };
+  }
 
   return result;
 }

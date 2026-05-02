@@ -500,6 +500,28 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Sneaker market price data row */}
+          {analysis.sneaker_market?.price_median_gbp != null && (
+            <div className="flex items-center justify-between rounded-lg border border-blue-900/40 bg-blue-950/20 px-3 py-2.5">
+              <div className="flex flex-col gap-0.5">
+                <span className="text-xs text-blue-400 font-medium uppercase tracking-wide">Market price</span>
+                <span className="text-lg font-bold text-blue-300">
+                  {formatPrice(analysis.sneaker_market.price_median_gbp, "GBP")} median
+                </span>
+                {analysis.sneaker_market.price_min_gbp != null && analysis.sneaker_market.price_max_gbp != null && (
+                  <span className="text-xs text-blue-500">
+                    Range: {formatPrice(analysis.sneaker_market.price_min_gbp, "GBP")} – {formatPrice(analysis.sneaker_market.price_max_gbp, "GBP")}
+                    {" "}({analysis.sneaker_market.source_listings} listings)
+                  </span>
+                )}
+              </div>
+              <div className="text-right shrink-0 ml-4">
+                <span className="inline-flex items-center gap-1 rounded-full border border-blue-800/50 bg-blue-950/40 px-2 py-0.5 text-xs text-blue-400">
+                  via Real-Time Sneaker Prices
+                </span>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-3 gap-4">
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-center">
               <p className="text-zinc-500 text-xs mb-1">Quick Sale</p>

@@ -150,7 +150,9 @@ export default function ReviewScreen() {
 
   const isRecordLens = body.lens === "RecordLens" || (params.lens ? String(params.lens) : "") === "RecordLens";
   const isWatchLens = body.lens === "WatchLens" || (params.lens ? String(params.lens) : "") === "WatchLens";
+  const isShoeLens = body.lens === "ShoeLens" || (params.lens ? String(params.lens) : "") === "ShoeLens";
   const [watchMarketData, setWatchMarketData] = useState<import("@/lib/api").WatchMarketData | null>(null);
+  const [sneakerMarketData, setSneakerMarketData] = useState<import("@/lib/api").SneakerMarketData | null>(null);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   // Correction panel state
@@ -251,6 +253,9 @@ export default function ReviewScreen() {
           if (listing.lens === "WatchLens" && apiAnalysis?.watch_market) {
             setWatchMarketData(apiAnalysis.watch_market);
           }
+          if (listing.lens === "ShoeLens" && apiAnalysis?.sneaker_market) {
+            setSneakerMarketData(apiAnalysis.sneaker_market);
+          }
           setHydrated(true);
           return;
         } catch {
@@ -298,6 +303,9 @@ export default function ReviewScreen() {
           }
           if (lensName === "WatchLens" && parsed.watch_market) {
             setWatchMarketData(parsed.watch_market);
+          }
+          if (lensName === "ShoeLens" && parsed.sneaker_market) {
+            setSneakerMarketData(parsed.sneaker_market);
           }
         } catch {
           setBody({
@@ -659,6 +667,33 @@ export default function ReviewScreen() {
           <PriceTile label="High" value={body.pricing.high} tone={colors.brandGreen} />
         </View>
       </Card>
+
+      {isShoeLens && sneakerMarketData && sneakerMarketData.price_median_gbp != null && (
+        <Card>
+          <View style={styles.confirmHeader}>
+            <Text style={[styles.cardTitle, { color: colors.foreground, flex: 1 }]}>
+              Market price
+            </Text>
+            <View style={{ backgroundColor: "rgba(8,30,68,0.5)", borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 }}>
+              <Text style={{ color: "#60a5fa", fontSize: 10, fontWeight: "600" }}>
+                Real-Time Sneaker Prices
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.correctionSubtitle, { color: colors.zinc500, marginBottom: 12 }]}>
+            {sneakerMarketData.source_listings} live resale listing{sneakerMarketData.source_listings === 1 ? "" : "s"}
+            {sneakerMarketData.search_query ? ` · "${sneakerMarketData.search_query}"` : ""}
+          </Text>
+          <View style={styles.pricingRow}>
+            <PriceTile label="Min" value={sneakerMarketData.price_min_gbp ?? 0} tone={colors.zinc400} />
+            <PriceTile label="Median" value={sneakerMarketData.price_median_gbp} tone="#60a5fa" highlight />
+            <PriceTile label="Max" value={sneakerMarketData.price_max_gbp ?? 0} tone={colors.brandGreen} />
+          </View>
+          <Text style={{ color: colors.zinc600, fontSize: 10, marginTop: 8 }}>
+            Recommended price blended with market median · via Real-Time Sneaker Prices
+          </Text>
+        </Card>
+      )}
 
       {isWatchLens && watchMarketData && watchMarketData.listing_count > 0 && (
         <Card>

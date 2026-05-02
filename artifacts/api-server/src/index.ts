@@ -31,6 +31,21 @@ if (missingSecrets.length > 0) {
   );
 }
 
+const OPTIONAL_RAPIDAPI_KEYS = [
+  "RAPIDAPI_SNEAKER_KEY",
+  "RAPIDAPI_KICKSCREW_KEY",
+  "RAPIDAPI_WATCH_KEY",
+] as const;
+
+const missingOptionalKeys = OPTIONAL_RAPIDAPI_KEYS.filter((k) => !process.env[k]);
+if (missingOptionalKeys.length > 0) {
+  logger.warn(
+    { missingOptionalKeys },
+    `Optional RapidAPI keys not set — market enrichment will be skipped for the corresponding lenses. ` +
+      `Add them in Replit Secrets to enable: ${missingOptionalKeys.join(", ")}.`,
+  );
+}
+
 runMigrations()
   .then(() => {
     app.listen(port, (err) => {

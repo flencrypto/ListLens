@@ -148,6 +148,17 @@ export interface WatchMarketData {
   currency: "GBP";
 }
 
+export interface SneakerMarketData {
+  source: string;
+  search_query: string;
+  listing_count: number;
+  price_min_gbp: number | null;
+  price_median_gbp: number | null;
+  price_max_gbp: number | null;
+  source_listings: number;
+  currency: "GBP";
+}
+
 export interface StudioAnalysis {
   mode: "studio";
   lens: string;
@@ -172,6 +183,7 @@ export interface StudioAnalysis {
   };
   warnings: string[];
   watch_market?: WatchMarketData | null;
+  sneaker_market?: SneakerMarketData | null;
 }
 
 export interface RecordAnalysis {
