@@ -1644,14 +1644,29 @@ router.get("/guard/checks", async (req, res) => {
   }
 });
 
-router.post("/guard/checks", (req, res) => {
+router.post("/guard/checks", async (req, res) => {
   const b = body(req);
   const id = newId("guard");
-  guardMeta.set(id, {
+  const meta: GuardMeta = {
     url: b["url"] as string,
     screenshotUrls: b["screenshotUrls"] as string[],
     lens: b["lens"] as string,
-  });
+  };
+  guardMeta.set(id, meta);
+
+  try {
+    await db.insert(guardChecksTable).values({
+      id,
+      userId: req.user?.id ?? null,
+      lens: meta.lens ?? "ShoeLens",
+      url: meta.url ?? null,
+      screenshotUrls: meta.screenshotUrls ?? [],
+      status: "pending",
+    });
+  } catch (err) {
+    logger.warn({ err, id }, "guard_checks pre-insert failed (non-fatal)");
+  }
+
   res.json({ id });
 });
 
@@ -1687,8 +1702,37 @@ router.get("/guard/checks/:id", async (req, res) => {
 
 router.post("/guard/checks/:id/analyse", async (req, res) => {
   const { id } = req.params;
-  const meta = guardMeta.get(id) ?? {};
   const userId = req.user?.id;
+
+  let meta: GuardMeta = guardMeta.get(id) ?? {};
+
+  if (!meta.url && !meta.screenshotUrls?.length) {
+    try {
+      const rows = await db
+        .select()
+        .from(guardChecksTable)
+        .where(eq(guardChecksTable.id, id))
+        .limit(1);
+      const row = rows[0];
+      if (row) {
+        meta = {
+          url: row.url ?? undefined,
+          screenshotUrls: (row.screenshotUrls as string[] | null) ?? undefined,
+          lens: row.lens ?? undefined,
+        };
+      }
+    } catch (dbErr) {
+      logger.warn({ dbErr, id }, "guard_checks DB fallback read failed");
+    }
+  }
+
+  if (!meta.url && !meta.screenshotUrls?.length) {
+    res.status(400).json({
+      error: "No listing URL or screenshots found for this check. Please start a new Guard check.",
+    });
+    return;
+  }
+
   const lens = meta.lens ?? "ShoeLens";
   try {
     const { result: report, usage } = await runGuardAnalysis(
@@ -1698,19 +1742,28 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
     );
     guardStore.set(id, report);
 
-    if (userId) {
-      await db.insert(guardChecksTable)
-        .values({
-          id,
-          userId,
-          lens,
-          url: meta.url ?? null,
+    await db.insert(guardChecksTable)
+      .values({
+        id,
+        userId: userId ?? null,
+        lens,
+        url: meta.url ?? null,
+        screenshotUrls: meta.screenshotUrls ?? [],
+        riskLevel: report.risk.level,
+        status: "checked",
+      })
+      .onConflictDoUpdate({
+        target: guardChecksTable.id,
+        set: {
           riskLevel: report.risk.level,
           status: "checked",
-        })
-        .onConflictDoUpdate({ target: guardChecksTable.id, set: { riskLevel: report.risk.level } })
-        .catch((err) => logger.warn({ err }, "guard_checks insert failed (non-fatal)"));
-    }
+          url: meta.url ?? null,
+          screenshotUrls: meta.screenshotUrls ?? [],
+          lens,
+          userId: userId ?? null,
+        },
+      })
+      .catch((err) => logger.warn({ err }, "guard_checks upsert failed (non-fatal)"));
 
     const confidencePct = Math.round((report.risk?.confidence ?? 0) * 100);
     try {

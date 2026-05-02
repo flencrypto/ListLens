@@ -12,12 +12,14 @@ if (!process.env.DATABASE_URL && !process.env.PGHOST) {
 
 function buildPoolConfig(): pg.PoolConfig {
   if (process.env.PGHOST) {
+    const isProduction = process.env.NODE_ENV === "production";
     return {
       host: process.env.PGHOST,
       port: Number(process.env.PGPORT ?? 5432),
       user: process.env.PGUSER,
       password: process.env.PGPASSWORD,
       database: process.env.PGDATABASE,
+      ssl: isProduction ? { rejectUnauthorized: false } : undefined,
     };
   }
   return {

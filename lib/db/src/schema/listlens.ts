@@ -19,8 +19,9 @@ export const guardChecksTable = pgTable("guard_checks", {
   userId: varchar("user_id"),
   lens: varchar("lens").notNull().default("ShoeLens"),
   url: varchar("url"),
+  screenshotUrls: jsonb("screenshot_urls").$type<string[]>().default(sql`'[]'::jsonb`),
   riskLevel: varchar("risk_level"),
-  status: varchar("status").notNull().default("checked"),
+  status: varchar("status").notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .default(sql`NOW()`),

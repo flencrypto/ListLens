@@ -68,10 +68,16 @@ export async function runMigrations(): Promise<void> {
         user_id VARCHAR,
         lens VARCHAR NOT NULL DEFAULT 'ShoeLens',
         url VARCHAR,
+        screenshot_urls JSONB NOT NULL DEFAULT '[]'::jsonb,
         risk_level VARCHAR,
-        status VARCHAR NOT NULL DEFAULT 'checked',
+        status VARCHAR NOT NULL DEFAULT 'pending',
         created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
       );
+    `);
+
+    await client.query(`
+      ALTER TABLE guard_checks
+        ADD COLUMN IF NOT EXISTS screenshot_urls JSONB NOT NULL DEFAULT '[]'::jsonb;
     `);
 
     await client.query(`
