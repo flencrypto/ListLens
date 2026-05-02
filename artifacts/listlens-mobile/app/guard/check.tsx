@@ -32,14 +32,15 @@ const MAX_PHOTOS = 6;
 export default function GuardCheckScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { mutateAsync: createGuardCheckAsync } = useCreateGuardCheck();
-  const { mutateAsync: analyseGuardCheckAsync } = useAnalyseGuardCheck();
+  const { mutateAsync: createGuardCheckAsync, isPending: isCreating } = useCreateGuardCheck();
+  const { mutateAsync: analyseGuardCheckAsync, isPending: isAnalysing } = useAnalyseGuardCheck();
   const [tab, setTab] = useState<Tab>("url");
   const [url, setUrl] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
   const liveLenses = LENS_REGISTRY.filter((l) => l.status === "live");
   const [lens, setLens] = useState(liveLenses[0]?.id ?? "ShoeLens");
   const [busy, setBusy] = useState(false);
+  const isLoading = busy || isCreating || isAnalysing;
 
   const violet300 = "rgba(196,181,253,0.95)";
   const violetStroke = "rgba(167,139,250,0.32)";
@@ -213,7 +214,7 @@ export default function GuardCheckScreen() {
     <ScreenContainer>
       {/* Progress overlay */}
       <Modal
-        visible={busy}
+        visible={isLoading}
         transparent
         animationType="fade"
         statusBarTranslucent
@@ -470,7 +471,7 @@ export default function GuardCheckScreen() {
 
       <GuardCheckButton
         label="Run Guard Check"
-        isRunning={busy}
+        isRunning={isLoading}
         onPress={handleStart}
       />
 
