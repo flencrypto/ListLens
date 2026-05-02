@@ -29,6 +29,7 @@ import PrivacyPage from "@/pages/legal/privacy";
 import TermsPage from "@/pages/legal/terms";
 import AiDisclaimerPage from "@/pages/legal/ai-disclaimer";
 import OfflinePage from "@/pages/offline";
+import AdminLogsPage from "@/pages/admin/logs";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
@@ -63,6 +64,7 @@ function Router() {
       <Route path="/legal/terms" component={TermsPage} />
       <Route path="/legal/ai-disclaimer" component={AiDisclaimerPage} />
       <Route path="/offline" component={OfflinePage} />
+      <Route path="/admin/logs" component={AdminLogsPage} />
       <Route component={NotFound} />
     </Switch>
   );
