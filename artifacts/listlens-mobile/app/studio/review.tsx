@@ -25,7 +25,7 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis } from "@/lib/api";
-import { confirmPressing, reanalyseItem, type AnalysisCorrections } from "@/lib/api";
+import { confirmPressing, getItem, reanalyseItem, type AnalysisCorrections } from "@/lib/api";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -184,6 +184,7 @@ export default function ReviewScreen() {
     let cancelled = false;
     async function load() {
       const incomingId = params.draftId ? String(params.draftId) : null;
+      const incomingItemId = params.itemId ? String(params.itemId) : null;
       if (incomingId) {
         const existing = await getDraft(incomingId);
         if (cancelled) return;
@@ -205,6 +206,38 @@ export default function ReviewScreen() {
           });
           setHydrated(true);
           return;
+        }
+
+        // Draft not in local storage — try loading from API if we have an item id
+        const apiItemId = incomingItemId ?? incomingId;
+        try {
+          const { listing } = await getItem(apiItemId);
+          if (cancelled) return;
+          const apiAnalysis = listing.analysis as (StudioAnalysis & Record<string, unknown>) | null;
+          const apiBody: DraftBody = apiAnalysis
+            ? analysisToBody(
+                apiAnalysis,
+                listing.lens,
+                listing.marketplace ?? DEFAULT_BODY.marketplace,
+                listing.photoUrls,
+              )
+            : {
+                ...DEFAULT_BODY,
+                lens: listing.lens,
+                marketplace: listing.marketplace ?? DEFAULT_BODY.marketplace,
+                photos: listing.photoUrls,
+                title: listing.title ?? DEFAULT_BODY.title,
+                description: listing.description ?? DEFAULT_BODY.description,
+              };
+          const createdTs = listing.createdAt ? new Date(listing.createdAt).getTime() : Date.now();
+          setDraftId(apiItemId);
+          setCreatedAt(createdTs);
+          setBody(apiBody);
+          setHydrated(true);
+          return;
+        } catch {
+          // API fetch failed — fall through to blank draft
+          if (cancelled) return;
         }
       }
 

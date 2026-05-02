@@ -1344,6 +1344,24 @@ async function fetchOwnedListing(
   }
 }
 
+router.get("/items/:id", async (req, res) => {
+  const { id } = req.params;
+  const result = await fetchOwnedListing(id, req.user?.id);
+  if (result.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (result.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  if (result.notFound || !result.row) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+  res.json({ listing: result.row });
+});
+
 router.get("/items/:id/analysis", async (req, res) => {
   const { id } = req.params;
   const result = await fetchOwnedListing(id, req.user?.id);

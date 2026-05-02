@@ -232,6 +232,28 @@ export interface ApiLensEntry {
   status: string;
 }
 
+export interface ApiListing {
+  id: string;
+  lens: string;
+  marketplace: string | null;
+  photoUrls: string[];
+  title: string | null;
+  description: string | null;
+  price: string | null;
+  analysis: Record<string, unknown> | null;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function getItems(): Promise<{ listings: ApiListing[] }> {
+  return get<{ listings: ApiListing[] }>("/api/items");
+}
+
+export async function getItem(id: string): Promise<{ listing: ApiListing }> {
+  return get<{ listing: ApiListing }>(`/api/items/${id}`);
+}
+
 export async function getLensRegistry(): Promise<{
   lenses: string[];
   registry: ApiLensEntry[];

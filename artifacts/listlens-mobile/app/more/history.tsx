@@ -9,6 +9,8 @@ import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
+import { useAuth } from "@/lib/auth";
+import { getItems, type ApiListing } from "@/lib/api";
 import {
   listDrafts,
   listReports,
@@ -16,31 +18,98 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 
+function apiListingToDraft(item: ApiListing): StudioDraft {
+  const analysis = item.analysis as Record<string, unknown> | undefined;
+  const pricing = analysis?.pricing as
+    | { quick_sale?: number; recommended?: number; high?: number }
+    | undefined;
+  const identity = analysis?.identity as { brand?: string } | undefined;
+  return {
+    id: item.id,
+    createdAt: new Date(item.createdAt).getTime(),
+    updatedAt: new Date(item.updatedAt).getTime(),
+    lens: item.lens,
+    marketplace: item.marketplace ?? "",
+    photos: item.photoUrls,
+    title: item.title ?? "",
+    brand: identity?.brand ?? "",
+    size: "",
+    description: item.description ?? "",
+    bullets: [],
+    pricing: {
+      quick: pricing?.quick_sale ?? 0,
+      recommended: pricing?.recommended ?? 0,
+      high: pricing?.high ?? 0,
+    },
+    flags: [],
+    exported: "none",
+  };
+}
+
 export default function HistoryScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [drafts, setDrafts] = useState<StudioDraft[]>([]);
   const [reports, setReports] = useState<GuardReport[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [source, setSource] = useState<"api" | "local">("local");
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
-      Promise.all([listDrafts(), listReports()])
-        .then(([d, r]) => {
+
+      async function load() {
+        try {
+          if (isAuthenticated) {
+            const [apiResult, localReports] = await Promise.all([
+              getItems().catch(() => null),
+              listReports(),
+            ]);
+            if (cancelled) return;
+            if (apiResult) {
+              const mapped = apiResult.listings.map(apiListingToDraft);
+              setDrafts(mapped);
+              setSource("api");
+            } else {
+              const localDrafts = await listDrafts();
+              if (!cancelled) {
+                setDrafts(localDrafts);
+                setSource("local");
+              }
+            }
+            setReports(localReports);
+          } else {
+            const [localDrafts, localReports] = await Promise.all([
+              listDrafts(),
+              listReports(),
+            ]);
+            if (cancelled) return;
+            setDrafts(localDrafts);
+            setReports(localReports);
+            setSource("local");
+          }
+        } catch {
           if (cancelled) return;
-          setDrafts(d);
-          setReports(r);
-          setLoaded(true);
-        })
-        .catch(() => {
-          if (cancelled) return;
-          setLoaded(true);
-        });
+          const [localDrafts, localReports] = await Promise.all([
+            listDrafts(),
+            listReports(),
+          ]);
+          if (!cancelled) {
+            setDrafts(localDrafts);
+            setReports(localReports);
+            setSource("local");
+          }
+        } finally {
+          if (!cancelled) setLoaded(true);
+        }
+      }
+
+      load();
       return () => {
         cancelled = true;
       };
-    }, []),
+    }, [isAuthenticated]),
   );
 
   const draftCountLabel =
@@ -92,6 +161,11 @@ export default function HistoryScreen() {
           </View>
         ) : (
           <View style={styles.list}>
+            {source === "api" && (
+              <Text style={[styles.sourceNote, { color: colors.zinc500 }]}>
+                Synced from your account
+              </Text>
+            )}
             {drafts.map((d) => (
               <DraftRow
                 key={d.id}
@@ -99,7 +173,10 @@ export default function HistoryScreen() {
                 onPress={() =>
                   router.push({
                     pathname: "/studio/review",
-                    params: { draftId: d.id },
+                    params: {
+                      draftId: d.id,
+                      ...(source === "api" ? { itemId: d.id } : {}),
+                    },
                   })
                 }
               />
@@ -358,6 +435,11 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 8,
+  },
+  sourceNote: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+    marginBottom: 4,
   },
   row: {
     flexDirection: "row",
