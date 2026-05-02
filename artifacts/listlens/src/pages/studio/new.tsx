@@ -229,6 +229,10 @@ export default function NewStudioPage() {
   const [refError, setRefError] = useState<string | null>(null);
   const [refResult, setRefResult] = useState<WatchLookupResult | null>(null);
 
+  const [urlInput, setUrlInput] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlChecking, setUrlChecking] = useState(false);
+
   const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
     onError: (err) => setError(`Upload failed: ${err.message}`),
   });
@@ -272,6 +276,52 @@ export default function NewStudioPage() {
       setRefError("Could not reach Chrono24 — please try again.");
     } finally {
       setRefLoading(false);
+    }
+  }
+
+  async function addImageUrl() {
+    const trimmed = urlInput.trim();
+    setUrlError(null);
+
+    try {
+      const parsed = new URL(trimmed);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        setUrlError("URL must start with http:// or https://");
+        return;
+      }
+    } catch {
+      setUrlError("Please enter a valid URL.");
+      return;
+    }
+
+    if (photoUrls.length >= MAX_PHOTOS) {
+      setUrlError(`Maximum ${MAX_PHOTOS} photos already added.`);
+      return;
+    }
+
+    if (photoUrls.includes(trimmed)) {
+      setUrlError("This URL has already been added.");
+      return;
+    }
+
+    setUrlChecking(true);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        const timer = setTimeout(
+          () => reject(new Error("URL timed out — check the link and try again.")),
+          8000
+        );
+        img.onload = () => { clearTimeout(timer); resolve(); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error("URL does not point to a reachable image.")); };
+        img.src = trimmed;
+      });
+      setPhotoUrls((prev) => (prev.length < MAX_PHOTOS ? [...prev, trimmed] : prev));
+      setUrlInput("");
+    } catch (e) {
+      setUrlError(e instanceof Error ? e.message : "Could not load image from URL.");
+    } finally {
+      setUrlChecking(false);
     }
   }
 
@@ -589,6 +639,40 @@ export default function NewStudioPage() {
                 </>
               )}
             </div>
+
+            {/* URL input */}
+            {photoUrls.length < MAX_PHOTOS && !isUploading && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-zinc-800" />
+                  <span className="text-xs text-zinc-600 shrink-0">or add by URL</span>
+                  <div className="flex-1 h-px bg-zinc-800" />
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="url"
+                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                    placeholder="https://example.com/image.jpg"
+                    value={urlInput}
+                    onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); }}
+                    onKeyDown={(e) => e.key === "Enter" && !urlChecking && urlInput.trim() && addImageUrl()}
+                    disabled={isBusy || urlChecking}
+                  />
+                  <Button
+                    onClick={addImageUrl}
+                    disabled={isBusy || urlChecking || !urlInput.trim()}
+                    variant="secondary"
+                    size="sm"
+                    className="shrink-0"
+                  >
+                    {urlChecking ? <Spinner className="text-xs" /> : "Add"}
+                  </Button>
+                </div>
+                {urlError && (
+                  <p className="text-red-400 text-xs">{urlError}</p>
+                )}
+              </div>
+            )}
 
             {photoUrls.length > 0 && (
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
