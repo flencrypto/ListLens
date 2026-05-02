@@ -181,6 +181,7 @@ export default function ReviewScreen() {
   const [matrixSubmitting, setMatrixSubmitting] = useState(false);
   const [matrixError, setMatrixError] = useState<string | null>(null);
   const [matrixLikelihoods, setMatrixLikelihoods] = useState<PressingMatch[] | null>(null);
+  const [pressingConfirmedAt, setPressingConfirmedAt] = useState<number | null>(null);
 
   const copyField = useCallback(async (key: string, text: string) => {
     await Clipboard.setStringAsync(text);
@@ -443,12 +444,32 @@ export default function ReviewScreen() {
         })),
       ];
       setMatrixLikelihoods(matches);
-      if (result.analysis) {
-        setBody((prev) =>
-          analysisToBody(result.analysis!, prev.lens, prev.marketplace, prev.photos),
-        );
-        setReanalysedAt(Date.now());
-      }
+      const topMatch = ident.top_match;
+      const highConfidence = topMatch.likelihood_percent > 70;
+      setBody((prev) => {
+        const base = result.analysis
+          ? analysisToBody(result.analysis!, prev.lens, prev.marketplace, prev.photos)
+          : { ...prev };
+        if (!highConfidence) return base;
+        const artistTitle = [topMatch.artist, topMatch.title].filter(Boolean).join(" – ");
+        const releaseLabel = topMatch.likely_release?.trim() || "pressing identified";
+        const meta = [topMatch.label, releaseLabel].filter(Boolean).join(", ");
+        const pressingTitle = artistTitle
+          ? meta ? `${artistTitle} (${meta})` : artistTitle
+          : base.title;
+        const confirmedLine = `✓ Pressing confirmed: ${releaseLabel}`;
+        const existingDesc = base.description ?? "";
+        const alreadyPrepended = existingDesc.startsWith("✓ Pressing confirmed:");
+        const newDescription = alreadyPrepended
+          ? existingDesc.replace(/^✓ Pressing confirmed:[^\n]*/, confirmedLine)
+          : existingDesc
+          ? `${confirmedLine}\n\n${existingDesc}`
+          : confirmedLine;
+        return { ...base, title: pressingTitle, description: newDescription };
+      });
+      const now = Date.now();
+      setReanalysedAt(now);
+      if (highConfidence) setPressingConfirmedAt(now);
     } catch (err) {
       setMatrixError(
         err instanceof Error ? err.message : "Pressing confirmation failed. Please try again.",
@@ -468,7 +489,12 @@ export default function ReviewScreen() {
           <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
             {body.lens} · {body.photos.length} photo
             {body.photos.length === 1 ? "" : "s"}
-            {reanalysedAt ? "  ·  Re-analysed" : ""}
+            {(reanalysedAt || pressingConfirmedAt)
+              ? "  ·  " +
+                [reanalysedAt ? "Re-analysed" : null, pressingConfirmedAt ? "Pressing confirmed" : null]
+                  .filter(Boolean)
+                  .join(" · ")
+              : ""}
           </Text>
         </View>
         <Badge label="AI draft" tone="cyan" />
