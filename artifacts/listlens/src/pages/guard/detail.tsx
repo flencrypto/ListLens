@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
@@ -8,13 +8,37 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskReport } from "@/components/guard/risk-report";
 import type { GuardOutput } from "@/lib/ai/schemas";
+
 export default function GuardCheckPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const [report, setReport] = useState<GuardOutput | null>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function fetchExistingReport() {
+      try {
+        const res = await fetch(`/api/guard/checks/${id}`);
+        if (!cancelled && res.ok) {
+          const data = await res.json();
+          if (data.report) {
+            setReport(data.report as GuardOutput);
+            setSaved(true);
+          }
+        }
+      } catch {
+        // silently ignore — user can still run a fresh analysis
+      } finally {
+        if (!cancelled) setInitialLoading(false);
+      }
+    }
+    fetchExistingReport();
+    return () => { cancelled = true; };
+  }, [id]);
 
   async function handleAnalyse() {
     setError(null);
@@ -49,7 +73,14 @@ export default function GuardCheckPage() {
           <Badge variant="secondary">Check {id.slice(-8)}</Badge>
         </div>
 
-        {!report && (
+        {initialLoading && (
+          <div className="flex items-center gap-2 text-zinc-400 text-sm py-4">
+            <Spinner className="text-base text-violet-400" />
+            Loading report…
+          </div>
+        )}
+
+        {!initialLoading && !report && (
           <Card>
             <CardHeader>
               <CardTitle className="text-base">Ready to analyse</CardTitle>

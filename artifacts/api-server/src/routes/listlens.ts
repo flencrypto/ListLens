@@ -1619,14 +1619,34 @@ router.post("/guard/checks", (req, res) => {
   res.json({ id });
 });
 
-router.get("/guard/checks/:id", (req, res) => {
+router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
-  const report = guardStore.get(id);
-  if (!report) {
-    res.status(404).json({ error: "Not found" });
+
+  const inMemory = guardStore.get(id);
+  if (inMemory) {
+    res.json({ id, report: inMemory });
     return;
   }
-  res.json({ id, report });
+
+  try {
+    const rows = await db
+      .select()
+      .from(aiJobLogsTable)
+      .where(eq(aiJobLogsTable.checkId, id))
+      .orderBy(desc(aiJobLogsTable.createdAt))
+      .limit(1);
+
+    const row = rows[0];
+    if (!row?.fullOutput) {
+      res.status(404).json({ error: "Not found" });
+      return;
+    }
+
+    res.json({ id, report: row.fullOutput });
+  } catch (err) {
+    logger.error({ err, id }, "guard_checks get failed");
+    res.status(500).json({ error: "Failed to load Guard check" });
+  }
 });
 
 router.post("/guard/checks/:id/analyse", async (req, res) => {
