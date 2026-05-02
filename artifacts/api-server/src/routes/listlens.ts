@@ -1674,6 +1674,7 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
   try {
     // Authorization: when itemId is provided, verify the caller owns the item
     // before reading or updating any in-memory state associated with it.
+    let ownedRow: typeof listingsTable.$inferSelect | null = null;
     if (itemId) {
       const ownership = await fetchOwnedListing(itemId, req.user?.id);
       if (ownership.dbError) {
@@ -1684,15 +1685,19 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
         res.status(403).json({ error: "Forbidden" });
         return;
       }
+      ownedRow = ownership.row ?? null;
     }
 
     let resolvedLabelUrls = labelUrls;
 
-    // When itemId is provided, retrieve stored label URLs for re-analysis
+    // When itemId is provided, retrieve stored label URLs for re-analysis.
+    // Check in-memory store first; fall back to DB row so URLs survive server restarts.
     if (itemId && !labelUrls.length) {
       const meta = itemMeta.get(itemId);
       if (meta?.photoUrls?.length) {
         resolvedLabelUrls = meta.photoUrls as string[];
+      } else if (ownedRow?.photoUrls?.length) {
+        resolvedLabelUrls = ownedRow.photoUrls as string[];
       }
     }
 
@@ -1704,16 +1709,37 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
     // When itemId is provided, re-run full RecordLens pipeline with matrix text injected
     // so listing wording, pricing, and attributes are all updated
     if (itemId && matrixText && resolvedLabelUrls.length) {
+      let analysisRecord: Record<string, unknown> | null = null;
+
+      // AI pipeline errors are non-fatal — fall back to identification-only response
       try {
         const fullAnalysis = await runRecordLensAnalysis(resolvedLabelUrls, undefined, {
           matrix_a: matrixText.sideA,
           matrix_b: matrixText.sideB,
         });
-        const analysisRecord = fullAnalysis as unknown as Record<string, unknown>;
+        // Force needs_matrix_for_clarification to false — the user has just supplied
+        // matrix data so the clarification prompt must not re-appear after this save.
+        analysisRecord = {
+          ...(fullAnalysis as unknown as Record<string, unknown>),
+          needs_matrix_for_clarification: false,
+        };
+        // Patch nested record_analysis field if present (runRecordLensAnalysis wraps output there)
+        if (analysisRecord.record_analysis && typeof analysisRecord.record_analysis === "object") {
+          analysisRecord.record_analysis = {
+            ...(analysisRecord.record_analysis as Record<string, unknown>),
+            needs_matrix_for_clarification: false,
+          };
+        }
+      } catch (pipelineErr) {
+        logger.warn({ pipelineErr, itemId }, "Full pipeline re-run failed — returning identification only");
+      }
+
+      if (analysisRecord) {
         studioStore.set(itemId, analysisRecord);
         updatedAnalysis = analysisRecord;
 
-        // Persist refreshed analysis to DB (matching /items/:id/analyse behaviour)
+        // Persist refreshed analysis to DB — errors here surface as 500 so the
+        // caller knows persistence failed rather than silently returning stale data.
         const ebayTitle = String(
           (analysisRecord.marketplace_outputs as Record<string, unknown> | undefined)
             ?.["ebay"] as string ?? "",
@@ -1732,12 +1758,7 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
             ...(description ? { description } : {}),
             status: "analysed",
           })
-          .where(eq(listingsTable.id, itemId))
-          .catch((dbErr) =>
-            logger.warn({ dbErr, itemId }, "Could not persist matrix-refreshed analysis to DB (non-fatal)"),
-          );
-      } catch (pipelineErr) {
-        logger.warn({ pipelineErr, itemId }, "Full pipeline re-run failed — returning identification only");
+          .where(eq(listingsTable.id, itemId));
       }
     }
 
