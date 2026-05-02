@@ -1,11 +1,27 @@
 /**
  * Single source of truth for the ListLens specialist Lens registry as used by
- * the Next.js web app (the `/lenses` page and the `GET /api/lenses` route).
+ * the web app (the `/lenses` page and the `GET /api/lenses` route).
  *
  * Mirrors `LENS_REGISTRY` in `packages/lenses` but lives in-app so the web
  * bundle has no runtime workspace build dependency. When adding a new Lens,
  * update this file and `packages/lenses/src/registry.ts` together.
  */
+
+import {
+  BadgeCheck,
+  BookOpen,
+  Car,
+  CircleDot,
+  Footprints,
+  LucideIcon,
+  PenTool,
+  Ruler,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Trophy,
+  Watch,
+} from "lucide-react";
 
 export type LensStatus = "live" | "planned" | "deprecated";
 
@@ -19,6 +35,22 @@ export interface LensEntry {
   /** Optional in-app destination when the Lens is `live`. */
   href?: string;
 }
+
+/** Maps each Lens id to its Lucide icon component. */
+export const LENS_ICON_MAP: Record<string, LucideIcon> = {
+  RecordLens: CircleDot,
+  ShoeLens: Footprints,
+  ClothingLens: Shirt,
+  CardLens: BadgeCheck,
+  ToyLens: Trophy,
+  WatchLens: Watch,
+  MeasureLens: Ruler,
+  MotorLens: Car,
+  TechLens: Smartphone,
+  BookLens: BookOpen,
+  AntiquesLens: Sparkles,
+  AutographLens: PenTool,
+};
 
 export const LENS_REGISTRY: readonly LensEntry[] = [
   {

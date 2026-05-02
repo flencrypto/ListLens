@@ -3,6 +3,21 @@
  * package has zero workspace runtime imports.
  */
 
+import {
+  BadgeCheck,
+  BookOpen,
+  Car,
+  CircleDot,
+  Footprints,
+  PenTool,
+  Ruler,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Trophy,
+  Watch,
+} from "lucide-react-native";
+
 export type LensStatus = "live" | "planned" | "deprecated";
 
 export interface LensEntry {
@@ -13,6 +28,22 @@ export interface LensEntry {
   icon: string;
   status: LensStatus;
 }
+
+/** Maps each Lens id to its lucide-react-native icon component. */
+export const LENS_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string; strokeWidth?: number }>> = {
+  RecordLens: CircleDot,
+  ShoeLens: Footprints,
+  ClothingLens: Shirt,
+  CardLens: BadgeCheck,
+  ToyLens: Trophy,
+  WatchLens: Watch,
+  MeasureLens: Ruler,
+  MotorLens: Car,
+  TechLens: Smartphone,
+  BookLens: BookOpen,
+  AntiquesLens: Sparkles,
+  AutographLens: PenTool,
+};
 
 export const LENS_REGISTRY: readonly LensEntry[] = [
   {
@@ -94,7 +125,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
     icon: "📱",
-    status: "live",
+    status: "planned",
   },
   {
     id: "BookLens",
@@ -103,7 +134,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Books, first editions and collectable print. ISBN, edition and condition.",
     icon: "📚",
-    status: "live",
+    status: "planned",
   },
   {
     id: "AntiquesLens",
@@ -112,7 +143,7 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Antiques and decorative objects. Maker marks, era and reproduction risk.",
     icon: "🏺",
-    status: "live",
+    status: "planned",
   },
   {
     id: "AutographLens",
@@ -121,6 +152,6 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     description:
       "Signed items and provenance. Evidence-led — never authenticates signatures.",
     icon: "✍️",
-    status: "live",
+    status: "planned",
   },
 ];
