@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useRef, useState } from "react";
-import { Pressable, StyleSheet, Text, View, type DimensionValue } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View, type DimensionValue } from "react-native";
 
 import { Badge } from "@/components/ui/Badge";
 import { BrandButton } from "@/components/ui/Button";
@@ -15,6 +15,29 @@ import {
   type GuardReport,
   type RiskLevel,
 } from "@/lib/historyStore";
+
+const AUTH_SERVICES = [
+  {
+    name: "PSA/DNA",
+    description: "Industry-standard autograph grading & encapsulation.",
+    url: "https://www.psacard.com/autographservices",
+  },
+  {
+    name: "Beckett BAS",
+    description: "Trusted grading for sports & entertainment autographs.",
+    url: "https://www.beckett.com/autograph-authentication",
+  },
+  {
+    name: "JSA",
+    description: "Specialist in celebrity, sports & historical autographs.",
+    url: "https://www.jsa.cc/authentication",
+  },
+  {
+    name: "AFTAL",
+    description: "UK-based approved autograph dealers & authenticators.",
+    url: "https://aftal.co.uk/category/authenticators/",
+  },
+] as const;
 
 const DEFAULT_LEVEL: RiskLevel = "medium";
 
@@ -473,6 +496,37 @@ export default function GuardReportScreen() {
         </Card>
       )}
 
+      {/* Third-party authentication services */}
+      {report.lens === "AutographLens" && (level === "medium_high" || level === "high") && (
+        <Card>
+          <View style={[styles.authServiceHeader, { borderColor: "rgba(248,113,113,0.35)" }]}>
+            <Feather name="shield" size={15} color="#f87171" />
+            <Text style={[styles.cardTitle, { color: colors.foreground, flex: 1 }]}>Get it authenticated</Text>
+          </View>
+          <Text style={[styles.authServiceIntro, { color: colors.zinc400 }]}>
+            The risk level on this autograph is elevated. Consider submitting the item to a recognised third-party authentication service before buying.
+          </Text>
+          <View style={{ gap: 10 }}>
+            {AUTH_SERVICES.map((svc) => (
+              <Pressable
+                key={svc.name}
+                onPress={() => Linking.openURL(svc.url)}
+                style={({ pressed }) => [
+                  styles.authServiceRow,
+                  { borderColor: "rgba(63,63,70,0.6)", backgroundColor: pressed ? "rgba(248,113,113,0.08)" : "rgba(39,39,42,0.5)" },
+                ]}
+              >
+                <View style={{ flex: 1, gap: 2 }}>
+                  <Text style={[styles.authServiceName, { color: colors.foreground }]}>{svc.name}</Text>
+                  <Text style={[styles.authServiceDesc, { color: colors.zinc500 }]}>{svc.description}</Text>
+                </View>
+                <Feather name="external-link" size={13} color="#71717a" />
+              </Pressable>
+            ))}
+          </View>
+        </Card>
+      )}
+
       {/* Actions */}
       <View style={styles.buttonRow}>
         <View style={{ flex: 1 }}>
@@ -757,6 +811,36 @@ const styles = StyleSheet.create({
     fontSize: 13,
     lineHeight: 18,
     flex: 1,
+  },
+  authServiceHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 6,
+  },
+  authServiceIntro: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    lineHeight: 17,
+    marginBottom: 12,
+  },
+  authServiceRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    borderWidth: 1,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  authServiceName: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 13,
+  },
+  authServiceDesc: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+    lineHeight: 15,
   },
   buttonRow: {
     flexDirection: "row",

@@ -31,6 +31,29 @@ const AUTHENTICITY_VERDICT_ICONS = {
   unclear: { icon: "?", color: "text-zinc-400 bg-zinc-900/50 border-zinc-700/40" },
 } as const;
 
+const AUTH_SERVICES = [
+  {
+    name: "PSA/DNA",
+    description: "Professional Sports Authenticator — industry-standard autograph grading & encapsulation.",
+    url: "https://www.psacard.com/autographservices",
+  },
+  {
+    name: "Beckett BAS",
+    description: "Beckett Authentication Services — trusted grading for sports & entertainment autographs.",
+    url: "https://www.beckett.com/autograph-authentication",
+  },
+  {
+    name: "JSA",
+    description: "James Spence Authentication — specialist in celebrity, sports & historical autographs.",
+    url: "https://www.jsa.cc/authentication",
+  },
+  {
+    name: "AFTAL",
+    description: "Autograph Fair Trading Association Ltd — UK-based approved autograph dealers & authenticators.",
+    url: "https://aftal.co.uk/category/authenticators/",
+  },
+] as const;
+
 const DIMENSION_LABELS = {
   price: "Price",
   photos: "Photos",
@@ -322,6 +345,36 @@ export function RiskReport({ report }: RiskReportProps) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* ── Third-party Authentication ───────────────────────────────────── */}
+      {report.lens === "AutographLens" && (report.risk.level === "medium_high" || report.risk.level === "high") && (
+        <div className="brand-card p-5 ring-1 ring-red-500/30">
+          <h2 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+            <span className="inline-block w-1 h-4 bg-red-500 rounded-full" />
+            Get it authenticated
+          </h2>
+          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+            The risk level on this autograph is elevated. Consider submitting the item to a recognised third-party authentication service before buying.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-3">
+            {AUTH_SERVICES.map((svc) => (
+              <a
+                key={svc.name}
+                href={svc.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-3 rounded-lg border border-zinc-800/70 bg-zinc-900/50 hover:border-red-500/40 hover:bg-red-950/20 transition-colors px-4 py-3 group"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">{svc.name}</p>
+                  <p className="text-xs text-zinc-500 leading-snug mt-0.5">{svc.description}</p>
+                </div>
+                <span className="text-zinc-600 group-hover:text-red-400 transition-colors shrink-0 mt-0.5">↗</span>
+              </a>
+            ))}
+          </div>
         </div>
       )}
 
