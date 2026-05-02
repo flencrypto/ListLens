@@ -1,4 +1,5 @@
 import { Router, type IRouter, type Request, type Response } from "express";
+import { createHash } from "crypto";
 import { z } from "zod";
 import { logger } from "../lib/logger";
 import { getXaiClient, getOpenAIClient } from "../lib/ai-clients";
@@ -49,6 +50,31 @@ const itemMeta = new Map<string, ItemMeta>();
 const studioStore = new Map<string, Record<string, unknown>>();
 const guardMeta = new Map<string, GuardMeta>();
 const guardStore = new Map<string, Record<string, unknown>>();
+
+const WATCH_IDENTITY_CACHE_TTL_MS = 30 * 60 * 1000;
+
+interface WatchIdentityCacheEntry {
+  brand: string | null;
+  model: string | null;
+  expiresAt: number;
+}
+
+const watchIdentityCache = new Map<string, WatchIdentityCacheEntry>();
+
+function buildWatchIdentityCacheKey(url?: string, screenshotUrls?: string[]): string {
+  const shots = (screenshotUrls ?? []).slice(0, 3).filter(Boolean).sort();
+  const canonical = shots.length > 0
+    ? JSON.stringify({ screenshots: shots })
+    : JSON.stringify({ url: url ?? null });
+  return createHash("sha256").update(canonical).digest("hex");
+}
+
+function evictExpiredWatchIdentityEntries(): void {
+  const now = Date.now();
+  for (const [key, entry] of watchIdentityCache) {
+    if (entry.expiresAt <= now) watchIdentityCache.delete(key);
+  }
+}
 
 const body = (req: Request): Record<string, unknown> =>
   (req.body as Record<string, unknown>) ?? {};
@@ -996,6 +1022,19 @@ async function extractWatchIdentityForGuard(
   url?: string,
   screenshotUrls?: string[],
 ): Promise<{ brand: string | null; model: string | null }> {
+  evictExpiredWatchIdentityEntries();
+
+  const cacheKey = buildWatchIdentityCacheKey(url, screenshotUrls);
+  const cached = watchIdentityCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    logger.debug({ cacheKey }, "[Guard/WatchLens] extractWatchIdentityForGuard cache HIT — skipping GPT-4o call.");
+    return { brand: cached.brand, model: cached.model };
+  }
+  if (cached) {
+    watchIdentityCache.delete(cacheKey);
+  }
+  logger.debug({ cacheKey }, "[Guard/WatchLens] extractWatchIdentityForGuard cache MISS — calling GPT-4o.");
+
   try {
     const client = getOpenAIClient();
 
@@ -1026,10 +1065,12 @@ async function extractWatchIdentityForGuard(
 
     const raw = completion.choices[0]?.message?.content ?? "{}";
     const parsed = JSON.parse(raw) as Record<string, unknown>;
-    return {
+    const identity = {
       brand: typeof parsed["brand"] === "string" ? parsed["brand"] : null,
       model: typeof parsed["model"] === "string" ? parsed["model"] : null,
     };
+    watchIdentityCache.set(cacheKey, { ...identity, expiresAt: Date.now() + WATCH_IDENTITY_CACHE_TTL_MS });
+    return identity;
   } catch (err) {
     logger.warn({ err }, "[Guard/WatchLens] extractWatchIdentityForGuard failed — skipping.");
     return { brand: null, model: null };

@@ -13,6 +13,34 @@ import { logger } from "./logger";
 const CHRONO24_HOST = "chrono24.p.rapidapi.com";
 const CHRONO24_SEARCH_URL = `https://${CHRONO24_HOST}/api/v1/search`;
 
+const CACHE_TTL_MS = 30 * 60 * 1000;
+const CACHE_MAX_SIZE = 200;
+
+interface CacheEntry {
+  result: WatchMarketResult;
+  expiresAt: number;
+}
+
+const searchCache = new Map<string, CacheEntry>();
+
+function evictSearchCache(): void {
+  const now = Date.now();
+  for (const [key, entry] of searchCache) {
+    if (entry.expiresAt <= now) searchCache.delete(key);
+  }
+  if (searchCache.size >= CACHE_MAX_SIZE) {
+    const oldest = searchCache.keys().next().value;
+    if (oldest !== undefined) searchCache.delete(oldest);
+  }
+}
+
+function normaliseCacheKey(brand: string | null, modelOrReference: string | null): string {
+  return [brand, modelOrReference]
+    .filter(Boolean)
+    .map((s) => s!.trim().toLowerCase())
+    .join(" ");
+}
+
 const GBP_FX: Record<string, number> = {
   GBP: 1.0,
   EUR: 0.86,
@@ -238,6 +266,19 @@ export async function searchWatchMarket(
   }
 
   const searchQuery = queryParts.join(" ").trim();
+  const cacheKey = normaliseCacheKey(brand, modelOrReference);
+
+  evictSearchCache();
+
+  const cached = searchCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    logger.debug({ cacheKey, searchQuery }, "[watch-market-client] Cache HIT — returning cached Chrono24 result.");
+    return cached.result;
+  }
+  if (cached) {
+    searchCache.delete(cacheKey);
+  }
+  logger.debug({ cacheKey, searchQuery }, "[watch-market-client] Cache MISS — fetching from Chrono24.");
 
   const params = new URLSearchParams({
     query: searchQuery,
@@ -293,7 +334,7 @@ export async function searchWatchMarket(
       "[watch-market-client] Chrono24 search complete.",
     );
 
-    return {
+    const result: WatchMarketResult = {
       source: "Chrono24",
       search_query: searchQuery,
       listing_count: listings.length,
@@ -304,6 +345,10 @@ export async function searchWatchMarket(
       currency: "GBP",
       listings,
     };
+
+    searchCache.set(cacheKey, { result, expiresAt: Date.now() + CACHE_TTL_MS });
+
+    return result;
   } catch (error) {
     logger.warn(
       { err: error instanceof Error ? error.message : String(error), searchQuery },
