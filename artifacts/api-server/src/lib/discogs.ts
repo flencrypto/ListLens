@@ -5,6 +5,27 @@ import { logger } from "./logger";
 const DISCOGS_BASE = "https://api.discogs.com";
 const USER_AGENT = "MrFLENS-ListLens/1.0 +https://mrflens.com";
 
+const RELEASE_CACHE_TTL_MS =
+  (parseInt(process.env["DISCOGS_RELEASE_CACHE_TTL_SECONDS"] ?? "3600", 10) || 3600) * 1000;
+
+const RELEASE_CACHE_NEGATIVE_TTL_MS = Math.min(120_000, RELEASE_CACHE_TTL_MS);
+
+interface CacheEntry {
+  value: DiscogsRelease | null;
+  expiresAt: number;
+}
+
+const releaseCache = new Map<number, CacheEntry>();
+
+function pruneReleaseCache(): void {
+  const now = Date.now();
+  for (const [id, entry] of releaseCache) {
+    if (entry.expiresAt <= now) releaseCache.delete(id);
+  }
+}
+
+setInterval(pruneReleaseCache, 5 * 60_000).unref();
+
 function makeOAuth(): OAuth {
   const key = process.env["DISCOGS_CONSUMER_KEY"]!;
   const secret = process.env["DISCOGS_CONSUMER_SECRET"]!;
@@ -98,10 +119,20 @@ export async function searchDiscogs(query: {
 export async function getDiscogsRelease(
   releaseId: number
 ): Promise<DiscogsRelease | null> {
+  const now = Date.now();
+  const cached = releaseCache.get(releaseId);
+  if (cached && cached.expiresAt > now) {
+    logger.debug({ releaseId }, "Discogs release cache hit");
+    return cached.value;
+  }
+
   try {
-    return await discogsGet<DiscogsRelease>(`/releases/${releaseId}`);
+    const value = await discogsGet<DiscogsRelease>(`/releases/${releaseId}`);
+    releaseCache.set(releaseId, { value, expiresAt: now + RELEASE_CACHE_TTL_MS });
+    return value;
   } catch (err) {
     logger.warn({ err, releaseId }, "Discogs release fetch failed — skipping enrichment");
+    releaseCache.set(releaseId, { value: null, expiresAt: now + RELEASE_CACHE_NEGATIVE_TTL_MS });
     return null;
   }
 }
