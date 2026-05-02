@@ -4,6 +4,7 @@ import { useLocation, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useCreateGuardCheck } from "@workspace/api-client-react";
 
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens" },
@@ -34,6 +35,7 @@ export default function NewGuardPage() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const createGuardCheck = useCreateGuardCheck();
 
   useEffect(() => {
     const lensParam = params.get("lens");
@@ -68,20 +70,13 @@ export default function NewGuardPage() {
     setLoading(true);
     let navigated = false;
     try {
-      const res = await fetch("/api/guard/checks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const data = await createGuardCheck.mutateAsync({
+        data: {
           url: tab === "url" ? url.trim() : undefined,
           screenshotUrls: tab === "screenshots" ? screenshotUrls : undefined,
           lens,
-        }),
+        },
       });
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        throw new Error((errData as { error?: string }).error ?? "Something went wrong");
-      }
-      const data = await res.json();
       navigated = true;
       setLocation(`/guard/${data.id}`);
     } catch (e) {

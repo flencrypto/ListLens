@@ -98,3 +98,287 @@ export const LogoutMobileSessionHeader = zod.object({
 export const LogoutMobileSessionResponse = zod.object({
   success: zod.boolean(),
 });
+
+/**
+ * @summary Create a new Studio listing record
+ */
+export const CreateStudioItemHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const CreateStudioItemBody = zod.object({
+  lens: zod.string(),
+  marketplace: zod.string(),
+  photoUrls: zod.array(zod.string()),
+});
+
+export const CreateStudioItemResponse = zod.object({
+  id: zod.string(),
+  lens: zod.string(),
+  marketplace: zod.string().nullish(),
+  status: zod.string(),
+});
+
+/**
+ * @summary Run AI analysis on a Studio listing
+ */
+export const AnalyseStudioItemParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const AnalyseStudioItemHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const AnalyseStudioItemBody = zod.object({
+  lens: zod.string().optional(),
+  photoUrls: zod.array(zod.string()),
+  hint: zod.string().optional(),
+});
+
+export const AnalyseStudioItemResponse = zod.object({
+  analysis: zod.object({
+    mode: zod.enum(["studio"]),
+    lens: zod.string(),
+    listing_description: zod.string(),
+    identity: zod.object({
+      brand: zod.string().nullable(),
+      model: zod.string().nullable(),
+      confidence: zod.number(),
+    }),
+    attributes: zod.record(zod.string(), zod.unknown()),
+    missing_photos: zod.array(zod.string()),
+    pricing: zod.object({
+      quick_sale: zod.number(),
+      recommended: zod.number(),
+      high: zod.number(),
+      currency: zod.string(),
+      confidence: zod.number(),
+    }),
+    marketplace_outputs: zod.object({
+      ebay: zod.record(zod.string(), zod.unknown()).optional(),
+      vinted: zod.record(zod.string(), zod.unknown()).optional(),
+    }),
+    warnings: zod.array(zod.string()),
+  }),
+});
+
+/**
+ * @summary Re-run analysis with user corrections (RecordLens only)
+ */
+export const ReanalyseStudioItemParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const ReanalyseStudioItemHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const ReanalyseStudioItemBody = zod.object({
+  corrections: zod.record(zod.string(), zod.unknown()),
+});
+
+export const ReanalyseStudioItemResponse = zod.object({
+  analysis: zod.object({
+    mode: zod.enum(["studio"]),
+    lens: zod.string(),
+    listing_description: zod.string(),
+    identity: zod.object({
+      brand: zod.string().nullable(),
+      model: zod.string().nullable(),
+      confidence: zod.number(),
+    }),
+    attributes: zod.record(zod.string(), zod.unknown()),
+    missing_photos: zod.array(zod.string()),
+    pricing: zod.object({
+      quick_sale: zod.number(),
+      recommended: zod.number(),
+      high: zod.number(),
+      currency: zod.string(),
+      confidence: zod.number(),
+    }),
+    marketplace_outputs: zod.object({
+      ebay: zod.record(zod.string(), zod.unknown()).optional(),
+      vinted: zod.record(zod.string(), zod.unknown()).optional(),
+    }),
+    warnings: zod.array(zod.string()),
+  }),
+});
+
+/**
+ * @summary Create a new Guard check record
+ */
+export const CreateGuardCheckHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const CreateGuardCheckBody = zod.object({
+  url: zod.string().optional(),
+  screenshotUrls: zod.array(zod.string()).optional(),
+  lens: zod.string(),
+});
+
+export const CreateGuardCheckResponse = zod.object({
+  id: zod.string(),
+});
+
+/**
+ * @summary Run AI risk analysis on a Guard check
+ */
+export const AnalyseGuardCheckParams = zod.object({
+  id: zod.coerce.string(),
+});
+
+export const AnalyseGuardCheckHeader = zod.object({
+  Authorization: zod
+    .string()
+    .optional()
+    .describe("Opaque session token — `Bearer <sid>`."),
+});
+
+export const analyseGuardCheckResponseReportRiskDimensionsPriceScoreMin = 0;
+export const analyseGuardCheckResponseReportRiskDimensionsPriceScoreMax = 10;
+
+export const analyseGuardCheckResponseReportRiskDimensionsPhotosScoreMin = 0;
+export const analyseGuardCheckResponseReportRiskDimensionsPhotosScoreMax = 10;
+
+export const analyseGuardCheckResponseReportRiskDimensionsListingQualityScoreMin = 0;
+export const analyseGuardCheckResponseReportRiskDimensionsListingQualityScoreMax = 10;
+
+export const analyseGuardCheckResponseReportRiskDimensionsItemAuthenticityScoreMin = 0;
+export const analyseGuardCheckResponseReportRiskDimensionsItemAuthenticityScoreMax = 10;
+
+export const analyseGuardCheckResponseReportRiskDimensionsSellerSignalsScoreMin = 0;
+export const analyseGuardCheckResponseReportRiskDimensionsSellerSignalsScoreMax = 10;
+
+export const AnalyseGuardCheckResponse = zod.object({
+  id: zod.string(),
+  report: zod.object({
+    mode: zod.string(),
+    lens: zod.string(),
+    risk: zod.object({
+      level: zod.enum(["low", "medium", "medium_high", "high", "inconclusive"]),
+      confidence: zod.number(),
+      summary: zod.string(),
+    }),
+    risk_dimensions: zod.object({
+      price: zod.object({
+        score: zod
+          .number()
+          .min(analyseGuardCheckResponseReportRiskDimensionsPriceScoreMin)
+          .max(analyseGuardCheckResponseReportRiskDimensionsPriceScoreMax),
+        verdict: zod.string(),
+      }),
+      photos: zod.object({
+        score: zod
+          .number()
+          .min(analyseGuardCheckResponseReportRiskDimensionsPhotosScoreMin)
+          .max(analyseGuardCheckResponseReportRiskDimensionsPhotosScoreMax),
+        verdict: zod.string(),
+      }),
+      listing_quality: zod.object({
+        score: zod
+          .number()
+          .min(
+            analyseGuardCheckResponseReportRiskDimensionsListingQualityScoreMin,
+          )
+          .max(
+            analyseGuardCheckResponseReportRiskDimensionsListingQualityScoreMax,
+          ),
+        verdict: zod.string(),
+      }),
+      item_authenticity: zod.object({
+        score: zod
+          .number()
+          .min(
+            analyseGuardCheckResponseReportRiskDimensionsItemAuthenticityScoreMin,
+          )
+          .max(
+            analyseGuardCheckResponseReportRiskDimensionsItemAuthenticityScoreMax,
+          ),
+        verdict: zod.string(),
+      }),
+      seller_signals: zod.object({
+        score: zod
+          .number()
+          .min(
+            analyseGuardCheckResponseReportRiskDimensionsSellerSignalsScoreMin,
+          )
+          .max(
+            analyseGuardCheckResponseReportRiskDimensionsSellerSignalsScoreMax,
+          ),
+        verdict: zod.string(),
+      }),
+    }),
+    red_flags: zod.array(
+      zod.object({
+        severity: zod.enum(["low", "medium", "high"]),
+        type: zod.string(),
+        message: zod.string(),
+      }),
+    ),
+    green_signals: zod.array(
+      zod.object({
+        type: zod.string(),
+        message: zod.string(),
+      }),
+    ),
+    price_analysis: zod.object({
+      asking_price: zod.string().nullish(),
+      market_estimate: zod.string().nullish(),
+      price_verdict: zod.enum([
+        "fair",
+        "low_risk_deal",
+        "suspiciously_low",
+        "overpriced",
+        "unknown",
+      ]),
+      price_note: zod.string(),
+    }),
+    authenticity_signals: zod.array(
+      zod.object({
+        marker: zod.string(),
+        observed: zod.string(),
+        verdict: zod.enum(["pass", "fail", "unclear"]),
+      }),
+    ),
+    missing_photos: zod.array(zod.string()),
+    seller_questions: zod.array(zod.string()),
+    buy_recommendation: zod.object({
+      verdict: zod.enum([
+        "proceed",
+        "proceed_with_caution",
+        "ask_questions_first",
+        "avoid",
+      ]),
+      reasoning: zod.string(),
+    }),
+    disclaimer: zod.string(),
+  }),
+});
+
+/**
+ * @summary Get a presigned URL for uploading a photo to object storage
+ */
+export const RequestUploadUrlBody = zod.object({
+  name: zod.string(),
+  size: zod.number(),
+  contentType: zod.string(),
+});
+
+export const RequestUploadUrlResponse = zod.object({
+  uploadURL: zod.string(),
+  objectPath: zod.string(),
+});

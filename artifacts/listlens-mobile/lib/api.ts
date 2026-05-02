@@ -359,3 +359,68 @@ export async function analyseLens(params: {
     metadata: params.metadata,
   });
 }
+
+export interface GuardRiskDimension {
+  score: number;
+  verdict: string;
+}
+
+export interface GuardApiReport {
+  mode: string;
+  lens: string;
+  risk: {
+    level: "low" | "medium" | "medium_high" | "high" | "inconclusive";
+    confidence: number;
+    summary: string;
+  };
+  risk_dimensions: {
+    price: GuardRiskDimension;
+    photos: GuardRiskDimension;
+    listing_quality: GuardRiskDimension;
+    item_authenticity: GuardRiskDimension;
+    seller_signals: GuardRiskDimension;
+  };
+  red_flags: Array<{
+    severity: "low" | "medium" | "high";
+    type: string;
+    message: string;
+  }>;
+  green_signals: Array<{ type: string; message: string }>;
+  price_analysis: {
+    asking_price: string | null;
+    market_estimate: string | null;
+    price_verdict: "fair" | "low_risk_deal" | "suspiciously_low" | "overpriced" | "unknown";
+    price_note: string;
+  };
+  authenticity_signals: Array<{
+    marker: string;
+    observed: string;
+    verdict: "pass" | "fail" | "unclear";
+  }>;
+  missing_photos: string[];
+  seller_questions: string[];
+  buy_recommendation: {
+    verdict: "proceed" | "proceed_with_caution" | "ask_questions_first" | "avoid";
+    reasoning: string;
+  };
+  disclaimer: string;
+}
+
+/**
+ * Create a new Guard check record on the server.
+ * Call `analyseGuardCheck` next to run the AI analysis.
+ */
+export async function createGuardCheck(params: {
+  url?: string;
+  screenshotUrls?: string[];
+  lens: string;
+}): Promise<{ id: string }> {
+  return post("/api/guard/checks", params);
+}
+
+/**
+ * Run AI analysis on an existing Guard check and return the full risk report.
+ */
+export async function analyseGuardCheck(id: string): Promise<{ id: string; report: GuardApiReport }> {
+  return post(`/api/guard/checks/${id}/analyse`, {});
+}

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Spinner } from "@/components/ui/spinner";
 import { useUpload } from "@workspace/object-storage-web";
+import { useCreateStudioItem, useAnalyseStudioItem } from "@workspace/api-client-react";
 
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens", desc: "Trainers, sneakers, shoes" },
@@ -48,6 +49,8 @@ export default function NewStudioPage() {
   const [uploadLabel, setUploadLabel] = useState("");
   const [analysisLabel, setAnalysisLabel] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const createStudioItem = useCreateStudioItem();
+  const analyseStudioItem = useAnalyseStudioItem();
 
   const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
     onError: (err) => setError(`Upload failed: ${err.message}`),
@@ -115,36 +118,27 @@ export default function NewStudioPage() {
     setLoading(true);
     setError(null);
     try {
-      // Step 1: create the item
+      // Step 1: create the item using the generated hook
       setAnalysisLabel("Creating listing…");
-      const createRes = await fetch("/api/items", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+      const createData = await createStudioItem.mutateAsync({
+        data: {
           lens: selectedLens,
           marketplace: selectedMarketplace,
-          photoUrls: photoUrls.length > 0 ? photoUrls : undefined,
-        }),
+          photoUrls: photoUrls.length > 0 ? photoUrls : [],
+        },
       });
-      if (!createRes.ok) {
-        const errData = await createRes.json().catch(() => ({}));
-        throw new Error((errData as { error?: string }).error ?? "Failed to create listing");
-      }
-      const data = await createRes.json();
-      const itemId: string = data.id;
+      const itemId = createData.id;
 
       // Step 2: if photos were selected, trigger analysis immediately
       if (photoUrls.length > 0) {
         setAnalysisLabel("Analysing with AI…");
-        const analyseRes = await fetch(`/api/items/${itemId}/analyse`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lens: selectedLens, photoUrls }),
-        });
-        if (!analyseRes.ok) {
+        try {
+          await analyseStudioItem.mutateAsync({
+            id: itemId,
+            data: { lens: selectedLens, photoUrls },
+          });
+        } catch {
           // Navigate to detail even if analysis fails — user can retry there
-          setLocation(`/studio/${itemId}`);
-          return;
         }
       }
 

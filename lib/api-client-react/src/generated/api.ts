@@ -17,14 +17,24 @@ import type {
 } from "@tanstack/react-query";
 
 import type {
+  AnalyseItemRequest,
+  AnalyseItemResponse,
   AuthUserEnvelope,
   BeginBrowserLoginParams,
+  CreateGuardCheckRequest,
+  CreateItemRequest,
+  CreateItemResponse,
   ErrorEnvelope,
+  GuardCheckAnalysisResponse,
+  GuardCheckCreated,
   HandleBrowserLoginCallbackParams,
   HealthStatus,
   LogoutSuccess,
   MobileTokenExchangeRequest,
   MobileTokenExchangeSuccess,
+  ReanalyseItemRequest,
+  RequestUploadUrlRequest,
+  UploadUrlResult,
 } from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
@@ -634,4 +644,520 @@ export const useLogoutMobileSession = <
   TContext
 > => {
   return useMutation(getLogoutMobileSessionMutationOptions(options));
+};
+
+/**
+ * @summary Create a new Studio listing record
+ */
+export const getCreateStudioItemUrl = () => {
+  return `/api/items`;
+};
+
+export const createStudioItem = async (
+  createItemRequest: CreateItemRequest,
+  options?: RequestInit,
+): Promise<CreateItemResponse> => {
+  return customFetch<CreateItemResponse>(getCreateStudioItemUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createItemRequest),
+  });
+};
+
+export const getCreateStudioItemMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStudioItem>>,
+    TError,
+    { data: BodyType<CreateItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createStudioItem>>,
+  TError,
+  { data: BodyType<CreateItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["createStudioItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createStudioItem>>,
+    { data: BodyType<CreateItemRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createStudioItem(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateStudioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createStudioItem>>
+>;
+export type CreateStudioItemMutationBody = BodyType<CreateItemRequest>;
+export type CreateStudioItemMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new Studio listing record
+ */
+export const useCreateStudioItem = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createStudioItem>>,
+    TError,
+    { data: BodyType<CreateItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createStudioItem>>,
+  TError,
+  { data: BodyType<CreateItemRequest> },
+  TContext
+> => {
+  return useMutation(getCreateStudioItemMutationOptions(options));
+};
+
+/**
+ * @summary Run AI analysis on a Studio listing
+ */
+export const getAnalyseStudioItemUrl = (id: string) => {
+  return `/api/items/${id}/analyse`;
+};
+
+export const analyseStudioItem = async (
+  id: string,
+  analyseItemRequest: AnalyseItemRequest,
+  options?: RequestInit,
+): Promise<AnalyseItemResponse> => {
+  return customFetch<AnalyseItemResponse>(getAnalyseStudioItemUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(analyseItemRequest),
+  });
+};
+
+export const getAnalyseStudioItemMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyseStudioItem>>,
+    TError,
+    { id: string; data: BodyType<AnalyseItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyseStudioItem>>,
+  TError,
+  { id: string; data: BodyType<AnalyseItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["analyseStudioItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyseStudioItem>>,
+    { id: string; data: BodyType<AnalyseItemRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return analyseStudioItem(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyseStudioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyseStudioItem>>
+>;
+export type AnalyseStudioItemMutationBody = BodyType<AnalyseItemRequest>;
+export type AnalyseStudioItemMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Run AI analysis on a Studio listing
+ */
+export const useAnalyseStudioItem = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyseStudioItem>>,
+    TError,
+    { id: string; data: BodyType<AnalyseItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyseStudioItem>>,
+  TError,
+  { id: string; data: BodyType<AnalyseItemRequest> },
+  TContext
+> => {
+  return useMutation(getAnalyseStudioItemMutationOptions(options));
+};
+
+/**
+ * @summary Re-run analysis with user corrections (RecordLens only)
+ */
+export const getReanalyseStudioItemUrl = (id: string) => {
+  return `/api/items/${id}/reanalyse`;
+};
+
+export const reanalyseStudioItem = async (
+  id: string,
+  reanalyseItemRequest: ReanalyseItemRequest,
+  options?: RequestInit,
+): Promise<AnalyseItemResponse> => {
+  return customFetch<AnalyseItemResponse>(getReanalyseStudioItemUrl(id), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(reanalyseItemRequest),
+  });
+};
+
+export const getReanalyseStudioItemMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reanalyseStudioItem>>,
+    TError,
+    { id: string; data: BodyType<ReanalyseItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof reanalyseStudioItem>>,
+  TError,
+  { id: string; data: BodyType<ReanalyseItemRequest> },
+  TContext
+> => {
+  const mutationKey = ["reanalyseStudioItem"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof reanalyseStudioItem>>,
+    { id: string; data: BodyType<ReanalyseItemRequest> }
+  > = (props) => {
+    const { id, data } = props ?? {};
+
+    return reanalyseStudioItem(id, data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type ReanalyseStudioItemMutationResult = NonNullable<
+  Awaited<ReturnType<typeof reanalyseStudioItem>>
+>;
+export type ReanalyseStudioItemMutationBody = BodyType<ReanalyseItemRequest>;
+export type ReanalyseStudioItemMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Re-run analysis with user corrections (RecordLens only)
+ */
+export const useReanalyseStudioItem = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof reanalyseStudioItem>>,
+    TError,
+    { id: string; data: BodyType<ReanalyseItemRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof reanalyseStudioItem>>,
+  TError,
+  { id: string; data: BodyType<ReanalyseItemRequest> },
+  TContext
+> => {
+  return useMutation(getReanalyseStudioItemMutationOptions(options));
+};
+
+/**
+ * @summary Create a new Guard check record
+ */
+export const getCreateGuardCheckUrl = () => {
+  return `/api/guard/checks`;
+};
+
+export const createGuardCheck = async (
+  createGuardCheckRequest: CreateGuardCheckRequest,
+  options?: RequestInit,
+): Promise<GuardCheckCreated> => {
+  return customFetch<GuardCheckCreated>(getCreateGuardCheckUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(createGuardCheckRequest),
+  });
+};
+
+export const getCreateGuardCheckMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGuardCheck>>,
+    TError,
+    { data: BodyType<CreateGuardCheckRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof createGuardCheck>>,
+  TError,
+  { data: BodyType<CreateGuardCheckRequest> },
+  TContext
+> => {
+  const mutationKey = ["createGuardCheck"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof createGuardCheck>>,
+    { data: BodyType<CreateGuardCheckRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return createGuardCheck(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type CreateGuardCheckMutationResult = NonNullable<
+  Awaited<ReturnType<typeof createGuardCheck>>
+>;
+export type CreateGuardCheckMutationBody = BodyType<CreateGuardCheckRequest>;
+export type CreateGuardCheckMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Create a new Guard check record
+ */
+export const useCreateGuardCheck = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof createGuardCheck>>,
+    TError,
+    { data: BodyType<CreateGuardCheckRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof createGuardCheck>>,
+  TError,
+  { data: BodyType<CreateGuardCheckRequest> },
+  TContext
+> => {
+  return useMutation(getCreateGuardCheckMutationOptions(options));
+};
+
+/**
+ * @summary Run AI risk analysis on a Guard check
+ */
+export const getAnalyseGuardCheckUrl = (id: string) => {
+  return `/api/guard/checks/${id}/analyse`;
+};
+
+export const analyseGuardCheck = async (
+  id: string,
+  options?: RequestInit,
+): Promise<GuardCheckAnalysisResponse> => {
+  return customFetch<GuardCheckAnalysisResponse>(getAnalyseGuardCheckUrl(id), {
+    ...options,
+    method: "POST",
+  });
+};
+
+export const getAnalyseGuardCheckMutationOptions = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyseGuardCheck>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof analyseGuardCheck>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  const mutationKey = ["analyseGuardCheck"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof analyseGuardCheck>>,
+    { id: string }
+  > = (props) => {
+    const { id } = props ?? {};
+
+    return analyseGuardCheck(id, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type AnalyseGuardCheckMutationResult = NonNullable<
+  Awaited<ReturnType<typeof analyseGuardCheck>>
+>;
+
+export type AnalyseGuardCheckMutationError = ErrorType<ErrorEnvelope>;
+
+/**
+ * @summary Run AI risk analysis on a Guard check
+ */
+export const useAnalyseGuardCheck = <
+  TError = ErrorType<ErrorEnvelope>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof analyseGuardCheck>>,
+    TError,
+    { id: string },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof analyseGuardCheck>>,
+  TError,
+  { id: string },
+  TContext
+> => {
+  return useMutation(getAnalyseGuardCheckMutationOptions(options));
+};
+
+/**
+ * @summary Get a presigned URL for uploading a photo to object storage
+ */
+export const getRequestUploadUrlUrl = () => {
+  return `/api/storage/uploads/request-url`;
+};
+
+export const requestUploadUrl = async (
+  requestUploadUrlRequest: RequestUploadUrlRequest,
+  options?: RequestInit,
+): Promise<UploadUrlResult> => {
+  return customFetch<UploadUrlResult>(getRequestUploadUrlUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(requestUploadUrlRequest),
+  });
+};
+
+export const getRequestUploadUrlMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    TError,
+    { data: BodyType<RequestUploadUrlRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof requestUploadUrl>>,
+  TError,
+  { data: BodyType<RequestUploadUrlRequest> },
+  TContext
+> => {
+  const mutationKey = ["requestUploadUrl"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    { data: BodyType<RequestUploadUrlRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return requestUploadUrl(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type RequestUploadUrlMutationResult = NonNullable<
+  Awaited<ReturnType<typeof requestUploadUrl>>
+>;
+export type RequestUploadUrlMutationBody = BodyType<RequestUploadUrlRequest>;
+export type RequestUploadUrlMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Get a presigned URL for uploading a photo to object storage
+ */
+export const useRequestUploadUrl = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof requestUploadUrl>>,
+    TError,
+    { data: BodyType<RequestUploadUrlRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof requestUploadUrl>>,
+  TError,
+  { data: BodyType<RequestUploadUrlRequest> },
+  TContext
+> => {
+  return useMutation(getRequestUploadUrlMutationOptions(options));
 };

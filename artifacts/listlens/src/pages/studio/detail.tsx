@@ -9,6 +9,7 @@ import { ProgressBar } from "@/components/ui/progress-bar";
 import { ListingEditor } from "@/components/studio/listing-editor";
 import type { StudioOutput } from "@/lib/ai/schemas";
 import { useUpload } from "@workspace/object-storage-web";
+import { useAnalyseStudioItem } from "@workspace/api-client-react";
 
 const MAX_PHOTOS = 8;
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
@@ -132,6 +133,7 @@ function MatchCard({
 export default function StudioItemPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
+  const analyseStudioItem = useAnalyseStudioItem();
   const [photoUrls, setPhotoUrls] = useState<string[]>([]);
   const [hint, setHint] = useState("");
   const [analysis, setAnalysis] = useState<StudioOutput | null>(null);
@@ -247,14 +249,11 @@ export default function StudioItemPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/items/${id}/analyse`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ photoUrls, hint: hint.trim() || undefined }),
+      const data = await analyseStudioItem.mutateAsync({
+        id,
+        data: { photoUrls, hint: hint.trim() || undefined },
       });
-      if (!res.ok) throw new Error("Analysis failed");
-      const data = await res.json();
-      setAnalysis(data.analysis);
+      setAnalysis(data.analysis as StudioOutput);
       setClarifyResult(null);
       setClarifyDone(false);
       setStillNeedsMatrix(false);

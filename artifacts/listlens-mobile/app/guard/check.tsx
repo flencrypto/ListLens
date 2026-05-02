@@ -1,10 +1,11 @@
 import { Feather } from "@expo/vector-icons";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   Image,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -16,9 +17,13 @@ import {
 
 import { BrandButton } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
+import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { LENS_REGISTRY } from "@/constants/lenses";
+import { uploadPhoto } from "@/lib/api";
+import { useCreateGuardCheck, useAnalyseGuardCheck } from "@workspace/api-client-react";
+import { generateId, saveReport, type GuardReport } from "@/lib/historyStore";
 
 type Tab = "url" | "photos";
 
@@ -27,6 +32,8 @@ const MAX_PHOTOS = 6;
 export default function GuardCheckScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { mutateAsync: createGuardCheckAsync } = useCreateGuardCheck();
+  const { mutateAsync: analyseGuardCheckAsync } = useAnalyseGuardCheck();
   const [tab, setTab] = useState<Tab>("url");
   const [url, setUrl] = useState("");
   const [photos, setPhotos] = useState<string[]>([]);
@@ -36,6 +43,32 @@ export default function GuardCheckScreen() {
 
   const violet300 = "rgba(196,181,253,0.95)";
   const violetStroke = "rgba(167,139,250,0.32)";
+  const [progressValue, setProgressValue] = useState(0);
+  const [progressLabel, setProgressLabel] = useState("");
+  const progressIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function startProgressPhase(label: string, fromPct: number, toPct: number, durationMs: number) {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    setProgressLabel(label);
+    setProgressValue(fromPct);
+    const tickMs = 300;
+    const totalTicks = durationMs / tickMs;
+    let tick = 0;
+    progressIntervalRef.current = setInterval(() => {
+      tick++;
+      const easedFraction = 1 - Math.exp((-4 * tick) / totalTicks);
+      const next = fromPct + (toPct - fromPct) * Math.min(easedFraction, 0.97);
+      setProgressValue(Math.round(next));
+      if (tick >= totalTicks * 1.5) {
+        if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      }
+    }, tickMs);
+  }
+
+  function stopProgress() {
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    progressIntervalRef.current = null;
+  }
 
   async function pickPhotos() {
     if (photos.length >= MAX_PHOTOS) {
@@ -79,7 +112,7 @@ export default function GuardCheckScreen() {
     }
   }
 
-  function handleStart() {
+  async function handleStart() {
     if (tab === "url" && !url.trim()) {
       notify("Paste an eBay or Vinted listing URL to continue.");
       return;
@@ -88,22 +121,123 @@ export default function GuardCheckScreen() {
       notify("Add at least one photo to analyse.");
       return;
     }
+
     setBusy(true);
-    setTimeout(() => {
+    setProgressValue(0);
+    setProgressLabel("Starting check…");
+
+    try {
+      let screenshotUrls: string[] | undefined;
+
+      if (tab === "photos" && photos.length > 0) {
+        // Phase 1: upload photos (0→40%)
+        setProgressLabel(`Uploading ${photos.length} photo${photos.length > 1 ? "s" : ""}…`);
+        const uploaded: string[] = [];
+        for (let i = 0; i < photos.length; i++) {
+          const photoUrl = await uploadPhoto(photos[i], "image/jpeg");
+          uploaded.push(photoUrl);
+          setProgressValue(Math.round(((i + 1) / photos.length) * 40));
+        }
+        screenshotUrls = uploaded;
+      }
+
+      // Phase 2: create check record (40→50%)
+      setProgressValue(40);
+      setProgressLabel("Creating check…");
+      const { id: checkId } = await createGuardCheckAsync({
+        data: {
+          url: tab === "url" ? url.trim() : undefined,
+          screenshotUrls,
+          lens,
+        },
+      });
+      setProgressValue(50);
+
+      // Phase 3: AI analysis (50→95%, animated)
+      startProgressPhase("Analysing with AI…", 50, 95, 30_000);
+      const { report: apiReport } = await analyseGuardCheckAsync({ id: checkId });
+
+      // Done — snap to 100%
+      stopProgress();
+      setProgressValue(100);
+      setProgressLabel("Complete!");
+
+      // Build the full GuardReport to save locally and pass to the report screen
+      const localId = generateId();
+      const now = Date.now();
+      const guardReport: GuardReport = {
+        id: localId,
+        createdAt: now,
+        lens,
+        source: tab === "photos" ? "screenshots" : "url",
+        url: tab === "url" ? url.trim() : "",
+        shots: tab === "photos" ? (screenshotUrls ?? photos) : [],
+        saved: false,
+        risk: apiReport.risk,
+        risk_dimensions: apiReport.risk_dimensions,
+        red_flags: apiReport.red_flags,
+        green_signals: apiReport.green_signals,
+        price_analysis: {
+          asking_price: apiReport.price_analysis.asking_price ?? null,
+          market_estimate: apiReport.price_analysis.market_estimate ?? null,
+          price_verdict: apiReport.price_analysis.price_verdict,
+          price_note: apiReport.price_analysis.price_note,
+        },
+        authenticity_signals: apiReport.authenticity_signals,
+        missing_photos: apiReport.missing_photos,
+        seller_questions: apiReport.seller_questions,
+        buy_recommendation: apiReport.buy_recommendation,
+      };
+
+      // Save to local history so it appears in the History tab
+      await saveReport(guardReport).catch(() => undefined);
+
+      // Brief pause so user sees 100%
+      await new Promise((r) => setTimeout(r, 350));
+
       router.replace({
         pathname: "/guard/report",
         params: {
-          lens,
-          source: tab === "photos" ? "screenshots" : "url",
-          url: tab === "url" ? url.trim() : "",
-          shots: photos.join("|"),
+          reportId: localId,
         },
       });
-    }, 1100);
+    } catch {
+      stopProgress();
+      notify("Guard check failed. Please check your connection and try again.");
+      setBusy(false);
+      setProgressValue(0);
+    }
   }
 
   return (
     <ScreenContainer>
+      {/* Progress overlay */}
+      <Modal
+        visible={busy}
+        transparent
+        animationType="fade"
+        statusBarTranslucent
+      >
+        <View style={styles.overlayBackdrop}>
+          <View style={[styles.overlayCard, { backgroundColor: colors.zinc900 }]}>
+            <Text style={[styles.overlayEyebrow, { color: violet300 }]}>
+              Guard · AI Check
+            </Text>
+            <Text style={[styles.overlayTitle, { color: colors.foreground }]}>
+              {progressLabel || "Processing…"}
+            </Text>
+            <View style={{ marginTop: 20 }}>
+              <ProgressBar value={progressValue} label={progressLabel} />
+            </View>
+            <Text style={[styles.overlayHint, { color: colors.zinc500 }]}>
+              {progressValue < 50
+                ? "Uploading photos securely…"
+                : "AI analysis usually takes 10–30 seconds. Keep the app open."}
+            </Text>
+          </View>
+        </View>
+      </Modal>
+
       <View style={styles.intro}>
         <Text
           style={{
@@ -482,5 +616,35 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 11,
     textAlign: "center",
+  },
+  overlayBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.82)",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  overlayCard: {
+    width: "100%",
+    borderRadius: 20,
+    padding: 28,
+  },
+  overlayEyebrow: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 10,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    marginBottom: 8,
+  },
+  overlayTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 20,
+    letterSpacing: -0.3,
+  },
+  overlayHint: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 12,
+    marginTop: 16,
+    lineHeight: 17,
   },
 });

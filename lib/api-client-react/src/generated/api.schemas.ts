@@ -51,6 +51,227 @@ export interface ErrorEnvelope {
   error: string;
 }
 
+export interface CreateItemRequest {
+  lens: string;
+  marketplace: string;
+  photoUrls: string[];
+}
+
+export interface CreateItemResponse {
+  id: string;
+  lens: string;
+  /** @nullable */
+  marketplace?: string | null;
+  status: string;
+}
+
+export interface AnalyseItemRequest {
+  lens?: string;
+  photoUrls: string[];
+  hint?: string;
+}
+
+export type StudioAnalysisMode =
+  (typeof StudioAnalysisMode)[keyof typeof StudioAnalysisMode];
+
+export const StudioAnalysisMode = {
+  studio: "studio",
+} as const;
+
+export type StudioAnalysisIdentity = {
+  /** @nullable */
+  brand: string | null;
+  /** @nullable */
+  model: string | null;
+  confidence: number;
+};
+
+export type StudioAnalysisAttributes = { [key: string]: unknown };
+
+export type StudioAnalysisPricing = {
+  quick_sale: number;
+  recommended: number;
+  high: number;
+  currency: string;
+  confidence: number;
+};
+
+export type StudioAnalysisMarketplaceOutputsEbay = { [key: string]: unknown };
+
+export type StudioAnalysisMarketplaceOutputsVinted = { [key: string]: unknown };
+
+export type StudioAnalysisMarketplaceOutputs = {
+  ebay?: StudioAnalysisMarketplaceOutputsEbay;
+  vinted?: StudioAnalysisMarketplaceOutputsVinted;
+};
+
+export interface StudioAnalysis {
+  mode: StudioAnalysisMode;
+  lens: string;
+  listing_description: string;
+  identity: StudioAnalysisIdentity;
+  attributes: StudioAnalysisAttributes;
+  missing_photos: string[];
+  pricing: StudioAnalysisPricing;
+  marketplace_outputs: StudioAnalysisMarketplaceOutputs;
+  warnings: string[];
+}
+
+export interface AnalyseItemResponse {
+  analysis: StudioAnalysis;
+}
+
+export type ReanalyseItemRequestCorrections = { [key: string]: unknown };
+
+export interface ReanalyseItemRequest {
+  corrections: ReanalyseItemRequestCorrections;
+}
+
+export interface CreateGuardCheckRequest {
+  url?: string;
+  screenshotUrls?: string[];
+  lens: string;
+}
+
+export interface GuardCheckCreated {
+  id: string;
+}
+
+export interface GuardRiskDimension {
+  /**
+   * @minimum 0
+   * @maximum 10
+   */
+  score: number;
+  verdict: string;
+}
+
+export type GuardReportRiskLevel =
+  (typeof GuardReportRiskLevel)[keyof typeof GuardReportRiskLevel];
+
+export const GuardReportRiskLevel = {
+  low: "low",
+  medium: "medium",
+  medium_high: "medium_high",
+  high: "high",
+  inconclusive: "inconclusive",
+} as const;
+
+export type GuardReportRisk = {
+  level: GuardReportRiskLevel;
+  confidence: number;
+  summary: string;
+};
+
+export type GuardReportRiskDimensions = {
+  price: GuardRiskDimension;
+  photos: GuardRiskDimension;
+  listing_quality: GuardRiskDimension;
+  item_authenticity: GuardRiskDimension;
+  seller_signals: GuardRiskDimension;
+};
+
+export type GuardReportRedFlagsItemSeverity =
+  (typeof GuardReportRedFlagsItemSeverity)[keyof typeof GuardReportRedFlagsItemSeverity];
+
+export const GuardReportRedFlagsItemSeverity = {
+  low: "low",
+  medium: "medium",
+  high: "high",
+} as const;
+
+export type GuardReportRedFlagsItem = {
+  severity: GuardReportRedFlagsItemSeverity;
+  type: string;
+  message: string;
+};
+
+export type GuardReportGreenSignalsItem = {
+  type: string;
+  message: string;
+};
+
+export type GuardReportPriceAnalysisPriceVerdict =
+  (typeof GuardReportPriceAnalysisPriceVerdict)[keyof typeof GuardReportPriceAnalysisPriceVerdict];
+
+export const GuardReportPriceAnalysisPriceVerdict = {
+  fair: "fair",
+  low_risk_deal: "low_risk_deal",
+  suspiciously_low: "suspiciously_low",
+  overpriced: "overpriced",
+  unknown: "unknown",
+} as const;
+
+export type GuardReportPriceAnalysis = {
+  /** @nullable */
+  asking_price?: string | null;
+  /** @nullable */
+  market_estimate?: string | null;
+  price_verdict: GuardReportPriceAnalysisPriceVerdict;
+  price_note: string;
+};
+
+export type GuardReportAuthenticitySignalsItemVerdict =
+  (typeof GuardReportAuthenticitySignalsItemVerdict)[keyof typeof GuardReportAuthenticitySignalsItemVerdict];
+
+export const GuardReportAuthenticitySignalsItemVerdict = {
+  pass: "pass",
+  fail: "fail",
+  unclear: "unclear",
+} as const;
+
+export type GuardReportAuthenticitySignalsItem = {
+  marker: string;
+  observed: string;
+  verdict: GuardReportAuthenticitySignalsItemVerdict;
+};
+
+export type GuardReportBuyRecommendationVerdict =
+  (typeof GuardReportBuyRecommendationVerdict)[keyof typeof GuardReportBuyRecommendationVerdict];
+
+export const GuardReportBuyRecommendationVerdict = {
+  proceed: "proceed",
+  proceed_with_caution: "proceed_with_caution",
+  ask_questions_first: "ask_questions_first",
+  avoid: "avoid",
+} as const;
+
+export type GuardReportBuyRecommendation = {
+  verdict: GuardReportBuyRecommendationVerdict;
+  reasoning: string;
+};
+
+export interface GuardReport {
+  mode: string;
+  lens: string;
+  risk: GuardReportRisk;
+  risk_dimensions: GuardReportRiskDimensions;
+  red_flags: GuardReportRedFlagsItem[];
+  green_signals: GuardReportGreenSignalsItem[];
+  price_analysis: GuardReportPriceAnalysis;
+  authenticity_signals: GuardReportAuthenticitySignalsItem[];
+  missing_photos: string[];
+  seller_questions: string[];
+  buy_recommendation: GuardReportBuyRecommendation;
+  disclaimer: string;
+}
+
+export interface GuardCheckAnalysisResponse {
+  id: string;
+  report: GuardReport;
+}
+
+export interface RequestUploadUrlRequest {
+  name: string;
+  size: number;
+  contentType: string;
+}
+
+export interface UploadUrlResult {
+  uploadURL: string;
+  objectPath: string;
+}
+
 /**
  * Opaque session token — `Bearer <sid>`.
  */

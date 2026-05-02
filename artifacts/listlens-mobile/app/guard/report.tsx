@@ -39,84 +39,6 @@ const AUTH_SERVICES = [
   },
 ] as const;
 
-const DEFAULT_LEVEL: RiskLevel = "medium";
-
-const DEFAULT_REPORT: GuardReport = {
-  id: "",
-  createdAt: 0,
-  lens: "ShoeLens",
-  source: "url",
-  url: "",
-  shots: [],
-  saved: false,
-  risk: {
-    level: DEFAULT_LEVEL,
-    confidence: 0.72,
-    summary:
-      "Listing has several photos and a clear price, but is missing a size-label close-up and a sole shot. Seller has limited history and price is below the typical range.",
-  },
-  risk_dimensions: {
-    price: { score: 4, verdict: "Asking price is ~38% below the recent median for this colourway, which is unusual unless the seller is clearing stock or unaware of market value." },
-    photos: { score: 3, verdict: "Only 3 photos provided — the size label, tongue branding, and insole are not visible, making authentication impossible from photos alone." },
-    listing_quality: { score: 6, verdict: "Description mentions size and condition but omits colourway code, country of manufacture, and whether the box is included." },
-    item_authenticity: { score: 4, verdict: "Stitching appears consistent in the one close-up available, but no sole, heel tab, or label shots exist to verify further." },
-    seller_signals: { score: 3, verdict: "Account is under 3 months old with only 2 prior sales, both in unrelated categories — no trainers sold previously." },
-  },
-  red_flags: [
-    {
-      severity: "high",
-      type: "MISSING_AUTH_PHOTOS",
-      message: "No size label, style code, or sole shot present — 3 of the 5 key authentication photos are absent, making independent verification impossible.",
-    },
-    {
-      severity: "high",
-      type: "PRICE_ANOMALY",
-      message: "Asking price of £65 is 38% below the £105 median sold price for this colourway on eBay UK in the last 30 days — far outside normal discount range.",
-    },
-    {
-      severity: "medium",
-      type: "NEW_SELLER",
-      message: "Seller account created 11 weeks ago with only 2 completed sales in unrelated categories; no prior footwear transactions to establish credibility.",
-    },
-  ],
-  green_signals: [
-    { type: "REAL_PHOTOS", message: "Photos appear to be genuine item shots rather than stock imagery — background and lighting are consistent throughout." },
-    { type: "CONDITION_HONEST", message: "Seller acknowledges minor sole yellowing in the description, which is consistent with what is visible in the photos." },
-  ],
-  price_analysis: {
-    asking_price: "£65",
-    market_estimate: "£95–£115",
-    price_verdict: "suspiciously_low",
-    price_note: "The asking price is 38% below the current eBay UK median for this colourway in used condition. Legitimate bargains exist but a gap this large is a significant risk signal.",
-  },
-  authenticity_signals: [
-    { marker: "Stitching quality", observed: "Appears uniform in the one available close-up, no loose threads visible", verdict: "pass" },
-    { marker: "Size label", observed: "Not photographed — cannot assess font, spacing, or country of manufacture", verdict: "unclear" },
-    { marker: "Sole unit", observed: "Not photographed — branding depth and pattern cannot be verified", verdict: "unclear" },
-    { marker: "Tongue branding", observed: "Not photographed — logo typeface and stitching cannot be confirmed", verdict: "unclear" },
-    { marker: "Box label", observed: "No box photo provided — barcode and SKU match cannot be checked", verdict: "unclear" },
-  ],
-  missing_photos: [
-    "Size label close-up (showing size, country of manufacture, and style code)",
-    "Full sole unit (both heel and toe areas visible)",
-    "Tongue branding and stitching close-up",
-    "Insole with brand markings",
-    "Box label with barcode (if box is included)",
-  ],
-  seller_questions: [
-    "Could you share a clear photo of the size label showing the style code and country of manufacture?",
-    "Are the original box, laces, and accessories included? If so, can you photograph the box label?",
-    "Where and when did you originally purchase these?",
-    "Can you add close-ups of the sole unit and tongue branding?",
-    "What is the reason for selling at this price?",
-  ],
-  buy_recommendation: {
-    verdict: "ask_questions_first",
-    reasoning:
-      "The price anomaly and missing authentication photos create too much uncertainty to proceed without more information. The listing is not definitively fraudulent but the risk is elevated. 1. Request the five missing photos listed above before agreeing to buy. 2. If the seller is reluctant to provide them, treat that as a strong red flag. 3. If you proceed, pay only via PayPal Goods & Services or eBay checkout to retain buyer protection.",
-  },
-};
-
 const RISK_COLORS: Record<RiskLevel, { color: string; bg: string; border: string; badge: "red" | "amber" | "emerald" | "neutral" }> = {
   low: { color: "#34d399", bg: "rgba(6,78,59,0.25)", border: "rgba(52,211,153,0.35)", badge: "emerald" },
   medium: { color: "#fbbf24", bg: "rgba(92,64,0,0.25)", border: "rgba(251,191,36,0.35)", badge: "amber" },
@@ -209,19 +131,9 @@ export default function GuardReportScreen() {
           return;
         }
       }
-      const fresh: GuardReport = {
-        ...DEFAULT_REPORT,
-        id: generateId(),
-        createdAt: Date.now(),
-        lens: params.lens ? String(params.lens) : "ShoeLens",
-        source: params.source === "screenshots" ? "screenshots" : "url",
-        url: params.url ? String(params.url) : "",
-        shots: params.shots ? String(params.shots).split("|").filter(Boolean) : [],
-        saved: false,
-      };
+      // No matching report found in local storage — show error state
+      // (fresh reports are created in check.tsx before navigating here)
       if (cancelled) return;
-      setReport(fresh);
-      saveReport(fresh).catch(() => undefined);
       initialised.current = true;
     }
     load();
@@ -235,11 +147,21 @@ export default function GuardReportScreen() {
   }, [report]);
 
   if (!report) {
+    const notFound = initialised.current;
     return (
       <ScreenContainer>
-        <View style={{ paddingHorizontal: 4 }}>
+        <View style={{ paddingHorizontal: 4, gap: 8 }}>
           <Text style={[styles.title, { color: colors.foreground }]}>Risk report</Text>
-          <Text style={[styles.subtitle, { color: colors.zinc400 }]}>Loading…</Text>
+          <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
+            {notFound ? "Report not found." : "Loading…"}
+          </Text>
+          {notFound && (
+            <Pressable onPress={() => router.replace("/guard/check")} hitSlop={12} style={{ marginTop: 12 }}>
+              <Text style={{ color: colors.cyan300, fontFamily: "Inter_500Medium", fontSize: 14 }}>
+                ← Run a new check
+              </Text>
+            </Pressable>
+          )}
         </View>
       </ScreenContainer>
     );

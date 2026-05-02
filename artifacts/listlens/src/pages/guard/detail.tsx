@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { RiskReport } from "@/components/guard/risk-report";
 import type { GuardOutput } from "@/lib/ai/schemas";
-
+import { useAnalyseGuardCheck } from "@workspace/api-client-react";
 export default function GuardCheckPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
@@ -17,6 +17,7 @@ export default function GuardCheckPage() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const analyseGuardCheck = useAnalyseGuardCheck();
 
   useEffect(() => {
     let cancelled = false;
@@ -44,14 +45,8 @@ export default function GuardCheckPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`/api/guard/checks/${id}/analyse`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
-      });
-      if (!res.ok) throw new Error("Analysis failed");
-      const data = await res.json();
-      setReport(data.report);
+      const data = await analyseGuardCheck.mutateAsync({ id });
+      setReport(data.report as GuardOutput);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Analysis failed");
     } finally {

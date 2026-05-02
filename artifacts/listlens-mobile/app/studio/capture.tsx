@@ -20,7 +20,8 @@ import { Card } from "@/components/ui/Card";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
-import { analyseItem, createItem, uploadPhoto } from "@/lib/api";
+import { uploadPhoto } from "@/lib/api";
+import { useCreateStudioItem, useAnalyseStudioItem } from "@workspace/api-client-react";
 
 const MIN_PHOTOS = 3;
 const MAX_PHOTOS = 8;
@@ -75,6 +76,8 @@ export default function CaptureScreen() {
     marketplace?: string;
   }>();
   const isMeasureLens = lens === "MeasureLens";
+  const { mutateAsync: createStudioItemAsync } = useCreateStudioItem();
+  const { mutateAsync: analyseStudioItemAsync } = useAnalyseStudioItem();
   const [photos, setPhotos] = useState<PhotoEntry[]>([]);
   const [busy, setBusy] = useState(false);
   const [progressValue, setProgressValue] = useState(0);
@@ -234,16 +237,21 @@ export default function CaptureScreen() {
       // Animate fake progress for the AI call (typically 5–30 s)
       startProgressPhase("Analysing with AI…", 45, 95, 30_000);
 
-      const { id } = await createItem({
-        lens: String(lens),
-        marketplace: String(marketplace),
-        photoUrls,
+      const { id } = await createStudioItemAsync({
+        data: {
+          lens: String(lens),
+          marketplace: String(marketplace),
+          photoUrls,
+        },
       });
 
-      const { analysis } = await analyseItem(id, {
-        lens: String(lens),
-        photoUrls,
-        ...(measureHint ? { hint: measureHint } : {}),
+      const { analysis } = await analyseStudioItemAsync({
+        id,
+        data: {
+          lens: String(lens),
+          photoUrls,
+          ...(measureHint ? { hint: measureHint } : {}),
+        },
       });
 
       // Done — snap to 100%

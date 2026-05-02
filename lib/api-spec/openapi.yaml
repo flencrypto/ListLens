@@ -148,6 +148,157 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LogoutSuccess'
+  /items:
+    post:
+      tags: [Studio]
+      operationId: createStudioItem
+      summary: Create a new Studio listing record
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateItemRequest'
+      responses:
+        '200':
+          description: Item record created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateItemResponse'
+  /items/{id}/analyse:
+    post:
+      tags: [Studio]
+      operationId: analyseStudioItem
+      summary: Run AI analysis on a Studio listing
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnalyseItemRequest'
+      responses:
+        '200':
+          description: Analysis complete.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyseItemResponse'
+        '404':
+          description: Listing not found.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+        '500':
+          description: Analysis failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /items/{id}/reanalyse:
+    post:
+      tags: [Studio]
+      operationId: reanalyseStudioItem
+      summary: Re-run analysis with user corrections (RecordLens only)
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReanalyseItemRequest'
+      responses:
+        '200':
+          description: Re-analysis complete.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyseItemResponse'
+        '400':
+          description: Invalid request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /guard/checks:
+    post:
+      tags: [Guard]
+      operationId: createGuardCheck
+      summary: Create a new Guard check record
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateGuardCheckRequest'
+      responses:
+        '200':
+          description: Guard check record created.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardCheckCreated'
+  /guard/checks/{id}/analyse:
+    post:
+      tags: [Guard]
+      operationId: analyseGuardCheck
+      summary: Run AI risk analysis on a Guard check
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationSessionHeader'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Risk report generated.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GuardCheckAnalysisResponse'
+        '500':
+          description: Analysis failed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorEnvelope'
+  /storage/uploads/request-url:
+    post:
+      tags: [Storage]
+      operationId: requestUploadUrl
+      summary: Get a presigned URL for uploading a photo to object storage
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RequestUploadUrlRequest'
+      responses:
+        '200':
+          description: Presigned upload URL returned.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadUrlResult'
 components:
   parameters:
     AuthorizationSessionHeader:
@@ -233,4 +384,263 @@ components:
       required: [error]
       properties:
         error:
+          type: string
+    CreateItemRequest:
+      type: object
+      required: [lens, marketplace, photoUrls]
+      properties:
+        lens:
+          type: string
+        marketplace:
+          type: string
+        photoUrls:
+          type: array
+          items:
+            type: string
+    CreateItemResponse:
+      type: object
+      required: [id, lens, status]
+      properties:
+        id:
+          type: string
+        lens:
+          type: string
+        marketplace:
+          type: [string, 'null']
+        status:
+          type: string
+    AnalyseItemRequest:
+      type: object
+      required: [photoUrls]
+      properties:
+        lens:
+          type: string
+        photoUrls:
+          type: array
+          items:
+            type: string
+        hint:
+          type: string
+    StudioAnalysis:
+      type: object
+      required: [mode, lens, listing_description, identity, attributes, missing_photos, pricing, marketplace_outputs, warnings]
+      properties:
+        mode:
+          type: string
+          enum: [studio]
+        lens:
+          type: string
+        listing_description:
+          type: string
+        identity:
+          type: object
+          required: [brand, model, confidence]
+          properties:
+            brand:
+              type: [string, 'null']
+            model:
+              type: [string, 'null']
+            confidence:
+              type: number
+        attributes:
+          type: object
+          additionalProperties: true
+        missing_photos:
+          type: array
+          items:
+            type: string
+        pricing:
+          type: object
+          required: [quick_sale, recommended, high, currency, confidence]
+          properties:
+            quick_sale:
+              type: number
+            recommended:
+              type: number
+            high:
+              type: number
+            currency:
+              type: string
+            confidence:
+              type: number
+        marketplace_outputs:
+          type: object
+          properties:
+            ebay:
+              type: object
+              additionalProperties: true
+            vinted:
+              type: object
+              additionalProperties: true
+        warnings:
+          type: array
+          items:
+            type: string
+    AnalyseItemResponse:
+      type: object
+      required: [analysis]
+      properties:
+        analysis:
+          $ref: '#/components/schemas/StudioAnalysis'
+    ReanalyseItemRequest:
+      type: object
+      required: [corrections]
+      properties:
+        corrections:
+          type: object
+          additionalProperties: true
+    CreateGuardCheckRequest:
+      type: object
+      required: [lens]
+      properties:
+        url:
+          type: string
+        screenshotUrls:
+          type: array
+          items:
+            type: string
+        lens:
+          type: string
+    GuardCheckCreated:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+    GuardRiskDimension:
+      type: object
+      required: [score, verdict]
+      properties:
+        score:
+          type: number
+          minimum: 0
+          maximum: 10
+        verdict:
+          type: string
+    GuardReport:
+      type: object
+      required: [mode, lens, risk, risk_dimensions, red_flags, green_signals, price_analysis, authenticity_signals, missing_photos, seller_questions, buy_recommendation, disclaimer]
+      properties:
+        mode:
+          type: string
+        lens:
+          type: string
+        risk:
+          type: object
+          required: [level, confidence, summary]
+          properties:
+            level:
+              type: string
+              enum: [low, medium, medium_high, high, inconclusive]
+            confidence:
+              type: number
+            summary:
+              type: string
+        risk_dimensions:
+          type: object
+          required: [price, photos, listing_quality, item_authenticity, seller_signals]
+          properties:
+            price:
+              $ref: '#/components/schemas/GuardRiskDimension'
+            photos:
+              $ref: '#/components/schemas/GuardRiskDimension'
+            listing_quality:
+              $ref: '#/components/schemas/GuardRiskDimension'
+            item_authenticity:
+              $ref: '#/components/schemas/GuardRiskDimension'
+            seller_signals:
+              $ref: '#/components/schemas/GuardRiskDimension'
+        red_flags:
+          type: array
+          items:
+            type: object
+            required: [severity, type, message]
+            properties:
+              severity:
+                type: string
+                enum: [low, medium, high]
+              type:
+                type: string
+              message:
+                type: string
+        green_signals:
+          type: array
+          items:
+            type: object
+            required: [type, message]
+            properties:
+              type:
+                type: string
+              message:
+                type: string
+        price_analysis:
+          type: object
+          required: [price_verdict, price_note]
+          properties:
+            asking_price:
+              type: [string, 'null']
+            market_estimate:
+              type: [string, 'null']
+            price_verdict:
+              type: string
+              enum: [fair, low_risk_deal, suspiciously_low, overpriced, unknown]
+            price_note:
+              type: string
+        authenticity_signals:
+          type: array
+          items:
+            type: object
+            required: [marker, observed, verdict]
+            properties:
+              marker:
+                type: string
+              observed:
+                type: string
+              verdict:
+                type: string
+                enum: [pass, fail, unclear]
+        missing_photos:
+          type: array
+          items:
+            type: string
+        seller_questions:
+          type: array
+          items:
+            type: string
+        buy_recommendation:
+          type: object
+          required: [verdict, reasoning]
+          properties:
+            verdict:
+              type: string
+              enum: [proceed, proceed_with_caution, ask_questions_first, avoid]
+            reasoning:
+              type: string
+        disclaimer:
+          type: string
+    GuardCheckAnalysisResponse:
+      type: object
+      required: [id, report]
+      properties:
+        id:
+          type: string
+        report:
+          $ref: '#/components/schemas/GuardReport'
+    RequestUploadUrlRequest:
+      type: object
+      required: [name, size, contentType]
+      properties:
+        name:
+          type: string
+        size:
+          type: integer
+        contentType:
+          type: string
+    UploadUrlResult:
+      type: object
+      required: [uploadURL, objectPath]
+      properties:
+        uploadURL:
+          type: string
+        objectPath:
           type: string
