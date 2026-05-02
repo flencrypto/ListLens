@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ListingCard, type ListingCardData } from "@/components/studio/listing-card";
 
 const QUICK_LINKS = [
   { href: "/studio/new", label: "New Listing", desc: "Photos → AI listing draft", icon: "📸", color: "from-cyan-500 to-blue-600" },
@@ -27,6 +28,7 @@ interface DashboardData {
   credits: number;
   planTier: string;
   recentActivity: RecentActivity[];
+  listings: ListingCardData[];
 }
 
 function planLabel(tier: string): string {
@@ -138,6 +140,50 @@ export default function DashboardPage() {
             ))}
           </div>
         )}
+
+        {/* My Listings panel */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+              <span className="text-lg">📋</span> My Listings
+              {!loading && data && data.listings.length > 0 && (
+                <Badge variant="secondary" className="text-xs">{data.listings.length}</Badge>
+              )}
+            </h2>
+            <Link href="/studio/new">
+              <span className="text-xs text-zinc-400 hover:text-white transition-colors">+ New listing</span>
+            </Link>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <div key={i} className="brand-card overflow-hidden animate-pulse">
+                  <div className="aspect-square bg-zinc-800" />
+                  <div className="p-3 space-y-2">
+                    <div className="h-3 bg-zinc-800 rounded w-4/5" />
+                    <div className="h-3 bg-zinc-800 rounded w-2/5" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : data && data.listings.length > 0 ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {data.listings.map((listing) => (
+                <ListingCard key={listing.id} listing={listing} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-12 rounded-xl border border-dashed border-zinc-800 gap-3 bg-zinc-900/30">
+              <span className="text-3xl">📸</span>
+              <p className="text-zinc-400 text-sm font-medium">No listings yet</p>
+              <p className="text-zinc-600 text-xs">Upload photos and let AI write your listing</p>
+              <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500 mt-1">
+                <Link href="/studio/new">Create your first listing</Link>
+              </Button>
+            </div>
+          )}
+        </div>
 
         {/* Quick action grid */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
