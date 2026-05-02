@@ -12,7 +12,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
-import { Platform } from "react-native";
+import { Platform, StatusBar as RNStatusBar } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -60,6 +60,9 @@ function AndroidNavBarSetup() {
     if (Platform.OS === "android") {
       NavigationBar.setBackgroundColorAsync(NAVY).catch(() => undefined);
       NavigationBar.setButtonStyleAsync("light").catch(() => undefined);
+      RNStatusBar.setBackgroundColor(NAVY, false);
+      RNStatusBar.setBarStyle("light-content", false);
+      RNStatusBar.setTranslucent(false);
     }
   }, []);
   return null;
@@ -164,7 +167,7 @@ export default function RootLayout() {
         <SubscriptionProvider>
           <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
             <KeyboardProvider>
-              <StatusBar style="light" />
+              <StatusBar style="light" backgroundColor={NAVY} translucent={false} />
               <AndroidNavBarSetup />
               <RootLayoutNav />
             </KeyboardProvider>
