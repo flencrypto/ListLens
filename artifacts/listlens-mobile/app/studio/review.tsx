@@ -26,7 +26,7 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 import type { StudioAnalysis, ItemSpecific } from "@/lib/api";
-import { confirmPressing, getItem, reanalyseItem, getItemSpecifics, publishItemToEbay, type AnalysisCorrections } from "@/lib/api";
+import { confirmPressing, getItem, reanalyseItem, getItemSpecifics, publishItemToEbay, updateItem, type AnalysisCorrections } from "@/lib/api";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -453,27 +453,52 @@ export default function ReviewScreen() {
       setMatrixLikelihoods(matches);
       const topMatch = ident.top_match;
       const highConfidence = topMatch.likelihood_percent > 70;
+
+      const baseForCompute = result.analysis
+        ? analysisToBody(result.analysis!, body.lens, body.marketplace, body.photos)
+        : { ...body };
+
+      let newPressingTitle: string | null = null;
+      let newPressingDescription: string | null = null;
+
+      if (highConfidence) {
+        const artistTitle = [topMatch.artist, topMatch.title].filter(Boolean).join(" – ");
+        const releaseLabel = topMatch.likely_release?.trim() || "pressing identified";
+        const meta = [topMatch.label, releaseLabel].filter(Boolean).join(", ");
+        newPressingTitle = artistTitle
+          ? meta ? `${artistTitle} (${meta})` : artistTitle
+          : baseForCompute.title ?? null;
+        const confirmedLine = `✓ Pressing confirmed: ${releaseLabel}`;
+        const existingDesc = baseForCompute.description ?? "";
+        const alreadyPrepended = existingDesc.startsWith("✓ Pressing confirmed:");
+        newPressingDescription = alreadyPrepended
+          ? existingDesc.replace(/^✓ Pressing confirmed:[^\n]*/, confirmedLine)
+          : existingDesc
+          ? `${confirmedLine}\n\n${existingDesc}`
+          : confirmedLine;
+      }
+
       setBody((prev) => {
         const base = result.analysis
           ? analysisToBody(result.analysis!, prev.lens, prev.marketplace, prev.photos)
           : { ...prev };
         if (!highConfidence) return base;
-        const artistTitle = [topMatch.artist, topMatch.title].filter(Boolean).join(" – ");
-        const releaseLabel = topMatch.likely_release?.trim() || "pressing identified";
-        const meta = [topMatch.label, releaseLabel].filter(Boolean).join(", ");
-        const pressingTitle = artistTitle
-          ? meta ? `${artistTitle} (${meta})` : artistTitle
-          : base.title;
-        const confirmedLine = `✓ Pressing confirmed: ${releaseLabel}`;
-        const existingDesc = base.description ?? "";
-        const alreadyPrepended = existingDesc.startsWith("✓ Pressing confirmed:");
-        const newDescription = alreadyPrepended
-          ? existingDesc.replace(/^✓ Pressing confirmed:[^\n]*/, confirmedLine)
-          : existingDesc
-          ? `${confirmedLine}\n\n${existingDesc}`
-          : confirmedLine;
-        return { ...base, title: pressingTitle, description: newDescription };
+        return {
+          ...base,
+          title: newPressingTitle ?? base.title,
+          description: newPressingDescription ?? base.description,
+        };
       });
+
+      if (highConfidence && itemId && (newPressingTitle || newPressingDescription)) {
+        const patchFields: { title?: string; description?: string } = {};
+        if (newPressingTitle) patchFields.title = newPressingTitle;
+        if (newPressingDescription) patchFields.description = newPressingDescription;
+        updateItem(itemId, patchFields).catch((err) => {
+          console.warn("[Studio] Failed to sync pressing title to server:", err);
+        });
+      }
+
       const now = Date.now();
       setReanalysedAt(now);
       if (highConfidence) setPressingConfirmedAt(now);

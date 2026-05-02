@@ -84,6 +84,24 @@ async function post<T>(path: string, data: unknown): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+async function patch<T>(path: string, data: unknown): Promise<T> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (_getAuthToken) {
+    const token = await _getAuthToken().catch(() => null);
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+  }
+  const res = await fetch(`${getApiBase()}${path}`, {
+    method: "PATCH",
+    headers,
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.text().catch(() => "unknown error");
+    throw new Error(`API ${path} failed (${res.status}): ${err}`);
+  }
+  return res.json() as Promise<T>;
+}
+
 async function get<T>(path: string): Promise<T> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (_getAuthToken) {
@@ -231,6 +249,13 @@ export interface ItemSpecific {
 
 export async function getItemSpecifics(itemId: string): Promise<{ specifics: ItemSpecific[] }> {
   return get<{ specifics: ItemSpecific[] }>(`/api/items/${itemId}/item-specifics`);
+}
+
+export async function updateItem(
+  id: string,
+  fields: { title?: string; description?: string; price?: string },
+): Promise<{ listing: ApiListing }> {
+  return patch<{ listing: ApiListing }>(`/api/items/${id}`, fields);
 }
 
 export interface EbayPublishResult {
