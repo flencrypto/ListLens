@@ -1,0 +1,86 @@
+import { ShieldCheck, ScanLine } from "lucide-react";
+
+type GuardCheckButtonProps = {
+  label?: string;
+  onClick?: () => void;
+  disabled?: boolean;
+  isRunning?: boolean;
+};
+
+export function GuardCheckButton({
+  label = "Run a Guard check",
+  onClick,
+  disabled = false,
+  isRunning = false,
+}: GuardCheckButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled || isRunning}
+      className="
+        group relative w-full overflow-hidden rounded-2xl
+        border border-cyan-400/45
+        bg-black/80 px-5 py-4
+        text-cyan-50
+        shadow-[0_0_24px_rgba(34,211,238,0.12),inset_0_0_18px_rgba(34,211,238,0.04)]
+        transition-all duration-300 ease-out
+        hover:border-cyan-300/80
+        hover:bg-cyan-950/20
+        hover:shadow-[0_0_34px_rgba(34,211,238,0.28),inset_0_0_22px_rgba(34,211,238,0.08)]
+        active:scale-[0.985]
+        disabled:cursor-not-allowed disabled:opacity-60
+      "
+    >
+      {/* subtle orbital glow */}
+      <span
+        className="
+          pointer-events-none absolute -right-16 -top-20 h-44 w-44 rounded-full
+          bg-gradient-to-br from-orange-400/10 via-purple-500/10 to-transparent
+          blur-xl transition-opacity duration-300
+          group-hover:opacity-80
+        "
+      />
+
+      {/* scanning line */}
+      <span
+        className={`
+          pointer-events-none absolute inset-y-0 left-0 w-20
+          bg-gradient-to-r from-transparent via-cyan-300/20 to-transparent
+          ${isRunning ? "animate-[guardScan_1.4s_linear_infinite]" : "translate-x-[-120%] group-hover:animate-[guardScan_1.4s_linear]"}
+        `}
+      />
+
+      {/* inner border */}
+      <span className="pointer-events-none absolute inset-[1px] rounded-2xl border border-white/5" />
+
+      <span className="relative z-10 flex items-center justify-center gap-3">
+        <span
+          className="
+            flex h-7 w-7 items-center justify-center rounded-lg
+            bg-cyan-400/10 text-cyan-200
+            ring-1 ring-cyan-300/20
+            transition-all duration-300
+            group-hover:bg-cyan-300/15 group-hover:text-white
+          "
+        >
+          {isRunning ? (
+            <ScanLine size={16} strokeWidth={2.4} />
+          ) : (
+            <ShieldCheck size={16} strokeWidth={2.4} />
+          )}
+        </span>
+
+        <span className="text-sm font-semibold tracking-wide text-cyan-50/90">
+          {isRunning ? "Running Guard check..." : label}
+        </span>
+      </span>
+
+      <style>{`
+        @keyframes guardScan {
+          0% { transform: translateX(-140%); }
+          100% { transform: translateX(620%); }
+        }
+      `}</style>
+    </button>
+  );
+}
