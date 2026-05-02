@@ -1510,9 +1510,10 @@ router.post("/items", async (req, res) => {
   const lens = (b["lens"] as string) ?? "ShoeLens";
   const marketplace = b["marketplace"] as string | undefined;
   const photoUrls = (b["photoUrls"] as string[]) ?? [];
+  const hint = b["hint"] as string | undefined;
   const userId = req.user?.id ?? null;
 
-  itemMeta.set(id, { lens, marketplace, photoUrls });
+  itemMeta.set(id, { lens, marketplace, photoUrls, hint });
 
   try {
     await db.insert(listingsTable).values({
@@ -1521,10 +1522,13 @@ router.post("/items", async (req, res) => {
       lens,
       marketplace,
       photoUrls,
+      hint: hint ?? null,
       status: "draft",
     });
   } catch (err) {
-    logger.warn({ err, id }, "Could not persist listing to DB (non-fatal)");
+    logger.error({ err, id }, "Could not persist listing to DB — aborting item creation");
+    res.status(503).json({ error: "Could not create listing. Please try again." });
+    return;
   }
 
   if (userId) {
@@ -1560,9 +1564,10 @@ router.post("/items/:id/analyse", async (req, res) => {
   }
 
   const meta = itemMeta.get(id) ?? {};
-  const lens = (b["lens"] as string) ?? meta.lens ?? "ShoeLens";
-  const hint = (b["hint"] as string) ?? meta.hint;
-  const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? (ownership.row?.photoUrls as string[] | undefined) ?? [];
+  const dbRow = ownership.row;
+  const lens = (b["lens"] as string) ?? meta.lens ?? dbRow?.lens ?? "ShoeLens";
+  const hint = (b["hint"] as string) ?? meta.hint ?? dbRow?.hint ?? undefined;
+  const photoUrls = (b["photoUrls"] as string[]) ?? meta.photoUrls ?? (dbRow?.photoUrls as string[] | undefined) ?? [];
   const kickscrewUrl = typeof b["kickscrewUrl"] === "string" ? b["kickscrewUrl"].trim() : undefined;
   const marketplaceCandidates = Array.isArray(b["marketplace_candidates"])
     ? (b["marketplace_candidates"] as ShoeIdentificationInput["marketplace_candidates"])
@@ -1677,12 +1682,13 @@ router.post("/items/:id/reanalyse", async (req, res) => {
 
   // Load photoUrls — try in-memory meta first, then DB
   const meta = itemMeta.get(id) ?? {};
-  let photoUrls: string[] = meta.photoUrls ?? [];
-  const hint = meta.hint;
-  const lens = meta.lens ?? "RecordLens";
+  const dbRow = ownership.row;
+  let photoUrls: string[] = meta.photoUrls ?? dbRow?.photoUrls ?? [];
+  const hint = meta.hint ?? dbRow?.hint ?? undefined;
+  const lens = meta.lens ?? dbRow?.lens ?? "RecordLens";
 
-  if (!photoUrls.length && ownership.row?.photoUrls?.length) {
-    photoUrls = ownership.row.photoUrls as string[];
+  if (!photoUrls.length && dbRow?.photoUrls?.length) {
+    photoUrls = dbRow.photoUrls as string[];
   }
 
   if (!photoUrls.length) {
