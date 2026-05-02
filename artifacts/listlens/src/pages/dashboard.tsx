@@ -115,7 +115,7 @@ export default function DashboardPage() {
 
         {/* Stats row */}
         {!loading && data && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="brand-card p-4 text-center">
               <p className="text-2xl font-bold text-white">{data.studioCount}</p>
               <p className="text-xs text-zinc-400 mt-0.5">Studio listings</p>
@@ -131,7 +131,7 @@ export default function DashboardPage() {
           </div>
         )}
         {loading && (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[0, 1, 2].map((i) => (
               <div key={i} className="brand-card p-4 text-center animate-pulse">
                 <div className="h-8 w-12 bg-zinc-800 rounded mx-auto mb-1" />

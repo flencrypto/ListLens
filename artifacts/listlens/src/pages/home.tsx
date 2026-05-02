@@ -172,7 +172,7 @@ export default function HomePage() {
             </div>
 
             {/* Headline — stacked */}
-            <h1 className="text-6xl sm:text-7xl font-black tracking-tight leading-[0.95] mb-5">
+            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black tracking-tight leading-[0.95] mb-5">
               List<br />
               <span className="bg-gradient-to-r from-[#3ea8ff] to-[#22d3ee] bg-clip-text text-transparent">
                 smarter.

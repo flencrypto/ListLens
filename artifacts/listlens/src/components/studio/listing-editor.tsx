@@ -522,7 +522,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
               </div>
             </div>
           )}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-center">
               <p className="text-zinc-500 text-xs mb-1">Quick Sale</p>
               <p className="text-xl font-bold text-zinc-300">{formatPrice(analysis.pricing.quick_sale, analysis.pricing.currency)}</p>
@@ -661,7 +661,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           ) : ebaySettings ? (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-2">
               <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">Listing defaults</p>
-              <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                 <div>
                   <p className="text-xs text-zinc-500 mb-0.5">Shipping</p>
                   <p className="text-sm font-semibold text-zinc-200">{formatShippingCost(ebaySettings.shippingCost)}</p>
