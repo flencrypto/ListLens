@@ -155,6 +155,19 @@ export default function DashboardPage() {
             </Link>
           </div>
 
+          {!loading && data && data.listings.length > 0 && (() => {
+            const drafts = data.listings.filter((l) => l.status !== "analysed" && l.status !== "analyzed" && l.status !== "published").length;
+            const analysed = data.listings.filter((l) => l.status === "analysed" || l.status === "analyzed").length;
+            const published = data.listings.filter((l) => l.status === "published").length;
+            const parts: string[] = [];
+            if (drafts > 0) parts.push(`${drafts} draft${drafts === 1 ? "" : "s"}`);
+            if (analysed > 0) parts.push(`${analysed} analysed`);
+            if (published > 0) parts.push(`${published} published`);
+            return (
+              <p className="text-xs text-zinc-500 mb-3">{parts.join(" · ")}</p>
+            );
+          })()}
+
           {loading ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {[0, 1, 2, 3, 4].map((i) => (
