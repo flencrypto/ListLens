@@ -1,0 +1,301 @@
+Yep — this screen needs the buttons to feel like **premium “system modules”** instead of plain list rows. Below is a full themed setup for the **More / Vault screen buttons** using clear destination icons, cyan glow, dark glass cards, subtle badges, and better spacing.
+
+## Recommended icons
+
+| Button             |         Icon | Reason                            |
+| ------------------ | -----------: | --------------------------------- |
+| History            |    `History` | Saved listings / previous actions |
+| Billing & Plans    | `CreditCard` | Subscription / credits            |
+| Legal              |   `FileText` | Terms / policy / AI disclaimer    |
+| Replay Splash      | `RefreshCcw` | Restart intro animation           |
+| Log in             |      `LogIn` | Account sign-in                   |
+| Vault / Collection |    `Archive` | Saved assets / collection         |
+
+---
+
+## Drop-in component: `MoreScreenButtons.tsx`
+
+```tsx
+import {
+  Archive,
+  ChevronRight,
+  CreditCard,
+  FileText,
+  History,
+  LogIn,
+  RefreshCcw,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { Link } from "wouter";
+
+type MoreActionButtonProps = {
+  label: string;
+  description: string;
+  href?: string;
+  icon: React.ElementType;
+  badge?: string;
+  variant?: "default" | "premium" | "account" | "danger" | "vault";
+  onClick?: () => void;
+};
+
+function MoreActionButton({
+  label,
+  description,
+  href,
+  icon: Icon,
+  badge,
+  variant = "default",
+  onClick,
+}: MoreActionButtonProps) {
+  const content = (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        group relative w-full overflow-hidden rounded-[22px]
+        border px-4 py-4 text-left
+        transition-all duration-300 ease-out
+        active:scale-[0.985]
+
+        ${
+          variant === "premium"
+            ? "border-cyan-300/25 bg-cyan-400/[0.08] shadow-[0_0_28px_rgba(34,211,238,0.10),inset_0_0_22px_rgba(34,211,238,0.04)]"
+            : variant === "account"
+            ? "border-blue-300/20 bg-blue-400/[0.07] shadow-[0_0_26px_rgba(59,130,246,0.10)]"
+            : variant === "vault"
+            ? "border-cyan-300/30 bg-gradient-to-br from-cyan-400/[0.12] via-blue-500/[0.08] to-violet-500/[0.08] shadow-[0_0_34px_rgba(34,211,238,0.16)]"
+            : variant === "danger"
+            ? "border-rose-300/20 bg-rose-400/[0.06]"
+            : "border-white/[0.08] bg-white/[0.035] shadow-[0_0_22px_rgba(0,0,0,0.22)]"
+        }
+
+        hover:border-cyan-300/45
+        hover:bg-cyan-400/[0.09]
+        hover:shadow-[0_0_34px_rgba(34,211,238,0.16),inset_0_0_24px_rgba(34,211,238,0.045)]
+      `}
+    >
+      {/* soft corner glow */}
+      <span
+        className="
+          pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full
+          bg-cyan-300/10 blur-2xl
+          opacity-0 transition-opacity duration-300
+          group-hover:opacity-100
+        "
+      />
+
+      {/* scan shimmer */}
+      <span
+        className="
+          pointer-events-none absolute inset-y-0 left-0 w-24
+          -translate-x-[140%]
+          bg-gradient-to-r from-transparent via-cyan-200/12 to-transparent
+          transition-transform duration-700
+          group-hover:translate-x-[620%]
+        "
+      />
+
+      <div className="relative z-10 flex items-center gap-4">
+        <div
+          className={`
+            flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl
+            border transition-all duration-300
+
+            ${
+              variant === "premium" || variant === "vault"
+                ? "border-cyan-300/30 bg-cyan-300/12 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]"
+                : variant === "account"
+                ? "border-blue-300/25 bg-blue-300/10 text-blue-100"
+                : "border-white/10 bg-black/30 text-slate-300"
+            }
+
+            group-hover:scale-105
+            group-hover:border-cyan-300/50
+            group-hover:bg-cyan-300/15
+            group-hover:text-cyan-100
+          `}
+        >
+          <Icon size={22} strokeWidth={2.35} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-[15px] font-semibold tracking-tight text-slate-100">
+              {label}
+            </p>
+
+            {badge && (
+              <span
+                className="
+                  rounded-full border border-cyan-300/25
+                  bg-cyan-300/10 px-2 py-0.5
+                  text-[10px] font-black uppercase tracking-[0.08em]
+                  text-cyan-200
+                  shadow-[0_0_14px_rgba(34,211,238,0.12)]
+                "
+              >
+                {badge}
+              </span>
+            )}
+          </div>
+
+          <p className="mt-0.5 line-clamp-1 text-[13px] font-medium text-slate-400">
+            {description}
+          </p>
+        </div>
+
+        <ChevronRight
+          size={19}
+          strokeWidth={2.4}
+          className="
+            shrink-0 text-slate-600 transition-all duration-300
+            group-hover:translate-x-1 group-hover:text-cyan-200
+          "
+        />
+      </div>
+    </button>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
+}
+
+export function MoreScreenButtons() {
+  return (
+    <div className="space-y-3">
+      <MoreActionButton
+        label="History"
+        description="Saved listings, scans and Guard checks"
+        href="/history"
+        icon={History}
+      />
+
+      <MoreActionButton
+        label="Billing & Plans"
+        description="Manage subscription, credits and upgrades"
+        href="/billing"
+        icon={CreditCard}
+        badge="Free Trial"
+        variant="premium"
+      />
+
+      <MoreActionButton
+        label="Legal"
+        description="Privacy, terms and AI disclaimer"
+        href="/legal"
+        icon={FileText}
+      />
+
+      <MoreActionButton
+        label="Replay Splash"
+        description="See the List-LENS intro again"
+        href="/splash"
+        icon={RefreshCcw}
+      />
+
+      <MoreActionButton
+        label="Log in"
+        description="Sign in to sync your data"
+        href="/login"
+        icon={LogIn}
+        variant="account"
+      />
+
+      <MoreActionButton
+        label="Vault"
+        description="Open your saved collection and listings"
+        href="/vault"
+        icon={Archive}
+        badge="Secure"
+        variant="vault"
+      />
+    </div>
+  );
+}
+```
+
+---
+
+## Better full screen layout
+
+Use this around the buttons to fix the spacing and make the page feel cleaner:
+
+```tsx
+import { MoreScreenButtons } from "@/components/MoreScreenButtons";
+
+export default function MorePage() {
+  return (
+    <main
+      className="
+        relative min-h-screen overflow-hidden
+        bg-[#020811] px-5 pb-28 pt-10 text-white
+      "
+    >
+      {/* background orbs */}
+      <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-cyan-400/14 blur-3xl" />
+      <div className="pointer-events-none absolute -right-28 top-40 h-80 w-80 rounded-full bg-blue-500/12 blur-3xl" />
+      <div className="pointer-events-none absolute bottom-20 right-4 h-48 w-48 rounded-full bg-orange-400/8 blur-3xl" />
+
+      <section className="relative z-10 mx-auto max-w-md">
+        <div className="mb-7">
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300/75">
+            List-LENS System
+          </p>
+
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
+            More
+          </h1>
+
+          <p className="mt-2 max-w-[320px] text-sm font-medium leading-6 text-slate-400">
+            Account, history, billing and the rest of your List-LENS control centre.
+          </p>
+        </div>
+
+        <MoreScreenButtons />
+
+        <div
+          className="
+            mt-5 rounded-[26px] border border-cyan-300/15
+            bg-black/35 p-5 text-center
+            shadow-[0_0_30px_rgba(34,211,238,0.08)]
+          "
+        >
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl border border-cyan-300/25 bg-cyan-300/10 text-cyan-200">
+            <Sparkles size={22} />
+          </div>
+
+          <p className="text-sm font-bold text-slate-100">
+            MR.FLENS · LIST-LENS
+          </p>
+
+          <p className="mt-1 text-xs font-medium uppercase tracking-[0.18em] text-cyan-300/70">
+            AI Evidence · Commerce · Confidence
+          </p>
+        </div>
+      </section>
+    </main>
+  );
+}
+```
+
+---
+
+## The big UX improvement
+
+At the moment your screen visually says:
+
+> “Here are menu items.”
+
+This redesign says:
+
+> **“These are premium app modules inside a serious AI resale tool.”**
+
+That’s the vibe you want for **Mr.FLENS List-LENS** — dark, trustworthy, collector-tech, and properly mobile-native.
