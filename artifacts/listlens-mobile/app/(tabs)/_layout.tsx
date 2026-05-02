@@ -3,6 +3,7 @@ import { Tabs } from "expo-router";
 import { Archive, Grid2x2, Layers, Shield, Video } from "lucide-react-native";
 import React from "react";
 import { Platform, StyleSheet, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
 import { useColors } from "@/hooks/useColors";
@@ -63,6 +64,7 @@ function TabIcon({
 export default function TabLayout() {
   const colors = useColors();
   const isWeb = Platform.OS === "web";
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -82,7 +84,7 @@ export default function TabLayout() {
           borderTopWidth: 0,
           elevation: 0,
           height: isWeb ? 84 : 72,
-          paddingBottom: isWeb ? 8 : 6,
+          paddingBottom: isWeb ? 8 : Platform.OS === "android" ? insets.bottom : 6,
         },
         tabBarBackground: () => (
           <View style={StyleSheet.absoluteFill}>

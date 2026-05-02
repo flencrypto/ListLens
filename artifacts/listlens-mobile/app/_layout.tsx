@@ -7,10 +7,12 @@ import {
 } from "@expo-google-fonts/inter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import * as Font from "expo-font";
+import * as NavigationBar from "expo-navigation-bar";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import React, { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -52,6 +54,16 @@ const HYDRATION_TIMEOUT_MS = 3000;
 
 const NAVY = "#040a14";
 const FOREGROUND = "#fafafa";
+
+function AndroidNavBarSetup() {
+  useEffect(() => {
+    if (Platform.OS === "android") {
+      NavigationBar.setBackgroundColorAsync(NAVY).catch(() => undefined);
+      NavigationBar.setButtonStyleAsync("light").catch(() => undefined);
+    }
+  }, []);
+  return null;
+}
 
 function RootLayoutNav() {
   return (
@@ -153,6 +165,7 @@ export default function RootLayout() {
           <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
             <KeyboardProvider>
               <StatusBar style="light" />
+              <AndroidNavBarSetup />
               <RootLayoutNav />
             </KeyboardProvider>
           </GestureHandlerRootView>

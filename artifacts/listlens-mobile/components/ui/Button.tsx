@@ -95,12 +95,13 @@ export function BrandButton({
         testID={testID}
         onPress={handlePress}
         disabled={loading || disabled}
+        android_ripple={{ color: "rgba(4,10,20,0.35)", borderless: false }}
         style={({ pressed }) => [
           {
             height,
             borderRadius: radius,
             overflow: "hidden",
-            opacity: disabled ? 0.5 : pressed ? 0.9 : 1,
+            opacity: disabled ? 0.5 : (Platform.OS === "ios" && pressed) ? 0.9 : 1,
           },
         ]}
       >
@@ -134,6 +135,7 @@ export function BrandButton({
       testID={testID}
       onPress={handlePress}
       disabled={loading || disabled}
+      android_ripple={{ color: "rgba(34,211,238,0.25)", borderless: false }}
       style={({ pressed }) => [
         {
           height,
@@ -141,7 +143,7 @@ export function BrandButton({
           backgroundColor: bg,
           borderColor: border,
           borderWidth: variant === "outline" ? 1 : 0,
-          opacity: disabled ? 0.5 : pressed ? 0.85 : 1,
+          opacity: disabled ? 0.5 : (Platform.OS === "ios" && pressed) ? 0.85 : 1,
           justifyContent: "center",
         },
       ]}
