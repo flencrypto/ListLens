@@ -8,7 +8,7 @@ import { useCreateGuardCheck } from "@workspace/api-client-react";
 
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens" },
-  { id: "LPLens", icon: "🎵", name: "LPLens" },
+  { id: "RecordLens", icon: "💿", name: "RecordLens" },
   { id: "ClothingLens", icon: "👕", name: "ClothingLens" },
   { id: "CardLens", icon: "🎴", name: "CardLens" },
   { id: "ToyLens", icon: "🧸", name: "ToyLens" },

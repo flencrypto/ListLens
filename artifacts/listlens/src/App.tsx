@@ -10,7 +10,6 @@ import HistoryPage from "@/pages/history";
 import LensesPage from "@/pages/lenses";
 import RecordLensPage from "@/pages/lenses/record";
 import SoleLensPrototype from "@/pages/lenses/Sole";
-import LPLensPage from "@/pages/lenses/lp";
 import ClothingLensPage from "@/pages/lenses/clothing";
 import CardLensPage from "@/pages/lenses/card";
 import ToyLensPage from "@/pages/lenses/toy";
@@ -45,7 +44,7 @@ function Router() {
       <Route path="/lenses" component={LensesPage} />
       <Route path="/lenses/record" component={RecordLensPage} />
       <Route path="/lenses/sole" component={SoleLensPrototype} />
-      <Route path="/lenses/lp" component={LPLensPage} />
+      <Route path="/lenses/lp" component={RecordLensPage} />
       <Route path="/lenses/clothing" component={ClothingLensPage} />
       <Route path="/lenses/card" component={CardLensPage} />
       <Route path="/lenses/toy" component={ToyLensPage} />

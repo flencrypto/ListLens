@@ -200,20 +200,6 @@ export const AutographLensAttributesSchema = z.object({
   item_condition: z.string().nullable().optional(),
 }).passthrough();
 
-export const LPLensAttributesSchema = z.object({
-  artist: z.string().nullable().optional(),
-  album_title: z.string().nullable().optional(),
-  label: z.string().nullable().optional(),
-  catalogue_number: z.string().nullable().optional(),
-  year: z.number().nullable().optional(),
-  pressing_country: z.string().nullable().optional(),
-  sleeve_grade: z.string().nullable().optional(),
-  media_grade: z.string().nullable().optional(),
-  matrix_runout: z.string().nullable().optional(),
-  format: z.string().nullable().optional(),
-  pressing_notes: z.string().nullable().optional(),
-}).passthrough();
-
 export const ClothingLensAttributesSchema = z.object({
   brand: z.string().nullable().optional(),
   size_label: z.string().nullable().optional(),
@@ -306,7 +292,6 @@ export const LENS_ATTRIBUTE_SCHEMAS: Partial<Record<string, z.ZodTypeAny>> = {
   BookLens: BookLensAttributesSchema,
   AntiquesLens: AntiquesLensAttributesSchema,
   AutographLens: AutographLensAttributesSchema,
-  LPLens: LPLensAttributesSchema,
   ClothingLens: ClothingLensAttributesSchema,
   CardLens: CardLensAttributesSchema,
   ToyLens: ToyLensAttributesSchema,
@@ -319,7 +304,6 @@ export type TechLensAttributes = z.infer<typeof TechLensAttributesSchema>;
 export type BookLensAttributes = z.infer<typeof BookLensAttributesSchema>;
 export type AntiquesLensAttributes = z.infer<typeof AntiquesLensAttributesSchema>;
 export type AutographLensAttributes = z.infer<typeof AutographLensAttributesSchema>;
-export type LPLensAttributes = z.infer<typeof LPLensAttributesSchema>;
 export type ClothingLensAttributes = z.infer<typeof ClothingLensAttributesSchema>;
 export type CardLensAttributes = z.infer<typeof CardLensAttributesSchema>;
 export type ToyLensAttributes = z.infer<typeof ToyLensAttributesSchema>;

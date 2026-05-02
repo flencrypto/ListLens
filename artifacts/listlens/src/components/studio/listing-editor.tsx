@@ -9,19 +9,6 @@ import type { StudioOutput } from "@/lib/ai/schemas";
 import { generateEbayHtml } from "@/lib/ebay-html";
 
 const LENS_FIELD_LABELS: Record<string, Record<string, string>> = {
-  LPLens: {
-    artist: "Artist",
-    album_title: "Album Title",
-    label: "Label",
-    catalogue_number: "Catalogue No.",
-    year: "Year",
-    pressing_country: "Pressing Country",
-    sleeve_grade: "Sleeve Grade",
-    media_grade: "Media Grade",
-    matrix_runout: "Matrix / Runout",
-    format: "Format",
-    pressing_notes: "Pressing Notes",
-  },
   ClothingLens: {
     brand: "Brand",
     size_label: "Size Label",

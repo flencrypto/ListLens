@@ -162,20 +162,6 @@ const AutographLensAttributesSchema = z.object({
   item_condition: z.string().nullable().optional(),
 }).passthrough();
 
-const LPLensAttributesSchema = z.object({
-  artist: z.string().nullable().optional(),
-  album_title: z.string().nullable().optional(),
-  label: z.string().nullable().optional(),
-  catalogue_number: z.string().nullable().optional(),
-  year: z.number().nullable().optional(),
-  pressing_country: z.string().nullable().optional(),
-  sleeve_grade: z.string().nullable().optional(),
-  media_grade: z.string().nullable().optional(),
-  matrix_runout: z.string().nullable().optional(),
-  format: z.string().nullable().optional(),
-  pressing_notes: z.string().nullable().optional(),
-}).passthrough();
-
 const ClothingLensAttributesSchema = z.object({
   brand: z.string().nullable().optional(),
   size_label: z.string().nullable().optional(),
@@ -268,7 +254,6 @@ const LENS_ATTRIBUTE_SCHEMAS: Partial<Record<string, z.ZodTypeAny>> = {
   BookLens: BookLensAttributesSchema,
   AntiquesLens: AntiquesLensAttributesSchema,
   AutographLens: AutographLensAttributesSchema,
-  LPLens: LPLensAttributesSchema,
   ClothingLens: ClothingLensAttributesSchema,
   CardLens: CardLensAttributesSchema,
   ToyLens: ToyLensAttributesSchema,
@@ -357,12 +342,6 @@ const LENS_META: Record<
     attributeHints:
       "artist, title, label, catalogue_number, pressing, format, sleeve_grade, media_grade",
   },
-  LPLens: {
-    label: "LP vinyl album",
-    category: "Music > Records > Albums",
-    attributeHints:
-      "artist, album_title, label, catalogue_number, year, pressing_country, sleeve_grade, media_grade, matrix_runout",
-  },
   ClothingLens: {
     label: "clothing item",
     category: "Clothes, Shoes & Accessories",
@@ -442,7 +421,6 @@ const LENS_TRUST_RULES: Partial<Record<string, string>> = {
   AutographLens: `CRITICAL TRUST RULES for AutographLens: You do NOT authenticate signatures. Your role is to produce a provenance and evidence risk report only. Never state a signature is genuine. In listing_description, describe the item and the provenance evidence present (COA, event photos, source). If the item is high-value, always include a warning recommending third-party authentication (PSA/DNA, Beckett, JSA, AFTAL). identity.brand should be the claimed signer; identity.model should be the signed item type.`,
   WatchLens: `CRITICAL TRUST RULES for WatchLens: You do NOT authenticate watches. Describe observable details only — dial text, case finish, bracelet style, engravings. For any watch priced above £500, include a warning in warnings[] recommending in-person inspection by a qualified watchmaker. Never state a watch is genuine. identity.brand = the brand name; identity.model = the model reference. If box and papers are not clearly shown, note the absence.`,
   CardLens: `CRITICAL TRUST RULES for CardLens: You do NOT grade cards. Describe the observable condition only — centering, surface, corners, edges. If the card is already graded (PSA/BGS/CGC slab visible), read and report the grade from the label exactly. Never invent a grade. For high-value cards (recommended price above £50), include a warning recommending professional grading before listing. identity.brand = the card set publisher; identity.model = the card name.`,
-  LPLens: `IMPORTANT for LPLens: If you can read matrix/runout etchings from the photos, include them in attributes.matrix_runout. Sleeve grades use Goldmine/Record Collector standard: M (Mint), NM (Near Mint), VG+ (Very Good Plus), VG (Very Good), G+ (Good Plus), G (Good), F (Fair), P (Poor). Identity.brand = artist; identity.model = album title. Be specific about the pressing — original vs reissue vs repress matters significantly for pricing.`,
   MotorLens: `IMPORTANT for MotorLens: If the item is a full vehicle, identity.brand = make, identity.model = model + year. If it is a part, identity.brand = the manufacturer/brand, identity.model = the part name. Always note fitment compatibility in attributes.fitment_vehicles. If VIN or part numbers are visible, include them. Flag any signs of accident damage, rust, or poor repairs in warnings[].`,
   MeasureLens: `IMPORTANT for MeasureLens: Your primary task is to estimate the physical dimensions of the item from the photos using any visible reference objects (coins, credit cards, rulers, hands). State your measurement method clearly in attributes.measurement_method and identify the reference object in attributes.reference_object_used. Express all dimensions in centimetres. Be explicit about your confidence in the measurements — low confidence must be flagged in warnings[]. identity.brand and identity.model should describe the item type being measured, not a brand.`,
 };
@@ -501,7 +479,6 @@ const NEW_LENSES_USING_GROK_VISION = new Set([
   "BookLens",
   "AntiquesLens",
   "AutographLens",
-  "LPLens",
   "ClothingLens",
   "CardLens",
   "ToyLens",
@@ -828,13 +805,6 @@ function buildGuardSystemPrompt(lens: string): string {
 - Lace tips: correct colour, aglet material and finish
 - Insole: correct branding, stitching, cushioning logo placement
 - Colourway accuracy: pantone match of uppers, midsole, outsole vs official colourway`,
-    LPLens: `Authenticity / condition markers to check for ${lensLabel}s:
-- Label: correct font, layout, colour for the pressing era and territory
-- Catalogue number: format matches label and matrix, correct country variant
-- Matrix/runout etchings: hand-etched vs stamped, pressing plant codes, generation suffix
-- Vinyl: colour correct for pressing (black/coloured), weight/thickness consistent with claimed pressing
-- Sleeve: correct print quality, spine text, catalogue number matches label
-- Price vs discogs market: anomalously cheap first-pressings are almost always bootlegs`,
     RecordLens: `Authenticity / condition markers to check for vinyl records:
 - Label authenticity: correct font, layout, and colour for the stated label and era
 - Catalogue number consistency: front sleeve, back sleeve, labels, and matrix all agree
@@ -2365,15 +2335,6 @@ const LENS_REGISTRY_META = [
     status: "live",
   },
   {
-    id: "LPLens",
-    name: "LPLens",
-    icon: "🎵",
-    category: "Music Media",
-    description:
-      "LP vinyl albums. Sleeve and media grading, matrix runout, pressing country and edition details.",
-    status: "live",
-  },
-  {
     id: "ClothingLens",
     name: "ClothingLens",
     icon: "👕",
@@ -2524,7 +2485,12 @@ async function handleLensAnalysis(
   }
 }
 
-router.post("/lenses/lp", (req, res) => handleLensAnalysis(req, res, "LPLens"));
+router.post("/lenses/lp", (_req, res) => {
+  res.status(410).json({
+    error: "LPLens has been consolidated into RecordLens.",
+    migration: "Use POST /api/lenses/record or the Studio analyse endpoint with lens='RecordLens'. RecordLens covers all LP-specific fields including Goldmine grading, matrix/runout extraction and pressing identification.",
+  });
+});
 router.post("/lenses/clothing", (req, res) => handleLensAnalysis(req, res, "ClothingLens"));
 router.post("/lenses/card", (req, res) => handleLensAnalysis(req, res, "CardLens"));
 router.post("/lenses/toy", (req, res) => handleLensAnalysis(req, res, "ToyLens"));

@@ -33,18 +33,6 @@ const LENS_DETAILS: Record<string, { focus: string[]; tips: string[] }> = {
       "One photo per side, plus the size label and the sole.",
     ],
   },
-  LPLens: {
-    focus: [
-      "Centre label — artist, title, catalogue number, label name",
-      "Sleeve front and back, including any OBI strip or inserts",
-      "Dead-wax matrix etchings for pressing identification",
-      "Any damage: ring wear, seam splits, writing on sleeve",
-    ],
-    tips: [
-      "Photograph both sides of the label — Side A and Side B.",
-      "Angle your camera to catch light across the groove surface to reveal marks.",
-    ],
-  },
   ClothingLens: {
     focus: [
       "Care/size label showing brand, size and material composition",

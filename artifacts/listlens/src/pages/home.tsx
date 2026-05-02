@@ -7,7 +7,7 @@ import { BrandBackground } from "@/components/brand/brand-background";
 
 const LENSES = [
   { name: "ShoeLens",      icon: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
-  { name: "LPLens",        icon: "🎵", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
+  { name: "RecordLens",     icon: "💿", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
   { name: "TechLens",      icon: "💻", desc: "Electronics & gadgets",   status: "live",  href: "/lenses/tech" },
   { name: "BookLens",      icon: "📚", desc: "Books & editions",        status: "live",  href: "/lenses/book" },
   { name: "AntiquesLens",  icon: "🏺", desc: "Antiques & collectibles", status: "live",  href: "/lenses/antiques" },

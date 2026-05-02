@@ -32,8 +32,6 @@ const LENS_PHOTO_INSTRUCTIONS: Record<string, string> = {
     "Lateral (outer) side, medial (inner) side, toe box, heel, sole/outsole, size tag on tongue, and any scuffs or sole wear.",
   RecordLens:
     "Front sleeve, back sleeve, label Side A, label Side B, matrix/runout etching Side A, matrix/runout etching Side B, and any sleeve damage or vinyl marks.",
-  LPLens:
-    "Front sleeve, back sleeve, label Side A, label Side B, matrix/runout etching, inner sleeve, and any ring wear or seam splits.",
   ClothingLens:
     "Front, back, brand tag, care/wash label, close-up of any pilling, fading, or staining, collar, cuffs, and zip or buttons.",
   CardLens:

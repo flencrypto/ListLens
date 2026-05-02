@@ -39,7 +39,7 @@ const PLANS: PlanDisplay[] = [
     features: [
       "Unlimited listings",
       "eBay + Vinted export",
-      "ShoeLens + LPLens",
+      "ShoeLens + RecordLens",
       "Listing history",
       "Priority AI analysis",
     ],

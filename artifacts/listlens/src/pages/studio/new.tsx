@@ -11,7 +11,7 @@ import { useCreateStudioItem, useAnalyseStudioItem } from "@workspace/api-client
 
 const LENSES = [
   { id: "ShoeLens", icon: "👟", name: "ShoeLens", desc: "Trainers, sneakers, shoes" },
-  { id: "LPLens", icon: "🎵", name: "LPLens", desc: "Vinyl, CDs, cassettes" },
+  { id: "RecordLens", icon: "💿", name: "RecordLens", desc: "Vinyl, CDs, cassettes" },
   { id: "ClothingLens", icon: "👕", name: "ClothingLens", desc: "Clothing & vintage garments" },
   { id: "CardLens", icon: "🎴", name: "CardLens", desc: "Trading cards & graded slabs" },
   { id: "ToyLens", icon: "🧸", name: "ToyLens", desc: "Toys, figures & LEGO" },

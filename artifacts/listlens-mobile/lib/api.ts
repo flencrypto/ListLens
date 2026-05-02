@@ -378,7 +378,6 @@ export async function analyseLens(params: {
   metadata?: Record<string, unknown>;
 }): Promise<{ analysis: StudioAnalysis }> {
   const lensRouteMap: Record<string, string> = {
-    LPLens: "/api/lenses/lp",
     ClothingLens: "/api/lenses/clothing",
     CardLens: "/api/lenses/card",
     ToyLens: "/api/lenses/toy",

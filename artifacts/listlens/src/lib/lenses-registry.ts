@@ -41,16 +41,6 @@ export const LENS_REGISTRY: readonly LensEntry[] = [
     href: "/lenses/sole",
   },
   {
-    id: "LPLens",
-    name: "LPLens",
-    category: "Music Media",
-    description:
-      "LP vinyl albums. Sleeve and media grading, matrix runout, pressing country and edition details.",
-    icon: "🎵",
-    status: "live",
-    href: "/lenses/lp",
-  },
-  {
     id: "ClothingLens",
     name: "ClothingLens",
     category: "Apparel",
