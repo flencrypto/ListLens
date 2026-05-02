@@ -1,5 +1,5 @@
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +51,30 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
 
   const isDirty =
     title !== initialTitle || description !== initialDescription || price !== initialPrice;
+
+  type EbaySettings = {
+    shippingCost: string;
+    returnsAccepted: boolean;
+    returnPeriod: string;
+    paymentMethod: string;
+  };
+  const [ebaySettings, setEbaySettings] = useState<EbaySettings | null>(null);
+  const [ebaySettingsLoading, setEbaySettingsLoading] = useState(true);
+  const [ebaySettingsError, setEbaySettingsError] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/ebay/settings")
+      .then((r) => r.ok ? r.json() : Promise.reject(r.status))
+      .then((data: unknown) => {
+        if (data && typeof (data as Record<string, unknown>).shippingCost !== "undefined") {
+          setEbaySettings(data as EbaySettings);
+        } else {
+          setEbaySettingsError(true);
+        }
+      })
+      .catch(() => setEbaySettingsError(true))
+      .finally(() => setEbaySettingsLoading(false));
+  }, []);
 
   const needsConfirmation =
     analysis.identity.confidence < 0.7 || analysis.pricing.confidence < 0.6;
@@ -156,6 +180,21 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
       : analysis.identity.confidence >= 0.6
         ? "warning"
         : "destructive";
+
+  function formatReturnPeriod(period: string): string {
+    const map: Record<string, string> = {
+      Days_14: "14 days",
+      Days_30: "30 days",
+      Days_60: "60 days",
+    };
+    return map[period] ?? period;
+  }
+
+  function formatShippingCost(cost: string): string {
+    const val = parseFloat(cost);
+    if (isNaN(val)) return "—";
+    return val === 0 ? "Free" : `£${val.toFixed(2)}`;
+  }
 
   return (
     <div className="space-y-6">
@@ -395,6 +434,46 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
             Optionally create a draft listing directly via the eBay API.
             {" "}<a href="/billing?tab=ebay" className="text-cyan-500 underline hover:text-cyan-400 text-xs">Connect your eBay account →</a>
           </p>
+
+          {/* Listing defaults preview */}
+          {ebaySettingsLoading ? (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-xs text-zinc-500 animate-pulse">
+              Loading listing defaults…
+            </div>
+          ) : ebaySettings ? (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-2">
+              <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">Listing defaults</p>
+              <div className="grid grid-cols-3 gap-3 text-center">
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Shipping</p>
+                  <p className="text-sm font-semibold text-zinc-200">{formatShippingCost(ebaySettings.shippingCost)}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Returns</p>
+                  <p className="text-sm font-semibold text-zinc-200">
+                    {ebaySettings.returnsAccepted ? formatReturnPeriod(ebaySettings.returnPeriod) : "No returns"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500 mb-0.5">Payment</p>
+                  <p className="text-sm font-semibold text-zinc-200">{ebaySettings.paymentMethod}</p>
+                </div>
+              </div>
+              <p className="text-xs text-zinc-600 text-right">
+                <a href="/billing?tab=ebay" className="text-cyan-600 hover:text-cyan-400 underline underline-offset-2 transition-colors">
+                  Update settings →
+                </a>
+              </p>
+            </div>
+          ) : ebaySettingsError ? (
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-xs text-zinc-500">
+              Could not load listing defaults.{" "}
+              <a href="/billing?tab=ebay" className="text-cyan-600 hover:text-cyan-400 underline underline-offset-2 transition-colors">
+                Check eBay settings →
+              </a>
+            </div>
+          ) : null}
+
           {published ? (
             <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 space-y-1">
               <p className="text-emerald-400 text-sm font-medium">✓ Draft created</p>
