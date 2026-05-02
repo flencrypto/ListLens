@@ -8,4 +8,8 @@ router.get("/healthz", (_req, res) => {
   res.json(data);
 });
 
+router.get("/ping", (_req, res) => {
+  res.json({ service: "listlens-api", version: "1" });
+});
+
 export default router;

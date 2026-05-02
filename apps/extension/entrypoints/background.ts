@@ -1,22 +1,75 @@
+const LISTLENS_API_TOKEN = "listlens-api";
+
+const TRUSTED_ORIGIN_RE =
+  /^https:\/\/[a-z0-9-]+\.replit\.(app|dev)$/i;
+
 export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-    if (msg.type !== "GUARD_CHECK") return;
+    if (msg.type === "GUARD_CHECK") {
+      const { apiBase, url, lens } = msg as {
+        apiBase: string;
+        url: string;
+        lens: string;
+      };
 
-    const { apiBase, url, lens } = msg as {
-      apiBase: string;
-      url: string;
-      lens: string;
-    };
+      runGuardCheck(apiBase, url, lens)
+        .then((result) => sendResponse({ result }))
+        .catch((err) =>
+          sendResponse({
+            error: String(err instanceof Error ? err.message : err),
+          }),
+        );
 
-    runGuardCheck(apiBase, url, lens)
-      .then((result) => sendResponse({ result }))
-      .catch((err) =>
-        sendResponse({ error: String(err instanceof Error ? err.message : err) }),
-      );
+      return true;
+    }
 
-    return true;
+    if (msg.type === "VERIFY_API_ORIGIN") {
+      const { origin } = msg as { origin: string };
+
+      if (!TRUSTED_ORIGIN_RE.test(origin)) {
+        return;
+      }
+
+      const candidateApi = `${origin}/api`;
+
+      verifyApiOrigin(candidateApi)
+        .then((valid) => {
+          if (valid) {
+            chrome.storage.local.set({ detectedApiBase: candidateApi });
+          } else {
+            chrome.storage.local.get(["detectedApiBase"], (stored) => {
+              if (stored["detectedApiBase"] === candidateApi) {
+                chrome.storage.local.remove("detectedApiBase");
+              }
+            });
+          }
+        })
+        .catch(() => {
+          chrome.storage.local.get(["detectedApiBase"], (stored) => {
+            if (stored["detectedApiBase"] === candidateApi) {
+              chrome.storage.local.remove("detectedApiBase");
+            }
+          });
+        });
+
+      return false;
+    }
   });
 });
+
+async function verifyApiOrigin(apiBase: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${apiBase}/ping`, {
+      method: "GET",
+      credentials: "omit",
+    });
+    if (!res.ok) return false;
+    const body = (await res.json()) as { service?: string };
+    return body.service === LISTLENS_API_TOKEN;
+  } catch {
+    return false;
+  }
+}
 
 async function runGuardCheck(
   apiBase: string,
@@ -25,12 +78,6 @@ async function runGuardCheck(
 ): Promise<unknown> {
   const base = apiBase.replace(/\/$/, "");
 
-  // credentials:"include" forwards the session cookie when the API origin is
-  // listed in host_permissions and the server allows the extension origin via
-  // CORS. The cookie is SameSite:Lax on the server side; chrome-extension://
-  // origins are treated as cross-site, so the cookie will be sent only when
-  // the server sets SameSite:None or the user's browser allows it. Guard
-  // checks work unauthenticated; auth is best-effort for history persistence.
   const createRes = await fetch(`${base}/guard/checks`, {
     method: "POST",
     credentials: "include",
@@ -40,7 +87,9 @@ async function runGuardCheck(
 
   if (!createRes.ok) {
     const text = await createRes.text().catch(() => createRes.statusText);
-    throw new Error(`Guard check creation failed (${createRes.status}): ${text}`);
+    throw new Error(
+      `Guard check creation failed (${createRes.status}): ${text}`,
+    );
   }
 
   const { id } = (await createRes.json()) as { id: string };

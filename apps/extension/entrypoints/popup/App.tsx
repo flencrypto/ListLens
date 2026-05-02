@@ -60,8 +60,17 @@ function pct(n: number) {
 
 const DEFAULT_API = "https://listlens.replit.app/api";
 
+const TRUSTED_API_RE = /^https:\/\/[a-z0-9-]+\.replit\.(app|dev)\/api$/i;
+
+function isTrustedApiBase(url: string): boolean {
+  return TRUSTED_API_RE.test(url);
+}
+
+type ApiSource = "user" | "detected" | "default";
+
 export default function App() {
   const [apiBase, setApiBase] = useState(DEFAULT_API);
+  const [apiSource, setApiSource] = useState<ApiSource>("default");
   const [editingApi, setEditingApi] = useState(false);
   const [apiInput, setApiInput] = useState(DEFAULT_API);
 
@@ -74,10 +83,18 @@ export default function App() {
   const [result, setResult] = useState<GuardResult | null>(null);
 
   useEffect(() => {
-    chrome.storage.local.get(["apiBase"], (v) => {
-      if (v["apiBase"]) {
-        setApiBase(v["apiBase"] as string);
-        setApiInput(v["apiBase"] as string);
+    chrome.storage.local.get(["apiBase", "detectedApiBase"], (v) => {
+      const userSaved = v["apiBase"] as string | undefined;
+      const detected = v["detectedApiBase"] as string | undefined;
+
+      if (userSaved) {
+        setApiBase(userSaved);
+        setApiInput(userSaved);
+        setApiSource("user");
+      } else if (detected && isTrustedApiBase(detected)) {
+        setApiBase(detected);
+        setApiInput(detected);
+        setApiSource("detected");
       }
     });
 
@@ -108,8 +125,21 @@ export default function App() {
     const trimmed = apiInput.trim().replace(/\/$/, "");
     setApiBase(trimmed);
     setApiInput(trimmed);
+    setApiSource("user");
     chrome.storage.local.set({ apiBase: trimmed });
     setEditingApi(false);
+  }
+
+  function resetApiBase() {
+    chrome.storage.local.get(["detectedApiBase"], (v) => {
+      const fallback = (v["detectedApiBase"] as string | undefined) ?? DEFAULT_API;
+      const src: ApiSource = v["detectedApiBase"] ? "detected" : "default";
+      setApiBase(fallback);
+      setApiInput(fallback);
+      setApiSource(src);
+      chrome.storage.local.remove("apiBase");
+      setEditingApi(false);
+    });
   }
 
   async function runCheck() {
@@ -311,7 +341,24 @@ export default function App() {
 
       {editingApi && (
         <div>
-          <div style={s.sectionLabel}>API Base URL</div>
+          <div style={{ ...s.sectionLabel, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span>API Base URL</span>
+            {apiSource === "detected" && (
+              <span style={{ color: BRAND.green, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>
+                ✓ AUTO-DETECTED
+              </span>
+            )}
+            {apiSource === "user" && (
+              <span style={{ color: BRAND.cyan, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>
+                CUSTOM
+              </span>
+            )}
+            {apiSource === "default" && (
+              <span style={{ color: BRAND.muted, fontSize: 9, fontWeight: 700, letterSpacing: 0.5 }}>
+                DEFAULT
+              </span>
+            )}
+          </div>
           <div style={s.apiRow}>
             <input
               style={s.apiInput}
@@ -323,6 +370,14 @@ export default function App() {
               Save
             </button>
           </div>
+          {apiSource === "user" && (
+            <div
+              style={{ fontSize: 10, color: BRAND.muted, marginTop: 4, cursor: "pointer", textDecoration: "underline" }}
+              onClick={resetApiBase}
+            >
+              Reset to auto-detected
+            </div>
+          )}
         </div>
       )}
 
