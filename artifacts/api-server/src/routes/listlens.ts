@@ -146,11 +146,119 @@ const AutographLensAttributesSchema = z.object({
   item_condition: z.string().nullable().optional(),
 }).passthrough();
 
+const LPLensAttributesSchema = z.object({
+  artist: z.string().nullable().optional(),
+  album_title: z.string().nullable().optional(),
+  label: z.string().nullable().optional(),
+  catalogue_number: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  pressing_country: z.string().nullable().optional(),
+  sleeve_grade: z.string().nullable().optional(),
+  media_grade: z.string().nullable().optional(),
+  matrix_runout: z.string().nullable().optional(),
+  format: z.string().nullable().optional(),
+  pressing_notes: z.string().nullable().optional(),
+}).passthrough();
+
+const ClothingLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  size_label: z.string().nullable().optional(),
+  chest_cm: z.number().nullable().optional(),
+  waist_cm: z.number().nullable().optional(),
+  length_cm: z.number().nullable().optional(),
+  material: z.string().nullable().optional(),
+  colour: z.string().nullable().optional(),
+  style: z.string().nullable().optional(),
+  era_vintage: z.string().nullable().optional(),
+  condition_tags: z.array(z.string()).optional(),
+  pilling: z.string().nullable().optional(),
+  fading: z.string().nullable().optional(),
+  staining: z.string().nullable().optional(),
+}).passthrough();
+
+const CardLensAttributesSchema = z.object({
+  card_name: z.string().nullable().optional(),
+  set_name: z.string().nullable().optional(),
+  set_number: z.string().nullable().optional(),
+  rarity: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  edition: z.string().nullable().optional(),
+  grade: z.string().nullable().optional(),
+  grading_company: z.string().nullable().optional(),
+  centering: z.string().nullable().optional(),
+  surface_condition: z.string().nullable().optional(),
+  corner_condition: z.string().nullable().optional(),
+  holo_pattern: z.string().nullable().optional(),
+}).passthrough();
+
+const ToyLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  product_name: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  completeness: z.string().nullable().optional(),
+  packaging: z.enum(["boxed", "loose", "sealed", "unknown"]).nullable().optional(),
+  parts_present: z.array(z.string()).optional(),
+  parts_missing: z.array(z.string()).optional(),
+  reproduction_risk_notes: z.string().nullable().optional(),
+  play_wear_notes: z.string().nullable().optional(),
+}).passthrough();
+
+const WatchLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  model_reference: z.string().nullable().optional(),
+  movement_type: z.enum(["manual", "automatic", "quartz", "unknown"]).nullable().optional(),
+  case_material: z.string().nullable().optional(),
+  dial_colour: z.string().nullable().optional(),
+  bezel_type: z.string().nullable().optional(),
+  bracelet_type: z.string().nullable().optional(),
+  case_diameter_mm: z.number().nullable().optional(),
+  lug_width_mm: z.number().nullable().optional(),
+  year_approx: z.string().nullable().optional(),
+  serial_number_visible: z.boolean().nullable().optional(),
+  service_history: z.string().nullable().optional(),
+  box_papers: z.string().nullable().optional(),
+  condition_notes: z.string().nullable().optional(),
+}).passthrough();
+
+const MeasureLensAttributesSchema = z.object({
+  item_type: z.string().nullable().optional(),
+  length_cm: z.number().nullable().optional(),
+  width_cm: z.number().nullable().optional(),
+  height_cm: z.number().nullable().optional(),
+  depth_cm: z.number().nullable().optional(),
+  measurement_method: z.enum(["reference_object", "ruler", "estimated", "unknown"]).nullable().optional(),
+  reference_object_used: z.string().nullable().optional(),
+  fit_notes: z.string().nullable().optional(),
+  size_label: z.string().nullable().optional(),
+  measurement_confidence: z.string().nullable().optional(),
+}).passthrough();
+
+const MotorLensAttributesSchema = z.object({
+  make: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  part_name: z.string().nullable().optional(),
+  part_number: z.string().nullable().optional(),
+  oem_or_aftermarket: z.enum(["OEM", "aftermarket", "unknown"]).nullable().optional(),
+  fitment_vehicles: z.array(z.string()).optional(),
+  condition_notes: z.string().nullable().optional(),
+  mileage: z.string().nullable().optional(),
+  service_history_present: z.boolean().nullable().optional(),
+  colour: z.string().nullable().optional(),
+}).passthrough();
+
 const LENS_ATTRIBUTE_SCHEMAS: Partial<Record<string, z.ZodTypeAny>> = {
   TechLens: TechLensAttributesSchema,
   BookLens: BookLensAttributesSchema,
   AntiquesLens: AntiquesLensAttributesSchema,
   AutographLens: AutographLensAttributesSchema,
+  LPLens: LPLensAttributesSchema,
+  ClothingLens: ClothingLensAttributesSchema,
+  CardLens: CardLensAttributesSchema,
+  ToyLens: ToyLensAttributesSchema,
+  WatchLens: WatchLensAttributesSchema,
+  MeasureLens: MeasureLensAttributesSchema,
+  MotorLens: MotorLensAttributesSchema,
 };
 
 function validateLensAttributes(lens: string, attributes: unknown): Record<string, unknown> {
@@ -316,6 +424,11 @@ function getLensMeta(
 const LENS_TRUST_RULES: Partial<Record<string, string>> = {
   AntiquesLens: `CRITICAL TRUST RULES for AntiquesLens: Never make definitive attribution. Always use cautious language: "appears consistent with", "possibly", "style of", "in the manner of". If you cannot confirm a maker mark, say so explicitly. Flag any reproduction risk in warnings.`,
   AutographLens: `CRITICAL TRUST RULES for AutographLens: You do NOT authenticate signatures. Your role is to produce a provenance and evidence risk report only. Never state a signature is genuine. In listing_description, describe the item and the provenance evidence present (COA, event photos, source). If the item is high-value, always include a warning recommending third-party authentication (PSA/DNA, Beckett, JSA, AFTAL). identity.brand should be the claimed signer; identity.model should be the signed item type.`,
+  WatchLens: `CRITICAL TRUST RULES for WatchLens: You do NOT authenticate watches. Describe observable details only — dial text, case finish, bracelet style, engravings. For any watch priced above £500, include a warning in warnings[] recommending in-person inspection by a qualified watchmaker. Never state a watch is genuine. identity.brand = the brand name; identity.model = the model reference. If box and papers are not clearly shown, note the absence.`,
+  CardLens: `CRITICAL TRUST RULES for CardLens: You do NOT grade cards. Describe the observable condition only — centering, surface, corners, edges. If the card is already graded (PSA/BGS/CGC slab visible), read and report the grade from the label exactly. Never invent a grade. For high-value cards (recommended price above £50), include a warning recommending professional grading before listing. identity.brand = the card set publisher; identity.model = the card name.`,
+  LPLens: `IMPORTANT for LPLens: If you can read matrix/runout etchings from the photos, include them in attributes.matrix_runout. Sleeve grades use Goldmine/Record Collector standard: M (Mint), NM (Near Mint), VG+ (Very Good Plus), VG (Very Good), G+ (Good Plus), G (Good), F (Fair), P (Poor). Identity.brand = artist; identity.model = album title. Be specific about the pressing — original vs reissue vs repress matters significantly for pricing.`,
+  MotorLens: `IMPORTANT for MotorLens: If the item is a full vehicle, identity.brand = make, identity.model = model + year. If it is a part, identity.brand = the manufacturer/brand, identity.model = the part name. Always note fitment compatibility in attributes.fitment_vehicles. If VIN or part numbers are visible, include them. Flag any signs of accident damage, rust, or poor repairs in warnings[].`,
+  MeasureLens: `IMPORTANT for MeasureLens: Your primary task is to estimate the physical dimensions of the item from the photos using any visible reference objects (coins, credit cards, rulers, hands). State your measurement method clearly in attributes.measurement_method and identify the reference object in attributes.reference_object_used. Express all dimensions in centimetres. Be explicit about your confidence in the measurements — low confidence must be flagged in warnings[]. identity.brand and identity.model should describe the item type being measured, not a brand.`,
 };
 
 function buildLensSystemPrompt(lens: string): string {
@@ -372,6 +485,13 @@ const NEW_LENSES_USING_GROK_VISION = new Set([
   "BookLens",
   "AntiquesLens",
   "AutographLens",
+  "LPLens",
+  "ClothingLens",
+  "CardLens",
+  "ToyLens",
+  "WatchLens",
+  "MeasureLens",
+  "MotorLens",
 ]);
 
 

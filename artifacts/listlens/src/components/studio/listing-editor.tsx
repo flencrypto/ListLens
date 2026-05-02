@@ -7,6 +7,207 @@ import { Spinner } from "@/components/ui/spinner";
 import { formatPrice } from "@/lib/pricing";
 import type { StudioOutput } from "@/lib/ai/schemas";
 import { generateEbayHtml } from "@/lib/ebay-html";
+
+const LENS_FIELD_LABELS: Record<string, Record<string, string>> = {
+  LPLens: {
+    artist: "Artist",
+    album_title: "Album Title",
+    label: "Label",
+    catalogue_number: "Catalogue No.",
+    year: "Year",
+    pressing_country: "Pressing Country",
+    sleeve_grade: "Sleeve Grade",
+    media_grade: "Media Grade",
+    matrix_runout: "Matrix / Runout",
+    format: "Format",
+    pressing_notes: "Pressing Notes",
+  },
+  ClothingLens: {
+    brand: "Brand",
+    size_label: "Size Label",
+    chest_cm: "Chest (cm)",
+    waist_cm: "Waist (cm)",
+    length_cm: "Length (cm)",
+    material: "Material",
+    colour: "Colour",
+    style: "Style",
+    era_vintage: "Era / Vintage",
+    condition_tags: "Condition Tags",
+    pilling: "Pilling",
+    fading: "Fading",
+    staining: "Staining",
+  },
+  CardLens: {
+    card_name: "Card Name",
+    set_name: "Set",
+    set_number: "Set Number",
+    rarity: "Rarity",
+    language: "Language",
+    edition: "Edition",
+    grade: "Grade",
+    grading_company: "Grading Company",
+    centering: "Centering",
+    surface_condition: "Surface",
+    corner_condition: "Corners",
+    holo_pattern: "Holo Pattern",
+  },
+  ToyLens: {
+    brand: "Brand",
+    product_name: "Product Name",
+    year: "Year",
+    completeness: "Completeness",
+    packaging: "Packaging",
+    parts_present: "Parts Present",
+    parts_missing: "Parts Missing",
+    reproduction_risk_notes: "Reproduction Risk",
+    play_wear_notes: "Play Wear",
+  },
+  WatchLens: {
+    brand: "Brand",
+    model_reference: "Model Reference",
+    movement_type: "Movement",
+    case_material: "Case Material",
+    dial_colour: "Dial Colour",
+    bezel_type: "Bezel",
+    bracelet_type: "Bracelet",
+    case_diameter_mm: "Case Diameter (mm)",
+    lug_width_mm: "Lug Width (mm)",
+    year_approx: "Year (approx.)",
+    serial_number_visible: "Serial Visible",
+    service_history: "Service History",
+    box_papers: "Box & Papers",
+    condition_notes: "Condition Notes",
+  },
+  MeasureLens: {
+    item_type: "Item Type",
+    length_cm: "Length (cm)",
+    width_cm: "Width (cm)",
+    height_cm: "Height (cm)",
+    depth_cm: "Depth (cm)",
+    measurement_method: "Measurement Method",
+    reference_object_used: "Reference Object",
+    fit_notes: "Fit Notes",
+    size_label: "Size Label",
+    measurement_confidence: "Confidence",
+  },
+  MotorLens: {
+    make: "Make",
+    model: "Model",
+    year: "Year",
+    part_name: "Part Name",
+    part_number: "Part Number",
+    oem_or_aftermarket: "OEM / Aftermarket",
+    fitment_vehicles: "Fits Vehicles",
+    condition_notes: "Condition",
+    mileage: "Mileage",
+    service_history_present: "Service History",
+    colour: "Colour",
+  },
+  TechLens: {
+    brand: "Brand",
+    model: "Model",
+    variant: "Variant",
+    storage_or_spec: "Storage / Spec",
+    model_number: "Model Number",
+    condition: "Condition",
+    screen_damage: "Screen Damage",
+    body_damage: "Body Damage",
+    ports_condition: "Ports",
+    battery_health: "Battery Health",
+    included_accessories: "Accessories",
+    tested_or_untested: "Tested",
+    fault_notes: "Fault Notes",
+    activation_lock_status: "Activation Lock",
+    network_lock_status: "Network Lock",
+  },
+  BookLens: {
+    title: "Title",
+    author: "Author",
+    publisher: "Publisher",
+    year: "Year",
+    edition: "Edition",
+    isbn: "ISBN",
+    format: "Format",
+    dust_jacket_present: "Dust Jacket",
+    dust_jacket_condition: "Dust Jacket Condition",
+    printing_statement: "Printing Statement",
+    spine_condition: "Spine",
+    boards_condition: "Boards",
+    pages_condition: "Pages",
+    foxing: "Foxing",
+    annotations: "Annotations",
+    signatures: "Signatures",
+    completeness: "Completeness",
+  },
+  AntiquesLens: {
+    object_type: "Object Type",
+    material: "Material",
+    era_or_style: "Era / Style",
+    maker_marks: "Maker Marks",
+    dimensions: "Dimensions",
+    chips_or_cracks_or_repairs: "Chips / Cracks / Repairs",
+    patina: "Patina",
+    missing_parts: "Missing Parts",
+    provenance: "Provenance",
+    estimated_price_range: "Est. Price Range",
+  },
+  AutographLens: {
+    signed_item_type: "Signed Item",
+    claimed_signer: "Claimed Signer",
+    signature_location: "Signature Location",
+    ink_visibility: "Ink Visibility",
+    certificate_or_provenance_present: "Certificate / Provenance",
+    coa_issuer: "COA Issuer",
+    event_or_source_notes: "Event / Source",
+    item_condition: "Item Condition",
+  },
+};
+
+function formatAttrValue(value: unknown): string | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "boolean") return value ? "Yes" : "No";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "string") return value.trim() || null;
+  if (Array.isArray(value)) {
+    const items = value.filter(Boolean).map(String);
+    return items.length > 0 ? items.join(", ") : null;
+  }
+  return null;
+}
+
+function LensAttributesPanel({ lens, attributes }: { lens: string; attributes: Record<string, unknown> }) {
+  const fieldLabels = LENS_FIELD_LABELS[lens];
+  if (!fieldLabels) return null;
+
+  const rows: { label: string; value: string }[] = [];
+  for (const [key, label] of Object.entries(fieldLabels)) {
+    const raw = attributes[key];
+    const formatted = formatAttrValue(raw);
+    if (formatted) rows.push({ label, value: formatted });
+  }
+  if (rows.length === 0) return null;
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <span>Item Details</span>
+          <Badge variant="secondary" className="text-xs">{lens}</Badge>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
+          {rows.map(({ label, value }) => (
+            <div key={label} className="flex flex-col gap-0.5 min-w-0">
+              <dt className="text-xs text-zinc-500 font-medium uppercase tracking-wide">{label}</dt>
+              <dd className="text-sm text-zinc-200 break-words">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      </CardContent>
+    </Card>
+  );
+}
 interface ListingEditorProps {
   itemId: string;
   analysis: StudioOutput;
@@ -226,6 +427,14 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           )}
         </CardContent>
       </Card>
+
+      {/* Category-specific attributes */}
+      {Object.keys(analysis.attributes ?? {}).length > 0 && (
+        <LensAttributesPanel
+          lens={analysis.lens}
+          attributes={analysis.attributes as Record<string, unknown>}
+        />
+      )}
 
       {/* Save bar */}
       {(isDirty || saveStatus !== "idle") && (

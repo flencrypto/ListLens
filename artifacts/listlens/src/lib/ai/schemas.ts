@@ -189,14 +189,129 @@ export const AutographLensAttributesSchema = z.object({
   item_condition: z.string().nullable().optional(),
 }).passthrough();
 
+export const LPLensAttributesSchema = z.object({
+  artist: z.string().nullable().optional(),
+  album_title: z.string().nullable().optional(),
+  label: z.string().nullable().optional(),
+  catalogue_number: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  pressing_country: z.string().nullable().optional(),
+  sleeve_grade: z.string().nullable().optional(),
+  media_grade: z.string().nullable().optional(),
+  matrix_runout: z.string().nullable().optional(),
+  format: z.string().nullable().optional(),
+  pressing_notes: z.string().nullable().optional(),
+}).passthrough();
+
+export const ClothingLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  size_label: z.string().nullable().optional(),
+  chest_cm: z.number().nullable().optional(),
+  waist_cm: z.number().nullable().optional(),
+  length_cm: z.number().nullable().optional(),
+  material: z.string().nullable().optional(),
+  colour: z.string().nullable().optional(),
+  style: z.string().nullable().optional(),
+  era_vintage: z.string().nullable().optional(),
+  condition_tags: z.array(z.string()).optional(),
+  pilling: z.string().nullable().optional(),
+  fading: z.string().nullable().optional(),
+  staining: z.string().nullable().optional(),
+}).passthrough();
+
+export const CardLensAttributesSchema = z.object({
+  card_name: z.string().nullable().optional(),
+  set_name: z.string().nullable().optional(),
+  set_number: z.string().nullable().optional(),
+  rarity: z.string().nullable().optional(),
+  language: z.string().nullable().optional(),
+  edition: z.string().nullable().optional(),
+  grade: z.string().nullable().optional(),
+  grading_company: z.string().nullable().optional(),
+  centering: z.string().nullable().optional(),
+  surface_condition: z.string().nullable().optional(),
+  corner_condition: z.string().nullable().optional(),
+  holo_pattern: z.string().nullable().optional(),
+}).passthrough();
+
+export const ToyLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  product_name: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  completeness: z.string().nullable().optional(),
+  packaging: z.enum(["boxed", "loose", "sealed", "unknown"]).nullable().optional(),
+  parts_present: z.array(z.string()).optional(),
+  parts_missing: z.array(z.string()).optional(),
+  reproduction_risk_notes: z.string().nullable().optional(),
+  play_wear_notes: z.string().nullable().optional(),
+}).passthrough();
+
+export const WatchLensAttributesSchema = z.object({
+  brand: z.string().nullable().optional(),
+  model_reference: z.string().nullable().optional(),
+  movement_type: z.enum(["manual", "automatic", "quartz", "unknown"]).nullable().optional(),
+  case_material: z.string().nullable().optional(),
+  dial_colour: z.string().nullable().optional(),
+  bezel_type: z.string().nullable().optional(),
+  bracelet_type: z.string().nullable().optional(),
+  case_diameter_mm: z.number().nullable().optional(),
+  lug_width_mm: z.number().nullable().optional(),
+  year_approx: z.string().nullable().optional(),
+  serial_number_visible: z.boolean().nullable().optional(),
+  service_history: z.string().nullable().optional(),
+  box_papers: z.string().nullable().optional(),
+  condition_notes: z.string().nullable().optional(),
+}).passthrough();
+
+export const MeasureLensAttributesSchema = z.object({
+  item_type: z.string().nullable().optional(),
+  length_cm: z.number().nullable().optional(),
+  width_cm: z.number().nullable().optional(),
+  height_cm: z.number().nullable().optional(),
+  depth_cm: z.number().nullable().optional(),
+  measurement_method: z.enum(["reference_object", "ruler", "estimated", "unknown"]).nullable().optional(),
+  reference_object_used: z.string().nullable().optional(),
+  fit_notes: z.string().nullable().optional(),
+  size_label: z.string().nullable().optional(),
+  measurement_confidence: z.string().nullable().optional(),
+}).passthrough();
+
+export const MotorLensAttributesSchema = z.object({
+  make: z.string().nullable().optional(),
+  model: z.string().nullable().optional(),
+  year: z.number().nullable().optional(),
+  part_name: z.string().nullable().optional(),
+  part_number: z.string().nullable().optional(),
+  oem_or_aftermarket: z.enum(["OEM", "aftermarket", "unknown"]).nullable().optional(),
+  fitment_vehicles: z.array(z.string()).optional(),
+  condition_notes: z.string().nullable().optional(),
+  mileage: z.string().nullable().optional(),
+  service_history_present: z.boolean().nullable().optional(),
+  colour: z.string().nullable().optional(),
+}).passthrough();
+
 export const LENS_ATTRIBUTE_SCHEMAS: Partial<Record<string, z.ZodTypeAny>> = {
   TechLens: TechLensAttributesSchema,
   BookLens: BookLensAttributesSchema,
   AntiquesLens: AntiquesLensAttributesSchema,
   AutographLens: AutographLensAttributesSchema,
+  LPLens: LPLensAttributesSchema,
+  ClothingLens: ClothingLensAttributesSchema,
+  CardLens: CardLensAttributesSchema,
+  ToyLens: ToyLensAttributesSchema,
+  WatchLens: WatchLensAttributesSchema,
+  MeasureLens: MeasureLensAttributesSchema,
+  MotorLens: MotorLensAttributesSchema,
 };
 
 export type TechLensAttributes = z.infer<typeof TechLensAttributesSchema>;
 export type BookLensAttributes = z.infer<typeof BookLensAttributesSchema>;
 export type AntiquesLensAttributes = z.infer<typeof AntiquesLensAttributesSchema>;
 export type AutographLensAttributes = z.infer<typeof AutographLensAttributesSchema>;
+export type LPLensAttributes = z.infer<typeof LPLensAttributesSchema>;
+export type ClothingLensAttributes = z.infer<typeof ClothingLensAttributesSchema>;
+export type CardLensAttributes = z.infer<typeof CardLensAttributesSchema>;
+export type ToyLensAttributes = z.infer<typeof ToyLensAttributesSchema>;
+export type WatchLensAttributes = z.infer<typeof WatchLensAttributesSchema>;
+export type MeasureLensAttributes = z.infer<typeof MeasureLensAttributesSchema>;
+export type MotorLensAttributes = z.infer<typeof MotorLensAttributesSchema>;
