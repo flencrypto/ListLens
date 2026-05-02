@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Link } from "wouter";
 
 /*
   SOLE-LENS™ UI Prototype
@@ -926,6 +927,12 @@ export default function SoleLensPrototype() {
     <div className={cx(fontSystem.app, "relative min-h-screen overflow-hidden bg-[#03050a] px-4 py-8 text-white")}>
       <GlowBlob className="left-1/2 top-0 h-96 w-96 -translate-x-1/2 bg-cyan-500/20" />
       <GlowBlob className="bottom-0 right-0 h-80 w-80 bg-blue-600/10" />
+      <div className="relative z-10 mx-auto max-w-6xl">
+        <Link href="/lenses" className="inline-flex items-center gap-1.5 mb-6 text-sm text-white/50 hover:text-white/90 transition-colors">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+          Lenses
+        </Link>
+      </div>
       <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-8 lg:grid-cols-[1fr_430px]">
         <div className="hidden lg:block">
           <Badge tone="cyan" icon="sparkles" className="mb-5">AI resale operating system · vertical prototype</Badge>
