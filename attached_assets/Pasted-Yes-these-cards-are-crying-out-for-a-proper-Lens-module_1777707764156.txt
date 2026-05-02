@@ -1,0 +1,449 @@
+Yes — these cards are crying out for a proper **“Lens module grid”** treatment. The structure is good, but visually they need:
+
+* stronger active state
+* better icon container
+* clearer hierarchy
+* glass / glow depth
+* “live / soon / pro” badges if needed
+* smoother touch feedback
+* cleaner marketplace filter buttons
+
+Below is a **drop-in React + Tailwind version**.
+
+## `LensGrid.tsx`
+
+```tsx
+import {
+  BadgeCheck,
+  BookOpen,
+  Car,
+  CircleDot,
+  Cpu,
+  Footprints,
+  PenTool,
+  Ruler,
+  Shirt,
+  Smartphone,
+  Sparkles,
+  Trophy,
+  Watch,
+} from "lucide-react";
+
+type LensStatus = "live" | "soon" | "pro";
+
+type LensItem = {
+  id: string;
+  name: string;
+  category: string;
+  icon: React.ElementType;
+  emoji?: string;
+  status?: LensStatus;
+};
+
+const lenses: LensItem[] = [
+  {
+    id: "record",
+    name: "RecordLens",
+    category: "Music Media",
+    icon: CircleDot,
+    emoji: "💿",
+    status: "live",
+  },
+  {
+    id: "shoe",
+    name: "ShoeLens",
+    category: "Footwear",
+    icon: Footprints,
+    emoji: "👟",
+    status: "live",
+  },
+  {
+    id: "clothing",
+    name: "ClothingLens",
+    category: "Apparel",
+    icon: Shirt,
+    emoji: "👕",
+    status: "soon",
+  },
+  {
+    id: "card",
+    name: "CardLens",
+    category: "Trading Cards",
+    icon: BadgeCheck,
+    emoji: "🃏",
+    status: "soon",
+  },
+  {
+    id: "toy",
+    name: "ToyLens",
+    category: "Toys & Collectibles",
+    icon: Trophy,
+    emoji: "🧸",
+    status: "soon",
+  },
+  {
+    id: "watch",
+    name: "WatchLens",
+    category: "Watches",
+    icon: Watch,
+    emoji: "⌚",
+    status: "pro",
+  },
+  {
+    id: "measure",
+    name: "MeasureLens",
+    category: "Measurement",
+    icon: Ruler,
+    emoji: "📐",
+    status: "live",
+  },
+  {
+    id: "motor",
+    name: "MotorLens",
+    category: "Vehicles & Parts",
+    icon: Car,
+    emoji: "🚗",
+    status: "soon",
+  },
+  {
+    id: "tech",
+    name: "TechLens",
+    category: "Electronics",
+    icon: Smartphone,
+    emoji: "📱",
+    status: "live",
+  },
+  {
+    id: "book",
+    name: "BookLens",
+    category: "Books",
+    icon: BookOpen,
+    emoji: "📚",
+    status: "soon",
+  },
+  {
+    id: "antiques",
+    name: "AntiquesLens",
+    category: "Antiques & Vintage",
+    icon: Sparkles,
+    emoji: "🏺",
+    status: "pro",
+  },
+  {
+    id: "autograph",
+    name: "AutographLens",
+    category: "Autographs",
+    icon: PenTool,
+    emoji: "✍️",
+    status: "soon",
+  },
+];
+
+type LensGridProps = {
+  selectedLens?: string;
+  onSelectLens?: (id: string) => void;
+};
+
+export function LensGrid({
+  selectedLens = "record",
+  onSelectLens,
+}: LensGridProps) {
+  return (
+    <section
+      className="
+        rounded-[30px] border border-cyan-300/15
+        bg-[#06111d]/75 p-4
+        shadow-[0_0_45px_rgba(34,211,238,0.08)]
+        backdrop-blur-2xl
+      "
+    >
+      <div className="mb-4 flex items-end justify-between gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300/70">
+            Lens Modules
+          </p>
+          <h2 className="mt-1 text-xl font-black tracking-tight text-white">
+            Choose your scanner
+          </h2>
+        </div>
+
+        <div className="rounded-full border border-cyan-300/15 bg-cyan-300/8 px-3 py-1 text-[10px] font-black uppercase tracking-[0.12em] text-cyan-200">
+          AI Ready
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {lenses.map((lens) => (
+          <LensCard
+            key={lens.id}
+            lens={lens}
+            active={selectedLens === lens.id}
+            onClick={() => onSelectLens?.(lens.id)}
+          />
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function LensCard({
+  lens,
+  active,
+  onClick,
+}: {
+  lens: LensItem;
+  active?: boolean;
+  onClick?: () => void;
+}) {
+  const Icon = lens.icon;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        group relative min-h-[116px] overflow-hidden rounded-[22px]
+        border p-4 text-left
+        transition-all duration-300 ease-out
+        active:scale-[0.975]
+
+        ${
+          active
+            ? "border-cyan-300/55 bg-cyan-400/[0.12] shadow-[0_0_30px_rgba(34,211,238,0.22),inset_0_0_22px_rgba(34,211,238,0.05)]"
+            : "border-white/[0.09] bg-white/[0.035] shadow-[0_0_20px_rgba(0,0,0,0.22)] hover:border-cyan-300/30 hover:bg-cyan-300/[0.07]"
+        }
+      `}
+    >
+      {/* top active light rail */}
+      <span
+        className={`
+          pointer-events-none absolute left-4 right-4 top-0 h-px
+          bg-gradient-to-r from-transparent via-cyan-200/70 to-transparent
+          transition-opacity duration-300
+          ${active ? "opacity-100" : "opacity-0 group-hover:opacity-70"}
+        `}
+      />
+
+      {/* glow blob */}
+      <span
+        className={`
+          pointer-events-none absolute -right-10 -top-10 h-28 w-28 rounded-full
+          bg-cyan-300/12 blur-2xl transition-opacity duration-300
+          ${active ? "opacity-100" : "opacity-0 group-hover:opacity-80"}
+        `}
+      />
+
+      {/* diagonal glass streak */}
+      <span
+        className="
+          pointer-events-none absolute inset-y-0 left-0 w-20
+          -translate-x-[140%] rotate-12
+          bg-gradient-to-r from-transparent via-white/10 to-transparent
+          transition-transform duration-700
+          group-hover:translate-x-[420%]
+        "
+      />
+
+      <div className="relative z-10 flex h-full flex-col justify-between">
+        <div className="flex items-start justify-between gap-2">
+          <div
+            className={`
+              flex h-11 w-11 items-center justify-center rounded-2xl
+              border transition-all duration-300
+
+              ${
+                active
+                  ? "border-cyan-300/35 bg-cyan-300/14 text-cyan-100 shadow-[0_0_18px_rgba(34,211,238,0.24)]"
+                  : "border-white/10 bg-black/25 text-slate-300 group-hover:border-cyan-300/25 group-hover:bg-cyan-300/10 group-hover:text-cyan-100"
+              }
+            `}
+          >
+            <Icon size={21} strokeWidth={2.4} />
+          </div>
+
+          {lens.status && <LensStatusBadge status={lens.status} />}
+        </div>
+
+        <div className="mt-4">
+          <h3 className="text-[15px] font-black tracking-tight text-slate-100">
+            {lens.name}
+          </h3>
+          <p className="mt-0.5 text-[12px] font-semibold text-slate-400">
+            {lens.category}
+          </p>
+        </div>
+      </div>
+
+      {active && (
+        <div
+          className="
+            pointer-events-none absolute bottom-3 right-3
+            h-2 w-2 rounded-full bg-cyan-300
+            shadow-[0_0_12px_rgba(103,232,249,0.95)]
+          "
+        />
+      )}
+    </button>
+  );
+}
+
+function LensStatusBadge({ status }: { status: LensStatus }) {
+  const label =
+    status === "live" ? "Live" : status === "pro" ? "Pro" : "Soon";
+
+  const className =
+    status === "live"
+      ? "border-emerald-300/25 bg-emerald-300/10 text-emerald-200"
+      : status === "pro"
+      ? "border-violet-300/25 bg-violet-300/10 text-violet-200"
+      : "border-slate-300/15 bg-slate-300/8 text-slate-400";
+
+  return (
+    <span
+      className={`
+        rounded-full border px-2 py-0.5
+        text-[9px] font-black uppercase tracking-[0.1em]
+        ${className}
+      `}
+    >
+      {label}
+    </span>
+  );
+}
+```
+
+## Improved marketplace toggle
+
+This will look much more like part of the same premium system.
+
+```tsx
+type Marketplace = "all" | "ebay" | "vinted";
+
+type MarketplaceToggleProps = {
+  value: Marketplace;
+  onChange: (value: Marketplace) => void;
+};
+
+const marketplaceOptions: Array<{
+  value: Marketplace;
+  label: string;
+}> = [
+  {
+    value: "all",
+    label: "eBay + Vinted",
+  },
+  {
+    value: "ebay",
+    label: "eBay only",
+  },
+  {
+    value: "vinted",
+    label: "Vinted only",
+  },
+];
+
+export function MarketplaceToggle({
+  value,
+  onChange,
+}: MarketplaceToggleProps) {
+  return (
+    <section
+      className="
+        mt-5 rounded-[28px] border border-white/[0.08]
+        bg-white/[0.035] p-4
+        shadow-[0_0_24px_rgba(0,0,0,0.22)]
+        backdrop-blur-xl
+      "
+    >
+      <div className="mb-3 flex items-center justify-between">
+        <div>
+          <h3 className="text-sm font-black text-white">Marketplace</h3>
+          <p className="mt-0.5 text-xs font-medium text-slate-500">
+            Choose where List-LENS optimises the result.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-3 gap-2">
+        {marketplaceOptions.map((option) => {
+          const active = value === option.value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => onChange(option.value)}
+              className={`
+                relative overflow-hidden rounded-2xl border px-3 py-3
+                text-center text-xs font-black
+                transition-all duration-300 active:scale-95
+
+                ${
+                  active
+                    ? "border-violet-300/50 bg-violet-400/20 text-violet-100 shadow-[0_0_22px_rgba(139,92,246,0.24)]"
+                    : "border-white/[0.09] bg-black/25 text-slate-400 hover:border-cyan-300/25 hover:bg-cyan-300/8 hover:text-cyan-100"
+                }
+              `}
+            >
+              {active && (
+                <span
+                  className="
+                    pointer-events-none absolute inset-x-2 top-0 h-px
+                    bg-gradient-to-r from-transparent via-violet-200/80 to-transparent
+                  "
+                />
+              )}
+
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+```
+
+## Example page usage
+
+```tsx
+import { useState } from "react";
+import { LensGrid } from "@/components/LensGrid";
+import { MarketplaceToggle } from "@/components/MarketplaceToggle";
+
+export default function LensesPage() {
+  const [selectedLens, setSelectedLens] = useState("record");
+  const [marketplace, setMarketplace] = useState<"all" | "ebay" | "vinted">(
+    "all"
+  );
+
+  return (
+    <main className="min-h-screen bg-[#020811] px-5 pb-28 pt-8 text-white">
+      <div className="pointer-events-none fixed -left-24 top-16 h-72 w-72 rounded-full bg-cyan-400/12 blur-3xl" />
+      <div className="pointer-events-none fixed -right-24 top-48 h-80 w-80 rounded-full bg-blue-500/10 blur-3xl" />
+
+      <section className="relative z-10 mx-auto max-w-md">
+        <div className="mb-6">
+          <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-300/70">
+            MR.FLENS · LIST-LENS
+          </p>
+
+          <h1 className="mt-2 text-4xl font-black tracking-tight text-white">
+            Lenses
+          </h1>
+
+          <p className="mt-2 text-sm font-medium leading-6 text-slate-400">
+            Pick the specialist scanner for what you’re listing.
+          </p>
+        </div>
+
+        <LensGrid selectedLens={selectedLens} onSelectLens={setSelectedLens} />
+
+        <MarketplaceToggle value={marketplace} onChange={setMarketplace} />
+      </section>
+    </main>
+  );
+}
+```
+
+Small but important tweak: I’d replace the emoji icons with `lucide-react` icons for consistency. Emojis look fun, but lucide icons make the app feel more like a proper product rather than a prototype.
