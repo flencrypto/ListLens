@@ -139,6 +139,7 @@ export default function HomePage() {
             <a href="#features"     className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors">Features</a>
             <a href="#lenses"       className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors">Lenses</a>
             <a href="#pricing"      className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors">Pricing</a>
+            <a href="#extension"    className="hidden sm:block text-sm text-zinc-400 hover:text-white transition-colors">Extension</a>
             <Button asChild size="sm" className="bg-gradient-to-r from-cyan-500 to-violet-600 border-0 shadow-[0_0_20px_-6px_rgba(34,211,238,0.7)]">
               <Link href="/dashboard">Get started</Link>
             </Button>
@@ -514,6 +515,88 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Guard Browser Extension ──────────────────────────────── */}
+      <section id="extension" className="py-20 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/25 to-[#040a14] p-10 relative overflow-hidden">
+            <div className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-violet-500/8 blur-[60px]" aria-hidden />
+            <div className="pointer-events-none absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-cyan-500/6 blur-[50px]" aria-hidden />
+
+            <div className="relative">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-10">
+                <div>
+                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg border border-violet-700/30 bg-violet-950/30">
+                    <span className="text-base">🛡️</span>
+                    <span className="font-mono-hud text-[10px] uppercase tracking-[0.22em] text-violet-300/90">
+                      Chrome Extension · Free
+                    </span>
+                  </div>
+                  <h2 className="text-3xl font-bold text-white mb-3">
+                    Guard while you browse
+                  </h2>
+                  <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
+                    Run an AI risk check on any eBay or Vinted listing without leaving the tab.
+                    One click — full Guard report, right in the page.
+                  </p>
+                </div>
+                <a
+                  href="/listlens-guard.zip"
+                  download="listlens-guard.zip"
+                  className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-bold text-sm shadow-[0_0_28px_-8px_rgba(139,92,246,0.7)] transition-all"
+                >
+                  <span className="text-lg">⬇</span>
+                  Download extension .zip
+                </a>
+              </div>
+
+              <div className="grid sm:grid-cols-3 gap-5">
+                {[
+                  {
+                    n: "01",
+                    icon: "⬇",
+                    title: "Download the zip",
+                    body: 'Click "Download extension .zip" above and save the file anywhere on your computer.',
+                    color: "violet",
+                  },
+                  {
+                    n: "02",
+                    icon: "📂",
+                    title: 'Unzip the file',
+                    body: 'Extract the downloaded zip to a folder on your computer — you\'ll point Chrome at this folder.',
+                    color: "violet",
+                  },
+                  {
+                    n: "03",
+                    icon: "🧩",
+                    title: 'Load unpacked in Chrome',
+                    body: 'Go to chrome://extensions, enable "Developer mode" (top-right toggle), click "Load unpacked", and select the unzipped folder.',
+                    color: "cyan",
+                  },
+                ].map((step) => (
+                  <div
+                    key={step.n}
+                    className="rounded-2xl border border-violet-700/25 bg-violet-950/15 p-5"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <span className="font-mono-hud text-[10px] font-bold tracking-[0.2em] text-violet-500">
+                        {step.n}
+                      </span>
+                      <span className="text-xl">{step.icon}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-white mb-1.5">{step.title}</p>
+                    <p className="text-xs text-zinc-400 leading-relaxed">{step.body}</p>
+                  </div>
+                ))}
+              </div>
+
+              <p className="mt-6 text-[11px] text-zinc-600 text-center">
+                Works on Chrome and Chromium-based browsers (Edge, Brave, Arc) · eBay UK/US and Vinted UK/EU supported
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ── Bottom CTA ───────────────────────────────────────────── */}
       <section className="py-20 px-6 relative overflow-hidden">
         <div
@@ -575,6 +658,7 @@ export default function HomePage() {
                 <Link href="/guard/new"  className="block text-sm text-zinc-500 hover:text-white transition-colors">Guard — check a listing</Link>
                 <Link href="/history"    className="block text-sm text-zinc-500 hover:text-white transition-colors">History</Link>
                 <Link href="/billing"    className="block text-sm text-zinc-500 hover:text-white transition-colors">Pricing</Link>
+                <a href="/listlens-guard.zip" download="listlens-guard.zip" className="block text-sm text-zinc-500 hover:text-white transition-colors">Guard Extension ↓</a>
               </nav>
             </div>
             <div>
