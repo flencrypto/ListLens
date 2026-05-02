@@ -113,7 +113,7 @@ export default function EvidenceLed() {
                         <div key={i} className="flex items-center justify-between gap-4">
                           <span className="text-xs text-slate-300 w-32">{dim.label}</span>
                           <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className={`h-full ${dim.color}`} style={{ width: \`\${dim.score}%\` }}></div>
+                            <div className={`h-full ${dim.color}`} style={{ width: `${dim.score}%` }}></div>
                           </div>
                         </div>
                       ))}

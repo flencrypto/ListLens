@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
-import { Sparkles, ShieldCheck, CheckCircle2, ChevronRight, UploadCloud, Camera, Tag, AlertTriangle, Zap, Search, Music, Watch, Book, Gamepad2, Shirtsmith } from "lucide-react";
+import { Sparkles, ShieldCheck, CheckCircle2, ChevronRight, UploadCloud, Camera, Tag, AlertTriangle, Zap, Search, Music, Watch, Book, Gamepad2, Shirt } from "lucide-react";
 import "./_group.css";
 
 export default function ToolFirst() {
@@ -13,15 +13,14 @@ export default function ToolFirst() {
     if (step === 0) {
       const timer = setTimeout(() => setStep(1), 1500);
       return () => clearTimeout(timer);
-    }
-    if (step === 1) {
+    } else if (step === 1) {
       const timer = setTimeout(() => setStep(2), 2000);
       return () => clearTimeout(timer);
-    }
-    if (step === 2) {
+    } else if (step === 2) {
       const timer = setTimeout(() => setStep(3), 3000);
       return () => clearTimeout(timer);
     }
+    return undefined;
   }, [step]);
 
   return (
@@ -328,7 +327,7 @@ export default function ToolFirst() {
                   { name: "BookLens", icon: Book, color: "text-yellow-400", bg: "bg-yellow-400/10", active: true },
                   { name: "WatchLens", icon: Watch, color: "text-blue-400", bg: "bg-blue-400/10", active: true },
                   { name: "AntiquesLens", icon: Search, color: "text-stone-400", bg: "bg-stone-400/10", active: true },
-                  { name: "ClothingLens", icon: Shirtsmith, color: "text-pink-400", bg: "bg-pink-400/10", active: true },
+                  { name: "ClothingLens", icon: Shirt, color: "text-pink-400", bg: "bg-pink-400/10", active: true },
                   { name: "CardLens", icon: Search, color: "text-gray-400", bg: "bg-white/5", active: false, label: "Coming Soon" },
                   { name: "AutoLens", icon: Search, color: "text-gray-400", bg: "bg-white/5", active: false, label: "Coming Soon" },
                   { name: "ToyLens", icon: Search, color: "text-gray-400", bg: "bg-white/5", active: false, label: "Coming Soon" },

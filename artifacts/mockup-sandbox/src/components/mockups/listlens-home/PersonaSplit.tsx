@@ -3,9 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Camera, Zap, FileText, CheckCircle2, Search, ArrowDownCircle, ShieldCheck } from "lucide-react";
-import { Link } from "wouter";
-
-export function PersonaSplit() {
+export default function PersonaSplit() {
   const [activePersona, setActivePersona] = useState<"seller" | "buyer">("seller");
 
   return (
@@ -227,4 +225,3 @@ export function PersonaSplit() {
   );
 }
 
-export default PersonaSplit;
