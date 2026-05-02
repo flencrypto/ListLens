@@ -379,16 +379,21 @@ const GENERIC_SPECIFIC_MAP: Record<string, string> = {
   type: "Type",
 };
 
-function buildItemSpecifics(
+/**
+ * Compute item specifics as a plain JSON array for display and editing.
+ * Each entry carries the eBay field name, the value extracted from AI
+ * attributes, and a flag indicating the value came from AI auto-fill.
+ */
+export function computeItemSpecifics(
   lens: string,
   attributes: Record<string, unknown>,
   identity?: { brand?: string | null; model?: string | null },
-): string {
+): { name: string; value: string; autoFilled: boolean }[] {
   const lensMap = LENS_SPECIFIC_MAP[lens] ?? {};
-  const nameValues: { name: string; value: string }[] = [];
+  const nameValues: { name: string; value: string; autoFilled: boolean }[] = [];
   const seen = new Set<string>();
 
-  const addSpec = (name: string, rawVal: unknown) => {
+  const addSpec = (name: string, rawVal: unknown, autoFilled: boolean) => {
     if (seen.has(name)) return;
     const value =
       rawVal == null || rawVal === "null" || rawVal === "undefined"
@@ -397,23 +402,36 @@ function buildItemSpecifics(
           ? rawVal.trim()
           : String(rawVal).trim();
     if (!value) return;
-    nameValues.push({ name, value: value.slice(0, 65) });
+    nameValues.push({ name, value: value.slice(0, 65), autoFilled });
     seen.add(name);
   };
 
   if (identity?.brand) {
-    addSpec(lensMap["brand"] ?? GENERIC_SPECIFIC_MAP["brand"] ?? "Brand", identity.brand);
+    addSpec(lensMap["brand"] ?? GENERIC_SPECIFIC_MAP["brand"] ?? "Brand", identity.brand, true);
   }
   if (identity?.model) {
-    addSpec(lensMap["model"] ?? GENERIC_SPECIFIC_MAP["model"] ?? "Model", identity.model);
+    addSpec(lensMap["model"] ?? GENERIC_SPECIFIC_MAP["model"] ?? "Model", identity.model, true);
   }
 
   for (const [key, rawVal] of Object.entries(attributes)) {
     const normalKey = key.toLowerCase().replace(/\s+/g, "_");
     const name = lensMap[normalKey] ?? GENERIC_SPECIFIC_MAP[normalKey];
     if (!name) continue;
-    addSpec(name, rawVal);
+    addSpec(name, rawVal, true);
   }
+
+  return nameValues;
+}
+
+function buildItemSpecifics(
+  lens: string,
+  attributes: Record<string, unknown>,
+  identity?: { brand?: string | null; model?: string | null },
+  overrides?: { name: string; value: string }[],
+): string {
+  const nameValues = overrides
+    ? overrides.filter((o) => o.name && o.value)
+    : computeItemSpecifics(lens, attributes, identity);
 
   if (nameValues.length === 0) return "";
 
@@ -436,6 +454,8 @@ export interface EbayListingInput {
   attributes?: Record<string, unknown>;
   identity?: { brand?: string | null; model?: string | null };
   photoUrls?: string[];
+  /** When provided, these replace the auto-computed item specifics entirely. */
+  specificsOverrides?: { name: string; value: string }[];
   settings?: {
     shippingCost: string;
     returnsAccepted: boolean;
@@ -470,6 +490,7 @@ export async function addEbayItem(
     input.lens,
     input.attributes ?? {},
     input.identity,
+    input.specificsOverrides,
   );
 
   const returnsAcceptedOption = settings.returnsAccepted

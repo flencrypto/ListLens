@@ -223,6 +223,35 @@ export async function confirmPressing(params: {
   return post("/api/lenses/record/identify-with-matrix", params);
 }
 
+export interface ItemSpecific {
+  name: string;
+  value: string;
+  autoFilled: boolean;
+}
+
+export async function getItemSpecifics(itemId: string): Promise<{ specifics: ItemSpecific[] }> {
+  return get<{ specifics: ItemSpecific[] }>(`/api/items/${itemId}/item-specifics`);
+}
+
+export interface EbayPublishResult {
+  ok: boolean;
+  listingId: string;
+  viewItemURL: string;
+}
+
+export async function publishItemToEbay(
+  itemId: string,
+  params: {
+    title: string;
+    description: string;
+    price: number;
+    lens: string;
+    specificsOverrides?: { name: string; value: string }[];
+  },
+): Promise<EbayPublishResult> {
+  return post<EbayPublishResult>(`/api/items/${itemId}/publish/ebay-sandbox`, params);
+}
+
 export interface ApiLensEntry {
   id: string;
   name: string;

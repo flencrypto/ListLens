@@ -24,8 +24,8 @@ import {
   saveDraft,
   type StudioDraft,
 } from "@/lib/historyStore";
-import type { StudioAnalysis } from "@/lib/api";
-import { confirmPressing, getItem, reanalyseItem, type AnalysisCorrections } from "@/lib/api";
+import type { StudioAnalysis, ItemSpecific } from "@/lib/api";
+import { confirmPressing, getItem, reanalyseItem, getItemSpecifics, publishItemToEbay, type AnalysisCorrections } from "@/lib/api";
 
 type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
 
@@ -163,6 +163,15 @@ export default function ReviewScreen() {
   const [reanalysing, setReanalysing] = useState(false);
   const [reanalyseError, setReanalyseError] = useState<string | null>(null);
   const [reanalysedAt, setReanalysedAt] = useState<number | null>(null);
+
+  // eBay item specifics state
+  const [ebaySpecifics, setEbaySpecifics] = useState<ItemSpecific[]>([]);
+  const [editedSpecifics, setEditedSpecifics] = useState<Record<string, string>>({});
+  const [specificsLoaded, setSpecificsLoaded] = useState(false);
+  const [specificsOpen, setSpecificsOpen] = useState(true);
+  const [publishing, setPublishing] = useState(false);
+  const [publishResult, setPublishResult] = useState<{ listingId: string; viewItemURL: string } | null>(null);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   // Confirm pressing (matrix/runout) state
   const [needsMatrixConfirm, setNeedsMatrixConfirm] = useState(false);
@@ -319,6 +328,56 @@ export default function ReviewScreen() {
     }, 250);
     return () => clearTimeout(handle);
   }, [hydrated, draftId, createdAt, body]);
+
+  // Fetch eBay item specifics from the server once we have an itemId.
+  useEffect(() => {
+    if (!itemId) return;
+    let cancelled = false;
+    getItemSpecifics(itemId)
+      .then(({ specifics }) => {
+        if (cancelled) return;
+        setEbaySpecifics(specifics);
+        setSpecificsLoaded(true);
+      })
+      .catch(() => {
+        if (!cancelled) setSpecificsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [itemId]);
+
+  async function handlePublishToEbay() {
+    if (!itemId) return;
+    setPublishing(true);
+    setPublishError(null);
+    setPublishResult(null);
+    try {
+      // Only send specificsOverrides when the specifics were successfully
+      // loaded. If the fetch failed, omit the field entirely so the server
+      // falls back to its own computed specifics rather than receiving an
+      // empty array that would clear all item specifics.
+      const specificsOverrides = specificsLoaded && ebaySpecifics.length > 0
+        ? ebaySpecifics.map((s) => ({
+            name: s.name,
+            value: editedSpecifics[s.name] ?? s.value,
+          }))
+        : undefined;
+      const result = await publishItemToEbay(itemId, {
+        title: body.title,
+        description: body.description,
+        price: body.pricing.recommended || body.pricing.quick || 0,
+        lens: body.lens,
+        specificsOverrides,
+      });
+      setPublishResult({ listingId: result.listingId, viewItemURL: result.viewItemURL });
+      setBody((d) => ({ ...d, exported: "ebay" }));
+    } catch (err) {
+      setPublishError(err instanceof Error ? err.message : "Failed to publish to eBay.");
+    } finally {
+      setPublishing(false);
+    }
+  }
 
   async function handleReanalyse() {
     if (!itemId) return;
@@ -794,6 +853,104 @@ export default function ReviewScreen() {
         </Card>
       )}
 
+      {/* eBay item specifics — shown when we have a server item and eBay is the marketplace */}
+      {itemId && (body.marketplace === "ebay" || body.marketplace === "both") && specificsLoaded && (
+        <Card>
+          <Pressable
+            onPress={() => setSpecificsOpen((o) => !o)}
+            style={styles.correctionHeader}
+            hitSlop={8}
+          >
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.cardTitle, { color: colors.foreground, marginBottom: 2 }]}>
+                eBay item specifics
+              </Text>
+              <Text style={[styles.correctionSubtitle, { color: colors.zinc500 }]}>
+                {specificsOpen
+                  ? "AI auto-filled · Edit any field before publishing"
+                  : `${ebaySpecifics.length} field${ebaySpecifics.length === 1 ? "" : "s"} auto-filled by AI`}
+              </Text>
+            </View>
+            <Feather
+              name={specificsOpen ? "chevron-up" : "chevron-down"}
+              size={18}
+              color={colors.zinc500}
+            />
+          </Pressable>
+
+          {specificsOpen && (
+            <View style={{ marginTop: 12, gap: 8 }}>
+              {ebaySpecifics.length === 0 ? (
+                <Text style={[styles.correctionSubtitle, { color: colors.zinc500 }]}>
+                  No item specifics could be extracted for this lens.
+                </Text>
+              ) : (
+                ebaySpecifics.map((spec) => {
+                  const edited = editedSpecifics[spec.name];
+                  const isEdited = edited !== undefined && edited !== spec.value;
+                  return (
+                    <View key={spec.name}>
+                      <View style={styles.fieldHeader}>
+                        <Text style={[styles.label, { color: colors.zinc400 }]}>{spec.name}</Text>
+                        {isEdited ? (
+                          <View style={styles.editedBadge}>
+                            <Feather name="edit-2" size={10} color={colors.brandCyan} />
+                            <Text style={[styles.editedBadgeText, { color: colors.brandCyan }]}>Edited</Text>
+                          </View>
+                        ) : spec.autoFilled ? (
+                          <View style={[styles.aiBadge, { backgroundColor: "rgba(8,51,68,0.5)", borderColor: colors.cyan700 }]}>
+                            <Feather name="cpu" size={10} color={colors.cyan300} />
+                            <Text style={[styles.aiBadgeText, { color: colors.cyan300 }]}>AI</Text>
+                          </View>
+                        ) : null}
+                      </View>
+                      <TextInput
+                        value={edited ?? spec.value}
+                        onChangeText={(t) =>
+                          setEditedSpecifics((prev) => ({ ...prev, [spec.name]: t }))
+                        }
+                        style={[
+                          styles.input,
+                          {
+                            color: colors.foreground,
+                            borderColor: isEdited ? colors.cyan700 : colors.zinc700,
+                          },
+                        ]}
+                        placeholderTextColor={colors.zinc600}
+                      />
+                    </View>
+                  );
+                })
+              )}
+
+              {publishResult ? (
+                <View style={[styles.matrixHint, { backgroundColor: "rgba(16,85,16,0.2)", borderColor: colors.brandGreen, marginTop: 4 }]}>
+                  <Feather name="check-circle" size={13} color={colors.brandGreen} />
+                  <Text style={[styles.matrixHintText, { color: colors.brandGreen }]}>
+                    Listed on eBay · ID {publishResult.listingId}
+                  </Text>
+                </View>
+              ) : (
+                <>
+                  {publishError && (
+                    <View style={[styles.errorBanner, { backgroundColor: "rgba(220,38,38,0.12)", borderColor: colors.red400 }]}>
+                      <Feather name="alert-circle" size={13} color={colors.red400} />
+                      <Text style={[styles.errorText, { color: colors.red400 }]}>{publishError}</Text>
+                    </View>
+                  )}
+                  <BrandButton
+                    label={publishing ? "Publishing to eBay…" : "Publish to eBay"}
+                    onPress={handlePublishToEbay}
+                    disabled={publishing}
+                    loading={publishing}
+                  />
+                </>
+              )}
+            </View>
+          )}
+        </Card>
+      )}
+
       <Card>
         <Text style={[styles.cardTitle, { color: colors.foreground }]}>
           Export
@@ -831,7 +988,9 @@ export default function ReviewScreen() {
           />
         </View>
         <Text style={[styles.exportHint, { color: colors.zinc600 }]}>
-          Copy the listing details to paste directly into the eBay app while direct publishing is being set up.
+          {itemId && (body.marketplace === "ebay" || body.marketplace === "both")
+            ? "Use \"Publish to eBay\" above to post directly, or copy to paste into the eBay app."
+            : "Copy the listing details to paste directly into the eBay app."}
         </Text>
       </Card>
 
@@ -1084,6 +1243,32 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     paddingVertical: 4,
+  },
+  aiBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    borderWidth: 1,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  aiBadgeText: {
+    fontFamily: "Inter_600SemiBold",
+    fontSize: 10,
+    letterSpacing: 0.4,
+  },
+  editedBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  editedBadgeText: {
+    fontFamily: "Inter_500Medium",
+    fontSize: 10,
+    letterSpacing: 0.4,
   },
   confirmHeader: {
     flexDirection: "row",

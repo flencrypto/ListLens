@@ -1490,6 +1490,38 @@ router.post("/items/:id/export/vinted", async (req, res) => {
   res.send(csv);
 });
 
+router.get("/items/:id/item-specifics", async (req, res) => {
+  const { id } = req.params;
+  const result = await fetchOwnedListing(id, req.user?.id);
+  if (result.dbError) {
+    res.status(503).json({ error: "Service temporarily unavailable." });
+    return;
+  }
+  if (result.denied) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
+  }
+  if (result.notFound) {
+    res.status(404).json({ error: "Not found" });
+    return;
+  }
+
+  const { computeItemSpecifics } = await import("../lib/ebay");
+  const stored = studioStore.get(id) ?? result.row?.analysis ?? {};
+  const meta = itemMeta.get(id) ?? (result.row
+    ? { lens: result.row.lens, marketplace: result.row.marketplace ?? undefined, photoUrls: result.row.photoUrls ?? [] }
+    : {});
+
+  const lens = (meta.lens as string | undefined) ?? "default";
+  const attributes = (stored["attributes"] as Record<string, unknown> | undefined) ?? {};
+  const identity = stored["identity"] as
+    | { brand?: string | null; model?: string | null }
+    | undefined;
+
+  const specifics = computeItemSpecifics(lens, attributes, identity);
+  res.json({ specifics });
+});
+
 router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
   const { id } = req.params;
   const b = body(req);
@@ -1497,6 +1529,9 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
   const description = (b["description"] as string | undefined) ?? "";
   const price = Number(b["price"] ?? 0);
   const lens = (b["lens"] as string | undefined) ?? "default";
+  const specificsOverrides = Array.isArray(b["specificsOverrides"])
+    ? (b["specificsOverrides"] as { name: string; value: string }[])
+    : undefined;
 
   const userId = req.user?.id;
 
@@ -1554,6 +1589,7 @@ router.post("/items/:id/publish/ebay-sandbox", async (req, res) => {
       attributes: (stored["attributes"] as Record<string, unknown> | undefined) ?? {},
       identity,
       photoUrls,
+      specificsOverrides,
       settings: {
         shippingCost: userSettings.shippingCost,
         returnsAccepted: userSettings.returnsAccepted,
