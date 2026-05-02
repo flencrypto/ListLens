@@ -10,7 +10,12 @@ import { Card } from "@/components/ui/Card";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { useAuth } from "@/lib/auth";
-import { getItems, type ApiListing } from "@/lib/api";
+import {
+  listGuardChecks,
+  listItems,
+  type ApiGuardCheck,
+  type ApiListing,
+} from "@/lib/api";
 import {
   listDrafts,
   listReports,
@@ -18,104 +23,138 @@ import {
   type StudioDraft,
 } from "@/lib/historyStore";
 
-function apiListingToDraft(item: ApiListing): StudioDraft {
-  const analysis = item.analysis as Record<string, unknown> | undefined;
-  const pricing = analysis?.pricing as
-    | { quick_sale?: number; recommended?: number; high?: number }
-    | undefined;
-  const identity = analysis?.identity as { brand?: string } | undefined;
+type RiskLevel = "low" | "medium" | "medium_high" | "high" | "inconclusive";
+
+interface DisplayDraft {
+  id: string;
+  title: string;
+  lens: string;
+  photos: string[];
+  updatedAt: number;
+  exported: "none" | "ebay" | "vinted";
+}
+
+interface DisplayReport {
+  id: string;
+  lens: string;
+  source: "url" | "screenshots";
+  url: string;
+  shots: string[];
+  riskLevel: RiskLevel;
+  createdAt: number;
+}
+
+function apiListingToDisplay(l: ApiListing): DisplayDraft {
   return {
-    id: item.id,
-    createdAt: new Date(item.createdAt).getTime(),
-    updatedAt: new Date(item.updatedAt).getTime(),
-    lens: item.lens,
-    marketplace: item.marketplace ?? "",
-    photos: item.photoUrls,
-    title: item.title ?? "",
-    brand: identity?.brand ?? "",
-    size: "",
-    description: item.description ?? "",
-    bullets: [],
-    pricing: {
-      quick: pricing?.quick_sale ?? 0,
-      recommended: pricing?.recommended ?? 0,
-      high: pricing?.high ?? 0,
-    },
-    flags: [],
+    id: l.id,
+    title: l.title ?? "",
+    lens: l.lens,
+    photos: Array.isArray(l.photoUrls) ? l.photoUrls : [],
+    updatedAt: new Date(l.updatedAt ?? l.createdAt).getTime(),
     exported: "none",
+  };
+}
+
+function apiGuardCheckToDisplay(c: ApiGuardCheck): DisplayReport {
+  return {
+    id: c.id,
+    lens: c.lens,
+    source: c.url ? "url" : "screenshots",
+    url: c.url ?? "",
+    shots: [],
+    riskLevel: (c.riskLevel as RiskLevel) ?? "inconclusive",
+    createdAt: new Date(c.createdAt).getTime(),
+  };
+}
+
+function studioToDisplay(d: StudioDraft): DisplayDraft {
+  return {
+    id: d.id,
+    title: d.title ?? "",
+    lens: d.lens,
+    photos: d.photos ?? [],
+    updatedAt: d.updatedAt,
+    exported: d.exported,
+  };
+}
+
+function reportToDisplay(r: GuardReport): DisplayReport {
+  return {
+    id: r.id,
+    lens: r.lens,
+    source: r.source,
+    url: r.url ?? "",
+    shots: r.shots ?? [],
+    riskLevel: r.risk?.level ?? "inconclusive",
+    createdAt: r.createdAt,
   };
 }
 
 export default function HistoryScreen() {
   const colors = useColors();
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const [drafts, setDrafts] = useState<StudioDraft[]>([]);
-  const [reports, setReports] = useState<GuardReport[]>([]);
+  const { isAuthenticated, isLoading: authLoading } = useAuth();
+
+  const [drafts, setDrafts] = useState<DisplayDraft[]>([]);
+  const [reports, setReports] = useState<DisplayReport[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [source, setSource] = useState<"api" | "local">("local");
 
   useFocusEffect(
     useCallback(() => {
       let cancelled = false;
+      setLoaded(false);
+      setError(null);
 
       async function load() {
         try {
           if (isAuthenticated) {
-            const [apiResult, localReports] = await Promise.all([
-              getItems().catch(() => null),
-              listReports(),
+            const [apiListings, apiChecks] = await Promise.all([
+              listItems(),
+              listGuardChecks(),
             ]);
-            if (cancelled) return;
-            if (apiResult) {
-              const mapped = apiResult.listings.map(apiListingToDraft);
-              setDrafts(mapped);
+            if (!cancelled) {
+              setDrafts(apiListings.map(apiListingToDisplay));
+              setReports(apiChecks.map(apiGuardCheckToDisplay));
               setSource("api");
-            } else {
-              const localDrafts = await listDrafts();
-              if (!cancelled) {
-                setDrafts(localDrafts);
-                setSource("local");
-              }
             }
-            setReports(localReports);
           } else {
             const [localDrafts, localReports] = await Promise.all([
               listDrafts(),
               listReports(),
             ]);
-            if (cancelled) return;
-            setDrafts(localDrafts);
-            setReports(localReports);
-            setSource("local");
+            if (!cancelled) {
+              setDrafts(localDrafts.map(studioToDisplay));
+              setReports(localReports.map(reportToDisplay));
+              setSource("local");
+            }
           }
         } catch {
-          if (cancelled) return;
-          const [localDrafts, localReports] = await Promise.all([
-            listDrafts(),
-            listReports(),
-          ]);
           if (!cancelled) {
-            setDrafts(localDrafts);
-            setReports(localReports);
-            setSource("local");
+            setError("Could not load history. Check your connection and try again.");
           }
         } finally {
           if (!cancelled) setLoaded(true);
         }
       }
 
-      load();
+      if (!authLoading) {
+        load();
+      }
+
       return () => {
         cancelled = true;
       };
-    }, [isAuthenticated]),
+    }, [isAuthenticated, authLoading]),
   );
 
   const draftCountLabel =
     drafts.length === 1 ? "1 listing" : `${drafts.length} listings`;
   const reportCountLabel =
     reports.length === 1 ? "1 check" : `${reports.length} checks`;
+
+  const loadingText = authLoading || !loaded ? "Loading…" : undefined;
 
   return (
     <ScreenContainer>
@@ -124,114 +163,126 @@ export default function HistoryScreen() {
           History
         </Text>
         <Text style={[styles.subtitle, { color: colors.zinc400 }]}>
-          Your saved listings and Guard checks.
+          {isAuthenticated
+            ? "Your saved listings and Guard checks."
+            : "Sign in to sync history across devices."}
         </Text>
       </View>
 
-      <Card>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            <Feather name="camera" size={16} color={colors.brandCyan} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              Studio listings
-            </Text>
-          </View>
-          <Badge label={draftCountLabel} tone="neutral" />
-        </View>
-        {drafts.length === 0 ? (
-          <View
-            style={[
-              styles.empty,
-              { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
-            ]}
-          >
-            <Text style={[styles.emptyTitle, { color: colors.zinc300 }]}>
-              {loaded ? "No listings yet" : "Loading…"}
-            </Text>
-            <Text style={[styles.emptyBody, { color: colors.zinc500 }]}>
-              Create a listing in Studio. After analysis, your drafts will appear
-              here.
-            </Text>
-            <BrandButton
-              label="Create first listing"
-              size="sm"
-              variant="outline"
-              onPress={() => router.push("/(tabs)/studio")}
-            />
-          </View>
-        ) : (
-          <View style={styles.list}>
-            {source === "api" && (
-              <Text style={[styles.sourceNote, { color: colors.zinc500 }]}>
-                Synced from your account
-              </Text>
+      {error ? (
+        <Card>
+          <Text style={[styles.emptyTitle, { color: colors.zinc300, textAlign: "center", paddingVertical: 16 }]}>
+            {error}
+          </Text>
+        </Card>
+      ) : (
+        <>
+          <Card>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <Feather name="camera" size={16} color={colors.brandCyan} />
+                <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+                  Studio listings
+                </Text>
+              </View>
+              {loaded && <Badge label={draftCountLabel} tone="neutral" />}
+            </View>
+            {drafts.length === 0 ? (
+              <View
+                style={[
+                  styles.empty,
+                  { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
+                ]}
+              >
+                <Text style={[styles.emptyTitle, { color: colors.zinc300 }]}>
+                  {loadingText ?? "No listings yet"}
+                </Text>
+                <Text style={[styles.emptyBody, { color: colors.zinc500 }]}>
+                  Create a listing in Studio. After analysis, your drafts will appear
+                  here.
+                </Text>
+                <BrandButton
+                  label="Create first listing"
+                  size="sm"
+                  variant="outline"
+                  onPress={() => router.push("/(tabs)/studio")}
+                />
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {source === "api" && (
+                  <Text style={[styles.sourceNote, { color: colors.zinc500 }]}>
+                    Synced from your account
+                  </Text>
+                )}
+                {drafts.map((d) => (
+                  <DraftRow
+                    key={d.id}
+                    draft={d}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/studio/review",
+                        params: {
+                          draftId: d.id,
+                          ...(source === "api" ? { itemId: d.id } : {}),
+                        },
+                      })
+                    }
+                  />
+                ))}
+              </View>
             )}
-            {drafts.map((d) => (
-              <DraftRow
-                key={d.id}
-                draft={d}
-                onPress={() =>
-                  router.push({
-                    pathname: "/studio/review",
-                    params: {
-                      draftId: d.id,
-                      ...(source === "api" ? { itemId: d.id } : {}),
-                    },
-                  })
-                }
-              />
-            ))}
-          </View>
-        )}
-      </Card>
+          </Card>
 
-      <Card>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardHeaderLeft}>
-            <Feather name="shield" size={16} color={colors.brandViolet} />
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              Guard checks
-            </Text>
-          </View>
-          <Badge label={reportCountLabel} tone="neutral" />
-        </View>
-        {reports.length === 0 ? (
-          <View
-            style={[
-              styles.empty,
-              { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
-            ]}
-          >
-            <Text style={[styles.emptyTitle, { color: colors.zinc300 }]}>
-              {loaded ? "No checks yet" : "Loading…"}
-            </Text>
-            <Text style={[styles.emptyBody, { color: colors.zinc500 }]}>
-              Check a listing before you buy. Saved reports will appear here.
-            </Text>
-            <BrandButton
-              label="Check a listing"
-              size="sm"
-              variant="outline"
-              onPress={() => router.push("/(tabs)/guard")}
-            />
-          </View>
-        ) : (
-          <View style={styles.list}>
-            {reports.map((r) => (
-              <ReportRow
-                key={r.id}
-                report={r}
-                onPress={() =>
-                  router.push({
-                    pathname: "/guard/report",
-                    params: { reportId: r.id },
-                  })
-                }
-              />
-            ))}
-          </View>
-        )}
-      </Card>
+          <Card>
+            <View style={styles.cardHeader}>
+              <View style={styles.cardHeaderLeft}>
+                <Feather name="shield" size={16} color={colors.brandViolet} />
+                <Text style={[styles.cardTitle, { color: colors.foreground }]}>
+                  Guard checks
+                </Text>
+              </View>
+              {loaded && <Badge label={reportCountLabel} tone="neutral" />}
+            </View>
+            {reports.length === 0 ? (
+              <View
+                style={[
+                  styles.empty,
+                  { borderColor: colors.zinc800, borderRadius: colors.radius - 4 },
+                ]}
+              >
+                <Text style={[styles.emptyTitle, { color: colors.zinc300 }]}>
+                  {loadingText ?? "No checks yet"}
+                </Text>
+                <Text style={[styles.emptyBody, { color: colors.zinc500 }]}>
+                  Check a listing before you buy. Saved reports will appear here.
+                </Text>
+                <BrandButton
+                  label="Check a listing"
+                  size="sm"
+                  variant="outline"
+                  onPress={() => router.push("/(tabs)/guard")}
+                />
+              </View>
+            ) : (
+              <View style={styles.list}>
+                {reports.map((r) => (
+                  <ReportRow
+                    key={r.id}
+                    report={r}
+                    onPress={() =>
+                      router.push({
+                        pathname: "/guard/report",
+                        params: { reportId: r.id },
+                      })
+                    }
+                  />
+                ))}
+              </View>
+            )}
+          </Card>
+        </>
+      )}
     </ScreenContainer>
   );
 }
@@ -240,7 +291,7 @@ function DraftRow({
   draft,
   onPress,
 }: {
-  draft: StudioDraft;
+  draft: DisplayDraft;
   onPress: () => void;
 }) {
   const colors = useColors();
@@ -319,11 +370,11 @@ function ReportRow({
   report,
   onPress,
 }: {
-  report: GuardReport;
+  report: DisplayReport;
   onPress: () => void;
 }) {
   const colors = useColors();
-  const level = report.risk?.level ?? "inconclusive";
+  const level = report.riskLevel ?? "inconclusive";
   const tone =
     level === "high"
       ? "red"

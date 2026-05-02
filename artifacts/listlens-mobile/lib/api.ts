@@ -283,6 +283,25 @@ export async function getItem(id: string): Promise<{ listing: ApiListing }> {
   return get<{ listing: ApiListing }>(`/api/items/${id}`);
 }
 
+export interface ApiGuardCheck {
+  id: string;
+  lens: string;
+  url: string | null;
+  riskLevel: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export async function listItems(): Promise<ApiListing[]> {
+  const data = await get<{ listings: ApiListing[] }>("/api/items");
+  return data.listings ?? [];
+}
+
+export async function listGuardChecks(): Promise<ApiGuardCheck[]> {
+  const data = await get<{ checks: ApiGuardCheck[] }>("/api/guard/checks");
+  return data.checks ?? [];
+}
+
 export async function getLensRegistry(): Promise<{
   lenses: string[];
   registry: ApiLensEntry[];
