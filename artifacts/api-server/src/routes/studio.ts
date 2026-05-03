@@ -124,6 +124,23 @@ function isPrivateHost(hostname: string): boolean {
   return false;
 }
 
+function isAntiBotResponse(status: number, html: string): boolean {
+  if (status === 403 || status === 429 || status === 503) return true;
+  const lower = html.slice(0, 8000).toLowerCase();
+  return (
+    lower.includes("captcha") ||
+    lower.includes("are you a robot") ||
+    lower.includes("verify you are human") ||
+    lower.includes("are you a human") ||
+    lower.includes("access denied") ||
+    lower.includes("challenge-form") ||
+    lower.includes("cf-challenge") ||
+    lower.includes("enable javascript") ||
+    lower.includes("please enable js") ||
+    lower.includes("bot detection")
+  );
+}
+
 function extractOgImage(html: string): string | null {
   const match =
     html.match(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)["']/i) ??
@@ -202,20 +219,38 @@ router.post("/studio/extract-image", async (req: Request, res: Response) => {
         return;
       }
 
+      const contentType = response.headers.get("content-type") ?? "";
+
       if (!response.ok) {
+        if (response.status === 403 || response.status === 429 || response.status === 503) {
+          res.status(502).json({
+            error: `${marketplace} blocked automated access — please paste the image URL directly instead.`,
+            code: "BOT_BLOCKED",
+            marketplace,
+          });
+          return;
+        }
         res.status(502).json({
           error: `Marketplace page returned status ${response.status}.`,
         });
         return;
       }
 
-      const contentType = response.headers.get("content-type") ?? "";
       if (!contentType.includes("text/html")) {
         res.status(502).json({ error: "Marketplace URL did not return an HTML page." });
         return;
       }
 
       html = await response.text();
+
+      if (isAntiBotResponse(200, html)) {
+        res.status(502).json({
+          error: `${marketplace} blocked automated access — please paste the image URL directly instead.`,
+          code: "BOT_BLOCKED",
+          marketplace,
+        });
+        return;
+      }
     } finally {
       clearTimeout(timeout);
     }

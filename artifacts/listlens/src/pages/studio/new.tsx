@@ -336,9 +336,17 @@ export default function NewStudioPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ url: trimmed }),
         });
-        const data = await resp.json() as { imageUrl?: string; marketplace?: string; error?: string };
+        const data = await resp.json() as { imageUrl?: string; marketplace?: string; error?: string; code?: string };
         if (!resp.ok || !data.imageUrl) {
-          setUrlError(data.error ?? `Could not extract an image from the ${marketplace} listing.`);
+          if (data.code === "BOT_BLOCKED") {
+            const name = data.marketplace ?? marketplace;
+            setUrlError(
+              `${name} blocked automated access — please paste the image URL directly instead. ` +
+              `Open the listing, right-click the main photo, and choose "Copy image address".`
+            );
+          } else {
+            setUrlError(data.error ?? `Could not extract an image from the ${marketplace} listing.`);
+          }
           return;
         }
         finalUrl = data.imageUrl;
