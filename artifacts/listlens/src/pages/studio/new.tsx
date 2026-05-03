@@ -286,6 +286,9 @@ export default function NewStudioPage() {
     { name: "Vinted", pattern: /vinted\.(co\.uk|com|fr|de|es|nl|pl|be|lu|at|cz|sk|hu|lt|lv|ee|pt)\/(items|l)\//i },
     { name: "Etsy", pattern: /etsy\.com\/listing\//i },
     { name: "Poshmark", pattern: /poshmark\.(com|ca|com\.au|co\.uk)\//i },
+    { name: "Amazon", pattern: /amazon\.(com|co\.uk|de|fr|es|it|ca|com\.au|co\.jp|in|nl|se|pl)\/(.*\/)?(dp|gp\/product)\//i },
+    { name: "Facebook Marketplace", pattern: /(www\.|m\.)?facebook\.com\/marketplace\/item\//i },
+    { name: "Shpock", pattern: /shpock\.com(\/[a-z]{2}(-[a-z]{2})?)?\/i\//i },
   ];
 
   function detectMarketplace(url: string): string | null {

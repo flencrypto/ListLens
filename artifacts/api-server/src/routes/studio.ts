@@ -69,6 +69,35 @@ const MARKETPLACE_ALLOWLIST: MarketplaceEntry[] = [
     ]),
     pathPattern: /^\//,
   },
+  {
+    name: "Amazon",
+    hostnames: new Set([
+      "www.amazon.com", "amazon.com",
+      "www.amazon.co.uk", "amazon.co.uk",
+      "www.amazon.de", "amazon.de",
+      "www.amazon.fr", "amazon.fr",
+      "www.amazon.es", "amazon.es",
+      "www.amazon.it", "amazon.it",
+      "www.amazon.ca", "amazon.ca",
+      "www.amazon.com.au", "amazon.com.au",
+      "www.amazon.co.jp", "amazon.co.jp",
+      "www.amazon.in", "amazon.in",
+      "www.amazon.nl", "amazon.nl",
+      "www.amazon.se", "amazon.se",
+      "www.amazon.pl", "amazon.pl",
+    ]),
+    pathPattern: /\/(dp|gp\/product)\//,
+  },
+  {
+    name: "Facebook Marketplace",
+    hostnames: new Set(["www.facebook.com", "facebook.com", "m.facebook.com"]),
+    pathPattern: /^\/marketplace\/item\//,
+  },
+  {
+    name: "Shpock",
+    hostnames: new Set(["www.shpock.com", "shpock.com"]),
+    pathPattern: /^(\/[a-z]{2}(-[a-z]{2})?)?\/i\//,
+  },
 ];
 
 function detectMarketplaceFromParsed(hostname: string, pathname: string): string | null {
