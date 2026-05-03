@@ -7,6 +7,7 @@ import billingRouter from "./billing";
 import dashboardRouter from "./dashboard";
 import storageRouter from "./storage";
 import adminRouter from "./admin";
+import studioRouter from "./studio";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(listlensRouter);
 router.use(ebayRouter);
 router.use(storageRouter);
 router.use(adminRouter);
+router.use(studioRouter);
 
 export default router;

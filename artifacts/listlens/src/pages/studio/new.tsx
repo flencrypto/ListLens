@@ -231,6 +231,7 @@ export default function NewStudioPage() {
 
   const [urlInput, setUrlInput] = useState("");
   const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlSuccess, setUrlSuccess] = useState<string | null>(null);
   const [urlChecking, setUrlChecking] = useState(false);
 
   const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
@@ -279,9 +280,25 @@ export default function NewStudioPage() {
     }
   }
 
+  const MARKETPLACE_PATTERNS = [
+    { name: "eBay", pattern: /ebay\.(com|co\.uk|de|fr|es|it|com\.au|ca|nl)\/(itm|p|i)\//i },
+    { name: "Depop", pattern: /depop\.com\/products\//i },
+    { name: "Vinted", pattern: /vinted\.(co\.uk|com|fr|de|es|nl|pl|be|lu|at|cz|sk|hu|lt|lv|ee|pt)\/(items|l)\//i },
+    { name: "Etsy", pattern: /etsy\.com\/listing\//i },
+    { name: "Poshmark", pattern: /poshmark\.(com|ca|com\.au|co\.uk)\//i },
+  ];
+
+  function detectMarketplace(url: string): string | null {
+    for (const { name, pattern } of MARKETPLACE_PATTERNS) {
+      if (pattern.test(url)) return name;
+    }
+    return null;
+  }
+
   async function addImageUrl() {
     const trimmed = urlInput.trim();
     setUrlError(null);
+    setUrlSuccess(null);
 
     try {
       const parsed = new URL(trimmed);
@@ -304,19 +321,53 @@ export default function NewStudioPage() {
       return;
     }
 
+    const marketplace = detectMarketplace(trimmed);
+
     setUrlChecking(true);
     try {
-      await new Promise<void>((resolve, reject) => {
-        const img = new Image();
-        const timer = setTimeout(
-          () => reject(new Error("URL timed out — check the link and try again.")),
-          8000
-        );
-        img.onload = () => { clearTimeout(timer); resolve(); };
-        img.onerror = () => { clearTimeout(timer); reject(new Error("URL does not point to a reachable image.")); };
-        img.src = trimmed;
-      });
-      setPhotoUrls((prev) => (prev.length < MAX_PHOTOS ? [...prev, trimmed] : prev));
+      let finalUrl = trimmed;
+
+      if (marketplace) {
+        const resp = await fetch("/api/studio/extract-image", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: trimmed }),
+        });
+        const data = await resp.json() as { imageUrl?: string; marketplace?: string; error?: string };
+        if (!resp.ok || !data.imageUrl) {
+          setUrlError(data.error ?? `Could not extract an image from the ${marketplace} listing.`);
+          return;
+        }
+        finalUrl = data.imageUrl;
+        if (photoUrls.includes(finalUrl)) {
+          setUrlError("This image has already been added.");
+          return;
+        }
+        await new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          const timer = setTimeout(
+            () => reject(new Error("The extracted image took too long to load.")),
+            8000
+          );
+          img.onload = () => { clearTimeout(timer); resolve(); };
+          img.onerror = () => { clearTimeout(timer); reject(new Error("The image extracted from the listing could not be loaded.")); };
+          img.src = finalUrl;
+        });
+        setUrlSuccess(`Found image from ${data.marketplace ?? marketplace} listing`);
+      } else {
+        await new Promise<void>((resolve, reject) => {
+          const img = new Image();
+          const timer = setTimeout(
+            () => reject(new Error("URL timed out — check the link and try again.")),
+            8000
+          );
+          img.onload = () => { clearTimeout(timer); resolve(); };
+          img.onerror = () => { clearTimeout(timer); reject(new Error("URL does not point to a reachable image.")); };
+          img.src = trimmed;
+        });
+      }
+
+      setPhotoUrls((prev) => (prev.length < MAX_PHOTOS ? [...prev, finalUrl] : prev));
       setUrlInput("");
     } catch (e) {
       setUrlError(e instanceof Error ? e.message : "Could not load image from URL.");
@@ -652,9 +703,9 @@ export default function NewStudioPage() {
                   <input
                     type="url"
                     className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
-                    placeholder="https://example.com/image.jpg"
+                    placeholder="Image URL or eBay / Depop / Vinted listing"
                     value={urlInput}
-                    onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); }}
+                    onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); setUrlSuccess(null); }}
                     onKeyDown={(e) => e.key === "Enter" && !urlChecking && urlInput.trim() && addImageUrl()}
                     disabled={isBusy || urlChecking}
                   />
@@ -670,6 +721,9 @@ export default function NewStudioPage() {
                 </div>
                 {urlError && (
                   <p className="text-red-400 text-xs">{urlError}</p>
+                )}
+                {urlSuccess && (
+                  <p className="text-green-400 text-xs">{urlSuccess}</p>
                 )}
               </div>
             )}
