@@ -1,0 +1,204 @@
+import {
+  Archive,
+  ChevronRight,
+  CreditCard,
+  FileText,
+  History,
+  LogIn,
+  RefreshCcw,
+  ShieldCheck,
+  Sparkles,
+} from "lucide-react";
+import { Link } from "wouter";
+
+type MoreActionButtonProps = {
+  label: string;
+  description: string;
+  href?: string;
+  icon: React.ElementType;
+  badge?: string;
+  variant?: "default" | "premium" | "account" | "danger" | "vault";
+  onClick?: () => void;
+};
+
+function MoreActionButton({
+  label,
+  description,
+  href,
+  icon: Icon,
+  badge,
+  variant = "default",
+  onClick,
+}: MoreActionButtonProps) {
+  const content = (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        group relative w-full overflow-hidden rounded-[22px]
+        border px-4 py-4 text-left
+        transition-all duration-300 ease-out
+        active:scale-[0.985]
+
+        ${
+          variant === "premium"
+            ? "border-cyan-300/25 bg-cyan-400/[0.08] shadow-[0_0_28px_rgba(34,211,238,0.10),inset_0_0_22px_rgba(34,211,238,0.04)]"
+            : variant === "account"
+            ? "border-blue-300/20 bg-blue-400/[0.07] shadow-[0_0_26px_rgba(59,130,246,0.10)]"
+            : variant === "vault"
+            ? "border-cyan-300/30 bg-gradient-to-br from-cyan-400/[0.12] via-blue-500/[0.08] to-violet-500/[0.08] shadow-[0_0_34px_rgba(34,211,238,0.16)]"
+            : variant === "danger"
+            ? "border-rose-300/20 bg-rose-400/[0.06]"
+            : "border-white/[0.08] bg-white/[0.035] shadow-[0_0_22px_rgba(0,0,0,0.22)]"
+        }
+
+        hover:border-cyan-300/45
+        hover:bg-cyan-400/[0.09]
+        hover:shadow-[0_0_34px_rgba(34,211,238,0.16),inset_0_0_24px_rgba(34,211,238,0.045)]
+      `}
+    >
+      {/* soft corner glow */}
+      <span
+        className="
+          pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full
+          bg-cyan-300/10 blur-2xl
+          opacity-0 transition-opacity duration-300
+          group-hover:opacity-100
+        "
+      />
+
+      {/* scan shimmer */}
+      <span
+        className="
+          pointer-events-none absolute inset-y-0 left-0 w-24
+          -translate-x-[140%]
+          bg-gradient-to-r from-transparent via-cyan-200/12 to-transparent
+          transition-transform duration-700
+          group-hover:translate-x-[620%]
+        "
+      />
+
+      <div className="relative z-10 flex items-center gap-4">
+        <div
+          className={`
+            flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl
+            border transition-all duration-300
+
+            ${
+              variant === "premium" || variant === "vault"
+                ? "border-cyan-300/30 bg-cyan-300/12 text-cyan-200 shadow-[0_0_18px_rgba(34,211,238,0.18)]"
+                : variant === "account"
+                ? "border-blue-300/25 bg-blue-300/10 text-blue-100"
+                : "border-white/10 bg-black/30 text-slate-300"
+            }
+
+            group-hover:scale-105
+            group-hover:border-cyan-300/50
+            group-hover:bg-cyan-300/15
+            group-hover:text-cyan-100
+          `}
+        >
+          <Icon size={22} strokeWidth={2.35} />
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-[15px] font-semibold tracking-tight text-slate-100">
+              {label}
+            </p>
+
+            {badge && (
+              <span
+                className="
+                  rounded-full border border-cyan-300/25
+                  bg-cyan-300/10 px-2 py-0.5
+                  text-[10px] font-black uppercase tracking-[0.08em]
+                  text-cyan-200
+                  shadow-[0_0_14px_rgba(34,211,238,0.12)]
+                "
+              >
+                {badge}
+              </span>
+            )}
+          </div>
+
+          <p className="mt-0.5 line-clamp-1 text-[13px] font-medium text-slate-400">
+            {description}
+          </p>
+        </div>
+
+        <ChevronRight
+          size={19}
+          strokeWidth={2.4}
+          className="
+            shrink-0 text-slate-600 transition-all duration-300
+            group-hover:translate-x-1 group-hover:text-cyan-200
+          "
+        />
+      </div>
+    </button>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} className="block">
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
+}
+
+export function MoreScreenButtons() {
+  return (
+    <div className="space-y-3">
+      <MoreActionButton
+        label="History"
+        description="Saved listings, scans and Guard checks"
+        href="/history"
+        icon={History}
+      />
+
+      <MoreActionButton
+        label="Billing & Plans"
+        description="Manage subscription, credits and upgrades"
+        href="/billing"
+        icon={CreditCard}
+        badge="Free Trial"
+        variant="premium"
+      />
+
+      <MoreActionButton
+        label="Legal"
+        description="Privacy, terms and AI disclaimer"
+        href="/legal"
+        icon={FileText}
+      />
+
+      <MoreActionButton
+        label="Replay Splash"
+        description="See the List-LENS intro again"
+        href="/splash"
+        icon={RefreshCcw}
+      />
+
+      <MoreActionButton
+        label="Log in"
+        description="Sign in to sync your data"
+        href="/login"
+        icon={LogIn}
+        variant="account"
+      />
+
+      <MoreActionButton
+        label="Vault"
+        description="Open your saved collection and listings"
+        href="/vault"
+        icon={Archive}
+        badge="Secure"
+        variant="vault"
+      />
+    </div>
+  );
+}
