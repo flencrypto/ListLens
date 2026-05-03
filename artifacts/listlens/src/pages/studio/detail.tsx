@@ -169,6 +169,8 @@ export default function StudioItemPage() {
   const [loadingExisting, setLoadingExisting] = useState(true);
   const [itemLens, setItemLens] = useState<string | null>(null);
   const [urlInput, setUrlInput] = useState("");
+  const [urlError, setUrlError] = useState<string | null>(null);
+  const [urlChecking, setUrlChecking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -316,16 +318,50 @@ export default function StudioItemPage() {
     }
   }
 
-  function handleAddUrl() {
+  async function handleAddUrl() {
     const trimmed = urlInput.trim();
-    if (!trimmed || photoUrls.includes(trimmed)) return;
-    if (photoUrls.length >= MAX_PHOTOS) {
-      setError(`Maximum ${MAX_PHOTOS} photos allowed.`);
+    setUrlError(null);
+
+    try {
+      const parsed = new URL(trimmed);
+      if (!["http:", "https:"].includes(parsed.protocol)) {
+        setUrlError("URL must start with http:// or https://");
+        return;
+      }
+    } catch {
+      setUrlError("Please enter a valid URL.");
       return;
     }
-    setPhotoUrls((prev) => [...prev, trimmed]);
-    setUrlInput("");
-    setError(null);
+
+    if (photoUrls.length >= MAX_PHOTOS) {
+      setUrlError(`Maximum ${MAX_PHOTOS} photos already added.`);
+      return;
+    }
+
+    if (photoUrls.includes(trimmed)) {
+      setUrlError("This URL has already been added.");
+      return;
+    }
+
+    setUrlChecking(true);
+    try {
+      await new Promise<void>((resolve, reject) => {
+        const img = new Image();
+        const timer = setTimeout(
+          () => reject(new Error("URL timed out — check the link and try again.")),
+          8000
+        );
+        img.onload = () => { clearTimeout(timer); resolve(); };
+        img.onerror = () => { clearTimeout(timer); reject(new Error("URL does not point to a reachable image.")); };
+        img.src = trimmed;
+      });
+      setPhotoUrls((prev) => (prev.length < MAX_PHOTOS ? [...prev, trimmed] : prev));
+      setUrlInput("");
+    } catch (e) {
+      setUrlError(e instanceof Error ? e.message : "Could not load image from URL.");
+    } finally {
+      setUrlChecking(false);
+    }
   }
 
   function handleRemoveUrl(url: string) {
@@ -577,19 +613,31 @@ export default function StudioItemPage() {
                       fill="none"
                     />
                   </svg>
-                  Or paste an image URL
+                  Or add by URL
                 </summary>
-                <div className="flex gap-2 mt-2">
-                  <input
-                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
-                    placeholder="https://example.com/photo.jpg"
-                    value={urlInput}
-                    onChange={(e) => setUrlInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && handleAddUrl()}
-                  />
-                  <Button onClick={handleAddUrl} variant="secondary" size="sm">
-                    Add
-                  </Button>
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex gap-2">
+                    <input
+                      className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                      placeholder="https://example.com/photo.jpg"
+                      value={urlInput}
+                      onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); }}
+                      onKeyDown={(e) => e.key === "Enter" && !urlChecking && handleAddUrl()}
+                      disabled={urlChecking}
+                    />
+                    <Button
+                      onClick={handleAddUrl}
+                      disabled={urlChecking || !urlInput.trim()}
+                      variant="secondary"
+                      size="sm"
+                      className="shrink-0"
+                    >
+                      {urlChecking ? <Spinner className="text-xs" /> : "Add"}
+                    </Button>
+                  </div>
+                  {urlError && (
+                    <p className="text-red-400 text-xs">{urlError}</p>
+                  )}
                 </div>
               </details>
 
