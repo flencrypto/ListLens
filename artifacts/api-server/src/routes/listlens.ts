@@ -2179,27 +2179,51 @@ router.post("/guard/checks", async (req, res) => {
 router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
 
+  // Check in-memory first — short-circuit before any DB round-trips so that
+  // a transient DB outage never breaks a same-session fresh check.
   const inMemory = guardStore.get(id);
   if (inMemory) {
-    res.json({ id, report: inMemory });
+    const meta = guardMeta.get(id);
+    res.json({
+      id,
+      report: inMemory,
+      createdAt: null,
+      url: meta?.url ?? null,
+      screenshotUrls: meta?.screenshotUrls ?? null,
+    });
     return;
   }
 
   try {
-    const rows = await db
-      .select()
-      .from(aiJobLogsTable)
-      .where(eq(aiJobLogsTable.checkId, id))
-      .orderBy(desc(aiJobLogsTable.createdAt))
-      .limit(1);
+    // Query both tables in parallel for the persisted report and its metadata.
+    const [logRows, checkRows] = await Promise.all([
+      db
+        .select()
+        .from(aiJobLogsTable)
+        .where(eq(aiJobLogsTable.checkId, id))
+        .orderBy(desc(aiJobLogsTable.createdAt))
+        .limit(1),
+      db
+        .select()
+        .from(guardChecksTable)
+        .where(eq(guardChecksTable.id, id))
+        .limit(1),
+    ]);
 
-    const row = rows[0];
-    if (!row?.fullOutput) {
+    const logRow = logRows[0];
+    if (!logRow?.fullOutput) {
       res.status(404).json({ error: "Not found" });
       return;
     }
 
-    res.json({ id, report: row.fullOutput });
+    const checkRow = checkRows[0];
+    res.json({
+      id,
+      report: logRow.fullOutput,
+      createdAt: logRow.createdAt,
+      url: checkRow?.url ?? null,
+      screenshotUrls: (checkRow?.screenshotUrls as string[] | null) ?? null,
+    });
   } catch (err) {
     logger.error({ err, id }, "guard_checks get failed");
     res.status(503).json({ error: "Service temporarily unavailable." });
