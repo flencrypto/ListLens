@@ -11,12 +11,38 @@ import { AnalysisReveal } from "@/components/ui/AnalysisReveal";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import {
-  generateId,
   getReport,
   saveReport,
   type GuardReport,
   type RiskLevel,
 } from "@/lib/historyStore";
+import { getGuardCheck, type GuardApiReport } from "@/lib/api";
+
+function apiReportToLocalReport(id: string, apiReport: GuardApiReport): GuardReport {
+  return {
+    id,
+    createdAt: Date.now(),
+    lens: apiReport.lens,
+    source: "url",
+    url: "",
+    shots: [],
+    saved: true,
+    risk: apiReport.risk,
+    risk_dimensions: apiReport.risk_dimensions,
+    red_flags: apiReport.red_flags,
+    green_signals: apiReport.green_signals,
+    price_analysis: {
+      asking_price: apiReport.price_analysis.asking_price,
+      market_estimate: apiReport.price_analysis.market_estimate,
+      price_verdict: apiReport.price_analysis.price_verdict,
+      price_note: apiReport.price_analysis.price_note,
+    },
+    authenticity_signals: apiReport.authenticity_signals,
+    missing_photos: apiReport.missing_photos,
+    seller_questions: apiReport.seller_questions,
+    buy_recommendation: apiReport.buy_recommendation,
+  };
+}
 
 const AUTH_SERVICES = [
   {
@@ -139,9 +165,21 @@ export default function GuardReportScreen() {
           initialised.current = true;
           return;
         }
+        // Not in local storage — fetch from the API (handles cross-device / cleared-cache case)
+        try {
+          const { report: apiReport } = await getGuardCheck(incomingId);
+          if (cancelled) return;
+          const localReport = apiReportToLocalReport(incomingId, apiReport);
+          await saveReport(localReport).catch(() => undefined);
+          setReport(localReport);
+          initialised.current = true;
+          return;
+        } catch {
+          // API unavailable — fall through to "not found"
+          if (cancelled) return;
+        }
       }
-      // No matching report found in local storage — show error state
-      // (fresh reports are created in check.tsx before navigating here)
+      // No matching report found in local storage or API
       if (cancelled) return;
       initialised.current = true;
     }

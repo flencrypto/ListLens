@@ -145,6 +145,12 @@ export default function ReviewScreen() {
               setMatrixLikelihoods(existing.pressingMatches);
             }
           }
+          if (existing.watchMarket) {
+            setWatchMarketData(existing.watchMarket);
+          }
+          if (existing.sneakerMarket) {
+            setSneakerMarketData(existing.sneakerMarket);
+          }
           setHydrated(true);
           return;
         }
@@ -179,6 +185,19 @@ export default function ReviewScreen() {
           }
           if (listing.lens === "ShoeLens" && apiAnalysis?.sneaker_market) {
             setSneakerMarketData(apiAnalysis.sneaker_market);
+          }
+          if (listing.lens === "RecordLens" && apiAnalysis) {
+            const ext = apiAnalysis as Record<string, unknown> & {
+              needs_matrix_for_clarification?: boolean;
+              record_analysis?: { needs_matrix_for_clarification?: boolean };
+            };
+            const confidence = (apiAnalysis.identity?.confidence ?? 1) as number;
+            const needsMatrix =
+              (ext.record_analysis?.needs_matrix_for_clarification ?? false) ||
+              (ext.needs_matrix_for_clarification ?? false);
+            if (confidence < 0.8 || needsMatrix) {
+              setNeedsMatrixConfirm(true);
+            }
           }
           setHydrated(true);
           return;
@@ -272,11 +291,13 @@ export default function ReviewScreen() {
         matrixSideB: matrixSideB || undefined,
         matrixSideCD: matrixSideCD || undefined,
         pressingMatches: matrixLikelihoods ?? undefined,
+        watchMarket: watchMarketData ?? undefined,
+        sneakerMarket: sneakerMarketData ?? undefined,
       };
       saveDraft(draft).catch(() => undefined);
     }, 250);
     return () => clearTimeout(handle);
-  }, [hydrated, draftId, createdAt, body, needsMatrixConfirm, matrixSideA, matrixSideB, matrixSideCD, matrixLikelihoods]);
+  }, [hydrated, draftId, createdAt, body, needsMatrixConfirm, matrixSideA, matrixSideB, matrixSideCD, matrixLikelihoods, watchMarketData, sneakerMarketData]);
 
   // Fetch eBay item specifics from the server once we have an itemId.
   useEffect(() => {

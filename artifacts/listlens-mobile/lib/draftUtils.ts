@@ -85,5 +85,7 @@ export function analysisToBody(
     },
     flags,
     exported: "none",
+    watchMarket: analysis.watch_market ?? undefined,
+    sneakerMarket: analysis.sneaker_market ?? undefined,
   };
 }
