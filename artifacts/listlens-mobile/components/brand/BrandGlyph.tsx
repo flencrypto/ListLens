@@ -1,4 +1,4 @@
-import React, { useId } from "react";
+import React from "react";
 import Svg, {
   Circle,
   Defs,
@@ -18,78 +18,105 @@ interface Props {
 }
 
 /**
- * BrandGlyph — the small "AI brain in shopping cart" mark from the rebrand
- * artwork, with bright cyan lightning sparks emanating outward (matching the
- * brain-in-cart hero image). Used as a quiet brand cue at the bottom of the
- * splash and as a footer glyph. Pure SVG, SSR-safe.
+ * BrandGlyph — the "AI brain in shopping cart" brand mark from the rebrand
+ * artwork, with bright cyan electric lightning sparks emanating outward
+ * (matching the brain-in-cart hero image). Used as a quiet brand cue at the
+ * bottom of the splash and as a footer glyph. Pure SVG, no animation.
  */
 export function BrandGlyph({ size = 36, showSparks = true }: Props) {
   const colors = useColors();
   const stroke = colors.brandCyan;
   const sparkColour = colors.cyan300;
-  // Unique gradient id per instance — multiple BrandGlyph instances on the
-  // same screen would otherwise collide on `id="brand-glyph-glow"`.
-  const glowId = `brand-glyph-glow-${useId().replace(/:/g, "")}`;
+  const glowId = "brand-glyph-glow";
+  const innerGlowId = "brand-glyph-inner";
+
   return (
-    <Svg viewBox="0 0 64 64" width={size} height={size}>
+    <Svg viewBox="0 0 80 80" width={size} height={size}>
       <Defs>
-        <RadialGradient id={glowId} cx="50%" cy="50%" r="50%">
-          <Stop offset="0%" stopColor={stroke} stopOpacity="0.5" />
-          <Stop offset="60%" stopColor={stroke} stopOpacity="0.08" />
+        {/* Outer halo */}
+        <RadialGradient id={glowId} cx="50%" cy="48%" r="50%">
+          <Stop offset="0%"   stopColor={stroke} stopOpacity="0.55" />
+          <Stop offset="50%"  stopColor={stroke} stopOpacity="0.12" />
           <Stop offset="100%" stopColor={stroke} stopOpacity="0" />
         </RadialGradient>
+        {/* Inner glow around brain core */}
+        <RadialGradient id={innerGlowId} cx="50%" cy="45%" r="40%">
+          <Stop offset="0%"   stopColor={colors.cyan300} stopOpacity="0.7" />
+          <Stop offset="100%" stopColor={stroke}         stopOpacity="0" />
+        </RadialGradient>
       </Defs>
-      {/* Soft cyan halo */}
-      <Circle cx={32} cy={32} r={28} fill={`url(#${glowId})`} />
 
-      {/* Lightning sparks emanating from the brain (matches artwork) */}
+      {/* Outer halo */}
+      <Circle cx={40} cy={40} r={38} fill={`url(#${glowId})`} />
+
+      {/* Lightning sparks — prominent, multi-branch */}
       {showSparks ? (
         <G
           stroke={sparkColour}
-          strokeWidth={1.1}
+          strokeWidth={1.6}
           strokeLinecap="round"
           fill="none"
-          opacity={0.85}
+          opacity={0.92}
         >
-          <Path d="M32 4 L30 10 L33 11 L31 16" />
-          <Path d="M50 8 L46 14 L49 16 L46 21" />
-          <Path d="M14 8 L18 14 L15 16 L18 21" />
-          <Path d="M58 24 L52 26 L54 29 L49 30" />
-          <Path d="M6 24 L12 26 L10 29 L15 30" />
+          <Path d="M40 3 L37 11 L41 12 L38 20" />
+          <Path d="M62 9 L57 17 L61 19 L57 27" />
+          <Path d="M18 9 L23 17 L19 19 L23 27" />
+          <Path d="M76 30 L67 33 L70 37 L62 39" />
+          <Path d="M4 30 L13 33 L10 37 L18 39" />
+          <Path d="M70 58 L62 54 L64 50 L57 48" />
+          <Path d="M10 58 L18 54 L16 50 L23 48" />
         </G>
       ) : null}
 
+      {/* Inner core glow */}
+      <Circle cx={40} cy={36} r={18} fill={`url(#${innerGlowId})`} />
+
+      {/* Cart handle */}
       <Path
-        d="M6 12 L14 12 L20 40 L52 40"
+        d="M6 14 L16 14 L23 50 L64 50"
         fill="none"
         stroke={stroke}
-        strokeWidth={3}
+        strokeWidth={3.5}
         strokeLinecap="round"
         strokeLinejoin="round"
       />
+      {/* Cart basket */}
       <Path
-        d="M16 20 L54 20 L50 36 L20 36 Z"
-        fill="none"
+        d="M19 24 L66 24 L62 44 L23 44 Z"
+        fill="rgba(34,211,238,0.07)"
         stroke={stroke}
         strokeWidth={3}
         strokeLinejoin="round"
-        opacity={0.55}
+        opacity={0.7}
       />
+
+      {/* Brain inside the basket */}
       <G
-        transform="translate(20 18)"
+        transform="translate(24 20)"
         stroke={stroke}
-        strokeWidth={1.6}
+        strokeWidth={1.8}
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <Path d="M12 2 C8 2 6 4 6 7 C4 7 2 9 2 12 C2 14 3 15 4 16 C3 17 3 19 4 20 C5 21 7 21 8 20 L8 16 C8 14 9 13 11 13 L11 4 C11 3 12 2 12 2 Z" />
-        <Path d="M12 2 C16 2 18 4 18 7 C20 7 22 9 22 12 C22 14 21 15 20 16 C21 17 21 19 20 20 C19 21 17 21 16 20 L16 16 C16 14 15 13 13 13 L13 4 C13 3 12 2 12 2 Z" />
-        <Line x1="8" y1="9" x2="11" y2="9" />
-        <Line x1="13" y1="9" x2="16" y2="9" />
+        {/* Left lobe */}
+        <Path d="M16 3 C10 3 7 5 7 9 C4 9 2 12 2 16 C2 19 3.5 20.5 5 21.5 C4 23 4 25.5 5.5 26.5 C7 27.5 9.5 27.5 11 26.5 L11 21 C11 18.5 12.5 17.5 14.5 17.5 L14.5 5 C14.5 3.5 16 3 16 3 Z" />
+        {/* Right lobe */}
+        <Path d="M16 3 C22 3 25 5 25 9 C28 9 30 12 30 16 C30 19 28.5 20.5 27 21.5 C28 23 28 25.5 26.5 26.5 C25 27.5 22.5 27.5 21 26.5 L21 21 C21 18.5 19.5 17.5 17.5 17.5 L17.5 5 C17.5 3.5 16 3 16 3 Z" />
+        {/* Corpus callosum lines */}
+        <Line x1="11" y1="11" x2="14.5" y2="11" />
+        <Line x1="17.5" y1="11" x2="21" y2="11" />
+        <Line x1="11" y1="15" x2="14.5" y2="15" />
+        <Line x1="17.5" y1="15" x2="21" y2="15" />
+        {/* Stem */}
+        <Line x1="16" y1="26.5" x2="16" y2="30" />
       </G>
-      <Circle cx={26} cy={50} r={3} fill={stroke} />
-      <Circle cx={46} cy={50} r={3} fill={stroke} />
+
+      {/* Wheels — filled with inner highlight */}
+      <Circle cx={31} cy={62} r={4.5} fill={stroke} />
+      <Circle cx={31} cy={62} r={2}   fill="#cffafe" opacity={0.6} />
+      <Circle cx={56} cy={62} r={4.5} fill={stroke} />
+      <Circle cx={56} cy={62} r={2}   fill="#cffafe" opacity={0.6} />
     </Svg>
   );
 }
