@@ -2179,6 +2179,22 @@ router.post("/guard/checks", async (req, res) => {
 router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
 
+  // In-memory store is a fallback for the same server instance (e.g. during the
+  // same session, before the DB write has propagated). Check this first to avoid
+  // 503 errors on transient DB failures when the report is already in memory.
+  const inMemoryReport = guardStore.get(id);
+  if (inMemoryReport) {
+    const meta = guardMeta.get(id);
+    res.json({
+      id,
+      report: inMemoryReport,
+      createdAt: new Date().toISOString(),
+      url: meta?.url ?? null,
+      screenshotUrls: meta?.screenshotUrls ?? [],
+    });
+    return;
+  }
+
   try {
     // Fetch check metadata (url, screenshotUrls, createdAt) and AI log in parallel
     const [checkRows, logRows] = await Promise.all([
@@ -2194,21 +2210,22 @@ router.get("/guard/checks/:id", async (req, res) => {
     const checkRow = checkRows[0];
     const logRow = logRows[0];
 
-    // In-memory store is a fallback for the same server instance (e.g. during the
-    // same session, before the DB write has propagated).
-    const report = logRow?.fullOutput ?? guardStore.get(id);
-    if (!report) {
+    if (!logRow?.fullOutput) {
       res.status(404).json({ error: "Not found" });
+      return;
+    }
+
+    // Apply ownership check: allow access if check is anonymous (userId === null)
+    // or if the authenticated user owns it.
+    if (checkRow?.userId !== null && checkRow?.userId !== req.user?.id) {
+      res.status(403).json({ error: "Forbidden" });
       return;
     }
 
     res.json({
       id,
-      report,
-      createdAt:
-        logRow?.createdAt?.toISOString() ??
-        checkRow?.createdAt?.toISOString() ??
-        null,
+      report: logRow.fullOutput,
+      createdAt: checkRow?.createdAt?.toISOString() ?? null,
       url: checkRow?.url ?? null,
       screenshotUrls: checkRow?.screenshotUrls ?? [],
     });

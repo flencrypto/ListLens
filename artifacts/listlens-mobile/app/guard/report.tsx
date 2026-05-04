@@ -40,6 +40,7 @@ function apiReportToLocalReport(
       market_estimate: apiReport.price_analysis.market_estimate,
       price_verdict: apiReport.price_analysis.price_verdict,
       price_note: apiReport.price_analysis.price_note,
+      market_data: apiReport.price_analysis.market_data ?? null,
     },
     authenticity_signals: apiReport.authenticity_signals,
     missing_photos: apiReport.missing_photos,
