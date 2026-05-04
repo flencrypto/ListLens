@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useId } from "react";
 import Svg, {
   Circle,
   Defs,
@@ -27,8 +27,12 @@ export function BrandGlyph({ size = 36, showSparks = true }: Props) {
   const colors = useColors();
   const stroke = colors.brandCyan;
   const sparkColour = colors.cyan300;
-  const glowId = "brand-glyph-glow";
-  const innerGlowId = "brand-glyph-inner";
+  // Unique gradient IDs per instance — multiple BrandGlyph instances on the
+  // same screen (or on Expo web in the same document) would otherwise share
+  // the first defined gradient and produce incorrect fills.
+  const uid = useId().replace(/:/g, "");
+  const glowId = `brand-glyph-glow-${uid}`;
+  const innerGlowId = `brand-glyph-inner-${uid}`;
 
   return (
     <Svg viewBox="0 0 80 80" width={size} height={size}>

@@ -32,7 +32,6 @@ export function BrandGlyph({
   const glowId = `bg-glow-${uid}`;
   const innerGlowId = `bg-inner-${uid}`;
   const blurId = `bg-blur-${uid}`;
-  const sparkBlurId = `bg-spark-blur-${uid}`;
 
   return (
     <svg
@@ -61,12 +60,9 @@ export function BrandGlyph({
           <stop offset="0%"   stopColor="#67e8f9" stopOpacity="0.7" />
           <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
         </radialGradient>
-        {/* Blur for spark glow */}
-        <filter id={blurId}      x="-40%" y="-40%" width="180%" height="180%">
+        {/* Blur filter for spark glow layer */}
+        <filter id={blurId} x="-40%" y="-40%" width="180%" height="180%">
           <feGaussianBlur stdDeviation="1.2" />
-        </filter>
-        <filter id={sparkBlurId} x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur stdDeviation="0.7" />
         </filter>
       </defs>
 
