@@ -47,3 +47,7 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# npm lockfile (this is a pnpm workspace)
+package-lock.json
+yarn.lock
