@@ -2179,24 +2179,9 @@ router.post("/guard/checks", async (req, res) => {
 router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
 
-  // In-memory store is a fallback for the same server instance (e.g. during the
-  // same session, before the DB write has propagated). Check this first to avoid
-  // 503 errors on transient DB failures when the report is already in memory.
-  const inMemoryReport = guardStore.get(id);
-  if (inMemoryReport) {
-    const meta = guardMeta.get(id);
-    res.json({
-      id,
-      report: inMemoryReport,
-      createdAt: new Date().toISOString(),
-      url: meta?.url ?? null,
-      screenshotUrls: meta?.screenshotUrls ?? [],
-    });
-    return;
-  }
-
   try {
-    // Fetch check metadata (url, screenshotUrls, createdAt) and AI log in parallel
+    // Always fetch check metadata for ownership validation and createdAt timestamp.
+    // Fetch in parallel with AI log for efficiency.
     const [checkRows, logRows] = await Promise.all([
       db.select().from(guardChecksTable).where(eq(guardChecksTable.id, id)).limit(1),
       db
@@ -2210,7 +2195,9 @@ router.get("/guard/checks/:id", async (req, res) => {
     const checkRow = checkRows[0];
     const logRow = logRows[0];
 
-    if (!logRow?.fullOutput) {
+    // In-memory store is a fallback when DB write hasn't propagated yet.
+    const report = logRow?.fullOutput ?? guardStore.get(id);
+    if (!report) {
       res.status(404).json({ error: "Not found" });
       return;
     }
@@ -2222,12 +2209,19 @@ router.get("/guard/checks/:id", async (req, res) => {
       return;
     }
 
+    // Prefer guardMeta for url/screenshotUrls when using in-memory report, otherwise
+    // fall back to checkRow. This handles the case where guardStore has the report
+    // but the DB write hasn't completed.
+    const meta = guardMeta.get(id);
+    const url = checkRow?.url ?? meta?.url ?? null;
+    const screenshotUrls = checkRow?.screenshotUrls ?? meta?.screenshotUrls ?? [];
+
     res.json({
       id,
-      report: logRow.fullOutput,
+      report,
       createdAt: checkRow?.createdAt?.toISOString() ?? null,
-      url: checkRow?.url ?? null,
-      screenshotUrls: checkRow?.screenshotUrls ?? [],
+      url,
+      screenshotUrls,
     });
   } catch (err) {
     logger.error({ err, id }, "guard_checks get failed");
