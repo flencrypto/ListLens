@@ -6,19 +6,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { BrandGlyph } from "@/components/brand/brand-glyph";
-
-const LENSES = [
-  { name: "ShoeLens",      emoji: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
-  { name: "RecordLens",    emoji: "💿", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
-  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "live",  href: "/lenses/tech" },
-  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "live",  href: "/lenses/book" },
-  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "live",  href: "/lenses/antiques" },
-  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "live",  href: "/lenses/autograph" },
-  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "soon" },
-  { name: "CardLens",      emoji: "🃏", desc: "Trading & sports cards",  status: "soon" },
-  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "soon" },
-  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "later" },
-];
+import { LENS_REGISTRY } from "@/lib/lenses-registry";
 
 const PRICING = [
   {
@@ -396,12 +384,12 @@ export default function HomePage() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Which category are you in?</h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              Generic AI hallucinates. Our 10 specialist Lenses are trained on millions of data points specific to their domain.
+              Generic AI hallucinates. Our specialist Lenses are trained on millions of data points specific to their domain.
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {LENSES.map((lens) => {
+            {LENS_REGISTRY.map((lens) => {
               const isLive = lens.status === "live";
               const card = (
                 <div className={`p-5 rounded-2xl border text-center transition-all ${
@@ -409,24 +397,23 @@ export default function HomePage() {
                     ? "bg-[#0d152a] border-white/10 hover:border-cyan-500/50 hover:bg-[#121c36] cursor-pointer"
                     : "bg-[#040a14] border-white/5 opacity-50 grayscale cursor-default"
                 }`}>
-                  <div className="text-2xl mb-2">{lens.emoji}</div>
+                  <div className="text-2xl mb-2">{lens.icon}</div>
                   <p className={`text-sm font-semibold ${isLive ? "text-white" : "text-slate-500"}`}>{lens.name}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.desc}</p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.category}</p>
                   <div className="mt-2">
                     {isLive && <span className="inline-block text-[9px] bg-cyan-900/70 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-700/40">Live</span>}
-                    {lens.status === "soon" && <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>}
-                    {lens.status === "later" && <span className="inline-block text-[9px] bg-zinc-900 text-zinc-700 px-2 py-0.5 rounded-full">Planned</span>}
+                    {lens.status === "planned" && <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>}
                   </div>
                 </div>
               );
               if (isLive && lens.href) {
                 return (
-                  <Link key={lens.name} href={lens.href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#040a14] rounded-2xl">
+                  <Link key={lens.id} href={lens.href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#040a14] rounded-2xl">
                     {card}
                   </Link>
                 );
               }
-              return <div key={lens.name}>{card}</div>;
+              return <div key={lens.id}>{card}</div>;
             })}
           </div>
         </div>
