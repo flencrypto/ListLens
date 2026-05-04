@@ -105,7 +105,7 @@ export default function HomePage() {
           className="pointer-events-none absolute inset-0 flex items-start justify-center overflow-hidden"
         >
           <div className="opacity-[0.12] -mt-24 w-[700px] h-[700px]">
-            <BrandLens className="w-full h-full" />
+            <BrandLens static className="w-full h-full" />
           </div>
         </div>
         {/* Glow orbs */}

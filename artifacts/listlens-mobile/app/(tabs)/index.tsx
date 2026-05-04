@@ -154,7 +154,7 @@ export default function HomeScreen() {
       >
         {/* Decorative BrandLens in top-right corner */}
         <View style={styles.heroLensWrap} pointerEvents="none">
-          <BrandLens size={110} />
+          <BrandLens size={110} staticOnly />
         </View>
 
         {/* Greeting + badge */}
