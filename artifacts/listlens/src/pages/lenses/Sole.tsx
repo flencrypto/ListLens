@@ -3,12 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Link } from "wouter";
 
 /*
-  SOLE-LENS™ UI Prototype
-  Clean rebuilt version after syntax corruption.
+  SOLE-LENS™ UI
   - No lucide-react dependency
   - Inline SVG icon system
   - Demo sneaker, comps, marketplace, dashboard and activity data
-  - Lightweight console.assert tests
 */
 
 const fontSystem = {
@@ -210,24 +208,7 @@ const qualityChecks = [
   { label: "Size label", status: "Needed", tone: "warn" },
 ];
 
-function runPrototypeTests() {
-  const validTabIds = tabs.map((tab) => tab.id);
-  console.assert(validTabIds.includes("scan"), "Expected scan tab to exist");
-  console.assert(validTabIds.includes("result"), "Expected result tab to exist");
-  console.assert(validTabIds.includes("listing"), "Expected listing tab to exist");
-  console.assert(validTabIds.includes("dashboard"), "Expected dashboard tab to exist");
-  console.assert(stats.length >= 4, "Expected at least four dashboard stat cards");
-  console.assert(comps.length >= 4, "Expected at least four pricing comps");
-  console.assert(demoSneakers.length >= 3, "Expected at least three demo sneaker records");
-  console.assert(marketplaceDrafts.some((draft) => draft.selected), "Expected one selected marketplace draft");
-  console.assert(recentScans.length >= 3, "Expected at least three recent scans");
-  console.assert(activityFeed.length >= 3, "Expected at least three activity feed items");
-  console.assert(captureSteps.length === 4, "Expected four guided capture steps");
-  console.assert(qualityChecks.every((check) => check.label && check.status), "Quality checks need label and status");
-  console.assert(sneaker.confidence >= 0 && sneaker.confidence <= 100, "Confidence must be a percentage");
-}
 
-runPrototypeTests();
 
 function cx(...classes: Array<string | false | null | undefined>) {
   return classes.filter(Boolean).join(" ");
@@ -877,7 +858,7 @@ export default function SoleLensPrototype() {
     setIsAnalysing(true);
     setAnalysisError(null);
     try {
-      const itemResponse = await fetch("/api/listlens/items", {
+      const itemResponse = await fetch("/api/items", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lens: "ShoeLens", marketplace: "eBay", photoUrls: [] }),
@@ -886,7 +867,7 @@ export default function SoleLensPrototype() {
       const item = await itemResponse.json() as { id?: string };
       if (!item.id) throw new Error("ShoeLens item response did not include an id.");
 
-      const analyseResponse = await fetch(`/api/listlens/items/${item.id}/analyse`, {
+      const analyseResponse = await fetch(`/api/items/${item.id}/analyse`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

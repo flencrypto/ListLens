@@ -10,14 +10,14 @@ import { BrandGlyph } from "@/components/brand/brand-glyph";
 const LENSES = [
   { name: "ShoeLens",      emoji: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
   { name: "RecordLens",    emoji: "💿", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
-  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "live",  href: "/lenses/tech" },
-  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "live",  href: "/lenses/book" },
-  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "live",  href: "/lenses/antiques" },
-  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "live",  href: "/lenses/autograph" },
-  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "soon" },
-  { name: "CardLens",      emoji: "🃏", desc: "Trading & sports cards",  status: "soon" },
-  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "soon" },
-  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "later" },
+  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "live",  href: "/lenses/watch" },
+  { name: "CardLens",      emoji: "🃏", desc: "Trading & sports cards",  status: "live",  href: "/lenses/card" },
+  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "live",  href: "/lenses/toy" },
+  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "live",  href: "/lenses/motor" },
+  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "soon" },
+  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "soon" },
+  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "soon" },
+  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "soon" },
 ];
 
 const PRICING = [
@@ -415,7 +415,6 @@ export default function HomePage() {
                   <div className="mt-2">
                     {isLive && <span className="inline-block text-[9px] bg-cyan-900/70 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-700/40">Live</span>}
                     {lens.status === "soon" && <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>}
-                    {lens.status === "later" && <span className="inline-block text-[9px] bg-zinc-900 text-zinc-700 px-2 py-0.5 rounded-full">Planned</span>}
                   </div>
                 </div>
               );
