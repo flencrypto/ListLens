@@ -22,6 +22,9 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useColors } from "@/hooks/useColors";
 import { uploadPhoto } from "@/lib/api";
+import type { StudioAnalysis } from "@/lib/api";
+import { analysisToBody } from "@/lib/draftUtils";
+import { saveDraft, type StudioDraft } from "@/lib/historyStore";
 import { useCreateStudioItem, useAnalyseStudioItem } from "@workspace/api-client-react";
 
 const MIN_PHOTOS = 3;
@@ -266,16 +269,40 @@ export default function CaptureScreen() {
       setProgressLabel("Complete!");
       setProgressValue(100);
 
+      // Build a draft from the analysis and save it to on-device storage before
+      // navigating. Using the API item id as the draft id means history entries
+      // from both local storage and the API route to the same review screen.
+      const safeAnalysis = analysis as unknown as StudioAnalysis;
+      const draftBody = analysisToBody(safeAnalysis, String(lens), String(marketplace), photoUrls);
+
+      // Detect whether RecordLens needs matrix/runout clarification.
+      const ext = analysis as unknown as {
+        needs_matrix_for_clarification?: boolean;
+        record_analysis?: { needs_matrix_for_clarification?: boolean };
+      };
+      const needsMatrixConfirm =
+        String(lens) === "RecordLens" &&
+        ((ext.record_analysis?.needs_matrix_for_clarification ?? false) ||
+          (ext.needs_matrix_for_clarification ?? false) ||
+          analysis.identity.confidence < 0.8);
+
+      const now = Date.now();
+      const draft: StudioDraft = {
+        id,
+        createdAt: now,
+        updatedAt: now,
+        ...draftBody,
+        needsMatrixConfirm: needsMatrixConfirm || undefined,
+      };
+      await saveDraft(draft).catch(() => undefined);
+
       // Brief pause so user sees 100%, then navigate
       await new Promise((r) => setTimeout(r, 400));
 
       router.replace({
         pathname: "/studio/review",
         params: {
-          lens: String(lens),
-          marketplace: String(marketplace),
-          photos: photos.map((p) => p.uri).join("|"),
-          analysis: JSON.stringify(analysis),
+          draftId: id,
           itemId: id,
           fresh: "1",
         },

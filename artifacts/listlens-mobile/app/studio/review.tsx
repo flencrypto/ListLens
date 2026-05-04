@@ -30,93 +30,7 @@ import {
 } from "@/lib/historyStore";
 import type { StudioAnalysis, ItemSpecific } from "@/lib/api";
 import { confirmPressing, getItem, reanalyseItem, getItemSpecifics, publishItemToEbay, updateItem, type AnalysisCorrections } from "@/lib/api";
-
-type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
-
-const DEFAULT_BODY: DraftBody = {
-  lens: "ShoeLens",
-  marketplace: "both",
-  photos: [],
-  title: "AI-drafted listing",
-  brand: "",
-  size: "",
-  description: "Listing drafted from your photos.",
-  bullets: [],
-  pricing: { quick: 0, recommended: 0, high: 0 },
-  flags: [],
-  exported: "none",
-};
-
-function analysisToBody(
-  analysis: StudioAnalysis,
-  lens: string,
-  marketplace: string,
-  photos: string[],
-): DraftBody {
-  const ebay = analysis.marketplace_outputs?.ebay ?? {};
-  const vinted = analysis.marketplace_outputs?.vinted ?? {};
-  const identityStr =
-    [analysis.identity?.brand, analysis.identity?.model]
-      .filter(Boolean)
-      .join(" ") || "AI-drafted listing";
-  const title =
-    (ebay["title"] as string | undefined) ??
-    (vinted["title"] as string | undefined) ??
-    identityStr;
-
-  const attrs = analysis.attributes ?? {};
-
-  const size =
-    (attrs["size"] as string | undefined) ??
-    (attrs["Size"] as string | undefined) ??
-    (attrs["size_label"] as string | undefined) ??
-    "";
-
-  function flattenAttr(key: string, value: unknown): string {
-    if (value === null || value === undefined) return `${key}: —`;
-    if (typeof value !== "object") return `${key}: ${String(value)}`;
-    const entries = Object.entries(value as Record<string, unknown>)
-      .filter(([, v]) => v !== null && v !== undefined)
-      .map(([k, v]) => `${k}: ${String(v)}`);
-    return `${key} — ${entries.join(", ")}`;
-  }
-
-  const SKIP_KEYS = new Set(["size", "Size", "size_label"]);
-
-  const bullets: string[] = Object.entries(attrs)
-    .filter(([k]) => !SKIP_KEYS.has(k))
-    .slice(0, 8)
-    .map(([k, v]) => flattenAttr(k, v));
-
-  const flags: DraftBody["flags"] = [
-    ...(analysis.missing_photos ?? []).map((text) => ({
-      severity: "medium" as const,
-      text,
-    })),
-    ...(analysis.warnings ?? []).map((text) => ({
-      severity: "low" as const,
-      text,
-    })),
-  ];
-
-  return {
-    lens,
-    marketplace,
-    photos,
-    title,
-    brand: analysis.identity?.brand ?? "",
-    size,
-    description: analysis.listing_description ?? "",
-    bullets,
-    pricing: {
-      quick: analysis.pricing?.quick_sale ?? 0,
-      recommended: analysis.pricing?.recommended ?? 0,
-      high: analysis.pricing?.high ?? 0,
-    },
-    flags,
-    exported: "none",
-  };
-}
+import { type DraftBody, DEFAULT_DRAFT_BODY as DEFAULT_BODY, analysisToBody } from "@/lib/draftUtils";
 
 const EMPTY_CORRECTIONS: AnalysisCorrections = {
   matrix_a: "",
@@ -222,7 +136,7 @@ export default function ReviewScreen() {
             flags: existing.flags,
             exported: existing.exported,
           });
-          if (existing.lens === "RecordLens" && (existing.matrixSideA || existing.matrixSideB || existing.matrixSideCD || existing.pressingMatches)) {
+          if (existing.lens === "RecordLens" && (existing.matrixSideA || existing.matrixSideB || existing.matrixSideCD || existing.pressingMatches || existing.needsMatrixConfirm)) {
             setNeedsMatrixConfirm(true);
             setMatrixSideA(existing.matrixSideA ?? "");
             setMatrixSideB(existing.matrixSideB ?? "");
@@ -353,6 +267,7 @@ export default function ReviewScreen() {
         createdAt,
         updatedAt: Date.now(),
         ...body,
+        needsMatrixConfirm: needsMatrixConfirm || undefined,
         matrixSideA: matrixSideA || undefined,
         matrixSideB: matrixSideB || undefined,
         matrixSideCD: matrixSideCD || undefined,
@@ -361,7 +276,7 @@ export default function ReviewScreen() {
       saveDraft(draft).catch(() => undefined);
     }, 250);
     return () => clearTimeout(handle);
-  }, [hydrated, draftId, createdAt, body, matrixSideA, matrixSideB, matrixSideCD, matrixLikelihoods]);
+  }, [hydrated, draftId, createdAt, body, needsMatrixConfirm, matrixSideA, matrixSideB, matrixSideCD, matrixLikelihoods]);
 
   // Fetch eBay item specifics from the server once we have an itemId.
   useEffect(() => {

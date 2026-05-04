@@ -30,6 +30,7 @@ export interface StudioDraft {
   matrixSideB?: string;
   matrixSideCD?: string;
   pressingMatches?: PressingMatch[];
+  needsMatrixConfirm?: boolean;
 }
 
 export type RiskLevel = "low" | "medium" | "medium_high" | "high" | "inconclusive";
