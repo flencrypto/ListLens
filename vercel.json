@@ -2,7 +2,13 @@
   "buildCommand": "pnpm --filter @workspace/listlens run build",
   "outputDirectory": "artifacts/listlens/dist/public",
   "framework": null,
+  "env": [
+    "BASE_PATH",
+    "VITE_API_URL",
+    "VITE_POSTHOG_API_KEY"
+  ],
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/api/(.*)", "destination": "/api/$1" },
+    { "source": "/((?!api/).*)", "destination": "/index.html" }
   ]
 }

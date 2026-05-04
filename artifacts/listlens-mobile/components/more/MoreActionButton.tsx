@@ -6,7 +6,7 @@ import { Animated, Pressable, StyleSheet, Text, View, ActivityIndicator } from "
 import { Badge } from "@/components/ui/Badge";
 import { useColors } from "@/hooks/useColors";
 
-type Variant = "default" | "premium" | "account" | "danger";
+type Variant = "default" | "premium" | "account" | "danger" | "vault";
 
 interface Props {
   label: string;
@@ -14,7 +14,7 @@ interface Props {
   icon: React.ComponentProps<typeof Feather>["name"];
   badge?: string;
   variant?: Variant;
-  href?: "/more/history" | "/more/billing" | "/more/legal" | "/splash";
+  href?: "/more/history" | "/more/billing" | "/more/legal" | "/more/vault" | "/splash";
   onPress?: () => void;
   disabled?: boolean;
   loading?: boolean;
@@ -51,6 +51,13 @@ const VARIANT_STYLES: Record<
     iconBg: "rgba(80, 10, 10, 0.55)",
     iconBorder: "rgba(239, 68, 68, 0.35)",
     iconColor: "#f87171",
+  },
+  vault: {
+    bg: "rgba(30, 24, 10, 0.56)",
+    border: "rgba(251, 146, 60, 0.35)",
+    iconBg: "rgba(63, 39, 14, 0.62)",
+    iconBorder: "rgba(251, 146, 60, 0.38)",
+    iconColor: "#fb923c",
   },
 };
 

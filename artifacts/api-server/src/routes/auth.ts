@@ -19,6 +19,7 @@ import {
   ISSUER_URL,
   type SessionData,
 } from "../lib/auth";
+import { logger } from "../lib/logger";
 
 const OIDC_COOKIE_TTL = 10 * 60 * 1000;
 
@@ -114,7 +115,14 @@ router.get("/auth/user", async (req: Request, res: Response) => {
 });
 
 router.get("/login", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
+  let config: Awaited<ReturnType<typeof getOidcConfig>>;
+  try {
+    config = await getOidcConfig();
+  } catch (err) {
+    logger.error({ err }, "OIDC discovery failed — cannot initiate login");
+    res.status(503).json({ error: "Authentication service temporarily unavailable. Please try again." });
+    return;
+  }
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
   const returnTo = getSafeReturnTo(req.query.returnTo);
@@ -145,7 +153,14 @@ router.get("/login", async (req: Request, res: Response) => {
 // Query params are not validated because the OIDC provider may include
 // parameters not expressed in the schema.
 router.get("/callback", async (req: Request, res: Response) => {
-  const config = await getOidcConfig();
+  let config: Awaited<ReturnType<typeof getOidcConfig>>;
+  try {
+    config = await getOidcConfig();
+  } catch (err) {
+    logger.error({ err }, "OIDC discovery failed during callback");
+    res.redirect("/api/login");
+    return;
+  }
   const callbackUrl = `${getOrigin(req)}/api/callback`;
 
   const codeVerifier = req.cookies?.code_verifier;

@@ -27,7 +27,40 @@ app.use(
     },
   }),
 );
-app.use(cors({ credentials: true, origin: true }));
+const parseOrigins = (value?: string): string[] =>
+  (value ?? "")
+    .split(",")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+
+const EXPLICIT_ALLOWED_ORIGINS = new Set([
+  ...parseOrigins(process.env["FRONTEND_ORIGINS"]),
+  ...parseOrigins(process.env["FRONTEND_ORIGIN"]),
+  "http://localhost:5173",
+  "http://localhost:3000",
+]);
+
+const DYNAMIC_ALLOWED_ORIGIN_PATTERNS = [
+  /^https:\/\/[a-z0-9-]+\.vercel\.app$/i,
+  /^https:\/\/[a-z0-9-]+-[a-z0-9-]+-[a-z0-9-]+\.vercel\.app$/i,
+];
+
+const isAllowedOrigin = (origin: string): boolean => {
+  if (EXPLICIT_ALLOWED_ORIGINS.has(origin)) return true;
+  return DYNAMIC_ALLOWED_ORIGIN_PATTERNS.some((pattern) => pattern.test(origin));
+};
+
+app.use(
+  cors({
+    credentials: true,
+    origin: (origin, callback) => {
+      // Some PWA/service-worker and native-webview requests may have no Origin header.
+      if (!origin) return callback(null, true);
+      if (isAllowedOrigin(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin '${origin}' not allowed`));
+    },
+  }),
+);
 app.use(cookieParser());
 
 app.use((req: Request, res: Response, next: NextFunction) => {

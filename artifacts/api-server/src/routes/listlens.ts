@@ -1533,6 +1533,7 @@ async function identifyRecord(
     alternate_matches: alternateMatches,
     needs_matrix_for_clarification: needsMatrix,
     missing_evidence: missingEvidence,
+    matrix_clarification_questions: missingEvidence,
     safe_summary: agentResult?.safe_summary ?? null,
     identification_complete: agentResult?.identification_complete ?? false,
     warnings,
@@ -2201,7 +2202,7 @@ router.get("/guard/checks/:id", async (req, res) => {
     res.json({ id, report: row.fullOutput });
   } catch (err) {
     logger.error({ err, id }, "guard_checks get failed");
-    res.status(500).json({ error: "Failed to load Guard check" });
+    res.status(503).json({ error: "Service temporarily unavailable." });
   }
 });
 
@@ -2321,7 +2322,16 @@ router.post("/guard/checks/:id/save", (_req, res) => {
 
 router.post("/lenses/record/identify", async (req, res) => {
   const b = body(req);
-  const labelUrls = (b["labelPhotoUrls"] as string[] | undefined) ?? (b["labelUrls"] as string[] | undefined) ?? (b["photoUrls"] as string[] | undefined) ?? [];
+  const rawLabelUrls = b["labelPhotoUrls"] ?? b["labelUrls"] ?? b["photoUrls"] ?? [];
+  if (!Array.isArray(rawLabelUrls)) {
+    res.status(400).json({ error: "labelUrls must be an array of URL strings." });
+    return;
+  }
+  if (rawLabelUrls.length === 0) {
+    res.status(400).json({ error: "labelUrls must contain at least one URL." });
+    return;
+  }
+  const labelUrls = rawLabelUrls as string[];
   try {
     const analysis = await identifyRecord(labelUrls, []);
     res.json({ analysis: { ...analysis, input_type: "single_label_photo" } });
@@ -2602,13 +2612,28 @@ router.get("/lenses", (_req, res) => {
   });
 });
 
+const MAX_LENS_PHOTO_URLS = 20;
+
 async function handleLensAnalysis(
   req: Request,
   res: Response,
   lensId: string,
 ): Promise<void> {
   const b = body(req);
-  const photoUrls = (b["photoUrls"] as string[]) ?? [];
+  const rawPhotoUrls = b["photoUrls"];
+  if (!Array.isArray(rawPhotoUrls)) {
+    res.status(400).json({ error: "photoUrls must be an array of URL strings." });
+    return;
+  }
+  if (rawPhotoUrls.length === 0) {
+    res.status(400).json({ error: "photoUrls must contain at least one URL." });
+    return;
+  }
+  if (rawPhotoUrls.length > MAX_LENS_PHOTO_URLS) {
+    res.status(400).json({ error: `Too many photos. Maximum ${MAX_LENS_PHOTO_URLS} URLs allowed.` });
+    return;
+  }
+  const photoUrls = rawPhotoUrls as string[];
   const hint = b["hint"] as string | undefined;
   const metadata = b["metadata"] as Record<string, unknown> | undefined;
   const combinedHint = [

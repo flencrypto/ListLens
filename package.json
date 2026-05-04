@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "preinstall": "sh -c 'rm -f package-lock.json yarn.lock; case \"$npm_config_user_agent\" in pnpm/*) ;; *) echo \"Use pnpm instead\" >&2; exit 1 ;; esac'",
+    "preinstall": "node -e \"const fs = require('fs'); const path = require('path'); try { fs.unlinkSync('package-lock.json'); } catch (e) {} try { fs.unlinkSync('yarn.lock'); } catch (e) {} if (!process.env.npm_config_user_agent?.startsWith('pnpm/')) { if (process.env.npm_config_user_agent) { console.error('Use pnpm instead'); process.exit(1); } }\"",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
@@ -15,5 +15,18 @@
   },
   "dependencies": {
     "@replit/revenuecat-sdk": "4.0.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "path-to-regexp": "8.4.2",
+      "picomatch@^2": "2.3.2",
+      "picomatch@^4": "4.0.4",
+      "brace-expansion@^2": "2.0.3",
+      "lodash": "4.18.1",
+      "yaml": "2.8.4",
+      "postcss": "8.5.13",
+      "@tootallnate/once": "3.0.1",
+      "esbuild@<0.25.0": "0.25.12"
+    }
   }
 }
