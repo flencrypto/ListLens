@@ -16,6 +16,7 @@ declare global {
   const fakeBrowser: typeof import('wxt/testing').fakeBrowser
   const getAppConfig: typeof import('wxt/utils/app-config').getAppConfig
   const injectScript: typeof import('wxt/utils/inject-script').injectScript
+  const lensRegistry: typeof import('C:/Users/benrf/Desktop/List-Lens/ListLens/apps/extension/utils/lens-registry').default
   const storage: typeof import('wxt/utils/storage').storage
   const useAppConfig: typeof import('wxt/utils/app-config').useAppConfig
 }

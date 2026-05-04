@@ -1,23 +1,63 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>List-LENS Guard</title>
-    <style>
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        width: 360px;
-        min-height: 200px;
-        background: #040a14;
-        color: #fafafa;
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", sans-serif;
-        font-size: 13px;
-      }
-    </style>
-    <script type="module" crossorigin src="/chunks/popup-BW6C5sHw.js"></script>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List-LENS Guard</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; width: 390px; min-height: 560px; background: #020617; color: #f8fafc; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; }
+    main { padding: 14px; display: grid; gap: 10px; }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 17px; letter-spacing: -.03em; }
+    h2 { font-size: 16px; }
+    h3 { font-size: 14px; line-height: 1.35; }
+    .logo { display: flex; gap: 9px; align-items: center; }
+    .mark { width: 34px; height: 34px; border-radius: 12px; display: grid; place-items: center; color: #03111f; font-weight: 900; background: linear-gradient(135deg,#22d3ee,#3b82f6); }
+    .card { background: rgba(15, 23, 42, .92); border: 1px solid rgba(148, 163, 184, .18); border-radius: 16px; padding: 13px; display: grid; gap: 9px; }
+    .soft { background: rgba(30, 41, 59, .68); }
+    .motor { border-color: rgba(148,163,184,.48); background: rgba(51,65,85,.86); }
+    .label { color: #93c5fd; font-size: 10px; font-weight: 900; letter-spacing: .08em; text-transform: uppercase; }
+    .muted { color: #cbd5e1; }
+    .tiny { color: #94a3b8; font-size: 11px; line-height: 1.4; }
+    .row, .actions, .lens-grid { display: flex; flex-wrap: wrap; gap: 7px; }
+    .pill, .lens-grid span { border-radius: 999px; background: rgba(148, 163, 184, .14); color: #e2e8f0; padding: 5px 8px; font-size: 11px; }
+    ul { margin: 4px 0 0 18px; padding: 0; color: #e2e8f0; }
+    li + li { margin-top: 4px; }
+    label { display: grid; gap: 5px; color: #cbd5e1; font-size: 12px; }
+    input, textarea, select { width: 100%; border: 1px solid rgba(148, 163, 184, .28); border-radius: 12px; padding: 10px; background: rgba(2, 6, 23, .88); color: #f8fafc; outline: none; font: inherit; }
+    textarea { min-height: 78px; resize: vertical; }
+    button { border-radius: 12px; border: 0; padding: 10px 12px; cursor: pointer; font-weight: 900; font: inherit; }
+    button:disabled { opacity: .55; cursor: not-allowed; }
+    .primary { background: #38bdf8; color: #03111f; }
+    .secondary { background: rgba(148, 163, 184, .16); color: #f8fafc; border: 1px solid rgba(148, 163, 184, .22); }
+    .danger { background: rgba(239,68,68,.16); color: #fecaca; border: 1px solid rgba(239,68,68,.3); }
+    .error, .notice { border-radius: 12px; padding: 10px; font-size: 12px; line-height: 1.45; }
+    .error { background: rgba(239,68,68,.16); color: #fecaca; }
+    .notice { background: rgba(56,189,248,.12); color: #bfdbfe; }
+    .result.high { border-color: rgba(239,68,68,.52); }
+    .result.medium { border-color: rgba(245,158,11,.52); }
+    .result.low { border-color: rgba(34,197,94,.52); }
+    .result-row { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+    .result-row strong { font-size: 17px; }
+    .result-row span { color: #cbd5e1; font-size: 12px; }
+    .checks { display: grid; gap: 5px; font-size: 12px; color: #e2e8f0; }
+    .checks b { display: inline-block; width: 16px; color: #38bdf8; }
+    .report-item { width: 100%; text-align: left; background: rgba(148,163,184,.1); color: #f8fafc; border: 1px solid rgba(148,163,184,.18); margin-top: 7px; }
+    summary { cursor: pointer; font-weight: 800; }
+    pre { white-space: pre-wrap; margin: 0; color: #e2e8f0; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+  <script type="module" crossorigin src="/chunks/popup-zMV9ATsj.js"></script>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="logo"><div class="mark">LL</div><div><h1>List-LENS Guard</h1><p class="tiny">Category-wide · motors excluded</p></div></div>
+    </header>
+    <div id="app"><div class="notice">Loading…</div></div>
+  </main>
+  <script src="/shared/lens-registry.js"></script>
+  <script src="/popup.js"></script>
+</body>
 </html>

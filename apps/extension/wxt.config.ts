@@ -4,8 +4,8 @@ export default defineConfig({
   manifest: {
     name: "Mr.FLENS · List-LENS Guard",
     description:
-      "Run an AI Guard risk check on any eBay or Vinted listing without leaving the tab.",
-    version: "0.0.1",
+      "AI-assisted marketplace risk screens for trainers, records, watches, cards and toys — with motors excluded.",
+    version: "0.3.0",
     permissions: ["storage", "activeTab"],
     host_permissions: [
       "https://*.ebay.co.uk/*",

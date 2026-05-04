@@ -18,6 +18,7 @@ import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import * as SecureStore from "expo-secure-store";
 import { setBaseUrl, setAuthTokenGetter } from "@workspace/api-client-react";
+
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import {
   hydrateSubscriptionCache,
@@ -28,7 +29,11 @@ import { AuthProvider } from "@/lib/auth";
 import { setAuthTokenProvider } from "@/lib/api";
 
 const domain = process.env.EXPO_PUBLIC_DOMAIN;
-if (domain) setBaseUrl(`https://${domain}`);
+
+if (domain) {
+  setBaseUrl(`https://${domain}`);
+}
+
 setAuthTokenGetter(() => SecureStore.getItemAsync("auth_session_token"));
 setAuthTokenProvider(() => SecureStore.getItemAsync("auth_session_token"));
 
@@ -36,12 +41,11 @@ SplashScreen.preventAutoHideAsync();
 
 const queryClient = new QueryClient();
 
-let revenueCatInitError: string | null = null;
 try {
   initializeRevenueCat();
 } catch (err) {
-  revenueCatInitError = err instanceof Error ? err.message : "Unknown error";
-  console.warn("RevenueCat init failed:", revenueCatInitError);
+  const message = err instanceof Error ? err.message : "Unknown error";
+  console.warn("RevenueCat init failed:", message);
 }
 
 const subscriptionCacheHydration = hydrateSubscriptionCache(queryClient).catch(
@@ -65,6 +69,7 @@ function AndroidNavBarSetup() {
       RNStatusBar.setTranslucent(false);
     }
   }, []);
+
   return null;
 }
 
@@ -86,14 +91,22 @@ function RootLayoutNav() {
     >
       <Stack.Screen name="splash" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+
       <Stack.Screen name="studio/new" options={{ title: "New Listing" }} />
-      <Stack.Screen name="studio/capture" options={{ title: "Capture Photos" }} />
+      <Stack.Screen
+        name="studio/capture"
+        options={{ title: "Capture Photos" }}
+      />
       <Stack.Screen name="studio/review" options={{ title: "Review Draft" }} />
+
       <Stack.Screen name="guard/check" options={{ title: "Check Listing" }} />
       <Stack.Screen name="guard/report" options={{ title: "Risk Report" }} />
+
       <Stack.Screen name="more/history" options={{ title: "History" }} />
       <Stack.Screen name="more/billing" options={{ title: "Billing & Plans" }} />
       <Stack.Screen name="more/legal" options={{ title: "Legal" }} />
+      <Stack.Screen name="more/vault" options={{ title: "Vault" }} />
+
       <Stack.Screen name="lenses/[id]" options={{ title: "Lens Detail" }} />
     </Stack>
   );
@@ -132,7 +145,9 @@ export default function RootLayout() {
     const timeout = new Promise<void>((resolve) => {
       timerId = setTimeout(() => {
         timedOut = true;
-        console.warn("Subscription cache hydration timed out after 3 s — proceeding anyway");
+        console.warn(
+          "Subscription cache hydration timed out after 3 s — proceeding anyway",
+        );
         resolve();
       }, HYDRATION_TIMEOUT_MS);
     });
@@ -161,26 +176,26 @@ export default function RootLayout() {
 
   if (!ready) return null;
 
-  const inner = (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SubscriptionProvider>
-          <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
-            <KeyboardProvider>
-              <StatusBar style="light" backgroundColor={NAVY} translucent={false} />
-              <AndroidNavBarSetup />
-              <RootLayoutNav />
-            </KeyboardProvider>
-          </GestureHandlerRootView>
-        </SubscriptionProvider>
-      </AuthProvider>
-    </QueryClientProvider>
-  );
-
   return (
     <SafeAreaProvider>
       <ErrorBoundary>
-        {inner}
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <SubscriptionProvider>
+              <GestureHandlerRootView style={{ flex: 1, backgroundColor: NAVY }}>
+                <KeyboardProvider>
+                  <StatusBar
+                    style="light"
+                    backgroundColor={NAVY}
+                    translucent={false}
+                  />
+                  <AndroidNavBarSetup />
+                  <RootLayoutNav />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </SubscriptionProvider>
+          </AuthProvider>
+        </QueryClientProvider>
       </ErrorBoundary>
     </SafeAreaProvider>
   );

@@ -13,6 +13,8 @@ declare module "wxt/browser" {
     | "/icon/48.png"
     | "/listlens-detector.js"
     | "/popup.html"
+    | "/popup.js"
+    | "/shared/lens-registry.js"
   type HtmlPublicPath = Extract<PublicPath, `${string}.html`>
   export interface WxtRuntime {
     getURL(path: PublicPath): string;

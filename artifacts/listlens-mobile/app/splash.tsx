@@ -1,7 +1,7 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,22 +17,25 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import { useEffect } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { BrandBackground } from "@/components/brand/BrandBackground";
 import { BrandGlyph } from "@/components/brand/BrandGlyph";
 import { BrandLens } from "@/components/brand/BrandLens";
 import { BrandWordmark } from "@/components/brand/BrandWordmark";
-import { GuardCheckButton } from "@/components/ui/GuardCheckButton";
 import { StudioButton } from "@/components/ui/StudioButton";
 import { useColors } from "@/hooks/useColors";
+
+const HAS_SEEN_SPLASH_KEY = "hasSeenSplash";
 
 export default function SplashScreenRoute() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { width, height } = useWindowDimensions();
+
+  const [hasSeenSplash, setHasSeenSplash] = useState(false);
+
   // Cap the lens so it never crowds the rest of the screen on shorter devices.
   const lensSize = Math.min(width - 80, height * 0.32, 280);
 
@@ -41,23 +44,66 @@ export default function SplashScreenRoute() {
   const reducedMotion = useReducedMotion();
   const scale = useSharedValue(reducedMotion ? 1 : 0.78);
   const rotate = useSharedValue(reducedMotion ? 0 : -8);
+
+  useEffect(() => {
+    let mounted = true;
+
+    AsyncStorage.getItem(HAS_SEEN_SPLASH_KEY)
+      .then((value) => {
+        if (mounted) {
+          setHasSeenSplash(value === "true");
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          setHasSeenSplash(false);
+        }
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   useEffect(() => {
     if (reducedMotion) return;
+
     scale.value = withTiming(1, {
       duration: 1100,
       easing: Easing.bezier(0.18, 0.71, 0.21, 1),
     });
+
     rotate.value = withTiming(0, {
       duration: 1100,
       easing: Easing.bezier(0.18, 0.71, 0.21, 1),
     });
-  }, [reducedMotion, scale, rotate]);
+  }, [reducedMotion, rotate, scale]);
+
   const lensSpinUp = useAnimatedStyle(() => ({
-    transform: [
-      { scale: scale.value },
-      { rotate: `${rotate.value}deg` },
-    ],
+    transform: [{ scale: scale.value }, { rotate: `${rotate.value}deg` }],
   }));
+
+  const getEntrance = (delay: number, duration = 700) => {
+    if (reducedMotion) return undefined;
+    return FadeInDown.delay(delay).duration(duration);
+  };
+
+  const getLensEntrance = () => {
+    if (reducedMotion) return undefined;
+    return FadeInUp.duration(600);
+  };
+
+  const handleEnter = async () => {
+    try {
+      await AsyncStorage.setItem(HAS_SEEN_SPLASH_KEY, "true");
+    } catch {
+      // Non-blocking: navigation should still happen if persistence fails.
+    }
+
+    router.replace("/(tabs)");
+  };
+
+  const buttonDelay = hasSeenSplash ? 420 : 700;
 
   return (
     <View style={[styles.flex, { backgroundColor: colors.navy }]}>
@@ -70,45 +116,28 @@ export default function SplashScreenRoute() {
         ]}
       >
         <BrandWordmark layout="inline" size="sm" />
-        <Pressable
-          onPress={() => router.replace("/(tabs)")}
-          accessibilityRole="button"
-          hitSlop={12}
-        >
-          <Text
-            style={{
-              color: colors.cyan200,
-              fontFamily: "Inter_600SemiBold",
-              fontSize: 11,
-              letterSpacing: 3,
-              textTransform: "uppercase",
-            }}
-          >
-            Skip →
-          </Text>
-        </Pressable>
       </View>
 
       <ScrollView
         contentContainerStyle={[
           styles.body,
-          { paddingBottom: insets.bottom + 80 },
+          { paddingBottom: insets.bottom + 88 },
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <Animated.View entering={FadeInUp.duration(600)} style={lensSpinUp}>
+        <Animated.View entering={getLensEntrance()} style={lensSpinUp}>
           <BrandLens size={lensSize} />
         </Animated.View>
 
         <Animated.View
-          entering={FadeInDown.delay(200).duration(700)}
+          entering={getEntrance(200)}
           style={styles.wordmark}
         >
           <BrandWordmark layout="stacked" size="lg" />
         </Animated.View>
 
         <Animated.Text
-          entering={FadeInDown.delay(380).duration(700)}
+          entering={getEntrance(380)}
           style={[styles.tagline, { color: colors.cyan100 }]}
         >
           AI resale intelligence. Specialist Lenses, evidence-led listings,
@@ -116,29 +145,21 @@ export default function SplashScreenRoute() {
         </Animated.Text>
 
         <Animated.Text
-          entering={FadeInDown.delay(520).duration(700)}
+          entering={getEntrance(520)}
           style={[styles.lead, { color: colors.cyan200 }]}
         >
           List smarter. Buy safer.
         </Animated.Text>
 
         <Animated.View
-          entering={FadeInDown.delay(680).duration(700)}
+          entering={getEntrance(buttonDelay)}
           style={styles.actions}
         >
-          <StudioButton
-            label="Enter Studio"
-            onPress={() => router.replace("/(tabs)/studio")}
-          />
-          <View style={{ height: 12 }} />
-          <GuardCheckButton
-            label="Run a Guard check"
-            onPress={() => router.replace("/(tabs)/guard")}
-          />
+          <StudioButton label="Enter List-LENS" onPress={handleEnter} />
         </Animated.View>
 
         <Animated.View
-          entering={FadeInDown.delay(900).duration(700)}
+          entering={getEntrance(buttonDelay + 180)}
           style={styles.glyphRow}
         >
           <BrandGlyph size={42} />
@@ -170,11 +191,13 @@ export default function SplashScreenRoute() {
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
+  flex: {
+    flex: 1,
+  },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "flex-start",
     paddingHorizontal: 22,
   },
   body: {
@@ -202,12 +225,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.4,
   },
   actions: {
-    marginTop: 22,
+    marginTop: 26,
     width: "100%",
     maxWidth: 360,
   },
   glyphRow: {
-    marginTop: 22,
+    marginTop: 24,
     alignItems: "center",
     gap: 10,
   },
