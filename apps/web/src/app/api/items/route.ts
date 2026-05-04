@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth-shim";
-import { itemOwner, itemMeta } from "@/lib/store";
+import { requireWorkspace } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { enforceRateLimit, rateLimitIdentifier } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace, userId } = ctx;
   const limited = await enforceRateLimit(rateLimitIdentifier(userId, req), {
     key: "items:create",
     limit: 30,
@@ -13,15 +14,22 @@ export async function POST(req: NextRequest) {
   });
   if (limited) return limited;
   const body = await req.json();
-  const id = `item_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-  const lens = body.lens ?? "ShoeLens";
-  itemOwner.set(id, userId);
-  itemMeta.set(id, { lens, marketplace: body.marketplace });
-  return NextResponse.json({ id, lens, marketplace: body.marketplace, status: "draft" });
+  const lens = (typeof body.lens === "string" ? body.lens : null) ?? "ShoeLens";
+  const marketplace = typeof body.marketplace === "string" ? body.marketplace : null;
+  const item = await prisma.item.create({
+    data: { workspaceId: workspace.id, lens, marketplace, status: "draft" },
+  });
+  return NextResponse.json({ id: item.id, lens: item.lens, marketplace: item.marketplace, status: item.status });
 }
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json({ items: [] });
+export async function GET(req: NextRequest) {
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace } = ctx;
+  const items = await prisma.item.findMany({
+    where: { workspaceId: workspace.id },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, lens: true, marketplace: true, status: true, title: true, createdAt: true },
+  });
+  return NextResponse.json({ items });
 }

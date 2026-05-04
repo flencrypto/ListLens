@@ -1,20 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth-shim";
-import { userOwnsItem } from "@/lib/store";
+import { requireWorkspace } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace } = ctx;
   const { id } = await params;
-  if (!userOwnsItem(id, userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  return NextResponse.json({ id, status: "draft" });
+  const item = await prisma.item.findFirst({
+    where: { id, workspaceId: workspace.id },
+  });
+  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  return NextResponse.json({
+    id: item.id,
+    status: item.status,
+    lens: item.lens,
+    marketplace: item.marketplace,
+    title: item.title,
+    description: item.description,
+    price: item.price,
+    currency: item.currency,
+  });
 }
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace } = ctx;
   const { id } = await params;
-  if (!userOwnsItem(id, userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  const item = await prisma.item.findFirst({
+    where: { id, workspaceId: workspace.id },
+    select: { id: true },
+  });
+  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
   const body = await req.json();
-  return NextResponse.json({ id, ...body });
+  const updated = await prisma.item.update({
+    where: { id },
+    data: {
+      ...(typeof body.title === "string" ? { title: body.title } : {}),
+      ...(typeof body.description === "string" ? { description: body.description } : {}),
+      ...(typeof body.condition === "string" ? { condition: body.condition } : {}),
+      ...(typeof body.price === "number" ? { price: body.price } : {}),
+      ...(typeof body.status === "string" ? { status: body.status } : {}),
+    },
+  });
+  return NextResponse.json({ id: updated.id, ...body });
 }
