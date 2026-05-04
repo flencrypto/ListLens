@@ -2179,27 +2179,39 @@ router.post("/guard/checks", async (req, res) => {
 router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
 
-  const inMemory = guardStore.get(id);
-  if (inMemory) {
-    res.json({ id, report: inMemory });
-    return;
-  }
-
   try {
-    const rows = await db
-      .select()
-      .from(aiJobLogsTable)
-      .where(eq(aiJobLogsTable.checkId, id))
-      .orderBy(desc(aiJobLogsTable.createdAt))
-      .limit(1);
+    // Fetch check metadata (url, screenshotUrls, createdAt) and AI log in parallel
+    const [checkRows, logRows] = await Promise.all([
+      db.select().from(guardChecksTable).where(eq(guardChecksTable.id, id)).limit(1),
+      db
+        .select()
+        .from(aiJobLogsTable)
+        .where(eq(aiJobLogsTable.checkId, id))
+        .orderBy(desc(aiJobLogsTable.createdAt))
+        .limit(1),
+    ]);
 
-    const row = rows[0];
-    if (!row?.fullOutput) {
+    const checkRow = checkRows[0];
+    const logRow = logRows[0];
+
+    // In-memory store is a fallback for the same server instance (e.g. during the
+    // same session, before the DB write has propagated).
+    const report = logRow?.fullOutput ?? guardStore.get(id);
+    if (!report) {
       res.status(404).json({ error: "Not found" });
       return;
     }
 
-    res.json({ id, report: row.fullOutput });
+    res.json({
+      id,
+      report,
+      createdAt:
+        logRow?.createdAt?.toISOString() ??
+        checkRow?.createdAt?.toISOString() ??
+        null,
+      url: checkRow?.url ?? null,
+      screenshotUrls: checkRow?.screenshotUrls ?? [],
+    });
   } catch (err) {
     logger.error({ err, id }, "guard_checks get failed");
     res.status(503).json({ error: "Service temporarily unavailable." });

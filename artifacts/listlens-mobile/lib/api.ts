@@ -473,9 +473,16 @@ export async function createGuardCheck(params: {
 /**
  * Fetch an existing Guard check report by id.
  * Useful for loading reports on a different device or after local storage is cleared.
+ * Returns the AI report alongside check metadata (createdAt, url, screenshotUrls).
  */
-export async function getGuardCheck(id: string): Promise<{ id: string; report: GuardApiReport }> {
-  return get<{ id: string; report: GuardApiReport }>(`/api/guard/checks/${id}`);
+export async function getGuardCheck(id: string): Promise<{
+  id: string;
+  report: GuardApiReport;
+  createdAt: string | null;
+  url: string | null;
+  screenshotUrls: string[];
+}> {
+  return get(`/api/guard/checks/${id}`);
 }
 
 /**

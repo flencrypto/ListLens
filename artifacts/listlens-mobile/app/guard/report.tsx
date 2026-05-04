@@ -18,14 +18,18 @@ import {
 } from "@/lib/historyStore";
 import { getGuardCheck, type GuardApiReport } from "@/lib/api";
 
-function apiReportToLocalReport(id: string, apiReport: GuardApiReport): GuardReport {
+function apiReportToLocalReport(
+  id: string,
+  apiReport: GuardApiReport,
+  meta: { createdAt: string | null; url: string | null; screenshotUrls: string[] },
+): GuardReport {
   return {
     id,
-    createdAt: Date.now(),
+    createdAt: meta.createdAt ? new Date(meta.createdAt).getTime() : Date.now(),
     lens: apiReport.lens,
-    source: "url",
-    url: "",
-    shots: [],
+    source: (meta.screenshotUrls?.length ?? 0) > 0 ? "screenshots" : "url",
+    url: meta.url ?? "",
+    shots: meta.screenshotUrls ?? [],
     saved: true,
     risk: apiReport.risk,
     risk_dimensions: apiReport.risk_dimensions,
@@ -167,9 +171,9 @@ export default function GuardReportScreen() {
         }
         // Not in local storage — fetch from the API (handles cross-device / cleared-cache case)
         try {
-          const { report: apiReport } = await getGuardCheck(incomingId);
+          const { report: apiReport, createdAt, url, screenshotUrls } = await getGuardCheck(incomingId);
           if (cancelled) return;
-          const localReport = apiReportToLocalReport(incomingId, apiReport);
+          const localReport = apiReportToLocalReport(incomingId, apiReport, { createdAt, url, screenshotUrls });
           await saveReport(localReport).catch(() => undefined);
           setReport(localReport);
           initialised.current = true;
