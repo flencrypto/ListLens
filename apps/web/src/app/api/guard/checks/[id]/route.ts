@@ -1,13 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth-shim";
-import { guardStore, userOwnsGuardCheck } from "@/lib/store";
+import { requireWorkspace } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import type { GuardOutput } from "@/lib/ai/schemas";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace } = ctx;
   const { id } = await params;
-  if (!userOwnsGuardCheck(id, userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const report = guardStore.get(id);
-  if (!report) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const check = await prisma.guardCheck.findFirst({
+    where: { id, workspaceId: workspace.id },
+  });
+  if (!check || !check.rawAiOutput) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const report = check.rawAiOutput as unknown as GuardOutput;
   return NextResponse.json({ id, report });
 }

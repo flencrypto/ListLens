@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth-shim";
-import { guardCheckMeta, guardOwner } from "@/lib/store";
+import { requireWorkspace } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { enforceRateLimit, rateLimitIdentifier } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace, userId } = ctx;
   const limited = await enforceRateLimit(rateLimitIdentifier(userId, req), {
     key: "guard:create",
     limit: 30,
@@ -13,18 +14,22 @@ export async function POST(req: NextRequest) {
   });
   if (limited) return limited;
   const body = await req.json();
-  const id = `guard_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-  guardCheckMeta.set(id, {
-    url: body.url,
-    screenshotUrls: body.screenshotUrls,
-    lens: body.lens ?? "ShoeLens",
+  const url = typeof body.url === "string" ? body.url : null;
+  const lens = (typeof body.lens === "string" ? body.lens : null) ?? "ShoeLens";
+  const check = await prisma.guardCheck.create({
+    data: { workspaceId: workspace.id, url, lens },
   });
-  guardOwner.set(id, userId);
-  return NextResponse.json({ id, url: body.url, lens: body.lens ?? "ShoeLens", status: "pending" });
+  return NextResponse.json({ id: check.id, url: check.url, lens: check.lens, status: "pending" });
 }
 
-export async function GET() {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json({ checks: [] });
+export async function GET(req: NextRequest) {
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace } = ctx;
+  const checks = await prisma.guardCheck.findMany({
+    where: { workspaceId: workspace.id },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, url: true, lens: true, riskLevel: true, confidence: true, createdAt: true },
+  });
+  return NextResponse.json({ checks });
 }

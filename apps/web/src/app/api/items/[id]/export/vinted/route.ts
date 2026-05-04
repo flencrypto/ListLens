@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth-shim";
-import { analysisStore, userOwnsItem } from "@/lib/store";
+import { requireWorkspace } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import type { StudioOutput } from "@/lib/ai/schemas";
 import { buildVintedDraft } from "@/lib/marketplace/vinted";
 
 /** Escape a value for RFC 4180 CSV. Wraps in double-quotes and escapes inner quotes. */
@@ -13,12 +14,21 @@ function csvEscape(value: string | number | null | undefined): string {
 }
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const { userId } = await auth();
-  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const ctx = await requireWorkspace();
+  if (ctx instanceof NextResponse) return ctx;
+  const { workspace } = ctx;
   const { id } = await params;
-  if (!userOwnsItem(id, userId)) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  const analysis = analysisStore.get(id);
-  if (!analysis) return NextResponse.json({ error: "No analysis found for this item" }, { status: 404 });
+  const item = await prisma.item.findFirst({
+    where: { id, workspaceId: workspace.id },
+    select: { id: true },
+  });
+  if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
+  const itemAnalysis = await prisma.itemAnalysis.findFirst({
+    where: { itemId: id },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!itemAnalysis) return NextResponse.json({ error: "No analysis found for this item" }, { status: 404 });
+  const analysis = itemAnalysis.rawAiOutput as unknown as StudioOutput;
 
   // Allow client-side edits (title/description/price) to override AI defaults.
   const overrides = await req.json().catch(() => ({}));
