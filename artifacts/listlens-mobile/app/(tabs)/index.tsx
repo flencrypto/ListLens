@@ -174,11 +174,11 @@ export default function HomeScreen() {
           {/* Inline stats inside hero */}
           <View style={styles.heroStats}>
             {[
-              { value: dashData?.studioCount ?? 0, label: "Listings",     accent: colors.brandCyan },
-              { value: dashData?.guardCount   ?? 0, label: "Guard checks", accent: colors.brandViolet },
-              { value: dashData?.credits      ?? 0, label: "Credits",      accent: "#a78bfa" },
-            ].map(({ value, label, accent }) => (
-              <View key={label} style={styles.heroStat}>
+              { value: dashData?.studioCount ?? 0, label: "Listings",     accent: colors.brandCyan,    bg: "rgba(34,211,238,0.08)"  },
+              { value: dashData?.guardCount   ?? 0, label: "Guard checks", accent: colors.brandViolet,  bg: "rgba(139,92,246,0.08)"  },
+              { value: dashData?.credits      ?? 0, label: "Credits",      accent: "#a78bfa",           bg: "rgba(167,139,250,0.08)" },
+            ].map(({ value, label, accent, bg }) => (
+              <View key={label} style={[styles.heroStat, { backgroundColor: bg }]}>
                 {dashLoading ? (
                   <ActivityIndicator size="small" color={accent} />
                 ) : (
@@ -392,7 +392,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: "rgba(34,211,238,0.04)",
     gap: 3,
   },
   heroStatNum: {

@@ -1,22 +1,25 @@
 /**
  * Mr.FLENS · List-LENS — Unified Mobile Design Tokens
  *
- * Mirrors the web app palette (artifacts/listlens/src/index.css) exactly.
+ * Mirrors the web app palette (artifacts/listlens/src/index.css).
  * Dark-first: both light/dark schemes resolve to the same navy palette.
+ * Note: web uses CSS custom-property names (--brand-*); mobile uses camelCase
+ * keys. Values are identical; names differ where the naming conventions diverge.
  *
  * Background layers (dark → light):
- *   navyDeep       #020610  base bedrock (outermost)
- *   navy           #040a14  primary page background
- *   navy2          #081325  section / raised panel
- *   cardSurface    #0a1628  card surface
+ *   navyDeep       #020610  base bedrock (outermost)        → --brand-navy-deep
+ *   navy           #040a14  primary page background         → --brand-navy
+ *   navy2          #081325  section / raised panel          → --brand-navy-2
+ *   cardSurface    #0a1628  card surface                    → --brand-card
  *
  * Accent scale:
- *   brandCyan      #22d3ee  primary interactive / CTA
- *   brandBlue      #3ea8ff  secondary link / info
- *   brandBlueBright #2979ff additional blue
- *   brandGreen     #4ade80  success / HUD gauge mid
- *   brandAmber     #fb923c  warning / HUD gauge high
- *   brandViolet    #8b5cf6  Guard accent
+ *   brandCyan      #22d3ee  primary interactive / CTA       → --brand-cyan
+ *   cyan300        #67e8f9  softer emphasis                 → --brand-cyan-soft
+ *   brandBlue      #3ea8ff  secondary link / info           → --brand-blue
+ *   brandBlueBright #2979ff additional blue                 → --brand-blue-bright
+ *   brandGreen     #4ade80  success / HUD gauge mid         → --brand-green
+ *   brandAmber     #fb923c  warning / HUD gauge high        → --brand-amber
+ *   brandViolet    #8b5cf6  Guard accent                    → --brand-violet
  *
  * Depth recipe (brand-card):
  *   brandStroke: rgba(34,211,238,0.18)  inner border

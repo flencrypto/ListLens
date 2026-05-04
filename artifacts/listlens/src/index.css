@@ -181,7 +181,10 @@ body {
 }
 
 /* HUD gauge arc fill — sweeps a conic arc from 0 to full in 1.2 s,
-   used inside BrandLens-style UI elements as a power-on indicator. */
+   used inside BrandLens-style UI elements as a power-on indicator.
+   ⚠ Requires the target SVG arc element to declare pathLength="100" so the
+   normalized 0–100 dash range maps 1:1 to the actual path length; without it
+   the animation will only sweep the first 100 user-units of the arc. */
 @keyframes hud-gauge-fill {
   from { stroke-dashoffset: 100; opacity: 0.4; }
   to   { stroke-dashoffset: 0;   opacity: 1; }
