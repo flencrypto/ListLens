@@ -1533,6 +1533,7 @@ async function identifyRecord(
     alternate_matches: alternateMatches,
     needs_matrix_for_clarification: needsMatrix,
     missing_evidence: missingEvidence,
+    matrix_clarification_questions: missingEvidence,
     safe_summary: agentResult?.safe_summary ?? null,
     identification_complete: agentResult?.identification_complete ?? false,
     warnings,

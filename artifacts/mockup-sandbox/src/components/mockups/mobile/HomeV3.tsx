@@ -16,6 +16,7 @@ const C = {
   zinc900: "#18181b",
   zinc800: "#27272a",
   zinc700: "#3f3f46",
+  zinc600: "#52525b",
   zinc500: "#71717a",
   zinc400: "#a1a1aa",
   white: "#fafafa",

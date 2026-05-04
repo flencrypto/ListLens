@@ -10,6 +10,7 @@ const C = {
   blue: "#3ea8ff",
   zinc400: "#a1a1aa",
   zinc500: "#71717a",
+  zinc600: "#52525b",
   zinc700: "#3f3f46",
   zinc800: "#27272a",
   zinc900: "#18181b",
