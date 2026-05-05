@@ -44,6 +44,7 @@ interface GuardMeta {
   url?: string;
   screenshotUrls?: string[];
   lens?: string;
+  userId?: string | null;
 }
 
 const itemMeta = new Map<string, ItemMeta>();
@@ -2157,6 +2158,7 @@ router.post("/guard/checks", async (req, res) => {
     url: b["url"] as string,
     screenshotUrls: b["screenshotUrls"] as string[],
     lens: b["lens"] as string,
+    userId: req.user?.id ?? null,
   };
   guardMeta.set(id, meta);
 
@@ -2178,12 +2180,19 @@ router.post("/guard/checks", async (req, res) => {
 
 router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
+  const callerId = req.user?.id;
 
   // Check in-memory first — short-circuit before any DB round-trips so that
   // a transient DB outage never breaks a same-session fresh check.
   const inMemory = guardStore.get(id);
   if (inMemory) {
     const meta = guardMeta.get(id);
+    // Enforce ownership: anonymous checks (userId null) are accessible to
+    // any caller; user-owned checks require the caller to match.
+    if (meta?.userId != null && meta.userId !== callerId) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
     res.json({
       id,
       report: inMemory,
@@ -2210,13 +2219,23 @@ router.get("/guard/checks/:id", async (req, res) => {
         .limit(1),
     ]);
 
+    const checkRow = checkRows[0];
+
+    // Enforce ownership before revealing whether a report exists, to avoid
+    // leaking the existence of another user's check via 404 vs 403 divergence.
+    if (checkRow) {
+      if (checkRow.userId !== null && checkRow.userId !== callerId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+    }
+
     const logRow = logRows[0];
     if (!logRow?.fullOutput) {
       res.status(404).json({ error: "Not found" });
       return;
     }
 
-    const checkRow = checkRows[0];
     res.json({
       id,
       report: logRow.fullOutput,
