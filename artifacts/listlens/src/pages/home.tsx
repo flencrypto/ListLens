@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Link } from "wouter";
 import {
   ShieldCheck, Sparkles, CheckCircle, AlertTriangle, Info,
@@ -6,8 +7,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { BrandGlyph } from "@/components/brand/brand-glyph";
-import { BrandLens } from "@/components/brand/brand-lens";
 import { LENS_REGISTRY, LENS_ICON_MAP } from "@/lib/lenses-registry";
+
+// Lazy-loaded so the framer-motion / HUD SVG bundle doesn't block first paint.
+// The backdrop is purely decorative; rendering it after hydration is fine.
+const BrandLens = lazy(() =>
+  import("@/components/brand/brand-lens").then((m) => ({ default: m.BrandLens }))
+);
 
 const PRICING = [
   {
@@ -105,7 +111,9 @@ export default function HomePage() {
           className="pointer-events-none absolute inset-0 flex items-start justify-center overflow-hidden"
         >
           <div className="opacity-[0.12] -mt-24 w-[700px] h-[700px]">
-            <BrandLens static className="w-full h-full" />
+            <Suspense fallback={null}>
+              <BrandLens static className="w-full h-full" />
+            </Suspense>
           </div>
         </div>
         {/* Glow orbs */}
