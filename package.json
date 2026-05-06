@@ -5,7 +5,7 @@
   "scripts": {
     "preinstall": "node -e \"const fs = require('fs'); const path = require('path'); try { fs.unlinkSync('package-lock.json'); } catch (e) {} try { fs.unlinkSync('yarn.lock'); } catch (e) {} if (!process.env.npm_config_user_agent?.startsWith('pnpm/')) { if (process.env.npm_config_user_agent) { console.error('Use pnpm instead'); process.exit(1); } }\"",
     "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck:libs": "tsc --build",
+    "typecheck:libs": "tsc --build && tsc --build ./lib/cv ./lib/lenses ./lib/pricing ./lib/schemas",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --filter \"./lib/**\" --if-present run typecheck",
     "test": "pnpm -r --filter \"./lib/**\" --if-present run test"
   },
