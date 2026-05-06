@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
+import { Camera, Shield, Clock, CreditCard, Sparkles, List } from "lucide-react";
 import { Navbar } from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { ListingCard, type ListingCardData } from "@/components/studio/listing-card";
 
 const QUICK_LINKS = [
-  { href: "/studio/new", label: "New Listing", desc: "Photos → AI listing draft", icon: "📸", color: "from-cyan-500 to-blue-600" },
-  { href: "/guard/new", label: "Check Listing", desc: "URL → Risk report", icon: "🛡️", color: "from-violet-500 to-purple-600" },
-  { href: "/history", label: "History", desc: "Past listings & checks", icon: "📋", color: "from-zinc-600 to-zinc-700" },
-  { href: "/billing", label: "Billing", desc: "Plans & credits", icon: "💳", color: "from-emerald-600 to-teal-700" },
+  { href: "/studio/new", label: "New Listing", desc: "Photos → AI listing draft", Icon: Camera, color: "from-cyan-500 to-blue-600" },
+  { href: "/guard/new", label: "Check Listing", desc: "URL → Risk report", Icon: Shield, color: "from-violet-500 to-purple-600" },
+  { href: "/history", label: "History", desc: "Past listings & checks", Icon: Clock, color: "from-zinc-600 to-zinc-700" },
+  { href: "/billing", label: "Billing", desc: "Plans & credits", Icon: CreditCard, color: "from-emerald-600 to-teal-700" },
 ];
 
 interface RecentActivity {
@@ -51,7 +52,10 @@ function ActivityRow({ item }: { item: RecentActivity }) {
   return (
     <Link href={item.href}>
       <div className="flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-zinc-800/40 transition-colors cursor-pointer group">
-        <span className="text-base shrink-0">{isStudio ? "📸" : "🛡️"}</span>
+        {isStudio
+          ? <Sparkles className="w-4 h-4 text-cyan-400 shrink-0" />
+          : <Shield className="w-4 h-4 text-violet-400 shrink-0" />
+        }
         <div className="flex-1 min-w-0">
           <p className="text-sm text-white font-medium truncate group-hover:text-cyan-400 transition-colors">
             {item.title}
@@ -97,7 +101,7 @@ export default function DashboardPage() {
   const isUpgradeable = !data || data.planTier === "free";
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[#040a14]">
       <Navbar />
       <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
         {/* Header */}
@@ -145,7 +149,7 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              <span className="text-lg">📋</span> My Listings
+              <List className="w-4 h-4 text-cyan-400" /> My Listings
               {!loading && data && data.listings.length > 0 && (
                 <Badge variant="secondary" className="text-xs">{data.listings.length}</Badge>
               )}
@@ -188,7 +192,7 @@ export default function DashboardPage() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-12 rounded-xl border border-dashed border-zinc-800 gap-3 bg-zinc-900/30">
-              <span className="text-3xl">📸</span>
+              <Camera className="w-8 h-8 text-zinc-600" />
               <p className="text-zinc-400 text-sm font-medium">No listings yet</p>
               <p className="text-zinc-600 text-xs">Upload photos and let AI write your listing</p>
               <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500 mt-1">
@@ -203,8 +207,8 @@ export default function DashboardPage() {
           {QUICK_LINKS.map((link) => (
             <Link key={link.href} href={link.href}>
               <div className="brand-card p-5 transition-all cursor-pointer group hover:shadow-[0_0_32px_-12px_rgba(34,211,238,0.6)] hover:-translate-y-0.5">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center text-lg mb-3`}>
-                  {link.icon}
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center mb-3`}>
+                  <link.Icon className="w-5 h-5 text-white" />
                 </div>
                 <p className="font-semibold text-white text-sm group-hover:text-cyan-400 transition-colors">{link.label}</p>
                 <p className="text-zinc-500 text-xs mt-0.5">{link.desc}</p>
@@ -219,7 +223,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <span className="text-lg">📸</span> Studio
+                <Sparkles className="w-4 h-4 text-cyan-400" /> Studio
                 {!loading && data && data.studioCount > 0 && (
                   <Badge variant="secondary" className="text-xs">{data.studioCount}</Badge>
                 )}
@@ -254,7 +258,7 @@ export default function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-3">
               <CardTitle className="text-base flex items-center gap-2">
-                <span className="text-lg">🛡️</span> Guard
+                <Shield className="w-4 h-4 text-violet-400" /> Guard
                 {!loading && data && data.guardCount > 0 && (
                   <Badge variant="secondary" className="text-xs">{data.guardCount}</Badge>
                 )}
