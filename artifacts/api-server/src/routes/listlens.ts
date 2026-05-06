@@ -44,6 +44,7 @@ interface GuardMeta {
   url?: string;
   screenshotUrls?: string[];
   lens?: string;
+  userId?: string | null;
 }
 
 const itemMeta = new Map<string, ItemMeta>();
@@ -2157,6 +2158,7 @@ router.post("/guard/checks", async (req, res) => {
     url: b["url"] as string,
     screenshotUrls: b["screenshotUrls"] as string[],
     lens: b["lens"] as string,
+    userId: req.user?.id ?? null,
   };
   guardMeta.set(id, meta);
 
@@ -2179,27 +2181,52 @@ router.post("/guard/checks", async (req, res) => {
 router.get("/guard/checks/:id", async (req, res) => {
   const { id } = req.params;
 
-  const inMemory = guardStore.get(id);
-  if (inMemory) {
-    res.json({ id, report: inMemory });
-    return;
-  }
-
   try {
-    const rows = await db
-      .select()
-      .from(aiJobLogsTable)
-      .where(eq(aiJobLogsTable.checkId, id))
-      .orderBy(desc(aiJobLogsTable.createdAt))
-      .limit(1);
+    // Always fetch check metadata for ownership validation and createdAt timestamp.
+    // Fetch in parallel with AI log for efficiency.
+    const [checkRows, logRows] = await Promise.all([
+      db.select().from(guardChecksTable).where(eq(guardChecksTable.id, id)).limit(1),
+      db
+        .select()
+        .from(aiJobLogsTable)
+        .where(eq(aiJobLogsTable.checkId, id))
+        .orderBy(desc(aiJobLogsTable.createdAt))
+        .limit(1),
+    ]);
 
-    const row = rows[0];
-    if (!row?.fullOutput) {
+    const checkRow = checkRows[0];
+    const logRow = logRows[0];
+
+    // In-memory store is a fallback when DB write hasn't propagated yet.
+    const report = logRow?.fullOutput ?? guardStore.get(id);
+    if (!report) {
       res.status(404).json({ error: "Not found" });
       return;
     }
 
-    res.json({ id, report: row.fullOutput });
+    // Apply ownership check: allow access if check is anonymous (userId === null)
+    // or if the authenticated user owns it. Use guardMeta as fallback when checkRow
+    // hasn't propagated from DB yet (brief window after check creation).
+    const meta = guardMeta.get(id);
+    const ownerUserId = checkRow !== undefined ? checkRow.userId : (meta?.userId ?? undefined);
+    if (ownerUserId !== null && ownerUserId !== req.user?.id) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
+    }
+
+    // Prefer guardMeta for url/screenshotUrls when using in-memory report, otherwise
+    // fall back to checkRow. This handles the case where guardStore has the report
+    // but the DB write hasn't completed.
+    const url = checkRow?.url ?? meta?.url ?? null;
+    const screenshotUrls = checkRow?.screenshotUrls ?? meta?.screenshotUrls ?? [];
+
+    res.json({
+      id,
+      report,
+      createdAt: checkRow?.createdAt?.toISOString() ?? null,
+      url,
+      screenshotUrls,
+    });
   } catch (err) {
     logger.error({ err, id }, "guard_checks get failed");
     res.status(503).json({ error: "Service temporarily unavailable." });
