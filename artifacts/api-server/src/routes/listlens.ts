@@ -2293,7 +2293,9 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
   // Capture stored owner from in-memory meta; undefined means ownership is unknown.
   let storedOwnerUserId: string | null | undefined = meta.userId;
 
-  if (!meta.url && !meta.screenshotUrls?.length) {
+  // Query the DB when the stored owner is unknown OR when we lack url/screenshotUrls.
+  // Both concerns are served by a single round-trip.
+  if (storedOwnerUserId === undefined || (!meta.url && !meta.screenshotUrls?.length)) {
     try {
       const rows = await db
         .select()
@@ -2304,9 +2306,11 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
       if (row) {
         storedOwnerUserId = row.userId;
         meta = {
-          url: row.url ?? undefined,
-          screenshotUrls: (row.screenshotUrls as string[] | null) ?? undefined,
-          lens: row.lens ?? undefined,
+          // Preserve in-memory userId if already set; otherwise take from DB.
+          userId: meta.userId !== undefined ? meta.userId : row.userId,
+          url: meta.url ?? row.url ?? undefined,
+          screenshotUrls: meta.screenshotUrls ?? (row.screenshotUrls as string[] | null) ?? undefined,
+          lens: meta.lens ?? row.lens ?? undefined,
         };
       }
     } catch (dbErr) {
@@ -2320,6 +2324,7 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
   // will become the owner). This prevents an attacker who learns a check id
   // from overwriting guardMeta/guardChecksTable.userId and then reading the
   // report via GET.
+  // Note: != null uses loose equality intentionally — catches both null and undefined.
   if (storedOwnerUserId != null && storedOwnerUserId !== userId) {
     res.status(403).json({ error: "Forbidden" });
     return;
@@ -2362,7 +2367,9 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
           url: meta.url ?? null,
           screenshotUrls: meta.screenshotUrls ?? [],
           lens,
-          userId: userId ?? null,
+          // Intentionally omit userId: preserve the original owner from creation.
+          // The ownership check above already ensures only the owner (or anyone
+          // for anonymous checks) can reach this point.
         },
       })
       .catch((err) => logger.warn({ err }, "guard_checks upsert failed (non-fatal)"));
