@@ -2,17 +2,19 @@ import { useId } from "react";
 import { cn } from "@/lib/utils";
 
 /**
- * BrandGlyph — the small "AI brain in shopping cart" mark from the rebrand
- * artwork, with bright cyan lightning sparks emanating outward (matching the
- * brain-in-cart hero image). Used as a footer/CTA glyph and as a subtle brand
- * cue. Pure SVG, SSR-safe, no animation by default — set `animated` to enable
- * a soft pulsing glow.
+ * BrandGlyph — the "AI brain in shopping cart" brand mark from the rebrand
+ * artwork, rendered as a pure SVG. Bright cyan electric lightning sparks
+ * emanate outward from the brain (matching the brain-in-cart hero image).
+ * Used as a footer/CTA glyph and subtle brand cue.
+ *
+ * Pure SVG, SSR-safe, no animation by default — set `animated` to enable
+ * a soft pulsing glow (CSS-only, respects prefers-reduced-motion).
  */
 export interface BrandGlyphProps {
   size?: number;
   className?: string;
   title?: string;
-  /** When true, the cart/glow softly pulses (CSS-only, respects reduced-motion). */
+  /** When true, the glyph softly pulses (CSS-only, respects reduced-motion). */
   animated?: boolean;
   /** When false, hides the lightning sparks for very small contexts. */
   showSparks?: boolean;
@@ -25,14 +27,15 @@ export function BrandGlyph({
   animated = false,
   showSparks = true,
 }: BrandGlyphProps) {
-  // Unique <defs> ids per instance — multiple BrandGlyph instances on the
-  // same page would otherwise share the first defined gradient/filter.
+  // Unique <defs> ids per instance to avoid gradient collisions on multi-glyph pages.
   const uid = useId().replace(/:/g, "");
   const glowId = `bg-glow-${uid}`;
+  const innerGlowId = `bg-inner-${uid}`;
   const blurId = `bg-blur-${uid}`;
+
   return (
     <svg
-      viewBox="0 0 64 64"
+      viewBox="0 0 80 80"
       width={size}
       height={size}
       className={cn(
@@ -46,72 +49,121 @@ export function BrandGlyph({
     >
       <title>{title}</title>
       <defs>
-        <radialGradient id={glowId} cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.55" />
-          <stop offset="60%" stopColor="#22d3ee" stopOpacity="0.08" />
+        {/* Outer halo — large, soft cyan radial */}
+        <radialGradient id={glowId} cx="50%" cy="48%" r="50%">
+          <stop offset="0%"   stopColor="#22d3ee" stopOpacity="0.55" />
+          <stop offset="50%"  stopColor="#22d3ee" stopOpacity="0.12" />
           <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
         </radialGradient>
-        <filter id={blurId} x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="0.9" />
+        {/* Inner glow around the brain core */}
+        <radialGradient id={innerGlowId} cx="50%" cy="45%" r="40%">
+          <stop offset="0%"   stopColor="#67e8f9" stopOpacity="0.7" />
+          <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+        </radialGradient>
+        {/* Blur filter for spark glow layer */}
+        <filter id={blurId} x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur stdDeviation="1.2" />
         </filter>
       </defs>
 
-      {/* Soft cyan halo */}
-      <circle cx="32" cy="32" r="28" fill={`url(#${glowId})`} />
+      {/* Outer halo */}
+      <circle cx="40" cy="40" r="38" fill={`url(#${glowId})`} />
 
-      {/* Lightning sparks emanating from the brain (matches artwork) */}
+      {/* Lightning sparks — prominent, multi-branch, matching the artwork */}
       {showSparks && (
-        <g
-          stroke="#67e8f9"
-          strokeWidth="1.1"
-          strokeLinecap="round"
-          fill="none"
-          opacity="0.85"
-          filter={`url(#${blurId})`}
-        >
-          <path d="M32 4 L30 10 L33 11 L31 16" />
-          <path d="M50 8 L46 14 L49 16 L46 21" />
-          <path d="M14 8 L18 14 L15 16 L18 21" />
-          <path d="M58 24 L52 26 L54 29 L49 30" />
-          <path d="M6 24 L12 26 L10 29 L15 30" />
-        </g>
+        <>
+          {/* Glow layer (blurred duplicate) */}
+          <g
+            stroke="#67e8f9"
+            strokeWidth="2"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.55"
+            filter={`url(#${blurId})`}
+          >
+            {/* Top */}
+            <path d="M40 3 L37 11 L41 12 L38 20" />
+            {/* Top-right */}
+            <path d="M62 9 L57 17 L61 19 L57 27" />
+            {/* Top-left */}
+            <path d="M18 9 L23 17 L19 19 L23 27" />
+            {/* Right */}
+            <path d="M76 30 L67 33 L70 37 L62 39" />
+            {/* Left */}
+            <path d="M4 30 L13 33 L10 37 L18 39" />
+            {/* Bottom-right */}
+            <path d="M70 58 L62 54 L64 50 L57 48" />
+            {/* Bottom-left */}
+            <path d="M10 58 L18 54 L16 50 L23 48" />
+          </g>
+          {/* Sharp layer */}
+          <g
+            stroke="#a5f3fc"
+            strokeWidth="1.3"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.92"
+          >
+            <path d="M40 3 L37 11 L41 12 L38 20" />
+            <path d="M62 9 L57 17 L61 19 L57 27" />
+            <path d="M18 9 L23 17 L19 19 L23 27" />
+            <path d="M76 30 L67 33 L70 37 L62 39" />
+            <path d="M4 30 L13 33 L10 37 L18 39" />
+            <path d="M70 58 L62 54 L64 50 L57 48" />
+            <path d="M10 58 L18 54 L16 50 L23 48" />
+          </g>
+        </>
       )}
+
+      {/* Inner core glow */}
+      <circle cx="40" cy="36" r="18" fill={`url(#${innerGlowId})`} />
 
       {/* Cart handle */}
       <path
-        d="M6 12 L14 12 L20 40 L52 40"
+        d="M6 14 L16 14 L23 50 L64 50"
         fill="none"
         stroke="#22d3ee"
-        strokeWidth="3"
+        strokeWidth="3.5"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
       {/* Cart basket */}
       <path
-        d="M16 20 L54 20 L50 36 L20 36 Z"
-        fill="none"
+        d="M19 24 L66 24 L62 44 L23 44 Z"
+        fill="rgba(34,211,238,0.07)"
         stroke="#22d3ee"
         strokeWidth="3"
         strokeLinejoin="round"
-        opacity="0.55"
+        opacity="0.7"
       />
-      {/* Brain inside the basket */}
+
+      {/* Brain inside the basket — bi-lobed with more interior detail */}
       <g
-        transform="translate(20 18)"
+        transform="translate(24 20)"
         stroke="#22d3ee"
-        strokeWidth="1.6"
+        strokeWidth="1.8"
         fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
       >
-        <path d="M12 2 C8 2 6 4 6 7 C4 7 2 9 2 12 C2 14 3 15 4 16 C3 17 3 19 4 20 C5 21 7 21 8 20 L8 16 C8 14 9 13 11 13 L11 4 C11 3 12 2 12 2 Z" />
-        <path d="M12 2 C16 2 18 4 18 7 C20 7 22 9 22 12 C22 14 21 15 20 16 C21 17 21 19 20 20 C19 21 17 21 16 20 L16 16 C16 14 15 13 13 13 L13 4 C13 3 12 2 12 2 Z" />
-        <line x1="8" y1="9" x2="11" y2="9" />
-        <line x1="13" y1="9" x2="16" y2="9" />
+        {/* Left lobe */}
+        <path d="M16 3 C10 3 7 5 7 9 C4 9 2 12 2 16 C2 19 3.5 20.5 5 21.5 C4 23 4 25.5 5.5 26.5 C7 27.5 9.5 27.5 11 26.5 L11 21 C11 18.5 12.5 17.5 14.5 17.5 L14.5 5 C14.5 3.5 16 3 16 3 Z" />
+        {/* Right lobe */}
+        <path d="M16 3 C22 3 25 5 25 9 C28 9 30 12 30 16 C30 19 28.5 20.5 27 21.5 C28 23 28 25.5 26.5 26.5 C25 27.5 22.5 27.5 21 26.5 L21 21 C21 18.5 19.5 17.5 17.5 17.5 L17.5 5 C17.5 3.5 16 3 16 3 Z" />
+        {/* Corpus callosum lines */}
+        <line x1="11" y1="11" x2="14.5" y2="11" />
+        <line x1="17.5" y1="11" x2="21" y2="11" />
+        <line x1="11" y1="15" x2="14.5" y2="15" />
+        <line x1="17.5" y1="15" x2="21" y2="15" />
+        {/* Stem */}
+        <line x1="16" y1="26.5" x2="16" y2="30" />
       </g>
-      {/* Wheels */}
-      <circle cx="26" cy="50" r="3" fill="#22d3ee" />
-      <circle cx="46" cy="50" r="3" fill="#22d3ee" />
+
+      {/* Wheels — filled cyan circles with inner highlight */}
+      <circle cx="31" cy="62" r="4.5" fill="#22d3ee" />
+      <circle cx="31" cy="62" r="2" fill="#cffafe" opacity="0.6" />
+      <circle cx="56" cy="62" r="4.5" fill="#22d3ee" />
+      <circle cx="56" cy="62" r="2" fill="#cffafe" opacity="0.6" />
     </svg>
   );
 }
