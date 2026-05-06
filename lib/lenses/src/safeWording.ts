@@ -33,11 +33,10 @@ export const DISALLOWED_PHRASES: readonly string[] = [
  * sanitisation (`sanitiseSafeLanguage`) to keep the two consistent. Anything
  * matched here will be both flagged and replaced.
  *
- * Note: we intentionally use \b boundaries to avoid false positives like
- * "scampi" matching "scam" or "counterfeiting" matching "counterfeit" when
- * those words appear as inflections in unrelated contexts. The
- * `(?:\w*)` extensions cover common inflections (e.g. counterfeiting,
- * scammers) without grabbing unrelated words.
+ * Note: we intentionally use \b boundaries to avoid false positives from
+ * unrelated substrings, such as "scampi" matching "scam". The explicit suffix
+ * groups intentionally cover common inflections (e.g. counterfeit,
+ * counterfeiting, scammers) without grabbing unrelated words.
  */
 const DISALLOWED_PATTERNS: Array<[RegExp, string]> = [
   [/\b(fakes?|counterfeit(?:s|ed|ing)?)\b/gi, "high replica-risk indicators found"],
