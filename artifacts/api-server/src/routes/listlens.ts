@@ -44,6 +44,7 @@ interface GuardMeta {
   url?: string;
   screenshotUrls?: string[];
   lens?: string;
+  userId?: string | null;
 }
 
 const itemMeta = new Map<string, ItemMeta>();
@@ -2157,6 +2158,7 @@ router.post("/guard/checks", async (req, res) => {
     url: b["url"] as string,
     screenshotUrls: b["screenshotUrls"] as string[],
     lens: b["lens"] as string,
+    userId: req.user?.id ?? null,
   };
   guardMeta.set(id, meta);
 
@@ -2203,8 +2205,11 @@ router.get("/guard/checks/:id", async (req, res) => {
     }
 
     // Apply ownership check: allow access if check is anonymous (userId === null)
-    // or if the authenticated user owns it.
-    if (checkRow?.userId !== null && checkRow?.userId !== req.user?.id) {
+    // or if the authenticated user owns it. Use guardMeta as fallback when checkRow
+    // hasn't propagated from DB yet (brief window after check creation).
+    const meta = guardMeta.get(id);
+    const ownerUserId = checkRow !== undefined ? checkRow.userId : (meta?.userId ?? undefined);
+    if (ownerUserId !== null && ownerUserId !== req.user?.id) {
       res.status(403).json({ error: "Forbidden" });
       return;
     }
@@ -2212,7 +2217,6 @@ router.get("/guard/checks/:id", async (req, res) => {
     // Prefer guardMeta for url/screenshotUrls when using in-memory report, otherwise
     // fall back to checkRow. This handles the case where guardStore has the report
     // but the DB write hasn't completed.
-    const meta = guardMeta.get(id);
     const url = checkRow?.url ?? meta?.url ?? null;
     const screenshotUrls = checkRow?.screenshotUrls ?? meta?.screenshotUrls ?? [];
 
