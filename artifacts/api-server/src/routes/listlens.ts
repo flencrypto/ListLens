@@ -2290,6 +2290,8 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
   const userId = req.user?.id;
 
   let meta: GuardMeta = guardMeta.get(id) ?? {};
+  // Capture stored owner from in-memory meta; undefined means ownership is unknown.
+  let storedOwnerUserId: string | null | undefined = meta.userId;
 
   if (!meta.url && !meta.screenshotUrls?.length) {
     try {
@@ -2300,6 +2302,7 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
         .limit(1);
       const row = rows[0];
       if (row) {
+        storedOwnerUserId = row.userId;
         meta = {
           url: row.url ?? undefined,
           screenshotUrls: (row.screenshotUrls as string[] | null) ?? undefined,
@@ -2309,6 +2312,17 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
     } catch (dbErr) {
       logger.warn({ dbErr, id }, "guard_checks DB fallback read failed");
     }
+  }
+
+  // Ownership check: reject if the check already belongs to a different user.
+  // Allow anonymous checks (storedOwnerUserId === null) and checks with unknown
+  // ownership (storedOwnerUserId === undefined — no DB row yet; the caller
+  // will become the owner). This prevents an attacker who learns a check id
+  // from overwriting guardMeta/guardChecksTable.userId and then reading the
+  // report via GET.
+  if (storedOwnerUserId != null && storedOwnerUserId !== userId) {
+    res.status(403).json({ error: "Forbidden" });
+    return;
   }
 
   if (!meta.url && !meta.screenshotUrls?.length) {
