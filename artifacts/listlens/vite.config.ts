@@ -50,6 +50,15 @@ export default defineConfig(async ({ command }) => {
           ]
         : []),
     ],
+    define: {
+      // Allow using NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY (from existing .env) as
+      // the Vite-side publishable key without renaming env vars.
+      "import.meta.env.VITE_CLERK_PUBLISHABLE_KEY": JSON.stringify(
+        process.env["VITE_CLERK_PUBLISHABLE_KEY"] ??
+          process.env["NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY"] ??
+          "",
+      ),
+    },
     resolve: {
       alias: {
         "@": path.resolve(import.meta.dirname, "src"),

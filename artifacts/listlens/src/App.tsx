@@ -1,6 +1,9 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { ClerkProvider } from "@clerk/clerk-react";
+import { isClerkConfigured } from "@/lib/clerk-config";
+import { ClerkAuthProvider, ReplitAuthProvider } from "@/lib/auth-context";
 
 import HomePage from "@/pages/home";
 import SplashPage from "@/pages/splash";
@@ -30,6 +33,10 @@ import AiDisclaimerPage from "@/pages/legal/ai-disclaimer";
 import OfflinePage from "@/pages/offline";
 import AdminLogsPage from "@/pages/admin/logs";
 import NotFound from "@/pages/not-found";
+
+const CLERK_PUBLISHABLE_KEY =
+  (import.meta as unknown as { env?: Record<string, string | undefined> })
+    .env?.["VITE_CLERK_PUBLISHABLE_KEY"] ?? "";
 
 const queryClient = new QueryClient();
 
@@ -74,13 +81,23 @@ function App() {
     document.documentElement.classList.add("dark");
   }, []);
 
-  return (
+  const inner = (
     <QueryClientProvider client={queryClient}>
       <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
         <Router />
       </WouterRouter>
     </QueryClientProvider>
   );
+
+  if (isClerkConfigured()) {
+    return (
+      <ClerkProvider publishableKey={CLERK_PUBLISHABLE_KEY}>
+        <ClerkAuthProvider>{inner}</ClerkAuthProvider>
+      </ClerkProvider>
+    );
+  }
+
+  return <ReplitAuthProvider>{inner}</ReplitAuthProvider>;
 }
 
 export default App;
