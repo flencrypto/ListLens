@@ -1,7 +1,21 @@
-import type { StudioAnalysis } from "@/lib/api";
-import type { StudioDraft } from "@/lib/historyStore";
+import type { StudioAnalysis, WatchMarketData, SneakerMarketData } from "@/lib/api";
 
-export type DraftBody = Omit<StudioDraft, "id" | "createdAt" | "updatedAt">;
+/** The editable fields of a Studio draft — does not include persisted metadata. */
+export interface DraftBody {
+  lens: string;
+  marketplace: string;
+  photos: string[];
+  title: string;
+  brand: string;
+  size: string;
+  description: string;
+  bullets: string[];
+  pricing: { quick: number; recommended: number; high: number };
+  flags: { severity: "high" | "medium" | "low"; text: string }[];
+  exported: "none" | "ebay" | "vinted";
+  watchMarket?: WatchMarketData | null;
+  sneakerMarket?: SneakerMarketData | null;
+}
 
 export const DEFAULT_DRAFT_BODY: DraftBody = {
   lens: "ShoeLens",
