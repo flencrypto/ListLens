@@ -2324,8 +2324,7 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
   // will become the owner). This prevents an attacker who learns a check id
   // from overwriting guardMeta/guardChecksTable.userId and then reading the
   // report via GET.
-  // Note: != null uses loose equality intentionally — catches both null and undefined.
-  if (storedOwnerUserId != null && storedOwnerUserId !== userId) {
+  if (storedOwnerUserId !== null && storedOwnerUserId !== undefined && storedOwnerUserId !== userId) {
     res.status(403).json({ error: "Forbidden" });
     return;
   }
