@@ -2187,20 +2187,52 @@ router.get("/guard/checks/:id", async (req, res) => {
   const inMemory = guardStore.get(id);
   if (inMemory) {
     const meta = guardMeta.get(id);
-    // Enforce ownership: anonymous checks (userId null) are accessible to
-    // any caller; user-owned checks require the caller to match.
-    if (meta?.userId != null && meta.userId !== callerId) {
-      res.status(403).json({ error: "Forbidden" });
+    // Only skip the DB round-trip when guardMeta has an *explicit* userId
+    // (including null = anonymous).  If userId is undefined the ownership
+    // is unknown (e.g. guardStore was populated by the analyse route after a
+    // process restart that cleared guardMeta), so fall through to the DB path
+    // for a proper ownership check and then serve from memory.
+    if (meta !== undefined && meta.userId !== undefined) {
+      if (meta.userId !== null && meta.userId !== callerId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+      res.json({
+        id,
+        report: inMemory,
+        createdAt: null,
+        url: meta.url ?? null,
+        screenshotUrls: meta.screenshotUrls ?? null,
+      });
       return;
     }
-    res.json({
-      id,
-      report: inMemory,
-      createdAt: null,
-      url: meta?.url ?? null,
-      screenshotUrls: meta?.screenshotUrls ?? null,
-    });
-    return;
+
+    // guardMeta absent or userId unknown — do a DB ownership check, then serve
+    // from memory to preserve the in-memory fallback benefit.
+    try {
+      const rows = await db
+        .select()
+        .from(guardChecksTable)
+        .where(eq(guardChecksTable.id, id))
+        .limit(1);
+      const checkRow = rows[0];
+      if (checkRow && checkRow.userId !== null && checkRow.userId !== callerId) {
+        res.status(403).json({ error: "Forbidden" });
+        return;
+      }
+      res.json({
+        id,
+        report: inMemory,
+        createdAt: null,
+        url: checkRow?.url ?? meta?.url ?? null,
+        screenshotUrls: (checkRow?.screenshotUrls as string[] | null) ?? meta?.screenshotUrls ?? null,
+      });
+      return;
+    } catch (err) {
+      logger.error({ err, id }, "guard_checks ownership lookup failed");
+      res.status(503).json({ error: "Service temporarily unavailable." });
+      return;
+    }
   }
 
   try {
@@ -2220,17 +2252,21 @@ router.get("/guard/checks/:id", async (req, res) => {
     ]);
 
     const checkRow = checkRows[0];
+    const logRow = logRows[0];
 
     // Enforce ownership before revealing whether a report exists, to avoid
     // leaking the existence of another user's check via 404 vs 403 divergence.
-    if (checkRow) {
-      if (checkRow.userId !== null && checkRow.userId !== callerId) {
-        res.status(403).json({ error: "Forbidden" });
-        return;
-      }
+    // Use checkRow.userId as the primary source; fall back to logRow.userId
+    // when the guard_checks row is absent (its insert is non-fatal and may
+    // have failed).
+    const ownerUserId = checkRow !== undefined
+      ? checkRow.userId
+      : (logRow?.userId ?? null);
+    if (ownerUserId !== null && ownerUserId !== callerId) {
+      res.status(403).json({ error: "Forbidden" });
+      return;
     }
 
-    const logRow = logRows[0];
     if (!logRow?.fullOutput) {
       res.status(404).json({ error: "Not found" });
       return;
@@ -2290,6 +2326,9 @@ router.post("/guard/checks/:id/analyse", async (req, res) => {
       meta.screenshotUrls,
     );
     guardStore.set(id, report);
+    // Keep guardMeta in sync with the current userId so the GET in-memory
+    // path can enforce ownership without a DB round-trip.
+    guardMeta.set(id, { ...meta, userId: userId ?? null });
 
     await db.insert(guardChecksTable)
       .values({
