@@ -32,6 +32,7 @@ import TermsPage from "@/pages/legal/terms";
 import AiDisclaimerPage from "@/pages/legal/ai-disclaimer";
 import OfflinePage from "@/pages/offline";
 import AdminLogsPage from "@/pages/admin/logs";
+import InvestPage from "@/pages/invest";
 import NotFound from "@/pages/not-found";
 
 const CLERK_PUBLISHABLE_KEY =
@@ -71,6 +72,7 @@ function Router() {
       <Route path="/legal/ai-disclaimer" component={AiDisclaimerPage} />
       <Route path="/offline" component={OfflinePage} />
       <Route path="/admin/logs" component={AdminLogsPage} />
+      <Route path="/invest" component={InvestPage} />
       <Route component={NotFound} />
     </Switch>
   );

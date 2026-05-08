@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Link } from "wouter";
 import {
   ShieldCheck, Sparkles, CheckCircle, AlertTriangle, Info,
-  Zap, HelpCircle, AlertCircle, TrendingUp, Download, FolderOpen, Puzzle,
+  Zap, HelpCircle, AlertCircle, TrendingUp, Download, FolderOpen, Puzzle, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
@@ -31,17 +31,17 @@ const PRICING = [
   },
   {
     name: "Studio Starter",
-    price: "£9.99",
+    price: "£19",
     period: "/mo",
     desc: "List faster, sell higher.",
-    features: ["50 Studio listings per month", "AI pricing recommendations", "Missing evidence warnings", "Export directly to platforms"],
+    features: ["50 Studio listings per month", "AI pricing recommendations", "Missing evidence warnings", "Export to eBay + Vinted"],
     cta: "Get Studio",
     href: "/billing",
     highlight: true,
     accentClass: "border-cyan-500/30 shadow-2xl shadow-cyan-900/20",
     btnVariant: "default" as const,
     btnClass: "bg-cyan-600 hover:bg-cyan-500 text-white border-0",
-    badge: "For Sellers",
+    badge: "Most popular",
   },
   {
     name: "Guard Passes",
@@ -59,11 +59,11 @@ const PRICING = [
 ];
 
 const RISK_DIMS = [
-  { label: "Material Texture",   score: 85, color: "bg-emerald-500" },
-  { label: "Stitching Patterns", score: 70, color: "bg-amber-500" },
-  { label: "Shape & Proportions",score: 92, color: "bg-emerald-500" },
-  { label: "Box & Packaging",    score: 45, color: "bg-rose-500" },
-  { label: "Seller History",     score: 60, color: "bg-amber-500" },
+  { label: "Price vs Market",    score: 45, color: "bg-rose-500" },
+  { label: "Photo Completeness", score: 70, color: "bg-amber-500" },
+  { label: "Item Authenticity",  score: 92, color: "bg-emerald-500" },
+  { label: "Listing Quality",    score: 85, color: "bg-emerald-500" },
+  { label: "Seller Signals",     score: 60, color: "bg-amber-500" },
 ];
 
 export default function HomePage() {
@@ -80,7 +80,7 @@ export default function HomePage() {
         }}
       />
 
-      {/* ── Nav ─────────────────────────────────────────────────────── */}
+      {/* ── Nav ──────────────────────────────────────────────────────── */}
       <nav className="sticky top-0 z-50 bg-[#040a14]/80 backdrop-blur-md border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/splash" aria-label="Mr.FLENS List-LENS">
@@ -91,6 +91,7 @@ export default function HomePage() {
             <a href="#lenses"       className="hover:text-white transition-colors">Lenses</a>
             <a href="#pricing"      className="hover:text-white transition-colors">Pricing</a>
             <a href="#extension"    className="hover:text-white transition-colors">Extension</a>
+            <Link href="/invest"    className="text-violet-300 hover:text-violet-100 transition-colors">Investors</Link>
           </div>
           <div className="flex items-center gap-4">
             <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-300 hover:text-white">
@@ -118,18 +119,29 @@ export default function HomePage() {
         </div>
         {/* Glow orbs */}
         <div aria-hidden className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/15 blur-[120px] rounded-full" />
-        <div aria-hidden className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/4  w-[600px] h-[300px] bg-violet-500/15 blur-[100px] rounded-full" />
+        <div aria-hidden className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/4 w-[600px] h-[300px] bg-violet-500/15 blur-[100px] rounded-full" />
 
         <div className="relative max-w-7xl mx-auto z-10">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-white tracking-tight mb-6 leading-[0.95]">
-              This is what you get.
+          <div className="flex justify-center mb-7">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-cyan-500/30 bg-cyan-950/30 text-cyan-300 text-xs font-semibold tracking-wider uppercase">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-cyan-400" />
+              </span>
+              AI Resale Intelligence · UK-First · 12 Specialist Lenses
+            </div>
+          </div>
+
+          <div className="text-center mb-10">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-extrabold text-white tracking-tight mb-6 leading-[0.95]">
+              List smarter.<br className="hidden sm:block" />
+              <span className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-transparent">Buy safer.</span>
             </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              AI output in under 30 seconds. No guesswork.<br className="hidden md:block" />
-              Studio for sellers, Guard for buyers — powered by specialist AI.
+            <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
+              Studio writes your listings from photos. Guard risk-screens listings before you buy.
+              Both powered by category-specialist AI — not generic prompts.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-10">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-9">
               <Button asChild size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 border-0 px-8 shadow-[0_0_40px_-6px_rgba(34,211,238,0.55)] text-base">
                 <Link href="/studio/new">Start listing free →</Link>
               </Button>
@@ -163,7 +175,7 @@ export default function HomePage() {
                     <p className="text-slate-400 text-sm">"Chicago Lost and Found"</p>
                   </div>
                   <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-2 rounded-lg text-center shrink-0">
-                    <div className="text-[10px] uppercase tracking-wider font-bold mb-0.5">Risk Score</div>
+                    <div className="text-[10px] uppercase tracking-wider font-bold mb-0.5">Risk</div>
                     <div className="text-lg font-bold">MEDIUM</div>
                   </div>
                 </div>
@@ -344,8 +356,8 @@ export default function HomePage() {
             <div className="space-y-6">
               {[
                 { n: "1", title: "Upload photos", body: "3–8 photos of your item. No professional lighting needed.", accent: "border-white/10 text-slate-400" },
-                { n: "2", title: "AI analysis", body: "The specialist Lens identifies the exact model, condition, and missing evidence.", accent: "border-cyan-500/30 text-cyan-400" },
-                { n: "3", title: "Ready to list", body: "Get an optimised title, description, and accurate pricing data instantly.", accent: "border-white/10 text-slate-400" },
+                { n: "2", title: "Specialist Lens activates", body: "Category-specific AI identifies the exact model, condition, and missing evidence. Not generic prompts.", accent: "border-cyan-500/30 text-cyan-400" },
+                { n: "3", title: "Ready to list", body: "Optimised title, AI description, live market pricing, one-click eBay & Vinted export.", accent: "border-white/10 text-slate-400" },
               ].map((step) => (
                 <div key={step.n} className="flex gap-4">
                   <div className={`w-8 h-8 rounded-full bg-[#0d152a] border ${step.accent} flex items-center justify-center font-bold shrink-0 text-sm`}>{step.n}</div>
@@ -373,9 +385,9 @@ export default function HomePage() {
             </div>
             <div className="space-y-6">
               {[
-                { n: "1", title: "Paste a link", body: "Found a deal on eBay or Vinted? Paste the URL into Guard.", accent: "border-white/10 text-slate-400" },
-                { n: "2", title: "Deep scan", body: "AI examines seller history, photo inconsistencies, and pricing anomalies.", accent: "border-violet-500/30 text-violet-400" },
-                { n: "3", title: "Risk report", body: "Review the red flags, green signals, and know exactly what to ask the seller.", accent: "border-white/10 text-slate-400" },
+                { n: "1", title: "Paste a listing URL", body: "Found a deal on eBay or Vinted? Paste the URL — or upload screenshots via the Guard extension.", accent: "border-white/10 text-slate-400" },
+                { n: "2", title: "AI deep scan", body: "13-stage pipeline examines photo evidence, price anomalies, listing quality, and seller signals.", accent: "border-violet-500/30 text-violet-400" },
+                { n: "3", title: "Risk report", body: "Red flags, green signals, missing evidence, and ready-made seller questions — in under 30 seconds.", accent: "border-white/10 text-slate-400" },
               ].map((step) => (
                 <div key={step.n} className="flex gap-4">
                   <div className={`w-8 h-8 rounded-full bg-[#0d152a] border ${step.accent} flex items-center justify-center font-bold shrink-0 text-sm`}>{step.n}</div>
@@ -400,7 +412,7 @@ export default function HomePage() {
       <section id="lenses" className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Which category are you in?</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Which category are you selling in?</h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
               Generic AI hallucinates. Our specialist Lenses are trained on millions of data points specific to their domain.
             </p>
@@ -411,10 +423,10 @@ export default function HomePage() {
               const isLive = lens.status === "live";
               const LensIcon = LENS_ICON_MAP[lens.id];
               const card = (
-                <div className={`p-5 rounded-2xl border text-center transition-all ${
+                <div className={`p-4 rounded-2xl border text-center transition-all ${
                   isLive
                     ? "bg-[#0d152a] border-white/10 hover:border-cyan-500/50 hover:bg-[#121c36] cursor-pointer"
-                    : "bg-[#040a14] border-white/5 opacity-50 grayscale cursor-default"
+                    : "bg-[#040a14] border-white/5 opacity-40 cursor-default"
                 }`}>
                   <div className="flex items-center justify-center mb-2">
                     {LensIcon
@@ -440,15 +452,21 @@ export default function HomePage() {
               return <div key={lens.id}>{card}</div>;
             })}
           </div>
+
+          <div className="text-center mt-8">
+            <Button asChild variant="outline" className="border-white/10 text-slate-300 hover:text-white">
+              <Link href="/lenses">Explore all Lenses →</Link>
+            </Button>
+          </div>
         </div>
       </section>
 
-      {/* ── Responsible AI / Trust ───────────────────────────────────── */}
+      {/* ── Responsible AI ───────────────────────────────────────────── */}
       <section className="py-24 px-6 border-y border-white/5 bg-[#0a1122]">
         <div className="max-w-4xl mx-auto text-center">
           <div className="inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full border border-amber-800/50 bg-amber-950/20">
-            <span className="text-amber-400 text-sm">⚠</span>
-            <span className="text-sm text-amber-300 font-medium">Responsible AI language</span>
+            <Lock className="w-3.5 h-3.5 text-amber-400" />
+            <span className="text-sm text-amber-300 font-medium">Responsible AI by design</span>
           </div>
           <h2 className="text-3xl font-bold text-white mb-3">Responsible AI, built for resale.</h2>
           <p className="text-slate-400 mb-10 max-w-xl mx-auto">
@@ -464,9 +482,9 @@ export default function HomePage() {
               </h3>
               <ul className="space-y-4 text-slate-300 text-sm">
                 {[
-                  'We never definitively declare an item "fake" or "counterfeit".',
-                  'We never call a seller a "scammer".',
-                  "We never automatically report listings to platforms.",
+                  'Definitively declare an item "fake" or "counterfeit".',
+                  'Label a seller as a "scammer".',
+                  'Auto-report listings to platforms.',
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3">
                     <span className="text-rose-500 mt-0.5 shrink-0">✕</span>
@@ -482,9 +500,9 @@ export default function HomePage() {
               </h3>
               <ul className="space-y-4 text-slate-300 text-sm">
                 {[
-                  "We highlight probabilistic risk factors and anomalies.",
-                  "We surface missing evidence needed for verification.",
-                  "We empower buyers with the right questions to ask.",
+                  "Highlight probabilistic risk factors and anomalies.",
+                  "Surface the missing evidence needed for verification.",
+                  "Generate ready-made seller questions for buyers.",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3">
                     <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
@@ -585,9 +603,8 @@ export default function HomePage() {
                   </div>
                 ))}
               </div>
-
               <p className="mt-6 text-[11px] text-zinc-600 text-center">
-                Works on Chrome and Chromium-based browsers (Edge, Brave, Arc) · eBay UK/US and Vinted UK/EU supported
+                Chrome, Edge, Brave, Arc · eBay UK/US and Vinted UK/EU supported
               </p>
             </div>
           </div>
@@ -623,7 +640,7 @@ export default function HomePage() {
       {/* ── Footer ───────────────────────────────────────────────────── */}
       <footer className="border-t border-white/5 py-12 px-6 bg-[#040a14]">
         <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-3 gap-10 mb-10">
+          <div className="grid sm:grid-cols-4 gap-10 mb-10">
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <BrandWordmark layout="inline" size="sm" />
@@ -634,7 +651,7 @@ export default function HomePage() {
               </p>
             </div>
             <div>
-              <p className="font-mono-hud text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Tools</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Tools</p>
               <nav className="space-y-2.5">
                 <Link href="/studio/new" className="block text-sm text-zinc-500 hover:text-white transition-colors">Studio — list an item</Link>
                 <Link href="/guard/new"  className="block text-sm text-zinc-500 hover:text-white transition-colors">Guard — check a listing</Link>
@@ -644,17 +661,24 @@ export default function HomePage() {
               </nav>
             </div>
             <div>
-              <p className="font-mono-hud text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Legal</p>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Company</p>
               <nav className="space-y-2.5">
-                <Link href="/terms"          className="block text-sm text-zinc-500 hover:text-white transition-colors">Terms of use</Link>
-                <Link href="/privacy"        className="block text-sm text-zinc-500 hover:text-white transition-colors">Privacy policy</Link>
-                <Link href="/ai-disclaimer"  className="block text-sm text-zinc-500 hover:text-white transition-colors">AI disclaimer</Link>
+                <Link href="/invest"  className="block text-sm text-violet-400/70 hover:text-violet-300 transition-colors">Investors</Link>
+                <Link href="/lenses"  className="block text-sm text-zinc-500 hover:text-white transition-colors">Lenses</Link>
+              </nav>
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Legal</p>
+              <nav className="space-y-2.5">
+                <Link href="/legal/terms"         className="block text-sm text-zinc-500 hover:text-white transition-colors">Terms of use</Link>
+                <Link href="/legal/privacy"       className="block text-sm text-zinc-500 hover:text-white transition-colors">Privacy policy</Link>
+                <Link href="/legal/ai-disclaimer" className="block text-sm text-zinc-500 hover:text-white transition-colors">AI disclaimer</Link>
               </nav>
             </div>
           </div>
           <div className="border-t border-zinc-800/60 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
             <p className="text-xs text-zinc-700">© {new Date().getFullYear()} Mr.FLENS · List-LENS. All rights reserved.</p>
-            <p className="font-mono-hud text-[10px] text-zinc-700 uppercase tracking-[0.3em]">AI · Evidence · Confidence</p>
+            <p className="text-[10px] text-zinc-700 uppercase tracking-[0.3em]">AI · Evidence · Confidence</p>
           </div>
         </div>
       </footer>
