@@ -1,26 +1,19 @@
+import { lazy, Suspense } from "react";
 import { Link } from "wouter";
 import {
-  ShieldCheck, Sparkles, CheckCircle, AlertTriangle,
-  Info, Zap, HelpCircle, AlertCircle, TrendingUp, Lock,
+  ShieldCheck, Sparkles, CheckCircle, AlertTriangle, Info,
+  Zap, HelpCircle, AlertCircle, TrendingUp, Download, FolderOpen, Puzzle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { BrandGlyph } from "@/components/brand/brand-glyph";
+import { LENS_REGISTRY, LENS_ICON_MAP } from "@/lib/lenses-registry";
 
-const LENSES = [
-  { name: "ShoeLens",      emoji: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
-  { name: "RecordLens",    emoji: "💿", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
-  { name: "ClothingLens",  emoji: "👕", desc: "Fashion & vintage",       status: "live",  href: "/lenses/clothing" },
-  { name: "CardLens",      emoji: "🎴", desc: "Trading & sports cards",  status: "live",  href: "/lenses/card" },
-  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "live",  href: "/lenses/toy" },
-  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "live",  href: "/lenses/watch" },
-  { name: "MeasureLens",   emoji: "📐", desc: "Physical measurements",   status: "live",  href: "/lenses/measure" },
-  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "live",  href: "/lenses/motor" },
-  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "soon" },
-  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "soon" },
-  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "soon" },
-  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "soon" },
-];
+// Lazy-loaded so the framer-motion / HUD SVG bundle doesn't block first paint.
+// The backdrop is purely decorative; rendering it after hydration is fine.
+const BrandLens = lazy(() =>
+  import("@/components/brand/brand-lens").then((m) => ({ default: m.BrandLens }))
+);
 
 const PRICING = [
   {
@@ -111,8 +104,20 @@ export default function HomePage() {
         </div>
       </nav>
 
-      {/* ── Hero ─────────────────────────────────────────────────────── */}
-      <section className="pt-20 pb-16 px-6 relative overflow-hidden">
+      {/* ── Hero — "This is what you get." ──────────────────────────── */}
+      <section className="pt-24 pb-20 px-6 relative overflow-hidden">
+        {/* HUD lens — ambient backdrop, slowly rotating, behind all content */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-start justify-center overflow-hidden"
+        >
+          <div className="opacity-[0.12] -mt-24 w-[700px] h-[700px]">
+            <Suspense fallback={null}>
+              <BrandLens static className="w-full h-full" />
+            </Suspense>
+          </div>
+        </div>
+        {/* Glow orbs */}
         <div aria-hidden className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/15 blur-[120px] rounded-full" />
         <div aria-hidden className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/4 w-[600px] h-[300px] bg-violet-500/15 blur-[100px] rounded-full" />
 
@@ -409,36 +414,42 @@ export default function HomePage() {
           <div className="text-center mb-14">
             <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Which category are you selling in?</h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              Generic AI hallucinates. Our 12 specialist Lenses each apply their own evidence rules, field schemas, and safe-language layer.
+              Generic AI hallucinates. Our specialist Lenses are trained on millions of data points specific to their domain.
             </p>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-            {LENSES.map((lens) => {
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            {LENS_REGISTRY.map((lens) => {
               const isLive = lens.status === "live";
+              const LensIcon = LENS_ICON_MAP[lens.id];
               const card = (
                 <div className={`p-4 rounded-2xl border text-center transition-all ${
                   isLive
                     ? "bg-[#0d152a] border-white/10 hover:border-cyan-500/50 hover:bg-[#121c36] cursor-pointer"
                     : "bg-[#040a14] border-white/5 opacity-40 cursor-default"
                 }`}>
-                  <div className="text-2xl mb-2">{lens.emoji}</div>
-                  <p className={`text-xs font-semibold leading-tight ${isLive ? "text-white" : "text-slate-500"}`}>{lens.name}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.desc}</p>
+                  <div className="flex items-center justify-center mb-2">
+                    {LensIcon
+                      ? <LensIcon className={`w-6 h-6 ${isLive ? "text-cyan-400" : "text-zinc-500"}`} />
+                      : <span className="text-2xl">{lens.icon}</span>
+                    }
+                  </div>
+                  <p className={`text-sm font-semibold ${isLive ? "text-white" : "text-slate-500"}`}>{lens.name}</p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.category}</p>
                   <div className="mt-2">
                     {isLive && <span className="inline-block text-[9px] bg-cyan-900/70 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-700/40">Live</span>}
-                    {lens.status === "soon" && <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>}
+                    {lens.status === "planned" && <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>}
                   </div>
                 </div>
               );
               if (isLive && lens.href) {
                 return (
-                  <Link key={lens.name} href={lens.href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 rounded-2xl">
+                  <Link key={lens.id} href={lens.href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#040a14] rounded-2xl">
                     {card}
                   </Link>
                 );
               }
-              return <div key={lens.name}>{card}</div>;
+              return <div key={lens.id}>{card}</div>;
             })}
           </div>
 
@@ -557,8 +568,8 @@ export default function HomePage() {
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-10">
                 <div>
                   <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg border border-violet-700/30 bg-violet-950/30">
-                    <span className="text-base">🛡️</span>
-                    <span className="text-[10px] uppercase tracking-[0.22em] text-violet-300/90 font-semibold">Chrome Extension · Free</span>
+                    <ShieldCheck className="w-4 h-4 text-violet-400" />
+                    <span className="font-mono-hud text-[10px] uppercase tracking-[0.22em] text-violet-300/90">Chrome Extension · Free</span>
                   </div>
                   <h2 className="text-3xl font-bold text-white mb-3">Guard while you browse</h2>
                   <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
@@ -571,21 +582,21 @@ export default function HomePage() {
                   download="listlens-guard.zip"
                   className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-bold text-sm shadow-[0_0_28px_-8px_rgba(139,92,246,0.7)] transition-all"
                 >
-                  <span className="text-lg">⬇</span>
+                  <Download className="w-4 h-4" />
                   Download extension .zip
                 </a>
               </div>
 
               <div className="grid sm:grid-cols-3 gap-5">
                 {[
-                  { n: "01", icon: "⬇", title: "Download the zip", body: 'Click "Download extension .zip" above.' },
-                  { n: "02", icon: "📂", title: "Unzip the file", body: "Extract to a folder — you'll point Chrome at this folder." },
-                  { n: "03", icon: "🧩", title: "Load unpacked", body: 'Go to chrome://extensions, enable "Developer mode", click "Load unpacked".' },
+                  { n: "01", Icon: Download,    title: "Download the zip", body: 'Click "Download extension .zip" above and save the file anywhere on your computer.' },
+                  { n: "02", Icon: FolderOpen,  title: "Unzip the file", body: "Extract the downloaded zip to a folder — you'll point Chrome at this folder." },
+                  { n: "03", Icon: Puzzle,      title: "Load unpacked in Chrome", body: 'Go to chrome://extensions, enable "Developer mode", click "Load unpacked", and select the folder.' },
                 ].map((step) => (
                   <div key={step.n} className="rounded-2xl border border-violet-700/25 bg-violet-950/15 p-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <span className="text-[10px] font-bold tracking-[0.2em] text-violet-500">{step.n}</span>
-                      <span className="text-xl">{step.icon}</span>
+                      <span className="font-mono-hud text-[10px] font-bold tracking-[0.2em] text-violet-500">{step.n}</span>
+                      <step.Icon className="w-4 h-4 text-violet-400" />
                     </div>
                     <p className="text-sm font-semibold text-white mb-1.5">{step.title}</p>
                     <p className="text-xs text-zinc-400 leading-relaxed">{step.body}</p>

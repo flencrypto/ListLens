@@ -141,43 +141,53 @@ export default function HomeScreen() {
 
   return (
     <ScreenContainer withTabPadding>
-      <View style={styles.headerRow}>
-        <View style={{ flex: 1 }}>
-          <Text style={[styles.greeting, { color: colors.zinc400 }]}>
-            Welcome back
-          </Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>
-            Dashboard
-          </Text>
+      {/* ── HUD Hero Panel ─────────────────────────────────────────── */}
+      <View
+        style={[
+          styles.heroPanelWrapper,
+          {
+            borderColor: colors.brandStroke,
+            backgroundColor: colors.cardSurfaceSoft,
+            borderRadius: colors.radius,
+          },
+        ]}
+      >
+        {/* Decorative BrandLens in top-right corner */}
+        <View style={styles.heroLensWrap} pointerEvents="none">
+          <BrandLens size={110} staticOnly />
         </View>
-        <Badge label={badgeLabel} tone="cyan" />
-      </View>
 
-      {/* Stats row */}
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: colors.cardSurfaceSoft, borderColor: colors.brandStroke, borderRadius: colors.radius }]}>
-          {dashLoading ? (
-            <ActivityIndicator size="small" color={colors.brandCyan} />
-          ) : (
-            <Text style={[styles.statNumber, { color: colors.foreground }]}>{dashData?.studioCount ?? 0}</Text>
-          )}
-          <Text style={[styles.statLabel, { color: colors.zinc400 }]}>Listings</Text>
-        </View>
-        <View style={[styles.statCard, { backgroundColor: colors.cardSurfaceSoft, borderColor: colors.brandStroke, borderRadius: colors.radius }]}>
-          {dashLoading ? (
-            <ActivityIndicator size="small" color={colors.brandViolet} />
-          ) : (
-            <Text style={[styles.statNumber, { color: colors.foreground }]}>{dashData?.guardCount ?? 0}</Text>
-          )}
-          <Text style={[styles.statLabel, { color: colors.zinc400 }]}>Guard checks</Text>
-        </View>
-        <View style={[styles.statCard, { backgroundColor: colors.cardSurfaceSoft, borderColor: colors.brandStroke, borderRadius: colors.radius }]}>
-          {dashLoading ? (
-            <ActivityIndicator size="small" color="#a78bfa" />
-          ) : (
-            <Text style={[styles.statNumber, { color: "#a78bfa" }]}>{dashData?.credits ?? 0}</Text>
-          )}
-          <Text style={[styles.statLabel, { color: colors.zinc400 }]}>Credits</Text>
+        {/* Greeting + badge */}
+        <View style={styles.heroContent}>
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.greeting, { color: colors.zinc400 }]}>
+                Welcome back
+              </Text>
+              <Text style={[styles.title, { color: colors.foreground }]}>
+                Dashboard
+              </Text>
+            </View>
+            <Badge label={badgeLabel} tone="cyan" />
+          </View>
+
+          {/* Inline stats inside hero */}
+          <View style={styles.heroStats}>
+            {[
+              { value: dashData?.studioCount ?? 0, label: "Listings",     accent: colors.brandCyan,    bg: "rgba(34,211,238,0.08)"  },
+              { value: dashData?.guardCount   ?? 0, label: "Guard checks", accent: colors.brandViolet,  bg: "rgba(139,92,246,0.08)"  },
+              { value: dashData?.credits      ?? 0, label: "Credits",      accent: "#a78bfa",           bg: "rgba(167,139,250,0.08)" },
+            ].map(({ value, label, accent, bg }) => (
+              <View key={label} style={[styles.heroStat, { backgroundColor: bg }]}>
+                {dashLoading ? (
+                  <ActivityIndicator size="small" color={accent} />
+                ) : (
+                  <Text style={[styles.heroStatNum, { color: accent }]}>{value}</Text>
+                )}
+                <Text style={[styles.heroStatLabel, { color: colors.zinc400 }]}>{label}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </View>
 
@@ -335,27 +345,31 @@ export default function HomeScreen() {
         </View>
       </Card>
 
-      {/* Brand reinforcement panel */}
-      <View style={styles.brandPanel}>
-        <BrandLens size={120} />
-        <Text style={[styles.brandPanelTitle, { color: colors.foreground }]}>
-          List smarter. Buy safer.
-        </Text>
-        <Text style={[styles.brandPanelBody, { color: colors.zinc400 }]}>
-          AI-powered listings for eBay & Vinted, and a buyer risk screen for
-          anything you check before you buy.
-        </Text>
-      </View>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
+  /* Hero panel */
+  heroPanelWrapper: {
+    borderWidth: 1,
+    overflow: "hidden",
+    position: "relative",
+  },
+  heroLensWrap: {
+    position: "absolute",
+    top: -20,
+    right: -20,
+    opacity: 0.18,
+  },
+  heroContent: {
+    padding: 16,
+    gap: 14,
+  },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 4,
   },
   greeting: {
     fontFamily: "Inter_500Medium",
@@ -365,28 +379,28 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: "Inter_700Bold",
-    fontSize: 28,
+    fontSize: 26,
     letterSpacing: -0.6,
-    marginTop: 4,
+    marginTop: 2,
   },
-  statsRow: {
+  heroStats: {
     flexDirection: "row",
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
-    borderWidth: 1,
-    paddingVertical: 12,
-    alignItems: "center",
     gap: 4,
   },
-  statNumber: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 22,
+  heroStat: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 10,
+    borderRadius: 10,
+    gap: 3,
   },
-  statLabel: {
+  heroStatNum: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 20,
+  },
+  heroStatLabel: {
     fontFamily: "Inter_400Regular",
-    fontSize: 10,
+    fontSize: 9,
     textTransform: "uppercase",
     letterSpacing: 0.5,
   },
@@ -497,22 +511,5 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontSize: 12,
     marginTop: 2,
-  },
-  brandPanel: {
-    alignItems: "center",
-    paddingVertical: 12,
-    gap: 8,
-  },
-  brandPanelTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 18,
-    marginTop: 4,
-  },
-  brandPanelBody: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-    textAlign: "center",
-    lineHeight: 19,
-    maxWidth: 320,
   },
 });

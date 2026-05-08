@@ -1,15 +1,46 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/*
+ * ── Mr.FLENS · List-LENS — Unified Design Tokens ──────────────────────────
+ *
+ * Palette: deep navy backdrop, electric cyan primary, tri-tone HUD gauge
+ * (cyan → green → amber), violet Guard accent. Dark-first — no light mode.
+ *
+ * Background layers (dark → light):
+ *   --brand-navy-deep  #020610  base bedrock (outermost layer)
+ *   --brand-navy       #040a14  primary page background
+ *   --brand-navy-2     #081325  section / raised panel
+ *   --brand-card       #0a1628  card surface
+ *
+ * Accent scale:
+ *   --brand-cyan       #22d3ee  primary interactive / CTA
+ *   --brand-cyan-soft  #67e8f9  softer emphasis
+ *   --brand-blue       #3ea8ff  secondary link / info
+ *   --brand-blue-bright #2979ff additional blue accent
+ *   --brand-green      #4ade80  success / HUD gauge mid
+ *   --brand-amber      #fb923c  warning / HUD gauge high
+ *   --brand-violet     #8b5cf6  Guard accent
+ *
+ * Depth recipe (brand-card class):
+ *   inner-stroke: rgba(34,211,238,0.18)
+ *   soft-glow:    0 24px 48px -28px rgba(34,211,238,0.18)
+ *   radius:       1rem
+ *
+ * HUD gauge stops (reusable, in order): #22d3ee → #4ade80 → #facc15 → #fb923c
+ */
+
 :root {
   --background: #040a14;
   --foreground: #fafafa;
+  --brand-navy-deep: #020610;
   --brand-navy: #040a14;
   --brand-navy-2: #081325;
   --brand-card: #0a1628;
   --brand-cyan: #22d3ee;
   --brand-cyan-soft: #67e8f9;
   --brand-blue: #3ea8ff;
+  --brand-blue-bright: #2979ff;
   --brand-green: #4ade80;
   --brand-amber: #fb923c;
   --brand-violet: #8b5cf6;
@@ -134,6 +165,34 @@ body {
     transparent 1px,
     transparent 3px
   );
+}
+
+/* Brand glyph soft-pulse glow — used on BrandGlyph when animated=true.
+   Scales the outer glow ring very subtly so the halo breathes. */
+@keyframes brand-glyph-pulse {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(34, 211, 238, 0.45));
+    transform: scale(1);
+  }
+  50% {
+    filter: drop-shadow(0 0 22px rgba(34, 211, 238, 0.75));
+    transform: scale(1.04);
+  }
+}
+
+/* HUD gauge arc fill — sweeps a conic arc from 0 to full in 1.2 s,
+   used inside BrandLens-style UI elements as a power-on indicator.
+   ⚠ Requires the target SVG arc element to declare pathLength="100" so the
+   normalized 0–100 dash range maps 1:1 to the actual path length; without it
+   the animation will only sweep the first 100 user-units of the arc. */
+@keyframes hud-gauge-fill {
+  from { stroke-dashoffset: 100; opacity: 0.4; }
+  to   { stroke-dashoffset: 0;   opacity: 1; }
+}
+.hud-gauge-arc {
+  stroke-dasharray: 100;
+  stroke-dashoffset: 100;
+  animation: hud-gauge-fill 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
 }
 
 /* Splash entrance — lens "spins up" from a slightly smaller, dimmer state.

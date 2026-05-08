@@ -1,14 +1,17 @@
 import * as oidc from "openid-client";
 import { type Request, type Response, type NextFunction } from "express";
 import type { AuthUser } from "@workspace/api-zod";
+import { createClerkClient, verifyToken } from "@clerk/backend";
 import {
   clearSession,
   getOidcConfig,
   getSessionId,
   getSession,
   updateSession,
+  upsertClerkUser,
   type SessionData,
 } from "../lib/auth";
+import { logger } from "../lib/logger";
 
 declare global {
   namespace Express {
@@ -24,6 +27,45 @@ declare global {
       user: User;
     }
   }
+}
+
+// Lazily-initialised Clerk client — only created when CLERK_SECRET_KEY is set.
+let clerkClient: ReturnType<typeof createClerkClient> | null = null;
+
+function getClerkClient() {
+  if (!process.env["CLERK_SECRET_KEY"]) return null;
+  if (!clerkClient) {
+    clerkClient = createClerkClient({ secretKey: process.env["CLERK_SECRET_KEY"] });
+  }
+  return clerkClient;
+}
+
+/**
+ * Try to authenticate the request via a Clerk JWT bearer token.
+ * Returns the resolved AuthUser or null if the token is absent/invalid.
+ */
+async function tryClerkAuth(req: Request): Promise<AuthUser | null> {
+  const clerk = getClerkClient();
+  if (!clerk) return null;
+
+  const authHeader = req.headers["authorization"];
+  if (!authHeader?.startsWith("Bearer ")) return null;
+  const token = authHeader.slice(7);
+
+  let clerkUserId: string;
+  try {
+    const payload = await verifyToken(token, {
+      secretKey: process.env["CLERK_SECRET_KEY"],
+    });
+    if (!payload.sub) return null;
+    clerkUserId = payload.sub;
+  } catch {
+    // Token absent, expired, or invalid — not a Clerk session.
+    return null;
+  }
+
+  // Resolve full user info: read from DB first; fall back to Clerk Users API.
+  return upsertClerkUser(clerkUserId, clerk);
 }
 
 async function refreshIfExpired(
@@ -62,6 +104,19 @@ export async function authMiddleware(
     return this.user != null;
   } as Request["isAuthenticated"];
 
+  // --- Clerk JWT path (takes priority when CLERK_SECRET_KEY is set) ---
+  try {
+    const clerkUser = await tryClerkAuth(req);
+    if (clerkUser) {
+      req.user = clerkUser;
+      next();
+      return;
+    }
+  } catch (err) {
+    logger.warn({ err }, "authMiddleware: Clerk verification threw unexpectedly");
+  }
+
+  // --- Replit OIDC session path (existing behaviour) ---
   const sid = getSessionId(req);
   if (!sid) {
     next();

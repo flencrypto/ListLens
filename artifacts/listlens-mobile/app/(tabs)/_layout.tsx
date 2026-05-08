@@ -90,14 +90,14 @@ export default function TabLayout() {
           <View style={StyleSheet.absoluteFill}>
             {Platform.OS === "ios" ? (
               <BlurView
-                intensity={70}
+                intensity={90}
                 tint="dark"
                 style={StyleSheet.absoluteFill}
               >
                 <View
                   style={[
                     StyleSheet.absoluteFill,
-                    { backgroundColor: "rgba(4,10,20,0.55)" },
+                    { backgroundColor: "rgba(4,10,20,0.6)" },
                   ]}
                 />
               </BlurView>
@@ -119,16 +119,16 @@ export default function TabLayout() {
                   right: 0,
                   top: 0,
                   height: 1,
-                  backgroundColor: "rgba(34,211,238,0.35)",
+                  backgroundColor: "rgba(34,211,238,0.45)",
                 },
                 Platform.select({
                   web: {
-                    boxShadow: "0 0 6px rgba(34,211,238,0.6)",
+                    boxShadow: "0 0 8px rgba(34,211,238,0.7)",
                   },
                   default: {
                     shadowColor: colors.brandCyan,
-                    shadowOpacity: 0.6,
-                    shadowRadius: 6,
+                    shadowOpacity: 0.7,
+                    shadowRadius: 8,
                     shadowOffset: { width: 0, height: 0 },
                   },
                 }),

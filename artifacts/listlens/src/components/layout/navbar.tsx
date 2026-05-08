@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 
-import { useAuth } from "@workspace/replit-auth-web";
+import { useAuth } from "@/lib/auth-context";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { cn } from "@/lib/utils";
 

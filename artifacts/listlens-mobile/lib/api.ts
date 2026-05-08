@@ -443,6 +443,13 @@ export interface GuardApiReport {
     market_estimate: string | null;
     price_verdict: "fair" | "low_risk_deal" | "suspiciously_low" | "overpriced" | "unknown";
     price_note: string;
+    market_data?: {
+      source: string;
+      listing_count: number;
+      price_min_gbp: number | null;
+      price_median_gbp: number | null;
+      price_max_gbp: number | null;
+    } | null;
   };
   authenticity_signals: Array<{
     marker: string;
@@ -468,6 +475,21 @@ export async function createGuardCheck(params: {
   lens: string;
 }): Promise<{ id: string }> {
   return post("/api/guard/checks", params);
+}
+
+/**
+ * Fetch an existing Guard check report by id.
+ * Useful for loading reports on a different device or after local storage is cleared.
+ * Returns the AI report alongside check metadata (createdAt, url, screenshotUrls).
+ */
+export async function getGuardCheck(id: string): Promise<{
+  id: string;
+  report: GuardApiReport;
+  createdAt: string | null;
+  url: string | null;
+  screenshotUrls: string[];
+}> {
+  return get(`/api/guard/checks/${id}`);
 }
 
 /**

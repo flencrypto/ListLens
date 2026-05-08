@@ -24,7 +24,7 @@ import { useColors } from "@/hooks/useColors";
 import { LENS_REGISTRY } from "@/constants/lenses";
 import { uploadPhoto } from "@/lib/api";
 import { useCreateGuardCheck, useAnalyseGuardCheck } from "@workspace/api-client-react";
-import { generateId, saveReport, type GuardReport } from "@/lib/historyStore";
+import { saveReport, type GuardReport } from "@/lib/historyStore";
 
 type Tab = "url" | "photos";
 
@@ -196,11 +196,12 @@ export default function GuardCheckScreen() {
       setProgressValue(100);
       setProgressLabel("Complete!");
 
-      // Build the full GuardReport to save locally and pass to the report screen
-      const localId = generateId();
+      // Build the full GuardReport to save locally and pass to the report screen.
+      // Use the API check id as the report id so that the History tab can match
+      // local reports with API guard checks when the user is authenticated.
       const now = Date.now();
       const guardReport: GuardReport = {
-        id: localId,
+        id: checkId,
         createdAt: now,
         lens,
         source: tab === "photos" ? "screenshots" : "url",
@@ -232,7 +233,7 @@ export default function GuardCheckScreen() {
       router.replace({
         pathname: "/guard/report",
         params: {
-          reportId: localId,
+          reportId: checkId,
           fresh: "1",
         },
       });

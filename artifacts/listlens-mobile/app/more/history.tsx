@@ -110,14 +110,27 @@ export default function HistoryScreen() {
       async function load() {
         try {
           if (isAuthenticated) {
-            const [apiListings, apiChecks] = await Promise.all([
-              listItems(),
-              listGuardChecks(),
-            ]);
-            if (!cancelled) {
-              setDrafts(apiListings.map(apiListingToDisplay));
-              setReports(apiChecks.map(apiGuardCheckToDisplay));
-              setSource("api");
+            try {
+              const [apiListings, apiChecks] = await Promise.all([
+                listItems(),
+                listGuardChecks(),
+              ]);
+              if (!cancelled) {
+                setDrafts(apiListings.map(apiListingToDisplay));
+                setReports(apiChecks.map(apiGuardCheckToDisplay));
+                setSource("api");
+              }
+            } catch {
+              // API unavailable — show locally-saved data so history is never blank
+              const [localDrafts, localReports] = await Promise.all([
+                listDrafts(),
+                listReports(),
+              ]);
+              if (!cancelled) {
+                setDrafts(localDrafts.map(studioToDisplay));
+                setReports(localReports.map(reportToDisplay));
+                setSource("local");
+              }
             }
           } else {
             const [localDrafts, localReports] = await Promise.all([

@@ -30,6 +30,27 @@ export interface StudioDraft {
   matrixSideB?: string;
   matrixSideCD?: string;
   pressingMatches?: PressingMatch[];
+  needsMatrixConfirm?: boolean;
+  watchMarket?: {
+    source: string;
+    search_query: string;
+    listing_count: number;
+    total_count: number;
+    price_min_gbp: number | null;
+    price_median_gbp: number | null;
+    price_max_gbp: number | null;
+    currency: "GBP";
+  } | null;
+  sneakerMarket?: {
+    source: string;
+    search_query: string;
+    listing_count: number;
+    price_min_gbp: number | null;
+    price_median_gbp: number | null;
+    price_max_gbp: number | null;
+    source_listings: number;
+    currency: "GBP";
+  } | null;
 }
 
 export type RiskLevel = "low" | "medium" | "medium_high" | "high" | "inconclusive";
