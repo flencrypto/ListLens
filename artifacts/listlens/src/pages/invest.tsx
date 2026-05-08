@@ -289,7 +289,7 @@ export default function InvestPage() {
               </h3>
               <ul className="space-y-4 text-slate-300 text-sm">
                 {[
-                  "Studio: photos → fully optimised marketplace listing in &lt;30 seconds.",
+                  "Studio: photos → fully optimised marketplace listing in <30 seconds.",
                   "12 specialist Lenses — each trained on domain-specific evidence rules.",
                   "Guard: live buyer risk check with 5-dimension AI analysis.",
                   "Marketplace-ready exports: eBay, Vinted, and 6+ platforms on roadmap.",
@@ -297,7 +297,7 @@ export default function InvestPage() {
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3">
                     <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
-                    <span dangerouslySetInnerHTML={{ __html: t }} />
+                    {t}
                   </li>
                 ))}
               </ul>
@@ -352,10 +352,10 @@ export default function InvestPage() {
                 Sellers upload 3–8 photos. The correct specialist Lens activates automatically, identifying the exact item, condition, and missing evidence. Output: optimised title, AI description, live market pricing, one-click marketplace export.
               </p>
               <ul className="space-y-2 text-sm text-slate-300">
-                {["Photos → draft in &lt;30 seconds", "Live market comps (comparable sold prices)", "Missing evidence warnings before listing", "eBay + Vinted direct export (more on roadmap)"].map((f) => (
+                {["Photos → draft in <30 seconds", "Live market comps (comparable sold prices)", "Missing evidence warnings before listing", "eBay + Vinted direct export (more on roadmap)"].map((f) => (
                   <li key={f} className="flex items-start gap-2">
                     <CheckCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
-                    <span dangerouslySetInnerHTML={{ __html: f }} />
+                    {f}
                   </li>
                 ))}
               </ul>
@@ -679,10 +679,10 @@ export default function InvestPage() {
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <BrandWordmark layout="inline" size="sm" />
           <div className="flex items-center gap-6 text-sm text-zinc-500">
-            <Link href="/"       className="hover:text-white transition-colors">Customer site</Link>
-            <Link href="/splash" className="hover:text-white transition-colors">Splash</Link>
-            <Link href="/terms"  className="hover:text-white transition-colors">Terms</Link>
-            <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+            <Link href="/"             className="hover:text-white transition-colors">Customer site</Link>
+            <Link href="/splash"       className="hover:text-white transition-colors">Splash</Link>
+            <Link href="/legal/terms"  className="hover:text-white transition-colors">Terms</Link>
+            <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacy</Link>
           </div>
           <p className="text-xs text-zinc-700">© {new Date().getFullYear()} Mr.FLENS · List-LENS</p>
         </div>

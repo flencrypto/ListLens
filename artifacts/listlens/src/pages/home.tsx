@@ -2,7 +2,7 @@ import { lazy, Suspense } from "react";
 import { Link } from "wouter";
 import {
   ShieldCheck, Sparkles, CheckCircle, AlertTriangle, Info,
-  Zap, HelpCircle, AlertCircle, TrendingUp, Download, FolderOpen, Puzzle,
+  Zap, HelpCircle, AlertCircle, TrendingUp, Download, FolderOpen, Puzzle, Lock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
@@ -663,7 +663,6 @@ export default function HomePage() {
             <div>
               <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Company</p>
               <nav className="space-y-2.5">
-                <Link href="/about"   className="block text-sm text-zinc-500 hover:text-white transition-colors">About</Link>
                 <Link href="/invest"  className="block text-sm text-violet-400/70 hover:text-violet-300 transition-colors">Investors</Link>
                 <Link href="/lenses"  className="block text-sm text-zinc-500 hover:text-white transition-colors">Lenses</Link>
               </nav>
@@ -671,9 +670,9 @@ export default function HomePage() {
             <div>
               <p className="text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Legal</p>
               <nav className="space-y-2.5">
-                <Link href="/terms"         className="block text-sm text-zinc-500 hover:text-white transition-colors">Terms of use</Link>
-                <Link href="/privacy"       className="block text-sm text-zinc-500 hover:text-white transition-colors">Privacy policy</Link>
-                <Link href="/ai-disclaimer" className="block text-sm text-zinc-500 hover:text-white transition-colors">AI disclaimer</Link>
+                <Link href="/legal/terms"         className="block text-sm text-zinc-500 hover:text-white transition-colors">Terms of use</Link>
+                <Link href="/legal/privacy"       className="block text-sm text-zinc-500 hover:text-white transition-colors">Privacy policy</Link>
+                <Link href="/legal/ai-disclaimer" className="block text-sm text-zinc-500 hover:text-white transition-colors">AI disclaimer</Link>
               </nav>
             </div>
           </div>

@@ -34,7 +34,6 @@ export default function SplashPage() {
       glow: "shadow-[0_0_32px_-8px_rgba(34,211,238,0.5)]",
       labelColor: "text-cyan-200",
       subColor: "text-cyan-400/70",
-      badge: "bg-cyan-500",
     },
     {
       href: "/dashboard",
@@ -45,7 +44,6 @@ export default function SplashPage() {
       glow: "shadow-[0_0_32px_-8px_rgba(52,211,153,0.4)]",
       labelColor: "text-emerald-200",
       subColor: "text-emerald-400/70",
-      badge: "bg-emerald-500",
     },
     {
       href: "/invest",
@@ -56,7 +54,6 @@ export default function SplashPage() {
       glow: "shadow-[0_0_32px_-8px_rgba(139,92,246,0.5)]",
       labelColor: "text-violet-200",
       subColor: "text-violet-400/70",
-      badge: "bg-violet-500",
     },
   ];
 
