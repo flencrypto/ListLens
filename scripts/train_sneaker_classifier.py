@@ -50,8 +50,9 @@ VAL_SIZE = 0.15
 MIN_SAMPLES_PER_BRAND = 2
 USE_CLASS_WEIGHTS = True
 SEED = 42
-PUSH_TO_HUB = os.getenv("PUSH_TO_HUB", "1") == "1"
-REPORT_TO_TRACKIO = os.getenv("REPORT_TO_TRACKIO", "1") == "1"
+PUSH_TO_HUB = os.getenv("PUSH_TO_HUB", "0") == "1"
+REPORT_TO_TRACKIO = os.getenv("REPORT_TO_TRACKIO", "0") == "1"
+NULL_LIKE_BRANDS = {"", "n/a", "na", "nan", "none", "null", "unknown"}
 
 
 def is_trackio_available() -> bool:
@@ -68,6 +69,8 @@ def normalize_brand(value: Any) -> str:
     raw = str(value).strip()
     raw = re.sub(r"\s+", " ", raw)
     key = raw.lower().replace("’", "'").replace("-", " ").strip()
+    if key in NULL_LIKE_BRANDS:
+        return "Unknown"
     aliases = {
         "new": "New Balance",
         "new balance": "New Balance",
@@ -128,16 +131,21 @@ def decode_image(value: Any) -> Image.Image:
         if img_bytes is not None:
             if isinstance(img_bytes, memoryview):
                 img_bytes = img_bytes.tobytes()
-            return Image.open(io.BytesIO(img_bytes)).convert("RGB")
+            with Image.open(io.BytesIO(img_bytes)) as image:
+                return image.convert("RGB")
         if img_path:
-            return Image.open(img_path).convert("RGB")
+            with Image.open(img_path) as image:
+                return image.convert("RGB")
         raise ValueError("Image record has neither bytes nor path")
     if isinstance(value, memoryview):
-        return Image.open(io.BytesIO(value.tobytes())).convert("RGB")
+        with Image.open(io.BytesIO(value.tobytes())) as image:
+            return image.convert("RGB")
     if isinstance(value, (bytes, bytearray)):
-        return Image.open(io.BytesIO(bytes(value))).convert("RGB")
+        with Image.open(io.BytesIO(bytes(value))) as image:
+            return image.convert("RGB")
     if isinstance(value, str):
-        return Image.open(value).convert("RGB")
+        with Image.open(value) as image:
+            return image.convert("RGB")
     if isinstance(value, np.ndarray):
         return Image.fromarray(value.astype(np.uint8)).convert("RGB")
     raise TypeError(f"Cannot decode image payload type: {type(value)!r}")
@@ -170,9 +178,12 @@ def load_parquet_batches() -> Tuple[List[Dict[str, Any]], List[str], List[str]]:
             local_path = hf_hub_download(repo_id=DATASET_REPO_ID, repo_type=DATASET_REPO_TYPE, filename=filename)
             table = pq.read_table(local_path, columns=["image", "brand", "model"])
             df = table.to_pandas().dropna(subset=["image", "brand"])
-            all_images.extend(image_to_hf_record(x) for x in df["image"].tolist())
-            all_brands.extend(normalize_brand(x) for x in df["brand"].tolist())
-            all_models.extend("" if x is None else str(x) for x in df["model"].tolist())
+            batch_images = [image_to_hf_record(x) for x in df["image"].tolist()]
+            batch_brands = [normalize_brand(x) for x in df["brand"].tolist()]
+            batch_models = ["" if x is None else str(x) for x in df["model"].tolist()]
+            all_images.extend(batch_images)
+            all_brands.extend(batch_brands)
+            all_models.extend(batch_models)
             if batch_id == 1 or batch_id % 10 == 0:
                 print(f"  Loaded {filename}: {len(df)} rows")
         except Exception as exc:
@@ -227,45 +238,9 @@ def make_class_weights(labels: List[int], num_labels: int) -> torch.Tensor:
     return torch.tensor(weights, dtype=torch.float32)
 
 
-images_raw, brands_raw, models_raw = load_parquet_batches()
-images_raw, brand_normalized, models_raw = filter_rare_brands(images_raw, brands_raw, models_raw)
-unique_brands = sorted(set(brand_normalized))
-label2id = {label: idx for idx, label in enumerate(unique_brands)}
-id2label = {idx: label for label, idx in label2id.items()}
-num_labels = len(unique_brands)
-
-features = Features({"image": HFImage(decode=False), "brand": ClassLabel(names=unique_brands), "brand_name": Value("string"), "model": Value("string")})
-dataset = Dataset.from_dict({"image": images_raw, "brand": [label2id[b] for b in brand_normalized], "brand_name": brand_normalized, "model": models_raw}, features=features)
-split_size = safe_test_size(len(dataset), num_labels, VAL_SIZE)
-dataset = dataset.train_test_split(test_size=split_size, seed=SEED, stratify_by_column="brand")
-
-class_weights = make_class_weights(dataset["train"]["brand"], num_labels) if USE_CLASS_WEIGHTS else None
-image_processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
-size = processor_crop_size(image_processor)
-normalize = Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
-
-train_transforms = Compose([RandomResizedCrop(size, scale=(0.75, 1.0)), RandomHorizontalFlip(), ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05), ToTensor(), normalize])
-val_transforms = Compose([Resize(size), CenterCrop(size), ToTensor(), normalize])
-
 def apply_transforms(examples: Dict[str, List[Any]], transform: Any) -> Dict[str, List[Any]]:
     examples["pixel_values"] = [transform(decode_image(img)) for img in examples["image"]]
     return examples
-
-dataset["train"].set_transform(lambda e: apply_transforms(e, train_transforms))
-dataset["test"].set_transform(lambda e: apply_transforms(e, val_transforms))
-
-model = AutoModelForImageClassification.from_pretrained(MODEL_NAME, num_labels=num_labels, label2id=label2id, id2label=id2label, ignore_mismatched_sizes=True)
-accuracy_metric = evaluate.load("accuracy")
-f1_metric = evaluate.load("f1")
-
-def compute_metrics(eval_pred: Any) -> Dict[str, float]:
-    logits, labels = eval_pred
-    predictions = np.argmax(logits, axis=-1)
-    return {
-        "accuracy": accuracy_metric.compute(predictions=predictions, references=labels)["accuracy"],
-        "f1_macro": f1_metric.compute(predictions=predictions, references=labels, average="macro")["f1"],
-        "f1_weighted": f1_metric.compute(predictions=predictions, references=labels, average="weighted")["f1"],
-    }
 
 def collate_fn(examples: List[Dict[str, Any]]) -> Dict[str, torch.Tensor]:
     return {"pixel_values": torch.stack([example["pixel_values"] for example in examples]), "labels": torch.tensor([int(example["brand"]) for example in examples], dtype=torch.long)}
@@ -282,16 +257,56 @@ class WeightedLossTrainer(Trainer):
         loss = torch.nn.CrossEntropyLoss(weight=weight)(logits.view(-1, model.config.num_labels), labels.view(-1))
         return (loss, outputs) if return_outputs else loss
 
-report_to = "trackio" if REPORT_TO_TRACKIO and is_trackio_available() else "none"
-training_args = TrainingArguments(output_dir=OUTPUT_DIR, remove_unused_columns=False, eval_strategy="epoch", save_strategy="epoch", learning_rate=LR, per_device_train_batch_size=BATCH_SIZE, per_device_eval_batch_size=BATCH_SIZE, gradient_accumulation_steps=GRAD_ACCUM, num_train_epochs=EPOCHS, warmup_ratio=WARMUP_RATIO, weight_decay=WEIGHT_DECAY, logging_strategy="steps", logging_steps=50, logging_first_step=True, load_best_model_at_end=True, metric_for_best_model="eval_f1_macro", greater_is_better=True, save_total_limit=2, seed=SEED, data_seed=SEED, dataloader_num_workers=min(4, os.cpu_count() or 1), bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(), fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(), push_to_hub=PUSH_TO_HUB, hub_model_id=HUB_MODEL_ID if PUSH_TO_HUB else None, hub_strategy="every_save" if PUSH_TO_HUB else "end", report_to=report_to, run_name="sneaker-brand-vit-base", project="sneaker-classification", disable_tqdm=True)
-callbacks: List[TrainerCallback] = [EarlyStoppingCallback(early_stopping_patience=2)]
-trainer = WeightedLossTrainer(model=model, args=training_args, train_dataset=dataset["train"], eval_dataset=dataset["test"], processing_class=image_processor, data_collator=collate_fn, compute_metrics=compute_metrics, callbacks=callbacks, class_weights=class_weights)
-trainer.train()
-metrics = trainer.evaluate()
-print(f"Final metrics: {metrics}")
-trainer.save_model(OUTPUT_DIR)
-image_processor.save_pretrained(OUTPUT_DIR)
-if PUSH_TO_HUB:
-    trainer.push_to_hub()
-    print(f"Model pushed to Hub: https://huggingface.co/{HUB_MODEL_ID}")
-print(f"Model saved to: {OUTPUT_DIR}")
+def main() -> None:
+    images_raw, brands_raw, models_raw = load_parquet_batches()
+    images_raw, brand_normalized, models_raw = filter_rare_brands(images_raw, brands_raw, models_raw)
+    unique_brands = sorted(set(brand_normalized))
+    label2id = {label: idx for idx, label in enumerate(unique_brands)}
+    id2label = {idx: label for label, idx in label2id.items()}
+    num_labels = len(unique_brands)
+
+    features = Features({"image": HFImage(decode=False), "brand": ClassLabel(names=unique_brands), "brand_name": Value("string"), "model": Value("string")})
+    dataset = Dataset.from_dict({"image": images_raw, "brand": [label2id[b] for b in brand_normalized], "brand_name": brand_normalized, "model": models_raw}, features=features)
+    split_size = safe_test_size(len(dataset), num_labels, VAL_SIZE)
+    dataset = dataset.train_test_split(test_size=split_size, seed=SEED, stratify_by_column="brand")
+
+    class_weights = make_class_weights(dataset["train"]["brand"], num_labels) if USE_CLASS_WEIGHTS else None
+    image_processor = AutoImageProcessor.from_pretrained(MODEL_NAME)
+    size = processor_crop_size(image_processor)
+    normalize = Normalize(mean=image_processor.image_mean, std=image_processor.image_std)
+
+    train_transforms = Compose([RandomResizedCrop(size, scale=(0.75, 1.0)), RandomHorizontalFlip(), ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.05), ToTensor(), normalize])
+    val_transforms = Compose([Resize(size), CenterCrop(size), ToTensor(), normalize])
+    dataset["train"].set_transform(lambda e: apply_transforms(e, train_transforms))
+    dataset["test"].set_transform(lambda e: apply_transforms(e, val_transforms))
+
+    model = AutoModelForImageClassification.from_pretrained(MODEL_NAME, num_labels=num_labels, label2id=label2id, id2label=id2label, ignore_mismatched_sizes=True)
+    accuracy_metric = evaluate.load("accuracy")
+    f1_metric = evaluate.load("f1")
+
+    def compute_metrics(eval_pred: Any) -> Dict[str, float]:
+        logits, labels = eval_pred
+        predictions = np.argmax(logits, axis=-1)
+        return {
+            "accuracy": accuracy_metric.compute(predictions=predictions, references=labels)["accuracy"],
+            "f1_macro": f1_metric.compute(predictions=predictions, references=labels, average="macro")["f1"],
+            "f1_weighted": f1_metric.compute(predictions=predictions, references=labels, average="weighted")["f1"],
+        }
+
+    report_to = "trackio" if REPORT_TO_TRACKIO and is_trackio_available() else "none"
+    training_args = TrainingArguments(output_dir=OUTPUT_DIR, remove_unused_columns=False, eval_strategy="epoch", save_strategy="epoch", learning_rate=LR, per_device_train_batch_size=BATCH_SIZE, per_device_eval_batch_size=BATCH_SIZE, gradient_accumulation_steps=GRAD_ACCUM, num_train_epochs=EPOCHS, warmup_ratio=WARMUP_RATIO, weight_decay=WEIGHT_DECAY, logging_strategy="steps", logging_steps=50, logging_first_step=True, load_best_model_at_end=True, metric_for_best_model="eval_f1_macro", greater_is_better=True, save_total_limit=2, seed=SEED, data_seed=SEED, dataloader_num_workers=min(4, os.cpu_count() or 1), bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(), fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(), push_to_hub=PUSH_TO_HUB, hub_model_id=HUB_MODEL_ID if PUSH_TO_HUB else None, hub_strategy="every_save" if PUSH_TO_HUB else "end", report_to=report_to, run_name="sneaker-brand-vit-base", project="sneaker-classification", disable_tqdm=True)
+    callbacks: List[TrainerCallback] = [EarlyStoppingCallback(early_stopping_patience=2)]
+    trainer = WeightedLossTrainer(model=model, args=training_args, train_dataset=dataset["train"], eval_dataset=dataset["test"], processing_class=image_processor, data_collator=collate_fn, compute_metrics=compute_metrics, callbacks=callbacks, class_weights=class_weights)
+    trainer.train()
+    metrics = trainer.evaluate()
+    print(f"Final metrics: {metrics}")
+    trainer.save_model(OUTPUT_DIR)
+    image_processor.save_pretrained(OUTPUT_DIR)
+    if PUSH_TO_HUB:
+        trainer.push_to_hub()
+        print(f"Model pushed to Hub: https://huggingface.co/{HUB_MODEL_ID}")
+    print(f"Model saved to: {OUTPUT_DIR}")
+
+
+if __name__ == "__main__":
+    main()
