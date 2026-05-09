@@ -90,6 +90,10 @@ type DisplaySneaker = DemoSneaker & {
   retailPrice: string;
   liveProductUrl: string | null;
 };
+type BrandPrediction = {
+  brand: string;
+  confidence: number | null;
+};
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : null;
@@ -153,6 +157,18 @@ function buildDisplaySneaker(analysis: LiveAnalysis): DisplaySneaker {
     retailPrice,
     liveProductUrl: asText(product["product_url"]),
   };
+}
+
+function readBrandPrediction(analysis: LiveAnalysis): BrandPrediction | null {
+  const analysisRecord = asRecord(analysis);
+  const modelPrediction = asRecord(analysisRecord?.["brand_prediction"]);
+  if (!modelPrediction) return null;
+
+  const brand = asText(modelPrediction["brand"]) ?? asText(modelPrediction["label"]);
+  if (!brand) return null;
+
+  const confidence = asNumber(modelPrediction["confidence"]);
+  return { brand, confidence };
 }
 
 const tabs = [
@@ -853,6 +869,7 @@ export default function SoleLensPrototype() {
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
   const displaySneaker = useMemo(() => buildDisplaySneaker(analysisResult), [analysisResult]);
+  const brandPrediction = useMemo(() => readBrandPrediction(analysisResult), [analysisResult]);
 
   async function handleAnalyse() {
     setIsAnalysing(true);
@@ -976,6 +993,15 @@ export default function SoleLensPrototype() {
                   </div>
                 )}
                 <ResultHero sneaker={displaySneaker} />
+                {brandPrediction ? (
+                  <GlassPanel className="mb-4 mt-4 p-4">
+                    <div className={cx(fontSystem.mono, "text-[10px] uppercase tracking-[0.16em] text-cyan-300/90")}>Dataset-assisted AI brand match</div>
+                    <p className="mt-2 text-sm text-white/85">
+                      Predicted brand: <span className="font-semibold text-white">{brandPrediction.brand}</span>
+                      {brandPrediction.confidence !== null ? ` · ${Math.round(brandPrediction.confidence * 100)}% confidence` : ""}
+                    </p>
+                  </GlassPanel>
+                ) : null}
                 <AuthenticityPanel sneaker={displaySneaker} />
               </div>
             </div>
