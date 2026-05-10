@@ -324,7 +324,6 @@ def main() -> None:
         hub_model_id=HUB_MODEL_ID if PUSH_TO_HUB else None,
         hub_strategy="every_save" if PUSH_TO_HUB else "end",
         report_to="none",
-        run_name="sneaker-brand-vit-base",
         disable_tqdm=True,
     )
     callbacks: List[TrainerCallback] = [EarlyStoppingCallback(early_stopping_patience=2)]
