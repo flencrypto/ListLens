@@ -293,10 +293,52 @@ def main() -> None:
             "f1_weighted": f1_metric.compute(predictions=predictions, references=labels, average="weighted")["f1"],
         }
 
-    report_to = "trackio" if REPORT_TO_TRACKIO and is_trackio_available() else "none"
-    training_args = TrainingArguments(output_dir=OUTPUT_DIR, remove_unused_columns=False, eval_strategy="epoch", save_strategy="epoch", learning_rate=LR, per_device_train_batch_size=BATCH_SIZE, per_device_eval_batch_size=BATCH_SIZE, gradient_accumulation_steps=GRAD_ACCUM, num_train_epochs=EPOCHS, warmup_ratio=WARMUP_RATIO, weight_decay=WEIGHT_DECAY, logging_strategy="steps", logging_steps=50, logging_first_step=True, load_best_model_at_end=True, metric_for_best_model="eval_f1_macro", greater_is_better=True, save_total_limit=2, seed=SEED, data_seed=SEED, dataloader_num_workers=min(4, os.cpu_count() or 1), bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(), fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(), push_to_hub=PUSH_TO_HUB, hub_model_id=HUB_MODEL_ID if PUSH_TO_HUB else None, hub_strategy="every_save" if PUSH_TO_HUB else "end", report_to=report_to, run_name="sneaker-brand-vit-base", project="sneaker-classification", disable_tqdm=True)
+    if REPORT_TO_TRACKIO and is_trackio_available():
+        print("Trackio is available, but this script does not register a Trainer reporting integration. Leaving report_to='none'.")
+
+    training_args = TrainingArguments(
+        output_dir=OUTPUT_DIR,
+        remove_unused_columns=False,
+        evaluation_strategy="epoch",
+        save_strategy="epoch",
+        learning_rate=LR,
+        per_device_train_batch_size=BATCH_SIZE,
+        per_device_eval_batch_size=BATCH_SIZE,
+        gradient_accumulation_steps=GRAD_ACCUM,
+        num_train_epochs=EPOCHS,
+        warmup_ratio=WARMUP_RATIO,
+        weight_decay=WEIGHT_DECAY,
+        logging_strategy="steps",
+        logging_steps=50,
+        logging_first_step=True,
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_f1_macro",
+        greater_is_better=True,
+        save_total_limit=2,
+        seed=SEED,
+        data_seed=SEED,
+        dataloader_num_workers=min(4, os.cpu_count() or 1),
+        bf16=torch.cuda.is_available() and torch.cuda.is_bf16_supported(),
+        fp16=torch.cuda.is_available() and not torch.cuda.is_bf16_supported(),
+        push_to_hub=PUSH_TO_HUB,
+        hub_model_id=HUB_MODEL_ID if PUSH_TO_HUB else None,
+        hub_strategy="every_save" if PUSH_TO_HUB else "end",
+        report_to="none",
+        run_name="sneaker-brand-vit-base",
+        disable_tqdm=True,
+    )
     callbacks: List[TrainerCallback] = [EarlyStoppingCallback(early_stopping_patience=2)]
-    trainer = WeightedLossTrainer(model=model, args=training_args, train_dataset=dataset["train"], eval_dataset=dataset["test"], processing_class=image_processor, data_collator=collate_fn, compute_metrics=compute_metrics, callbacks=callbacks, class_weights=class_weights)
+    trainer = WeightedLossTrainer(
+        model=model,
+        args=training_args,
+        train_dataset=dataset["train"],
+        eval_dataset=dataset["test"],
+        tokenizer=image_processor,
+        data_collator=collate_fn,
+        compute_metrics=compute_metrics,
+        callbacks=callbacks,
+        class_weights=class_weights,
+    )
     trainer.train()
     metrics = trainer.evaluate()
     print(f"Final metrics: {metrics}")
