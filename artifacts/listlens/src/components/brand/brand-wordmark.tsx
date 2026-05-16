@@ -1,10 +1,5 @@
 import { cn } from "@/lib/utils";
 
-/**
- * BrandWordmark — the "MR.FLENS · LIST-LENS" lockup used in the navbar,
- * splash hero and footer. Pure SSR-friendly markup (no animation) so it can
- * be used inside server components.
- */
 export interface BrandWordmarkProps {
   /** "stacked" mirrors the splash hero, "inline" is the navbar lockup. */
   layout?: "stacked" | "inline";
@@ -22,39 +17,39 @@ export function BrandWordmark({
     size === "lg"
       ? "text-5xl sm:text-7xl"
       : size === "md"
-      ? "text-2xl"
-      : "text-base";
+      ? "text-3xl"
+      : "text-xl";
   const sub =
     size === "lg"
-      ? "text-2xl sm:text-3xl"
+      ? "text-sm sm:text-base"
       : size === "md"
-      ? "text-sm"
-      : "text-[10px]";
+      ? "text-[11px]"
+      : "text-[8px]";
   const gap = size === "lg" ? "gap-2" : "gap-0.5";
 
   if (layout === "inline") {
     return (
       <span
         className={cn(
-          "inline-flex items-baseline gap-2 font-extrabold tracking-tight",
+          "inline-flex flex-col items-start gap-0.5 font-extrabold",
           className,
         )}
       >
         <span
           className={cn(
             top,
-            "bg-gradient-to-r from-[#3ea8ff] via-[#22d3ee] to-[#4ade80] bg-clip-text text-transparent",
+            "neon-wordmark font-black uppercase leading-none text-white",
           )}
         >
-          MR.FLENS
+          LIST-<span className="text-cyan-300">LENS</span>
         </span>
         <span
           className={cn(
             sub,
-            "uppercase tracking-[0.25em] text-cyan-200/80 font-semibold",
+            "font-mono-hud uppercase tracking-[0.32em] text-cyan-200/80 font-semibold",
           )}
         >
-          List-LENS
+          AI-powered marketplace intelligence
         </span>
       </span>
     );
@@ -65,19 +60,19 @@ export function BrandWordmark({
       <span
         className={cn(
           top,
-          "font-extrabold tracking-tight bg-gradient-to-r from-[#3ea8ff] via-[#22d3ee] to-[#4ade80] bg-clip-text text-transparent",
+          "neon-wordmark font-black uppercase leading-none text-white",
           "drop-shadow-[0_0_24px_rgba(34,211,238,0.35)]",
         )}
       >
-        MR.FLENS
+        LIST-<span className="text-cyan-300">LENS</span>
       </span>
       <span
         className={cn(
           sub,
-          "font-semibold uppercase tracking-[0.5em] text-cyan-200/80",
+          "font-mono-hud font-semibold uppercase tracking-[0.5em] text-cyan-200/80",
         )}
       >
-        List-LENS
+        AI-powered marketplace intelligence
       </span>
     </span>
   );

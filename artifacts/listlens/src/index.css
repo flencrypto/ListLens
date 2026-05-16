@@ -28,6 +28,61 @@ body {
   @apply antialiased;
 }
 
+.listlens-shell-bg {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.18), transparent 28rem),
+    radial-gradient(circle at 88% 18%, rgba(62, 168, 255, 0.13), transparent 32rem),
+    radial-gradient(circle at 50% 100%, rgba(4, 124, 255, 0.16), transparent 38rem),
+    linear-gradient(180deg, #03070f 0%, #050b16 44%, #02040a 100%);
+}
+
+.circuit-board-bg {
+  background-image:
+    linear-gradient(90deg, rgba(0, 194, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(0, 194, 255, 0.055) 1px, transparent 1px),
+    radial-gradient(circle at 20% 20%, rgba(0, 194, 255, 0.12) 0 1px, transparent 1px),
+    radial-gradient(circle at 78% 10%, rgba(62, 168, 255, 0.16) 0 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 120px 120px, 140px 140px;
+  mask-image: radial-gradient(ellipse at center, black 16%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 16%, transparent 78%);
+}
+
+.hud-frame::before,
+.hud-frame::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  height: 18px;
+  width: 18px;
+  border-color: currentColor;
+  opacity: 0.55;
+}
+
+.hud-frame::before {
+  top: 8px;
+  left: 8px;
+  border-left: 1px solid;
+  border-top: 1px solid;
+}
+
+.hud-frame::after {
+  right: 8px;
+  bottom: 8px;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+}
+
+.neon-wordmark {
+  letter-spacing: 0;
+  text-shadow:
+    0 0 18px rgba(34, 211, 238, 0.28),
+    0 0 42px rgba(62, 168, 255, 0.12);
+}
+
+.angled-rail {
+  clip-path: polygon(14px 0, 100% 0, calc(100% - 14px) 100%, 0 100%);
+}
+
 /* Legacy glass card (kept for compat). Prefer .brand-card for new work. */
 .glass-card {
   background: rgba(255, 255, 255, 0.05);

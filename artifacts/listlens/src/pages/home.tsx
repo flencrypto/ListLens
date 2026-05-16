@@ -1,654 +1,481 @@
 import { Link } from "wouter";
 import {
-  ShieldCheck, Sparkles, CheckCircle, AlertTriangle, Info,
-  Zap, HelpCircle, AlertCircle, TrendingUp,
+  ArrowRight,
+  Camera,
+  CheckCircle2,
+  CircleAlert,
+  Copy,
+  FileText,
+  HelpCircle,
+  ImagePlus,
+  ShieldCheck,
+  Sparkles,
+  Upload,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { BrandWordmark } from "@/components/brand/brand-wordmark";
+
 import { BrandGlyph } from "@/components/brand/brand-glyph";
+import { BrandWordmark } from "@/components/brand/brand-wordmark";
+import {
+  BrandCartOrb,
+  EvidenceStrip,
+  HudPanel,
+  LensOrb,
+  LENS_ICON_MAP,
+  ListLensShell,
+  MiniEvidenceRow,
+  ProductModeCard,
+  StatusPill,
+  toneClasses,
+} from "@/components/listlens/hud";
+import { Button } from "@/components/ui/button";
+import {
+  BANNED_GUARD_PHRASES,
+  MVP_LENSES,
+  SAFE_GUARD_PHRASES,
+  SOLELENS_EVIDENCE,
+  WORKFLOW_STEPS,
+} from "@/lib/listlens-mvp";
+import { cn } from "@/lib/utils";
 
-const LENSES = [
-  { name: "ShoeLens",      emoji: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
-  { name: "RecordLens",    emoji: "💿", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
-  { name: "ClothingLens",  emoji: "👕", desc: "Clothing & vintage",      status: "live",  href: "/lenses/clothing" },
-  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "live",  href: "/lenses/watch" },
-  { name: "CardLens",      emoji: "🃏", desc: "Trading & sports cards",  status: "live",  href: "/lenses/card" },
-  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "live",  href: "/lenses/toy" },
-  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "live",  href: "/lenses/motor" },
-  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "soon",  href: "/lenses/tech" },
-  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "soon",  href: "/lenses/book" },
-  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "soon",  href: "/lenses/antiques" },
-  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "soon",  href: "/lenses/autograph" },
-];
+const activeLenses = MVP_LENSES.filter((lens) =>
+  ["live", "fallback", "next"].includes(lens.status),
+);
 
-const PRICING = [
+const recentDrafts = [
   {
-    name: "Free trial",
-    price: "£0",
-    period: "",
-    desc: "3 listings, no card needed",
-    features: ["3 Studio listings", "1 Guard risk check", "Access to all active Lenses"],
-    cta: "Start free trial",
-    href: "/dashboard",
-    highlight: false,
-    accentClass: "border-white/10",
-    btnVariant: "outline" as const,
-    btnClass: "border-white/20 text-white hover:bg-white/5",
+    title: "Nike Dunk Low Panda UK 8",
+    status: "Draft saved",
+    meta: "ShoeLens · eBay + Vinted",
+    score: "82% confidence",
   },
   {
-    name: "Studio Starter",
-    price: "£9.99",
-    period: "/mo",
-    desc: "List faster, sell higher.",
-    features: ["50 Studio listings per month", "AI pricing recommendations", "Missing evidence warnings", "Export directly to platforms"],
-    cta: "Get Studio",
-    href: "/billing",
-    highlight: true,
-    accentClass: "border-cyan-500/30 shadow-2xl shadow-cyan-900/20",
-    btnVariant: "default" as const,
-    btnClass: "bg-cyan-600 hover:bg-cyan-500 text-white border-0",
-    badge: "For Sellers",
-  },
-  {
-    name: "Guard Passes",
-    price: "£1.99",
-    period: "/check",
-    desc: "Pay as you go. No subscription.",
-    features: ["Detailed 5-dimension risk report", "Photo & text anomaly detection", "Generates questions for sellers"],
-    cta: "Buy a pass",
-    href: "/guard/new",
-    highlight: false,
-    accentClass: "border-violet-500/30",
-    btnVariant: "outline" as const,
-    btnClass: "border-violet-500/50 text-violet-100 hover:bg-violet-500/10",
+    title: "Sony Alpha A7 III camera body",
+    status: "Needs extra proof",
+    meta: "General Lens · eBay",
+    score: "3 missing photos",
   },
 ];
 
-const RISK_DIMS = [
-  { label: "Material Texture",   score: 85, color: "bg-emerald-500" },
-  { label: "Stitching Patterns", score: 70, color: "bg-amber-500" },
-  { label: "Shape & Proportions",score: 92, color: "bg-emerald-500" },
-  { label: "Box & Packaging",    score: 45, color: "bg-rose-500" },
-  { label: "Seller History",     score: 60, color: "bg-amber-500" },
+const recentReports = [
+  {
+    title: "Jordan 1 Lost & Found listing",
+    status: "Medium risk",
+    meta: "Missing size tag and heel tab",
+    score: "5 seller questions",
+  },
+  {
+    title: "Vinted trainer screenshot",
+    status: "Unclear",
+    meta: "Stock photos only",
+    score: "Ask first",
+  },
 ];
 
-export default function HomePage() {
+function LensRoadmap() {
   return (
-    <div className="min-h-screen bg-[#040a14] text-slate-200 font-sans selection:bg-cyan-500/30">
-
-      {/* Dot-grid overlay */}
-      <div
-        aria-hidden
-        className="pointer-events-none fixed inset-0 z-0"
-        style={{
-          backgroundImage: "radial-gradient(circle, rgba(34,211,238,0.04) 1px, transparent 1px)",
-          backgroundSize: "48px 48px",
-        }}
-      />
-
-      {/* ── Nav ─────────────────────────────────────────────────────── */}
-      <nav className="sticky top-0 z-50 bg-[#040a14]/80 backdrop-blur-md border-b border-white/5">
-        <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/splash" aria-label="Mr.FLENS List-LENS">
-            <BrandWordmark layout="inline" size="sm" />
-          </Link>
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-400">
-            <a href="#how-it-works" className="hover:text-white transition-colors">How it works</a>
-            <a href="#lenses"       className="hover:text-white transition-colors">Lenses</a>
-            <a href="#pricing"      className="hover:text-white transition-colors">Pricing</a>
-            <a href="#extension"    className="hover:text-white transition-colors">Extension</a>
-          </div>
-          <div className="flex items-center gap-4">
-            <Button asChild variant="ghost" size="sm" className="hidden sm:flex text-slate-300 hover:text-white">
-              <Link href="/dashboard">Sign in</Link>
-            </Button>
-            <Button asChild size="sm" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 border-0 shadow-[0_0_20px_-6px_rgba(34,211,238,0.6)]">
-              <Link href="/studio/new">Get started free</Link>
-            </Button>
-          </div>
-        </div>
-      </nav>
-
-      {/* ── Hero — "This is what you get." ──────────────────────────── */}
-      <section className="pt-24 pb-20 px-6 relative overflow-hidden">
-        {/* Glow orbs */}
-        <div aria-hidden className="pointer-events-none absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-cyan-500/15 blur-[120px] rounded-full" />
-        <div aria-hidden className="pointer-events-none absolute top-1/3 left-1/2 -translate-x-1/4  w-[600px] h-[300px] bg-violet-500/15 blur-[100px] rounded-full" />
-
-        <div className="relative max-w-7xl mx-auto z-10">
-          <div className="text-center mb-16">
-            <h1 className="text-5xl sm:text-7xl md:text-8xl font-extrabold text-white tracking-tight mb-6 leading-[0.95]">
-              This is what you get.
-            </h1>
-            <p className="text-lg sm:text-xl md:text-2xl text-slate-400 max-w-2xl mx-auto leading-relaxed">
-              AI output in under 30 seconds. No guesswork.<br className="hidden md:block" />
-              Studio for sellers, Guard for buyers — powered by specialist AI.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 justify-center mt-10">
-              <Button asChild size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 border-0 px-8 shadow-[0_0_40px_-6px_rgba(34,211,238,0.55)] text-base">
-                <Link href="/studio/new">Start listing free →</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="border-cyan-700/40 text-cyan-200 hover:text-white hover:bg-cyan-950/40 px-8 text-base">
-                <Link href="/guard/new">Check a listing →</Link>
-              </Button>
-            </div>
-            <p className="text-xs text-zinc-600 mt-4">No credit card · First 3 listings free</p>
-          </div>
-
-          {/* Dual output panels */}
-          <div className="grid md:grid-cols-2 gap-8 items-start">
-
-            {/* Guard panel */}
-            <div className="bg-[#0a1122] rounded-2xl border border-violet-500/30 shadow-2xl shadow-violet-900/20 overflow-hidden flex flex-col" style={{ height: 640 }}>
-              <div className="h-12 bg-[#0d152a] border-b border-white/5 flex items-center px-4 gap-3 shrink-0">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                </div>
-                <div className="mx-auto flex items-center gap-2 text-violet-400 text-xs font-medium bg-violet-500/10 px-3 py-1 rounded-full">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  Guard Risk Report
-                </div>
-              </div>
-              <div className="p-6 overflow-y-auto flex-1" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(139,92,246,0.3) transparent" }}>
-                <div className="flex items-start justify-between mb-7">
-                  <div>
-                    <h3 className="text-xl font-bold text-white mb-1">Jordan 1 Retro High OG</h3>
-                    <p className="text-slate-400 text-sm">"Chicago Lost and Found"</p>
-                  </div>
-                  <div className="bg-amber-500/10 border border-amber-500/30 text-amber-400 px-4 py-2 rounded-lg text-center shrink-0">
-                    <div className="text-[10px] uppercase tracking-wider font-bold mb-0.5">Risk Score</div>
-                    <div className="text-lg font-bold">MEDIUM</div>
-                  </div>
-                </div>
-
-                <div className="space-y-5">
-                  {/* Red flags */}
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-semibold text-rose-400 uppercase tracking-wider mb-3">
-                      <AlertTriangle className="w-3.5 h-3.5" /> 2 Red Flags Detected
-                    </h4>
-                    <div className="space-y-2">
-                      {[
-                        { title: "Box label typography inconsistency", body: "The font weight on the sizing tag appears unusually thin compared to retail examples." },
-                        { title: "Missing medial panel shots", body: "Crucial authentication points (Swoosh placement, leather cracking pattern) are obscured." },
-                      ].map((flag) => (
-                        <div key={flag.title} className="bg-rose-500/10 border border-rose-500/20 rounded-lg p-3 flex gap-3">
-                          <div className="mt-0.5 text-rose-400 shrink-0"><AlertCircle className="w-4 h-4" /></div>
-                          <div>
-                            <p className="text-rose-200 text-sm font-medium">{flag.title}</p>
-                            <p className="text-rose-300/70 text-xs mt-1">{flag.body}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Risk dimensions */}
-                  <div>
-                    <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Risk Dimensions</h4>
-                    <div className="space-y-3 bg-[#0d152a] rounded-xl p-4 border border-white/5">
-                      {RISK_DIMS.map((dim) => (
-                        <div key={dim.label} className="flex items-center gap-4">
-                          <span className="text-xs text-slate-300 w-36 shrink-0">{dim.label}</span>
-                          <div className="flex-1 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className={`h-full ${dim.color}`} style={{ width: `${dim.score}%` }} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Authenticity signal */}
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-semibold text-emerald-400 uppercase tracking-wider mb-3">
-                      <CheckCircle className="w-3.5 h-3.5" /> Authenticity Signal
-                    </h4>
-                    <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3 flex gap-3">
-                      <div className="mt-0.5 text-emerald-400 shrink-0"><CheckCircle className="w-4 h-4" /></div>
-                      <div>
-                        <p className="text-emerald-200 text-sm font-medium">Collar cracking aligns with retail</p>
-                        <p className="text-emerald-300/70 text-xs mt-1">Pattern and depth of the black collar cracking matches verified retail pairs from this release.</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Seller questions */}
-                  <div>
-                    <h4 className="flex items-center gap-2 text-xs font-semibold text-violet-400 uppercase tracking-wider mb-3">
-                      <HelpCircle className="w-3.5 h-3.5" /> Questions to ask the seller
-                    </h4>
-                    <ol className="space-y-2 list-decimal list-inside text-sm text-slate-300 ml-1">
-                      {[
-                        "Can you provide a close-up photo of the size tag inside the shoe?",
-                        "Do you have a picture of the back of the insole?",
-                        "Is the original purchase receipt available?",
-                      ].map((q) => (
-                        <li key={q} className="pl-1 pb-1.5 border-b border-white/5 last:border-0">{q}</li>
-                      ))}
-                    </ol>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Studio panel */}
-            <div className="bg-[#0a1122] rounded-2xl border border-cyan-500/30 shadow-2xl shadow-cyan-900/20 overflow-hidden flex flex-col mt-6 md:mt-0" style={{ height: 640 }}>
-              <div className="h-12 bg-[#0d152a] border-b border-white/5 flex items-center px-4 gap-3 shrink-0">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                </div>
-                <div className="mx-auto flex items-center gap-2 text-cyan-400 text-xs font-medium bg-cyan-500/10 px-3 py-1 rounded-full">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Studio Listing Output
-                </div>
-              </div>
-              <div className="p-6 overflow-y-auto flex-1 relative" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(34,211,238,0.3) transparent" }}>
-
-                {/* Missing evidence */}
-                <div className="mb-5 bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex items-start gap-3">
-                  <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-amber-200 text-sm font-medium">Missing Evidence</p>
-                    <p className="text-amber-300/70 text-xs mt-1">For maximum buyer trust, add a photo of the heel tabs. Buyers often look for this to verify condition.</p>
-                  </div>
-                </div>
-
-                {/* Title */}
-                <div className="mb-5">
-                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Optimised Title</label>
-                  <div className="p-3 bg-[#0d152a] border border-white/10 rounded-lg text-white text-sm font-medium leading-snug">
-                    Sony Alpha a7 III Mirrorless Camera Body Only — Mint Condition, Low Shutter Count
-                  </div>
-                  <div className="flex justify-between items-center mt-1.5">
-                    <span className="text-[10px] text-slate-500">78/80 characters</span>
-                    <span className="text-[10px] text-cyan-400 font-medium">High search visibility</span>
-                  </div>
-                </div>
-
-                {/* Pricing */}
-                <div className="mb-5">
-                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Market Pricing Data</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="bg-[#0d152a] border border-white/5 rounded-xl p-4">
-                      <div className="flex items-center gap-2 text-slate-400 mb-1">
-                        <Zap className="w-3.5 h-3.5 text-amber-400" />
-                        <span className="text-xs font-medium">Quick Sale</span>
-                      </div>
-                      <div className="text-xl font-bold text-white">£850–920</div>
-                    </div>
-                    <div className="bg-[#0d152a] border border-cyan-500/20 rounded-xl p-4 relative overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-transparent pointer-events-none" />
-                      <div className="flex items-center gap-2 text-cyan-400 mb-1 relative z-10">
-                        <TrendingUp className="w-3.5 h-3.5" />
-                        <span className="text-xs font-medium">Recommended</span>
-                      </div>
-                      <div className="text-xl font-bold text-white relative z-10">£980–1,050</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Description */}
-                <div>
-                  <label className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider mb-2 block">AI-Drafted Description</label>
-                  <div className="bg-[#0d152a] border border-white/10 rounded-xl p-4 text-sm text-slate-300 space-y-3 font-mono leading-relaxed">
-                    <p>Up for sale is a meticulously cared for Sony Alpha a7 III (Body Only).</p>
-                    <div>
-                      <p className="text-white font-semibold mb-1">Condition Details:</p>
-                      <ul className="list-disc pl-4 space-y-1">
-                        <li>Mint condition with zero visible scratches on the sensor.</li>
-                        <li>Screen protector applied since day one (included).</li>
-                        <li>Shutter count is exceptionally low at roughly 12,500.</li>
-                      </ul>
-                    </div>
-                    <p className="italic text-slate-500">Dispatched via Royal Mail Special Delivery Guaranteed by 1pm.</p>
-                  </div>
-                </div>
-
-                {/* Action strip */}
-                <div className="sticky bottom-0 pt-4 mt-4 bg-gradient-to-t from-[#0a1122] via-[#0a1122]/90 to-transparent flex gap-3">
-                  <Button asChild variant="outline" className="flex-1 border-white/10 text-white hover:bg-white/5">
-                    <Link href="/dashboard">View in Studio</Link>
-                  </Button>
-                  <Button asChild className="flex-1 bg-cyan-600 hover:bg-cyan-500 text-white border-0 shadow-lg shadow-cyan-900/50">
-                    <Link href="/studio/new">Try it free →</Link>
-                  </Button>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </section>
-
-      {/* ── How it works ─────────────────────────────────────────────── */}
-      <section id="how-it-works" className="py-20 px-6 border-y border-white/5 bg-[#070e1c]">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-2 gap-16">
-
-          {/* Studio steps */}
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-lg bg-cyan-500/20 flex items-center justify-center text-cyan-400">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <h3 className="text-2xl font-bold text-white">How Studio works</h3>
-            </div>
-            <div className="space-y-6">
-              {[
-                { n: "1", title: "Upload photos", body: "3–8 photos of your item. No professional lighting needed.", accent: "border-white/10 text-slate-400" },
-                { n: "2", title: "AI analysis", body: "The specialist Lens identifies the exact model, condition, and missing evidence.", accent: "border-cyan-500/30 text-cyan-400" },
-                { n: "3", title: "Ready to list", body: "Get an optimised title, description, and accurate pricing data instantly.", accent: "border-white/10 text-slate-400" },
-              ].map((step) => (
-                <div key={step.n} className="flex gap-4">
-                  <div className={`w-8 h-8 rounded-full bg-[#0d152a] border ${step.accent} flex items-center justify-center font-bold shrink-0 text-sm`}>{step.n}</div>
-                  <div>
-                    <h4 className="text-white font-medium mb-1">{step.title}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed">{step.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8">
-              <Button asChild className="bg-cyan-600/25 hover:bg-cyan-600/40 border border-cyan-600/40 text-cyan-200 font-semibold">
-                <Link href="/studio/new">Create a listing →</Link>
-              </Button>
-            </div>
-          </div>
-
-          {/* Guard steps */}
-          <div>
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-10 h-10 rounded-lg bg-violet-500/20 flex items-center justify-center text-violet-400">
-                <ShieldCheck className="w-5 h-5" />
-              </div>
-              <h3 className="text-2xl font-bold text-white">How Guard works</h3>
-            </div>
-            <div className="space-y-6">
-              {[
-                { n: "1", title: "Paste a link", body: "Found a deal on eBay or Vinted? Paste the URL into Guard.", accent: "border-white/10 text-slate-400" },
-                { n: "2", title: "Deep scan", body: "AI examines seller history, photo inconsistencies, and pricing anomalies.", accent: "border-violet-500/30 text-violet-400" },
-                { n: "3", title: "Risk report", body: "Review the red flags, green signals, and know exactly what to ask the seller.", accent: "border-white/10 text-slate-400" },
-              ].map((step) => (
-                <div key={step.n} className="flex gap-4">
-                  <div className={`w-8 h-8 rounded-full bg-[#0d152a] border ${step.accent} flex items-center justify-center font-bold shrink-0 text-sm`}>{step.n}</div>
-                  <div>
-                    <h4 className="text-white font-medium mb-1">{step.title}</h4>
-                    <p className="text-sm text-slate-400 leading-relaxed">{step.body}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-8">
-              <Button asChild className="bg-violet-600/25 hover:bg-violet-600/40 border border-violet-600/40 text-violet-200 font-semibold">
-                <Link href="/guard/new">Check a listing →</Link>
-              </Button>
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ── Specialist Lenses ────────────────────────────────────────── */}
-      <section id="lenses" className="py-24 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Which category are you in?</h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
-              Generic AI hallucinates. Our 10 specialist Lenses are trained on millions of data points specific to their domain.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-            {LENSES.map((lens) => {
-              const isLive = lens.status === "live";
-              const card = (
-                <div className={`p-5 rounded-2xl border text-center transition-all ${
-                  isLive
-                    ? "bg-[#0d152a] border-white/10 hover:border-cyan-500/50 hover:bg-[#121c36] cursor-pointer"
-                    : "bg-[#040a14] border-white/5 opacity-50 grayscale cursor-default"
-                }`}>
-                  <div className="text-2xl mb-2">{lens.emoji}</div>
-                  <p className={`text-sm font-semibold ${isLive ? "text-white" : "text-slate-500"}`}>{lens.name}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5 leading-tight">{lens.desc}</p>
-                  <div className="mt-2">
-                    {isLive && <span className="inline-block text-[9px] bg-cyan-900/70 text-cyan-400 px-2 py-0.5 rounded-full border border-cyan-700/40">Live</span>}
-                    {lens.status === "soon" && <span className="inline-block text-[9px] bg-zinc-800 text-zinc-500 px-2 py-0.5 rounded-full">Soon</span>}
-                    {lens.status === "later" && <span className="inline-block text-[9px] bg-zinc-900 text-zinc-700 px-2 py-0.5 rounded-full">Planned</span>}
-                  </div>
-                </div>
-              );
-              if (isLive && lens.href) {
-                return (
-                  <Link key={lens.name} href={lens.href} className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#040a14] rounded-2xl">
-                    {card}
-                  </Link>
-                );
-              }
-              return <div key={lens.name}>{card}</div>;
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Responsible AI / Trust ───────────────────────────────────── */}
-      <section className="py-24 px-6 border-y border-white/5 bg-[#0a1122]">
-        <div className="max-w-4xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 mb-5 px-4 py-2 rounded-full border border-amber-800/50 bg-amber-950/20">
-            <span className="text-amber-400 text-sm">⚠</span>
-            <span className="text-sm text-amber-300 font-medium">Responsible AI language</span>
-          </div>
-          <h2 className="text-3xl font-bold text-white mb-3">Responsible AI, built for resale.</h2>
-          <p className="text-slate-400 mb-10 max-w-xl mx-auto">
-            Guard is an AI-assisted risk screen, not a formal authentication service.
-            Every report is calibrated to inform — never to accuse.
+    <HudPanel tone="cyan" className="p-5">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <h2 className="text-lg font-bold text-white">Core Resale Lenses</h2>
+          <p className="mt-1 text-sm text-slate-400">
+            Different category intelligence. Same trust layer.
           </p>
+        </div>
+        <StatusPill tone="cyan">One engine</StatusPill>
+      </div>
 
-          <div className="grid md:grid-cols-2 gap-6 text-left">
-            <div className="bg-rose-500/5 border border-rose-500/10 rounded-2xl p-8">
-              <h3 className="text-rose-400 font-bold mb-5 uppercase tracking-wider text-xs flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-                What we never do
-              </h3>
-              <ul className="space-y-4 text-slate-300 text-sm">
-                {[
-                  'We never definitively declare an item "fake" or "counterfeit".',
-                  'We never call a seller a "scammer".',
-                  "We never automatically report listings to platforms.",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-3">
-                    <span className="text-rose-500 mt-0.5 shrink-0">✕</span>
-                    {t}
-                  </li>
-                ))}
-              </ul>
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+        {activeLenses.map((lens) => {
+          const Icon = LENS_ICON_MAP[lens.id] ?? Sparkles;
+          const tone = lens.accent;
+          const isLive = lens.status === "live" || lens.status === "fallback";
+          return (
+            <div
+              key={lens.id}
+              className={cn(
+                "rounded-lg border bg-[#071423]/75 p-4",
+                toneClasses[tone].border,
+              )}
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <LensOrb icon={Icon} tone={tone} size="sm" />
+                <StatusPill tone={tone}>
+                  {isLive ? lens.phase : "Next"}
+                </StatusPill>
+              </div>
+              <h3 className="text-sm font-bold text-white">{lens.displayName}</h3>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+                {lens.category}
+              </p>
+              <p className="mt-3 text-xs leading-5 text-slate-400">{lens.purpose}</p>
             </div>
-            <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-8">
-              <h3 className="text-emerald-400 font-bold mb-5 uppercase tracking-wider text-xs flex items-center gap-2">
-                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                What we always do
-              </h3>
-              <ul className="space-y-4 text-slate-300 text-sm">
-                {[
-                  "We highlight probabilistic risk factors and anomalies.",
-                  "We surface missing evidence needed for verification.",
-                  "We empower buyers with the right questions to ask.",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-3">
-                    <span className="text-emerald-500 mt-0.5 shrink-0">✓</span>
-                    {t}
-                  </li>
-                ))}
-              </ul>
+          );
+        })}
+      </div>
+    </HudPanel>
+  );
+}
+
+function StudioPreview() {
+  return (
+    <HudPanel tone="cyan" className="p-5">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <StatusPill tone="cyan">ListLens Studio</StatusPill>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+            Photo evidence to seller draft
+          </h2>
+        </div>
+        <LensOrb icon={Camera} tone="cyan" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="rounded-lg border border-dashed border-cyan-300/30 bg-cyan-300/10 p-4">
+          <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
+            <span>Upload photos</span>
+            <span>0 / 8</span>
+          </div>
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-md border border-cyan-300/20 bg-black/25 text-center">
+            <ImagePlus className="mb-3 text-cyan-300" size={34} strokeWidth={1.6} />
+            <p className="text-sm font-semibold text-white">Drag item photos here</p>
+            <p className="mt-1 max-w-56 text-xs leading-5 text-slate-500">
+              Sole, size label, box, condition marks and proof of purchase if available.
+            </p>
+          </div>
+          <Button asChild className="mt-4 w-full border-0 bg-cyan-500 text-slate-950 hover:bg-cyan-300">
+            <Link href="/studio/new">
+              <Upload size={16} />
+              Create seller listing
+            </Link>
+          </Button>
+        </div>
+
+        <div className="space-y-3">
+          <div className="rounded-lg border border-cyan-300/20 bg-[#061120] p-4">
+            <p className="font-mono-hud text-[10px] uppercase tracking-[0.2em] text-cyan-300">
+              Marketplace title
+            </p>
+            <p className="mt-2 text-sm font-semibold leading-6 text-white">
+              Nike Dunk Low Panda Black White Trainers UK 8 · Box Included
+            </p>
+            <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+              <span>72 / 80 characters</span>
+              <span className="text-cyan-300">eBay-ready</span>
+            </div>
+          </div>
+          <div className="rounded-lg border border-amber-300/20 bg-amber-300/10 p-4">
+            <p className="flex items-center gap-2 text-sm font-semibold text-amber-200">
+              <CircleAlert size={16} />
+              Missing evidence
+            </p>
+            <p className="mt-2 text-xs leading-5 text-amber-100/70">
+              Add a clear tongue-size label and heel-tab close-up before publishing.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="rounded-lg border border-white/10 bg-black/20 p-3">
+              <p className="text-xs text-slate-500">Quick sale</p>
+              <p className="mt-1 text-lg font-bold text-white">£62-70</p>
+            </div>
+            <div className="rounded-lg border border-cyan-300/20 bg-cyan-300/10 p-3">
+              <p className="text-xs text-cyan-300">Recommended</p>
+              <p className="mt-1 text-lg font-bold text-white">£78-86</p>
             </div>
           </div>
         </div>
-      </section>
+      </div>
+    </HudPanel>
+  );
+}
 
-      {/* ── Pricing ──────────────────────────────────────────────────── */}
-      <section id="pricing" className="py-24 px-6">
-        <div className="max-w-5xl mx-auto">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Simple, transparent pricing.</h2>
-            <p className="text-slate-400">Start for free. Upgrade when you need more power.</p>
+function GuardPreview() {
+  return (
+    <HudPanel tone="violet" className="p-5">
+      <div className="mb-5 flex items-center justify-between gap-4">
+        <div>
+          <StatusPill tone="violet">ListLens Guard</StatusPill>
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+            Listing evidence to buyer report
+          </h2>
+        </div>
+        <LensOrb icon={ShieldCheck} tone="violet" />
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
+        <div className="rounded-lg border border-violet-300/20 bg-[#061120] p-4">
+          <div className="mb-4 flex items-center justify-between">
+            <p className="font-mono-hud text-[10px] uppercase tracking-[0.2em] text-violet-300">
+              Guard report
+            </p>
+            <StatusPill tone="amber">Medium risk</StatusPill>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-6 items-start">
-            {PRICING.map((plan) => (
-              <div key={plan.name} className={`bg-gradient-to-b from-[#0d152a] to-[#040a14] border ${plan.accentClass} rounded-2xl p-8 flex flex-col relative ${plan.highlight ? "md:-translate-y-4" : ""}`}>
-                {plan.badge && (
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-cyan-500 text-slate-900 text-[10px] font-bold uppercase tracking-wider px-3 py-1 rounded-full">
-                    {plan.badge}
-                  </div>
-                )}
-                <h3 className={`text-lg font-bold mb-2 ${plan.highlight ? "text-cyan-400" : "text-white"}`}>{plan.name}</h3>
-                <div className="flex items-baseline gap-0.5 mb-1">
-                  <span className="text-3xl font-bold text-white">{plan.price}</span>
-                  <span className="text-slate-500 text-sm">{plan.period}</span>
-                </div>
-                <p className="text-sm text-slate-400 mb-6">{plan.desc}</p>
-                <ul className="space-y-3 mb-8 flex-1 text-slate-300 text-sm">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex gap-2">
-                      <CheckCircle className={`w-4 h-4 shrink-0 ${plan.highlight ? "text-cyan-500" : plan.name === "Guard Passes" ? "text-violet-500" : "text-slate-500"}`} />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-                <Button asChild variant={plan.btnVariant} className={`w-full ${plan.btnClass}`}>
-                  <Link href={plan.href}>{plan.cta}</Link>
-                </Button>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              { icon: CircleAlert, label: "Missing evidence", value: "5", tone: "red" as const },
+              { icon: CheckCircle2, label: "Price check", value: "High", tone: "amber" as const },
+              { icon: HelpCircle, label: "Questions", value: "7", tone: "blue" as const },
+            ].map(({ icon: Icon, label, value, tone }) => (
+              <div key={label} className="rounded-lg border border-white/10 bg-black/20 p-3">
+                <Icon className={toneClasses[tone].text} size={18} strokeWidth={1.7} />
+                <p className="mt-3 text-xs text-slate-500">{label}</p>
+                <p className="mt-1 text-lg font-bold text-white">{value}</p>
               </div>
             ))}
           </div>
-          <p className="text-center text-xs text-zinc-700 mt-8">
-            All plans include listing history · No hidden fees · Cancel anytime
-          </p>
+          <div className="mt-4 space-y-1">
+            <MiniEvidenceRow label="Size label photo" value="Missing" tone="red" />
+            <MiniEvidenceRow label="Box label" value="Unclear" tone="amber" />
+            <MiniEvidenceRow label="Sole wear" value="Visible" tone="green" />
+          </div>
         </div>
-      </section>
 
-      {/* ── Guard Browser Extension ──────────────────────────────────── */}
-      <section id="extension" className="py-20 px-6">
-        <div className="max-w-4xl mx-auto">
-          <div className="rounded-3xl border border-violet-500/20 bg-gradient-to-br from-violet-950/25 to-[#040a14] p-10 relative overflow-hidden">
-            <div aria-hidden className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full bg-violet-500/8 blur-[60px]" />
-            <div aria-hidden className="pointer-events-none absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-cyan-500/6 blur-[50px]" />
+        <div className="flex flex-col justify-between gap-4 rounded-lg border border-dashed border-violet-300/25 bg-violet-300/10 p-4">
+          <div>
+            <p className="font-mono-hud text-[10px] uppercase tracking-[0.2em] text-violet-300">
+              Paste listing URL
+            </p>
+            <div className="mt-3 rounded-md border border-violet-300/20 bg-black/30 px-3 py-3 text-xs text-slate-500">
+              https://www.ebay.co.uk/itm/...
+            </div>
+          </div>
+          <Button asChild className="w-full border-0 bg-violet-500 text-white hover:bg-violet-400">
+            <Link href="/guard/new">
+              <ShieldCheck size={16} />
+              Run Guard check
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </HudPanel>
+  );
+}
 
-            <div className="relative">
-              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6 mb-10">
-                <div>
-                  <div className="inline-flex items-center gap-2 mb-4 px-3 py-1.5 rounded-lg border border-violet-700/30 bg-violet-950/30">
-                    <span className="text-base">🛡️</span>
-                    <span className="font-mono-hud text-[10px] uppercase tracking-[0.22em] text-violet-300/90">Chrome Extension · Free</span>
-                  </div>
-                  <h2 className="text-3xl font-bold text-white mb-3">Guard while you browse</h2>
-                  <p className="text-zinc-400 text-sm leading-relaxed max-w-md">
-                    Run an AI risk check on any eBay or Vinted listing without leaving the tab.
-                    One click — full Guard report, right in the page.
-                  </p>
-                </div>
-                <a
-                  href="/listlens-guard.zip"
-                  download="listlens-guard.zip"
-                  className="shrink-0 inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 text-white font-bold text-sm shadow-[0_0_28px_-8px_rgba(139,92,246,0.7)] transition-all"
-                >
-                  <span className="text-lg">⬇</span>
-                  Download extension .zip
-                </a>
+function HistoryColumn({
+  title,
+  items,
+  tone,
+  href,
+}: {
+  title: string;
+  items: typeof recentDrafts;
+  tone: "cyan" | "violet";
+  href: string;
+}) {
+  return (
+    <HudPanel tone={tone} className="p-5">
+      <div className="mb-4 flex items-center justify-between gap-3">
+        <h2 className="text-base font-bold text-white">{title}</h2>
+        <Link href={href} className={cn("text-xs font-semibold", toneClasses[tone].text)}>
+          View all
+        </Link>
+      </div>
+      <div className="space-y-3">
+        {items.map((item) => (
+          <div key={item.title} className="rounded-lg border border-white/10 bg-black/20 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-white">{item.title}</p>
+                <p className="mt-1 text-xs text-slate-500">{item.meta}</p>
               </div>
+              <span className={cn("shrink-0 text-xs font-semibold", toneClasses[tone].text)}>
+                {item.status}
+              </span>
+            </div>
+            <p className="mt-3 font-mono-hud text-[10px] uppercase tracking-[0.18em] text-slate-500">
+              {item.score}
+            </p>
+          </div>
+        ))}
+      </div>
+    </HudPanel>
+  );
+}
 
-              <div className="grid sm:grid-cols-3 gap-5">
-                {[
-                  { n: "01", icon: "⬇", title: "Download the zip", body: 'Click "Download extension .zip" above and save the file anywhere on your computer.' },
-                  { n: "02", icon: "📂", title: "Unzip the file", body: "Extract the downloaded zip to a folder — you'll point Chrome at this folder." },
-                  { n: "03", icon: "🧩", title: "Load unpacked in Chrome", body: 'Go to chrome://extensions, enable "Developer mode", click "Load unpacked", and select the folder.' },
-                ].map((step) => (
-                  <div key={step.n} className="rounded-2xl border border-violet-700/25 bg-violet-950/15 p-5">
-                    <div className="flex items-center gap-3 mb-3">
-                      <span className="font-mono-hud text-[10px] font-bold tracking-[0.2em] text-violet-500">{step.n}</span>
-                      <span className="text-xl">{step.icon}</span>
-                    </div>
-                    <p className="text-sm font-semibold text-white mb-1.5">{step.title}</p>
-                    <p className="text-xs text-zinc-400 leading-relaxed">{step.body}</p>
+export default function HomePage() {
+  return (
+    <ListLensShell>
+      <header className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-5 sm:px-6 lg:px-8">
+        <Link href="/" className="flex items-center gap-3">
+          <BrandGlyph size={42} animated showSparks={false} />
+          <BrandWordmark layout="inline" size="sm" />
+        </Link>
+        <nav className="hidden items-center gap-6 text-sm text-slate-400 md:flex">
+          <Link href="/studio/new" className="hover:text-white">Studio</Link>
+          <Link href="/guard/new" className="hover:text-white">Guard</Link>
+          <Link href="/lenses" className="hover:text-white">Lenses</Link>
+          <Link href="/billing" className="hover:text-white">Credits</Link>
+        </nav>
+        <Button asChild className="border-0 bg-cyan-400 text-slate-950 hover:bg-cyan-300">
+          <Link href="/dashboard">
+            Open cockpit
+            <ArrowRight size={16} />
+          </Link>
+        </Button>
+      </header>
+
+      <main className="mx-auto max-w-7xl space-y-6 px-4 pb-12 sm:px-6 lg:px-8">
+        <section className="grid gap-6 lg:grid-cols-[0.92fr_1.08fr]">
+          <HudPanel tone="cyan" className="p-6 lg:p-8">
+            <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
+              <div>
+                <StatusPill tone="cyan">Rev 1.0 POC / MVP</StatusPill>
+                <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+                  List smarter. Buy safer.
+                </h1>
+                <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
+                  ListLens turns item photos, listing links and screenshots into evidence-led seller drafts and buyer risk reports.
+                </p>
+                <div className="mt-7 flex flex-col gap-3 sm:flex-row">
+                  <Button asChild size="lg" className="border-0 bg-cyan-400 font-bold text-slate-950 hover:bg-cyan-300">
+                    <Link href="/studio/new">
+                      <Camera size={18} />
+                      Create seller listing
+                    </Link>
+                  </Button>
+                  <Button asChild size="lg" variant="outline" className="border-violet-400/45 bg-violet-400/10 font-bold text-violet-100 hover:bg-violet-400/20 hover:text-white">
+                    <Link href="/guard/new">
+                      <ShieldCheck size={18} />
+                      Check buyer listing
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              <BrandCartOrb className="mx-auto hidden md:flex" />
+            </div>
+            <EvidenceStrip className="mt-8" />
+          </HudPanel>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+            <ProductModeCard
+              tone="cyan"
+              icon={Camera}
+              title="Studio"
+              label="For sellers"
+              body="Upload item photos, choose eBay or Vinted, then save an evidence-backed marketplace draft."
+              cta="Start Studio"
+              href="/studio/new"
+            />
+            <ProductModeCard
+              tone="violet"
+              icon={ShieldCheck}
+              title="Guard"
+              label="For buyers"
+              body="Paste a listing or add screenshots before buying, then ask better seller questions."
+              cta="Run Guard"
+              href="/guard/new"
+            />
+          </div>
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-2">
+          <StudioPreview />
+          <GuardPreview />
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[1.25fr_0.75fr]">
+          <LensRoadmap />
+
+          <div className="space-y-6">
+            <HudPanel tone="green" className="p-5">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <h2 className="text-lg font-bold text-white">SoleLens evidence</h2>
+                <StatusPill tone="green">Live wedge</StatusPill>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {SOLELENS_EVIDENCE.map((item) => (
+                  <div key={item} className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-3 py-2 text-sm text-slate-200">
+                    {item}
                   </div>
                 ))}
               </div>
+            </HudPanel>
 
-              <p className="mt-6 text-[11px] text-zinc-600 text-center">
-                Works on Chrome and Chromium-based browsers (Edge, Brave, Arc) · eBay UK/US and Vinted UK/EU supported
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Bottom CTA ───────────────────────────────────────────────── */}
-      <section className="py-20 px-6 relative overflow-hidden">
-        <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className="w-[520px] h-[520px] rounded-full bg-cyan-500/7 blur-[80px]" />
-        </div>
-        <div className="relative max-w-xl mx-auto text-center">
-          <div className="w-14 h-14 rounded-full border-2 border-cyan-500/40 bg-cyan-950/20 flex items-center justify-center mx-auto mb-6 shadow-[0_0_32px_-8px_rgba(34,211,238,0.6)]">
-            <BrandGlyph size={28} animated showSparks={false} />
-          </div>
-          <h2 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-4">
-            Ready to list smarter?
-          </h2>
-          <p className="text-slate-400 mb-8 text-base leading-relaxed">
-            No credit card. No commitment. Your first three listings are completely free.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <Button asChild size="lg" className="bg-gradient-to-r from-cyan-500 to-violet-600 hover:from-cyan-400 hover:to-violet-500 border-0 px-10 shadow-[0_0_44px_-8px_rgba(34,211,238,0.7)] text-base">
-              <Link href="/studio/new">Start listing free</Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="border-cyan-700/40 text-cyan-200 hover:text-white hover:bg-cyan-950/40 px-8 text-base">
-              <Link href="/guard/new">Run a Guard check</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* ── Footer ───────────────────────────────────────────────────── */}
-      <footer className="border-t border-white/5 py-12 px-6 bg-[#040a14]">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid sm:grid-cols-3 gap-10 mb-10">
-            <div>
-              <div className="flex items-center gap-2 mb-4">
-                <BrandWordmark layout="inline" size="sm" />
+            <HudPanel tone="amber" className="p-5">
+              <div className="mb-4 flex items-center gap-3">
+                <LensOrb icon={FileText} tone="amber" size="sm" />
+                <div>
+                  <h2 className="text-lg font-bold text-white">Credits & pricing</h2>
+                  <p className="text-sm text-slate-500">Built for subscriptions and point-of-need checks.</p>
+                </div>
               </div>
-              <p className="text-xs text-zinc-500 leading-relaxed">
-                AI resale trust layer for eBay &amp; Vinted.<br />
-                UK-first · Evidence-led · Responsible AI.
-              </p>
-            </div>
-            <div>
-              <p className="font-mono-hud text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Tools</p>
-              <nav className="space-y-2.5">
-                <Link href="/studio/new" className="block text-sm text-zinc-500 hover:text-white transition-colors">Studio — list an item</Link>
-                <Link href="/guard/new"  className="block text-sm text-zinc-500 hover:text-white transition-colors">Guard — check a listing</Link>
-                <Link href="/history"    className="block text-sm text-zinc-500 hover:text-white transition-colors">History</Link>
-                <Link href="/billing"    className="block text-sm text-zinc-500 hover:text-white transition-colors">Pricing</Link>
-                <a href="/listlens-guard.zip" download="listlens-guard.zip" className="block text-sm text-zinc-500 hover:text-white transition-colors">Guard Extension ↓</a>
-              </nav>
-            </div>
-            <div>
-              <p className="font-mono-hud text-[10px] font-bold text-zinc-400 uppercase tracking-[0.2em] mb-4">Legal</p>
-              <nav className="space-y-2.5">
-                <Link href="/terms"          className="block text-sm text-zinc-500 hover:text-white transition-colors">Terms of use</Link>
-                <Link href="/privacy"        className="block text-sm text-zinc-500 hover:text-white transition-colors">Privacy policy</Link>
-                <Link href="/ai-disclaimer"  className="block text-sm text-zinc-500 hover:text-white transition-colors">AI disclaimer</Link>
-              </nav>
-            </div>
+              <div className="space-y-1">
+                <MiniEvidenceRow label="Studio Starter" value="GBP 9.99/mo" tone="cyan" />
+                <MiniEvidenceRow label="Studio Reseller" value="GBP 24.99/mo" tone="cyan" />
+                <MiniEvidenceRow label="Guard Single" value="GBP 1.99/check" tone="violet" />
+                <MiniEvidenceRow label="Guard Monthly" value="10 checks" tone="violet" />
+              </div>
+              <Button asChild variant="outline" className="mt-4 w-full border-amber-300/35 bg-amber-300/10 text-amber-100 hover:bg-amber-300/20">
+                <Link href="/billing">Open credits</Link>
+              </Button>
+            </HudPanel>
           </div>
-          <div className="border-t border-zinc-800/60 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3">
-            <p className="text-xs text-zinc-700">© {new Date().getFullYear()} Mr.FLENS · List-LENS. All rights reserved.</p>
-            <p className="font-mono-hud text-[10px] text-zinc-700 uppercase tracking-[0.3em]">AI · Evidence · Confidence</p>
-          </div>
-        </div>
-      </footer>
+        </section>
 
-    </div>
+        <section className="grid gap-6 lg:grid-cols-2">
+          <HistoryColumn title="Recent Studio drafts" items={recentDrafts} tone="cyan" href="/history" />
+          <HistoryColumn title="Recent Guard reports" items={recentReports} tone="violet" href="/history" />
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+          <HudPanel tone="blue" className="p-5">
+            <h2 className="text-lg font-bold text-white">Sticky loop</h2>
+            <div className="mt-4 space-y-3">
+              {WORKFLOW_STEPS.map((step, index) => (
+                <div key={step} className="flex items-center gap-3">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-300/25 bg-blue-300/10 font-mono-hud text-[10px] text-blue-200">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                  <span className="text-sm text-slate-300">{step}</span>
+                </div>
+              ))}
+            </div>
+          </HudPanel>
+
+          <HudPanel tone="violet" className="p-5">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-lg font-bold text-white">Safe Guard wording</h2>
+              <StatusPill tone="violet">Not authentication</StatusPill>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                  Use
+                </p>
+                <div className="space-y-2">
+                  {SAFE_GUARD_PHRASES.slice(0, 4).map((phrase) => (
+                    <p key={phrase} className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-3 py-2 text-xs leading-5 text-slate-300">
+                      {phrase}
+                    </p>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="mb-3 text-xs font-semibold uppercase tracking-[0.18em] text-red-300">
+                  Avoid
+                </p>
+                <div className="space-y-2">
+                  {BANNED_GUARD_PHRASES.slice(0, 4).map((phrase) => (
+                    <p key={phrase} className="rounded-md border border-red-300/15 bg-red-300/10 px-3 py-2 text-xs leading-5 text-slate-400">
+                      {phrase}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </HudPanel>
+        </section>
+
+        <footer className="flex flex-col items-center justify-between gap-4 border-t border-cyan-400/15 py-6 text-xs text-slate-500 sm:flex-row">
+          <div className="flex items-center gap-2">
+            <BrandGlyph size={24} showSparks={false} />
+            <span>All products. One intelligence. Powered by ListLens.</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <Copy size={14} />
+            <span>Evidence-first resale intelligence</span>
+          </div>
+        </footer>
+      </main>
+    </ListLensShell>
   );
 }

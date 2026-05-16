@@ -17,20 +17,20 @@ export const PLANS: Record<
 > = {
   studio_starter: {
     name: "Studio Starter",
-    price: 1900,
+    price: 999,
     credits: 50,
     priceId: env["VITE_STRIPE_STUDIO_STARTER_PRICE_ID"] || undefined,
   },
   studio_reseller: {
     name: "Studio Reseller",
-    price: 4900,
+    price: 2499,
     credits: 200,
     priceId: env["VITE_STRIPE_STUDIO_RESELLER_PRICE_ID"] || undefined,
   },
   guard_monthly: {
     name: "Guard Monthly",
-    price: 999,
-    credits: 100,
+    price: 699,
+    credits: 10,
     priceId: env["VITE_STRIPE_GUARD_MONTHLY_PRICE_ID"] || undefined,
   },
   guard_single: {
