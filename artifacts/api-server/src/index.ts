@@ -35,6 +35,7 @@ const OPTIONAL_RAPIDAPI_KEYS = [
   "RAPIDAPI_SNEAKER_KEY",
   "RAPIDAPI_KICKSCREW_KEY",
   "RAPIDAPI_WATCH_KEY",
+  "RAPIDAPI_EBAY_COMPLETED_KEY",
 ] as const;
 
 const missingOptionalKeys = OPTIONAL_RAPIDAPI_KEYS.filter((k) => !process.env[k]);

@@ -14,6 +14,11 @@ import {
 } from "../lib/record-identification-agent";
 import { fetchKicksCrewByUrl, type KickCrewProduct } from "../lib/kickscrew-client";
 import {
+  fetchEbayCompletedMarketPrice,
+  type EbayCompletedAspectInput,
+  type EbayCompletedMarketResult,
+} from "../lib/ebay-completed-market-client";
+import {
   runShoeIdentificationAgent,
   type ShoeIdentificationInput,
 } from "../lib/shoe-identification-agent";
@@ -133,6 +138,18 @@ const StudioOutputSchema = z.object({
     price_median_gbp: z.number().nullable(),
     price_max_gbp: z.number().nullable(),
     source_listings: z.number(),
+    currency: z.literal("GBP"),
+  }).nullable().optional(),
+  completed_market: z.object({
+    source: z.string(),
+    search_query: z.string(),
+    listing_count: z.number(),
+    price_min_gbp: z.number().nullable(),
+    price_median_gbp: z.number().nullable(),
+    price_max_gbp: z.number().nullable(),
+    average_price_gbp: z.number().nullable(),
+    category_id: z.string().nullable(),
+    excluded_keywords: z.string().nullable(),
     currency: z.literal("GBP"),
   }).nullable().optional(),
 });
@@ -549,6 +566,223 @@ function stringArrayValue(value: unknown): string[] {
     : [];
 }
 
+function numberValue(value: unknown): number | null {
+  return typeof value === "number" && Number.isFinite(value) ? value : null;
+}
+
+function firstString(...values: unknown[]): string | null {
+  for (const value of values) {
+    const parsed = stringValue(value);
+    if (parsed) return parsed;
+  }
+  return null;
+}
+
+function uniqueStrings(values: Array<string | null | undefined>): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const value of values) {
+    if (!value) continue;
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(trimmed);
+  }
+  return result;
+}
+
+function pushAspect(
+  aspects: EbayCompletedAspectInput[],
+  name: string,
+  value: unknown,
+): void {
+  const parsed = stringValue(value);
+  if (!parsed) return;
+  aspects.push({ name, value: parsed });
+}
+
+function buildCompletedMarketSearchInput(
+  lens: string,
+  result: StudioAnalysisResult,
+): {
+  keywords: string;
+  excludedKeywords?: string;
+  aspects: EbayCompletedAspectInput[];
+  categoryId?: string;
+} | null {
+  const attrs = result.attributes as Record<string, unknown>;
+  const aspects: EbayCompletedAspectInput[] = [];
+  const keywords: string[] = [];
+
+  const addKeywords = (...values: Array<unknown>): void => {
+    for (const value of values) {
+      const parsed = stringValue(value);
+      if (parsed) keywords.push(parsed);
+    }
+  };
+
+  addKeywords(result.identity.brand, result.identity.model);
+
+  switch (lens) {
+    case "ShoeLens":
+      addKeywords(attrs["style_code"], attrs["sku"], attrs["colourway"], attrs["size"]);
+      pushAspect(aspects, "Brand", result.identity.brand ?? attrs["brand"]);
+      pushAspect(aspects, "Style Code", firstString(attrs["style_code"], attrs["sku"]));
+      pushAspect(aspects, "Color", attrs["colourway"] ?? attrs["colorway"]);
+      break;
+    case "RecordLens":
+      addKeywords(attrs["artist"], attrs["title"], attrs["catalogue_number"], attrs["label"]);
+      pushAspect(aspects, "Artist", attrs["artist"]);
+      pushAspect(aspects, "Record Label", attrs["label"]);
+      pushAspect(aspects, "Catalog Number", attrs["catalogue_number"]);
+      break;
+    case "ClothingLens":
+      addKeywords(attrs["brand"], attrs["style"], attrs["colour"], attrs["size_label"]);
+      pushAspect(aspects, "Brand", attrs["brand"]);
+      pushAspect(aspects, "Size", attrs["size_label"]);
+      pushAspect(aspects, "Colour", attrs["colour"]);
+      pushAspect(aspects, "Material", attrs["material"]);
+      break;
+    case "CardLens":
+      addKeywords(attrs["card_name"], attrs["set_name"], attrs["set_number"], attrs["grade"]);
+      pushAspect(aspects, "Card Name", attrs["card_name"]);
+      pushAspect(aspects, "Set", attrs["set_name"]);
+      pushAspect(aspects, "Card Number", attrs["set_number"]);
+      pushAspect(aspects, "Grade", attrs["grade"]);
+      break;
+    case "ToyLens":
+      addKeywords(attrs["brand"], attrs["product_name"], attrs["year"] != null ? String(attrs["year"]) : null);
+      pushAspect(aspects, "Brand", attrs["brand"]);
+      pushAspect(aspects, "Product Line", attrs["product_name"]);
+      pushAspect(aspects, "Packaging", attrs["packaging"]);
+      break;
+    case "WatchLens":
+      addKeywords(attrs["brand"], attrs["model_reference"], attrs["year_approx"]);
+      pushAspect(aspects, "Brand", result.identity.brand ?? attrs["brand"]);
+      pushAspect(aspects, "Reference Number", firstString(attrs["model_reference"], result.identity.model));
+      pushAspect(aspects, "Case Material", attrs["case_material"]);
+      break;
+    case "MeasureLens":
+      addKeywords(attrs["item_type"], attrs["size_label"], attrs["reference_object_used"]);
+      pushAspect(aspects, "Item Type", attrs["item_type"]);
+      pushAspect(aspects, "Size", attrs["size_label"]);
+      break;
+    case "MotorLens":
+      addKeywords(attrs["make"], attrs["model"], attrs["part_name"], attrs["part_number"]);
+      pushAspect(aspects, "Brand", firstString(attrs["make"], result.identity.brand));
+      pushAspect(aspects, "Manufacturer Part Number", attrs["part_number"]);
+      break;
+    case "TechLens":
+      addKeywords(attrs["brand"], attrs["model"], attrs["variant"], attrs["storage_or_spec"]);
+      pushAspect(aspects, "Brand", firstString(attrs["brand"], result.identity.brand));
+      pushAspect(aspects, "Model", firstString(attrs["model"], result.identity.model));
+      pushAspect(aspects, "Storage Capacity", attrs["storage_or_spec"]);
+      pushAspect(aspects, "Network", attrs["network_lock_status"]);
+      break;
+    case "BookLens":
+      addKeywords(attrs["title"], attrs["author"], attrs["edition"], attrs["isbn"]);
+      pushAspect(aspects, "Author", attrs["author"]);
+      pushAspect(aspects, "ISBN", attrs["isbn"]);
+      pushAspect(aspects, "Format", attrs["format"]);
+      break;
+    case "AntiquesLens":
+      addKeywords(attrs["object_type"], attrs["era_or_style"], attrs["maker_marks"], attrs["material"]);
+      pushAspect(aspects, "Material", attrs["material"]);
+      break;
+    case "AutographLens":
+      addKeywords(attrs["claimed_signer"], attrs["signed_item_type"]);
+      pushAspect(aspects, "Signed By", attrs["claimed_signer"]);
+      break;
+    default:
+      addKeywords(result.identity.brand, result.identity.model);
+      break;
+  }
+
+  const searchKeywords = uniqueStrings(keywords).slice(0, 6).join(" ");
+  if (!searchKeywords) return null;
+
+  const excludedKeywords = lens === "TechLens"
+    ? uniqueStrings([
+        /locked/i.test(firstString(attrs["activation_lock_status"], attrs["network_lock_status"]) ?? "") ? null : "locked",
+        stringValue(attrs["screen_damage"]) ? null : "cracked",
+        stringValue(attrs["fault_notes"]) ? null : "spares",
+        stringValue(attrs["fault_notes"]) ? null : "parts",
+        stringValue(attrs["included_accessories"]) ? undefined : "box",
+      ]).join(" ")
+    : undefined;
+
+  return {
+    keywords: searchKeywords,
+    excludedKeywords: excludedKeywords || undefined,
+    aspects,
+  };
+}
+
+async function enrichWithCompletedMarketData(
+  lens: string,
+  result: StudioAnalysisResult,
+): Promise<void> {
+  const input = buildCompletedMarketSearchInput(lens, result);
+  if (!input) return;
+
+  const completedMarket = await fetchEbayCompletedMarketPrice({
+    keywords: input.keywords,
+    excludedKeywords: input.excludedKeywords,
+    aspects: input.aspects,
+    categoryId: input.categoryId,
+    maxSearchResults: 120,
+    siteId: "3",
+  }).catch((err) => {
+    logger.warn({ err, lens, keywords: input.keywords }, "[pricing] eBay completed-items enrichment failed.");
+    return null;
+  });
+
+  if (!completedMarket) return;
+
+  result.completed_market = {
+    source: completedMarket.source,
+    search_query: completedMarket.search_query,
+    listing_count: completedMarket.listing_count,
+    price_min_gbp: completedMarket.price_min_gbp,
+    price_median_gbp: completedMarket.price_median_gbp,
+    price_max_gbp: completedMarket.price_max_gbp,
+    average_price_gbp: completedMarket.average_price_gbp,
+    category_id: completedMarket.category_id,
+    excluded_keywords: completedMarket.excluded_keywords,
+    currency: completedMarket.currency,
+  };
+
+  if (completedMarket.listing_count < 3 || completedMarket.price_median_gbp === null) {
+    return;
+  }
+
+  const currentRecommended = result.pricing.recommended;
+  const hasSpecialistMarket = Boolean(
+    lens === "RecordLens" || result.sneaker_market || result.watch_market,
+  );
+  const blendWeight = lens === "RecordLens"
+    ? 0.2
+    : hasSpecialistMarket
+      ? 0.35
+      : 0.55;
+  const blended = Math.round(
+    completedMarket.price_median_gbp * blendWeight + currentRecommended * (1 - blendWeight),
+  );
+
+  result.pricing = {
+    ...result.pricing,
+    recommended: blended,
+    quick_sale: Math.round(blended * 0.87),
+    high: Math.round(blended * 1.15),
+    confidence: Math.min(
+      0.95,
+      result.pricing.confidence + (lens === "RecordLens" ? 0.03 : hasSpecialistMarket ? 0.05 : 0.12),
+    ),
+  };
+}
+
 function mapKicksCrewToShoeCandidate(product: KickCrewProduct): NonNullable<ShoeIdentificationInput["marketplace_candidates"]>[number] {
   return {
     source: "KicksCrew",
@@ -827,47 +1061,51 @@ async function runStudioAnalysis(
   hint?: string,
   options?: StudioAnalysisOptions,
 ): Promise<{ result: z.infer<typeof StudioOutputSchema>; usage: AnalysisUsage }> {
-  // RecordLens uses its own dedicated 5-step xAI/grok pipeline
+  let result: StudioAnalysisResult;
+  let usage: AnalysisUsage;
+
   if (lens === "RecordLens") {
     const { analysis: raw, usage: rlUsage } = await runRecordLensAnalysis(photoUrls, hint);
-    const result = StudioOutputSchema.parse(raw);
-    return { result, usage: rlUsage };
+    result = StudioOutputSchema.parse(raw);
+    usage = rlUsage;
+  } else {
+    const { label: lensLabel } = getLensMeta(lens);
+    const systemPrompt = buildLensSystemPrompt(lens);
+    const useGrokVision = NEW_LENSES_USING_GROK_VISION.has(lens);
+    const client = useGrokVision ? getXaiClient() : getOpenAIClient();
+
+    const userContent: Parameters<
+      typeof client.chat.completions.create
+    >[0]["messages"][0]["content"] = [
+      {
+        type: "text",
+        text: hint
+          ? `Analyse this ${lensLabel} for resale. Additional context: ${hint}`
+          : `Analyse this ${lensLabel} for resale.`,
+      },
+      ...imageContent(photoUrls),
+    ];
+
+    const completion = await client.chat.completions.create({
+      model: useGrokVision ? "grok-4-fast-non-reasoning" : "gpt-4o",
+      response_format: { type: "json_object" },
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userContent },
+      ],
+      max_tokens: 1200,
+    });
+
+    const model = useGrokVision ? "grok-4-fast-non-reasoning" : "gpt-4o";
+    const promptTokens = completion.usage?.prompt_tokens ?? 0;
+    const completionTokens = completion.usage?.completion_tokens ?? 0;
+
+    const raw = completion.choices[0]?.message?.content ?? "{}";
+    const parsed = JSON.parse(raw) as unknown;
+    result = StudioOutputSchema.parse(parsed);
+    usage = { promptTokens, completionTokens, model };
   }
 
-  const { label: lensLabel } = getLensMeta(lens);
-  const systemPrompt = buildLensSystemPrompt(lens);
-  const useGrokVision = NEW_LENSES_USING_GROK_VISION.has(lens);
-  const client = useGrokVision ? getXaiClient() : getOpenAIClient();
-
-  const userContent: Parameters<
-    typeof client.chat.completions.create
-  >[0]["messages"][0]["content"] = [
-    {
-      type: "text",
-      text: hint
-        ? `Analyse this ${lensLabel} for resale. Additional context: ${hint}`
-        : `Analyse this ${lensLabel} for resale.`,
-    },
-    ...imageContent(photoUrls),
-  ];
-
-  const completion = await client.chat.completions.create({
-    model: useGrokVision ? "grok-4-fast-non-reasoning" : "gpt-4o",
-    response_format: { type: "json_object" },
-    messages: [
-      { role: "system", content: systemPrompt },
-      { role: "user", content: userContent },
-    ],
-    max_tokens: 1200,
-  });
-
-  const model = useGrokVision ? "grok-4-fast-non-reasoning" : "gpt-4o";
-  const promptTokens = completion.usage?.prompt_tokens ?? 0;
-  const completionTokens = completion.usage?.completion_tokens ?? 0;
-
-  const raw = completion.choices[0]?.message?.content ?? "{}";
-  const parsed = JSON.parse(raw) as unknown;
-  const result = StudioOutputSchema.parse(parsed);
   result.attributes = validateLensAttributes(lens, result.attributes);
 
   if (lens === "ShoeLens") {
@@ -878,7 +1116,9 @@ async function runStudioAnalysis(
     await enrichWatchLensWithMarketData(result);
   }
 
-  return { result, usage: { promptTokens, completionTokens, model } };
+  await enrichWithCompletedMarketData(lens, result);
+
+  return { result, usage };
 }
 
 function buildGuardSystemPrompt(lens: string): string {

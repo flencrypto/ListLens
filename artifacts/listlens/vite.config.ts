@@ -4,7 +4,9 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-const rawPort = process.env.PORT;
+// On Replit, PORT is set per-service by the runtime (frontend gets a specific port).
+// Locally, use VITE_PORT (default 3000) to avoid conflicting with API_PORT (8080).
+const rawPort = process.env.VITE_PORT ?? process.env.PORT;
 
 if (!rawPort) {
   throw new Error(
@@ -66,6 +68,14 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+    proxy: process.env.REPL_ID
+      ? undefined
+      : {
+          "/api": {
+            target: `http://localhost:${process.env.API_PORT ?? 8080}`,
+            changeOrigin: true,
+          },
+        },
   },
   preview: {
     port,

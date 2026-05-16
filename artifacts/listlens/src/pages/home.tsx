@@ -10,14 +10,15 @@ import { BrandGlyph } from "@/components/brand/brand-glyph";
 const LENSES = [
   { name: "ShoeLens",      emoji: "👟", desc: "Trainers & sneakers",     status: "live",  href: "/lenses/sole" },
   { name: "RecordLens",    emoji: "💿", desc: "Vinyl, CDs, cassettes",   status: "live",  href: "/lenses/record" },
-  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "live",  href: "/lenses/tech" },
-  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "live",  href: "/lenses/book" },
-  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "live",  href: "/lenses/antiques" },
-  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "live",  href: "/lenses/autograph" },
-  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "soon" },
-  { name: "CardLens",      emoji: "🃏", desc: "Trading & sports cards",  status: "soon" },
-  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "soon" },
-  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "later" },
+  { name: "ClothingLens",  emoji: "👕", desc: "Clothing & vintage",      status: "live",  href: "/lenses/clothing" },
+  { name: "WatchLens",     emoji: "⌚", desc: "Watches & timepieces",    status: "live",  href: "/lenses/watch" },
+  { name: "CardLens",      emoji: "🃏", desc: "Trading & sports cards",  status: "live",  href: "/lenses/card" },
+  { name: "ToyLens",       emoji: "🧸", desc: "Toys, LEGO, figures",     status: "live",  href: "/lenses/toy" },
+  { name: "MotorLens",     emoji: "🚗", desc: "Vehicles & parts",        status: "live",  href: "/lenses/motor" },
+  { name: "TechLens",      emoji: "💻", desc: "Electronics & gadgets",   status: "soon",  href: "/lenses/tech" },
+  { name: "BookLens",      emoji: "📚", desc: "Books & editions",        status: "soon",  href: "/lenses/book" },
+  { name: "AntiquesLens",  emoji: "🏺", desc: "Antiques & collectibles", status: "soon",  href: "/lenses/antiques" },
+  { name: "AutographLens", emoji: "✍️", desc: "Signed memorabilia",      status: "soon",  href: "/lenses/autograph" },
 ];
 
 const PRICING = [
