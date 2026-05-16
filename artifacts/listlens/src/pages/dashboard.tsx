@@ -190,10 +190,12 @@ function ListingRow({ listing }: { listing: ListingSummary }) {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [mode, setMode] = useState<"live" | "demo" | "signed-out">("demo");
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const response = await fetch("/api/dashboard");
       if (response.status === 401) {
@@ -201,13 +203,15 @@ export default function DashboardPage() {
         setData(demoDashboard);
         return;
       }
-      if (!response.ok) throw new Error("Dashboard unavailable");
+      if (!response.ok) throw new Error(`Dashboard unavailable (${response.status})`);
       const result = (await response.json()) as DashboardData;
       setMode("live");
       setData(result);
-    } catch {
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Dashboard unavailable");
       setMode("demo");
-      setData(demoDashboard);
+      // Keep previous data if available; fall back to demo only on first load
+      setData((prev) => prev ?? demoDashboard);
     } finally {
       setLoading(false);
     }
@@ -232,6 +236,17 @@ export default function DashboardPage() {
     <ListLensShell>
       <Navbar />
       <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        {fetchError && (
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-700/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
+            <span>⚠ {fetchError}. Showing cached data.</span>
+            <button
+              onClick={() => void fetchDashboard()}
+              className="shrink-0 rounded border border-amber-600/50 px-3 py-1 text-xs font-semibold text-amber-200 transition hover:bg-amber-800/40"
+            >
+              Retry
+            </button>
+          </div>
+        )}
         <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
           <HudPanel tone="cyan" className="p-6">
             <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">

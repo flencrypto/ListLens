@@ -25,6 +25,7 @@ const LENSES = GUARD_LENS_OPTIONS.map((lens) => ({
 }));
 
 const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
+const ACCEPTED_TYPES = new Set(ACCEPT.split(","));
 const MAX_SCREENSHOTS = 6;
 
 export default function NewGuardPage() {
@@ -72,7 +73,7 @@ export default function NewGuardPage() {
   }
 
   async function processScreenshotFiles(files: FileList | File[]) {
-    const images = Array.from(files).filter((file) => file.type.startsWith("image/"));
+    const images = Array.from(files).filter((file) => ACCEPTED_TYPES.has(file.type));
     if (images.length === 0) return;
     const slots = MAX_SCREENSHOTS - screenshotUrls.length;
     if (slots <= 0) {
@@ -268,10 +269,10 @@ export default function NewGuardPage() {
 
         <Button
           onClick={handleStart}
-          disabled={loading}
+          disabled={loading || isUploading}
           className="w-full h-12 text-base bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 border-0"
         >
-          {loading ? "Starting check…" : "Run Guard Check →"}
+          {loading ? "Starting check…" : isUploading ? "Uploading screenshots…" : "Run Guard Check →"}
         </Button>
 
         <p className="text-center text-xs text-zinc-600 mt-4">

@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from "react";
+import { Link } from "wouter";
 import {
   BadgeCheck,
   BarChart3,
@@ -294,7 +295,7 @@ export function ProductModeCard({
       </div>
       <h3 className="text-2xl font-black tracking-tight text-white">{title}</h3>
       <p className="mt-3 flex-1 text-sm leading-6 text-slate-300">{body}</p>
-      <a
+      <Link
         href={href}
         className={cn(
           "mt-6 inline-flex items-center justify-center rounded-md border px-4 py-3 text-sm font-bold transition",
@@ -305,7 +306,7 @@ export function ProductModeCard({
         )}
       >
         {cta}
-      </a>
+      </Link>
     </HudPanel>
   );
 }

@@ -56,11 +56,11 @@ function LensCard({ lens }: { lens: LensEntry }) {
         "border transition-all duration-300",
         "bg-[radial-gradient(130%_100%_at_50%_0%,rgba(34,211,238,0.05),transparent_60%),linear-gradient(180deg,rgba(10,22,40,0.85),rgba(8,19,37,0.9))]",
         isLive
-          ? "border-cyan-500/20 hover:border-cyan-400/50 cursor-pointer"
+          ? "border-cyan-500/20"
           : isNext
           ? "border-orange-500/20"
           : "border-zinc-800/60 opacity-60",
-        interactive && "hover:shadow-[0_0_28px_-8px_rgba(34,211,238,0.45)]"
+        interactive && "hover:border-cyan-400/50 cursor-pointer hover:shadow-[0_0_28px_-8px_rgba(34,211,238,0.45)]"
       )}
     >
       {/* top light rail */}
@@ -108,7 +108,7 @@ function LensCard({ lens }: { lens: LensEntry }) {
           >
             {lens.name}
           </span>
-          {isLive && (
+          {interactive && (
             <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400" />
