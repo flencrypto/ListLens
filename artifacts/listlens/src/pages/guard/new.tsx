@@ -101,6 +101,10 @@ export default function NewGuardPage() {
   }
 
   async function handleStart() {
+    if (isUploading) {
+      setError("Wait for screenshot uploads to finish before running Guard.");
+      return;
+    }
     const hasInput = tab === "url" ? url.trim() : screenshotUrls.length > 0;
     if (!hasInput) {
       setError(tab === "url" ? "Enter a listing URL." : "Add at least one screenshot URL.");

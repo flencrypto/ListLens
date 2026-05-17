@@ -4,29 +4,31 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import runtimeErrorOverlay from "@replit/vite-plugin-runtime-error-modal";
 
-// On Replit, PORT is set per-service by the runtime (frontend gets a specific port).
-// Locally, use VITE_PORT (default 3000) to avoid conflicting with API_PORT (8080).
-const rawPort = process.env.VITE_PORT ?? process.env.PORT;
-
-if (!rawPort) {
-  throw new Error(
-    "PORT environment variable is required but was not provided.",
-  );
+function getNumberEnv(name: string, fallback: number) {
+  const raw = process.env[name];
+  if (!raw) return fallback;
+  const num = Number(raw);
+  if (Number.isNaN(num) || num <= 0) {
+    throw new Error(`Invalid ${name} value: "${raw}"`);
+  }
+  return num;
 }
 
-const port = Number(rawPort);
-
-if (Number.isNaN(port) || port <= 0) {
-  throw new Error(`Invalid PORT value: "${rawPort}"`);
+function normalizeBasePath(rawBasePath: string | undefined): string {
+  const trimmed = (rawBasePath ?? "/").trim();
+  const basePath = trimmed.length > 0 ? trimmed : "/";
+  const withLeading = basePath.startsWith("/") ? basePath : `/${basePath}`;
+  return withLeading.endsWith("/") ? withLeading : `${withLeading}/`;
 }
 
-const basePath = process.env.BASE_PATH;
-
-if (!basePath) {
-  throw new Error(
-    "BASE_PATH environment variable is required but was not provided.",
-  );
-}
+// Build environments (e.g. Vercel) won't provide runtime PORT/BASE_PATH, so default
+// safely and keep strict validation only for explicit values.
+const port = (() => {
+  if (process.env.VITE_PORT) return getNumberEnv("VITE_PORT", 3000);
+  if (process.env.PORT) return getNumberEnv("PORT", 3000);
+  return 3000;
+})();
+const basePath = normalizeBasePath(process.env.BASE_PATH);
 
 export default defineConfig({
   base: basePath,
@@ -57,7 +59,7 @@ export default defineConfig({
   },
   root: path.resolve(import.meta.dirname),
   build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
+    outDir: path.resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
   },
   server: {

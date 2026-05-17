@@ -112,9 +112,18 @@ export default function NewStudioPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const params = new URLSearchParams(search);
-  const initialLens = params.get("lens") ?? "ShoeLens";
+  const requestedLens = params.get("lens");
+  const isSupportedLens = requestedLens
+    ? LENSES.some((l) => l.id === requestedLens)
+    : false;
+  const fallbackLens = LENSES.some((l) => l.id === "GeneralLens")
+    ? "GeneralLens"
+    : "ShoeLens";
   const [selectedLens, setSelectedLens] = useState<string>(
-    LENSES.some((l) => l.id === initialLens) ? initialLens : "ShoeLens"
+    isSupportedLens ? requestedLens! : requestedLens ? fallbackLens : "ShoeLens"
+  );
+  const [unsupportedLensNotice, setUnsupportedLensNotice] = useState<string | null>(
+    requestedLens && !isSupportedLens ? requestedLens : null
   );
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>("both");
   const [loading, setLoading] = useState(false);
@@ -144,9 +153,17 @@ export default function NewStudioPage() {
 
   useEffect(() => {
     const lensParam = params.get("lens");
-    if (lensParam && LENSES.some((l) => l.id === lensParam)) {
-      setSelectedLens(lensParam);
+    if (!lensParam) {
+      setUnsupportedLensNotice(null);
+      return;
     }
+    if (LENSES.some((l) => l.id === lensParam)) {
+      setSelectedLens(lensParam);
+      setUnsupportedLensNotice(null);
+      return;
+    }
+    setSelectedLens(fallbackLens);
+    setUnsupportedLensNotice(lensParam);
   }, [search]);
 
   useEffect(() => {
@@ -409,11 +426,21 @@ export default function NewStudioPage() {
             </div>
             <StatusPill tone="cyan">Rev 1.0</StatusPill>
           </div>
+          {unsupportedLensNotice && (
+            <div className="mb-4 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-200/80">
+              <span className="font-mono-hud tracking-[0.14em] uppercase">Note</span>:{" "}
+              <span className="text-amber-100">{unsupportedLensNotice}</span> is not available in Studio yet — using{" "}
+              <span className="text-white">{fallbackLens}</span> for this listing.
+            </div>
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
               {LENSES.map((lens) => (
                 <button
                   key={lens.id}
-                  onClick={() => setSelectedLens(lens.id)}
+                  onClick={() => {
+                    setSelectedLens(lens.id);
+                    setUnsupportedLensNotice(null);
+                  }}
                   className={`rounded-lg border p-4 text-left transition-all ${
                     selectedLens === lens.id
                       ? "border-cyan-500 bg-cyan-950/40"
