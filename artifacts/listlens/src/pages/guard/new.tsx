@@ -1,25 +1,32 @@
 
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ProgressBar } from "@/components/ui/progress-bar";
+import {
+  HudPanel,
+  LensOrb,
+  LENS_ICON_MAP,
+  ListLensShell,
+  StatusPill,
+} from "@/components/listlens/hud";
+import { GUARD_LENS_OPTIONS, SAFE_GUARD_PHRASES } from "@/lib/listlens-mvp";
+import { useUpload } from "@workspace/object-storage-web";
 import { useCreateGuardCheck } from "@workspace/api-client-react";
 
-const LENSES = [
-  { id: "ShoeLens", icon: "👟", name: "ShoeLens" },
-  { id: "RecordLens", icon: "💿", name: "RecordLens" },
-  { id: "ClothingLens", icon: "👕", name: "ClothingLens" },
-  { id: "CardLens", icon: "🎴", name: "CardLens" },
-  { id: "ToyLens", icon: "🧸", name: "ToyLens" },
-  { id: "WatchLens", icon: "⌚", name: "WatchLens" },
-  { id: "MotorLens", icon: "🚗", name: "MotorLens" },
-  { id: "MeasureLens", icon: "📐", name: "MeasureLens" },
-  { id: "TechLens", icon: "📱", name: "TechLens" },
-  { id: "BookLens", icon: "📚", name: "BookLens" },
-  { id: "AntiquesLens", icon: "🏺", name: "AntiquesLens" },
-  { id: "AutographLens", icon: "✍️", name: "AutographLens" },
-];
+const LENSES = GUARD_LENS_OPTIONS.map((lens) => ({
+  id: lens.id,
+  name: lens.displayName,
+  desc: lens.category,
+  tone: lens.accent,
+  phase: lens.phase,
+}));
+
+const ACCEPT = "image/jpeg,image/png,image/webp,image/avif";
+const ACCEPTED_TYPES = new Set(ACCEPT.split(","));
+const MAX_SCREENSHOTS = 6;
 
 export default function NewGuardPage() {
   const [, setLocation] = useLocation();
@@ -35,7 +42,12 @@ export default function NewGuardPage() {
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadLabel, setUploadLabel] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const createGuardCheck = useCreateGuardCheck();
+  const { uploadFile, isUploading, progress: uploadProgress } = useUpload({
+    onError: (err) => setError(`Screenshot upload failed: ${err.message}`),
+  });
 
   useEffect(() => {
     const lensParam = params.get("lens");
@@ -51,8 +63,8 @@ export default function NewGuardPage() {
       setScreenshotInput("");
       return;
     }
-    if (screenshotUrls.length >= 6) {
-      setError("Maximum 6 screenshots allowed.");
+    if (screenshotUrls.length >= MAX_SCREENSHOTS) {
+      setError(`Maximum ${MAX_SCREENSHOTS} screenshots allowed.`);
       return;
     }
     setScreenshotUrls((prev) => [...prev, trimmed]);
@@ -60,7 +72,39 @@ export default function NewGuardPage() {
     setError(null);
   }
 
+  async function processScreenshotFiles(files: FileList | File[]) {
+    const images = Array.from(files).filter((file) => ACCEPTED_TYPES.has(file.type));
+    if (images.length === 0) return;
+    const slots = MAX_SCREENSHOTS - screenshotUrls.length;
+    if (slots <= 0) {
+      setError(`Maximum ${MAX_SCREENSHOTS} screenshots already added.`);
+      return;
+    }
+    setError(null);
+    const selected = images.slice(0, slots);
+    for (let i = 0; i < selected.length; i++) {
+      const file = selected[i];
+      setUploadLabel(
+        selected.length > 1
+          ? `Uploading screenshot ${i + 1} of ${selected.length}`
+          : "Uploading screenshot"
+      );
+      const result = await uploadFile(file);
+      if (result) {
+        const publicUrl = `${window.location.origin}/api/storage${result.objectPath}`;
+        setScreenshotUrls((prev) =>
+          prev.length < MAX_SCREENSHOTS ? [...prev, publicUrl] : prev
+        );
+      }
+    }
+    setUploadLabel("");
+  }
+
   async function handleStart() {
+    if (isUploading) {
+      setError("Wait for screenshot uploads to finish before running Guard.");
+      return;
+    }
     const hasInput = tab === "url" ? url.trim() : screenshotUrls.length > 0;
     if (!hasInput) {
       setError(tab === "url" ? "Enter a listing URL." : "Add at least one screenshot URL.");
@@ -87,20 +131,20 @@ export default function NewGuardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <ListLensShell>
       <Navbar />
       <main className="max-w-2xl mx-auto px-4 py-8">
         <div className="mb-8">
           <p className="text-violet-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Guard · New check
           </p>
-          <h1 className="text-2xl font-bold text-white mb-1">Guard — Check a Listing</h1>
-          <p className="text-zinc-400 text-sm">AI risk report before you buy. Paste a URL or upload screenshots.</p>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2">Check buyer listing</h1>
+          <p className="text-zinc-400 text-sm">Paste a listing URL or upload screenshots before you buy.</p>
           <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         {/* Input method tabs */}
-        <div className="brand-card p-5 mb-4">
+        <HudPanel tone="violet" className="p-5 mb-4">
           <div className="flex rounded-lg border border-zinc-700 overflow-hidden w-fit mb-5">
             <button
               onClick={() => setTab("url")}
@@ -135,7 +179,36 @@ export default function NewGuardPage() {
 
           {tab === "screenshots" && (
             <div className="space-y-3">
-              <p className="text-zinc-500 text-sm">Paste screenshot image URLs (up to 6)</p>
+              <p className="text-zinc-500 text-sm">Upload screenshots or paste image URLs (up to {MAX_SCREENSHOTS})</p>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept={ACCEPT}
+                multiple
+                className="sr-only"
+                onChange={(event) => {
+                  if (event.target.files) void processScreenshotFiles(event.target.files);
+                  event.target.value = "";
+                }}
+                disabled={isUploading || screenshotUrls.length >= MAX_SCREENSHOTS}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading || screenshotUrls.length >= MAX_SCREENSHOTS}
+                className="flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed border-violet-300/25 bg-violet-300/10 px-4 py-6 text-center transition hover:border-violet-300/45 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isUploading ? (
+                  <div className="w-full max-w-xs">
+                    <ProgressBar value={uploadProgress} label={uploadLabel || "Uploading screenshot"} />
+                  </div>
+                ) : (
+                  <>
+                    <span className="text-sm font-semibold text-violet-100">Choose screenshot files</span>
+                    <span className="mt-1 text-xs text-zinc-500">JPG, PNG, WebP or AVIF</span>
+                  </>
+                )}
+              </button>
               <div className="flex gap-2">
                 <input
                   className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-violet-600"
@@ -159,43 +232,57 @@ export default function NewGuardPage() {
               )}
             </div>
           )}
-        </div>
+        </HudPanel>
 
         {/* Lens picker */}
-        <div className="brand-card brand-card-violet p-5 mb-6">
-          <h2 className="text-base font-semibold text-white mb-4">Choose Lens</h2>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+        <HudPanel tone="violet" className="p-5 mb-6">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-white">Choose Lens</h2>
+              <p className="mt-1 text-xs text-zinc-500">Rev 1.0 routes Guard through ShoeLens or General fallback.</p>
+            </div>
+            <StatusPill tone="violet">AI-assisted risk screen</StatusPill>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             {LENSES.map((l) => (
               <button
                 key={l.id}
                 onClick={() => setLens(l.id)}
-                className={`rounded-xl border p-3 text-left transition-all ${
+                className={`rounded-lg border p-4 text-left transition-all ${
                   lens === l.id
                     ? "border-violet-500 bg-violet-950/40"
                     : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
                 }`}
               >
-                <div className="text-xl mb-1">{l.icon}</div>
-                <div className="font-medium text-xs text-white leading-tight">{l.name}</div>
+                <div className="mb-3 flex items-start justify-between gap-3">
+                  <LensOrb
+                    icon={LENS_ICON_MAP[l.id] ?? LENS_ICON_MAP.GeneralLens}
+                    tone={l.tone}
+                    size="sm"
+                  />
+                  <StatusPill tone={l.tone}>{l.phase}</StatusPill>
+                </div>
+                <div className="font-semibold text-sm text-white leading-tight">{l.name}</div>
+                <div className="mt-1 text-xs text-zinc-400">{l.desc}</div>
               </button>
             ))}
           </div>
-        </div>
+        </HudPanel>
 
         {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
 
         <Button
           onClick={handleStart}
-          disabled={loading}
+          disabled={loading || isUploading}
           className="w-full h-12 text-base bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-500 hover:to-purple-600 border-0"
         >
-          {loading ? "Starting check…" : "Run Guard Check →"}
+          {loading ? "Starting check…" : isUploading ? "Uploading screenshots…" : "Run Guard Check →"}
         </Button>
 
         <p className="text-center text-xs text-zinc-600 mt-4">
-          This is an AI-assisted risk screen, not formal authentication.
+          {SAFE_GUARD_PHRASES[0]} This is not formal authentication.
         </p>
       </main>
-    </div>
+    </ListLensShell>
   );
 }

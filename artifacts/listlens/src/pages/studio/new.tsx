@@ -4,124 +4,28 @@ import { useLocation, useSearch } from "wouter";
 import { Navbar } from "@/components/layout/navbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  HudPanel,
+  LensOrb,
+  LENS_ICON_MAP,
+  ListLensShell,
+  StatusPill,
+} from "@/components/listlens/hud";
 import { ProgressBar } from "@/components/ui/progress-bar";
 import { Spinner } from "@/components/ui/spinner";
+import { STUDIO_LENS_OPTIONS, STUDIO_SUGGESTED_SHOTS } from "@/lib/listlens-mvp";
 import { useUpload } from "@workspace/object-storage-web";
 import { useCreateStudioItem, useAnalyseStudioItem } from "@workspace/api-client-react";
 
-const LENSES = [
-  { id: "ShoeLens", icon: "👟", name: "ShoeLens", desc: "Trainers, sneakers, shoes" },
-  { id: "RecordLens", icon: "💿", name: "RecordLens", desc: "Vinyl, CDs, cassettes" },
-  { id: "ClothingLens", icon: "👕", name: "ClothingLens", desc: "Clothing & vintage garments" },
-  { id: "CardLens", icon: "🎴", name: "CardLens", desc: "Trading cards & graded slabs" },
-  { id: "ToyLens", icon: "🧸", name: "ToyLens", desc: "Toys, figures & LEGO" },
-  { id: "WatchLens", icon: "⌚", name: "WatchLens", desc: "Watches & timepieces" },
-  { id: "MotorLens", icon: "🚗", name: "MotorLens", desc: "Vehicles & motor parts" },
-  { id: "MeasureLens", icon: "📐", name: "MeasureLens", desc: "Dimension estimation" },
-  { id: "TechLens", icon: "📱", name: "TechLens", desc: "Phones, laptops, cameras" },
-  { id: "BookLens", icon: "📚", name: "BookLens", desc: "Books & first editions" },
-  { id: "AntiquesLens", icon: "🏺", name: "AntiquesLens", desc: "Antiques & decorative objects" },
-  { id: "AutographLens", icon: "✍️", name: "AutographLens", desc: "Signed items & provenance" },
-];
+const LENSES = STUDIO_LENS_OPTIONS.map((lens) => ({
+  id: lens.id,
+  name: lens.displayName,
+  desc: lens.category,
+  tone: lens.accent,
+  phase: lens.phase,
+}));
 
-const LENS_UPLOAD_SHOTS: Record<string, string[]> = {
-  ShoeLens: [
-    "Lateral (outer) side of both shoes",
-    "Medial (inner) side of both shoes",
-    "Toe box — straight on",
-    "Heel — straight on",
-    "Sole / outsole (lay flat)",
-    "Size tag on the tongue",
-    "Close-up of any scuffs, creasing, or sole wear",
-  ],
-  RecordLens: [
-    "Front sleeve",
-    "Back sleeve",
-    "Label on Side A",
-    "Label on Side B",
-    "Matrix / runout etching on Side A",
-    "Matrix / runout etching on Side B",
-    "Any sleeve damage, seam splits, or vinyl marks",
-  ],
-  ClothingLens: [
-    "Front of the garment (laid flat or on hanger)",
-    "Back of the garment",
-    "Brand label",
-    "Care / wash label",
-    "Collar and cuffs",
-    "Zip, buttons, or fastenings",
-    "Close-up of any pilling, fading, or staining",
-  ],
-  CardLens: [
-    "Card face — well lit, no glare",
-    "Card reverse",
-    "All four corners (close-up)",
-    "Edges — top and bottom",
-    "Surface under raking light to reveal surface wear",
-    "Hologram, stamp, or authentication label if present",
-  ],
-  ToyLens: [
-    "Front of item",
-    "Back of item",
-    "All loose accessories or parts",
-    "Any play wear, paint loss, or damage",
-    "Batch / serial number stamp (usually moulded into the base)",
-    "Packaging or box, if present",
-  ],
-  WatchLens: [
-    "Dial face — straight on, in good light",
-    "Case side at the 3 o'clock position",
-    "Crown (close-up)",
-    "Caseback — engravings or serial number visible",
-    "Bracelet or strap — top and underside",
-    "Clasp",
-    "Any scratches, blemishes, or polishing marks",
-  ],
-  MeasureLens: [
-    "Item alongside your reference object — front view (keep the full reference visible)",
-    "Item alongside your reference object — side view",
-    "Item alongside your reference object — top / overhead view",
-  ],
-  MotorLens: [
-    "Part number or casting stamp (close-up)",
-    "Front face",
-    "Rear face",
-    "Mounting points or bolt holes",
-    "Connector, port, or coupling (if applicable)",
-    "Any corrosion, cracks, or damage",
-  ],
-  TechLens: [
-    "Front / screen",
-    "Back / chassis",
-    "All ports and connectors",
-    "Model and serial number label",
-    "Any screen damage, scratches, or dents",
-    "Accessories or cables included",
-  ],
-  BookLens: [
-    "Front cover",
-    "Back cover",
-    "Spine",
-    "Title page",
-    "Copyright / colophon page",
-    "Any foxing, inscriptions, or condition issues",
-  ],
-  AntiquesLens: [
-    "Front face",
-    "Back / underside",
-    "All four sides",
-    "Maker's mark, signature, or hallmark (close-up)",
-    "Any damage, chips, or repairs",
-    "Scale reference — item alongside a coin or ruler",
-  ],
-  AutographLens: [
-    "The autograph — close-up, well lit",
-    "Full item showing the autograph in context",
-    "Certificate of authenticity or provenance document",
-    "Any authentication hologram or stamp",
-    "Back of item if relevant",
-  ],
-};
+const LENS_UPLOAD_SHOTS: Record<string, string[]> = STUDIO_SUGGESTED_SHOTS;
 
 const WATCH_LOOKUP_REMINDER =
   "Tip: use the Reference Lookup panel above to search Chrono24 and auto-fill watch details before uploading.";
@@ -208,9 +112,18 @@ export default function NewStudioPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const params = new URLSearchParams(search);
-  const initialLens = params.get("lens") ?? "ShoeLens";
+  const requestedLens = params.get("lens");
+  const isSupportedLens = requestedLens
+    ? LENSES.some((l) => l.id === requestedLens)
+    : false;
+  const fallbackLens = LENSES.some((l) => l.id === "GeneralLens")
+    ? "GeneralLens"
+    : "ShoeLens";
   const [selectedLens, setSelectedLens] = useState<string>(
-    LENSES.some((l) => l.id === initialLens) ? initialLens : "ShoeLens"
+    isSupportedLens ? requestedLens! : requestedLens ? fallbackLens : "ShoeLens"
+  );
+  const [unsupportedLensNotice, setUnsupportedLensNotice] = useState<string | null>(
+    requestedLens && !isSupportedLens ? requestedLens : null
   );
   const [selectedMarketplace, setSelectedMarketplace] = useState<string>("both");
   const [loading, setLoading] = useState(false);
@@ -240,9 +153,17 @@ export default function NewStudioPage() {
 
   useEffect(() => {
     const lensParam = params.get("lens");
-    if (lensParam && LENSES.some((l) => l.id === lensParam)) {
-      setSelectedLens(lensParam);
+    if (!lensParam) {
+      setUnsupportedLensNotice(null);
+      return;
     }
+    if (LENSES.some((l) => l.id === lensParam)) {
+      setSelectedLens(lensParam);
+      setUnsupportedLensNotice(null);
+      return;
+    }
+    setSelectedLens(fallbackLens);
+    setUnsupportedLensNotice(lensParam);
   }, [search]);
 
   useEffect(() => {
@@ -482,45 +403,64 @@ export default function NewStudioPage() {
   const isWatchLens = selectedLens === "WatchLens";
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <ListLensShell>
       <Navbar />
-      <main className="max-w-2xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Studio · New listing
           </p>
-          <h1 className="text-2xl font-bold text-white mb-1">New Listing</h1>
+          <h1 className="text-3xl font-black tracking-tight text-white mb-2">Create seller listing</h1>
           <p className="text-zinc-400 text-sm">
-            Choose your lens and marketplace, then upload photos for instant AI analysis.
+            Upload item evidence, choose eBay or Vinted, then save a marketplace-ready draft.
           </p>
           <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         {/* Lens picker */}
-        <Card className="mb-4">
-          <CardHeader>
-            <CardTitle className="text-base">Choose Lens</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-3">
+        <HudPanel tone="cyan" className="mb-4 p-5">
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="text-base font-semibold text-white">Choose Lens</h2>
+              <p className="mt-1 text-xs text-zinc-500">Rev 1.0 starts with SoleLens/ShoeLens and a General fallback.</p>
+            </div>
+            <StatusPill tone="cyan">Rev 1.0</StatusPill>
+          </div>
+          {unsupportedLensNotice && (
+            <div className="mb-4 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-200/80">
+              <span className="font-mono-hud tracking-[0.14em] uppercase">Note</span>:{" "}
+              <span className="text-amber-100">{unsupportedLensNotice}</span> is not available in Studio yet — using{" "}
+              <span className="text-white">{fallbackLens}</span> for this listing.
+            </div>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2">
               {LENSES.map((lens) => (
                 <button
                   key={lens.id}
-                  onClick={() => setSelectedLens(lens.id)}
-                  className={`rounded-xl border p-4 text-left transition-all ${
+                  onClick={() => {
+                    setSelectedLens(lens.id);
+                    setUnsupportedLensNotice(null);
+                  }}
+                  className={`rounded-lg border p-4 text-left transition-all ${
                     selectedLens === lens.id
                       ? "border-cyan-500 bg-cyan-950/40"
                       : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
                   }`}
                 >
-                  <div className="text-2xl mb-1">{lens.icon}</div>
+                  <div className="mb-3 flex items-start justify-between gap-3">
+                    <LensOrb
+                      icon={LENS_ICON_MAP[lens.id] ?? LENS_ICON_MAP.GeneralLens}
+                      tone={lens.tone}
+                      size="sm"
+                    />
+                    <StatusPill tone={lens.tone}>{lens.phase}</StatusPill>
+                  </div>
                   <div className="font-semibold text-sm text-white">{lens.name}</div>
-                  <div className="text-xs text-zinc-400 mt-0.5">{lens.desc}</div>
+                  <div className="text-xs text-zinc-400 mt-1">{lens.desc}</div>
                 </button>
               ))}
-            </div>
-          </CardContent>
-        </Card>
+          </div>
+        </HudPanel>
 
         {/* WatchLens — Chrono24 reference lookup */}
         {isWatchLens && (
@@ -809,6 +749,6 @@ export default function NewStudioPage() {
           </p>
         )}
       </main>
-    </div>
+    </ListLensShell>
   );
 }

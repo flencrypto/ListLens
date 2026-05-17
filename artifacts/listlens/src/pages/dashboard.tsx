@@ -1,17 +1,29 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
-import { Navbar } from "@/components/layout/navbar";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ListingCard, type ListingCardData } from "@/components/studio/listing-card";
+import {
+  Camera,
+  CreditCard,
+  FileText,
+  History,
+  ShieldCheck,
+  Sparkles,
+  WalletCards,
+} from "lucide-react";
 
-const QUICK_LINKS = [
-  { href: "/studio/new", label: "New Listing", desc: "Photos → AI listing draft", icon: "📸", color: "from-cyan-500 to-blue-600" },
-  { href: "/guard/new", label: "Check Listing", desc: "URL → Risk report", icon: "🛡️", color: "from-violet-500 to-purple-600" },
-  { href: "/history", label: "History", desc: "Past listings & checks", icon: "📋", color: "from-zinc-600 to-zinc-700" },
-  { href: "/billing", label: "Billing", desc: "Plans & credits", icon: "💳", color: "from-emerald-600 to-teal-700" },
-];
+import { Navbar } from "@/components/layout/navbar";
+import {
+  EvidenceStrip,
+  HudPanel,
+  LensOrb,
+  LENS_ICON_MAP,
+  ListLensShell,
+  MiniEvidenceRow,
+  StatusPill,
+  toneClasses,
+} from "@/components/listlens/hud";
+import { Button } from "@/components/ui/button";
+import { MVP_LENSES, SAFE_GUARD_PHRASES, WORKFLOW_STEPS } from "@/lib/listlens-mvp";
+import { cn } from "@/lib/utils";
 
 interface RecentActivity {
   id: string;
@@ -22,14 +34,69 @@ interface RecentActivity {
   href: string;
 }
 
+interface ListingSummary {
+  id: string;
+  title: string | null;
+  price: string | null;
+  status: string;
+  lens: string;
+  photoUrls: string[];
+  createdAt: string;
+}
+
 interface DashboardData {
   studioCount: number;
   guardCount: number;
   credits: number;
   planTier: string;
   recentActivity: RecentActivity[];
-  listings: ListingCardData[];
+  listings: ListingSummary[];
 }
+
+const demoDashboard: DashboardData = {
+  studioCount: 2,
+  guardCount: 2,
+  credits: 3,
+  planTier: "free",
+  recentActivity: [
+    {
+      id: "demo-studio-1",
+      type: "studio",
+      title: "Nike Dunk Low Panda UK 8",
+      status: "draft",
+      date: new Date().toISOString(),
+      href: "/studio/new",
+    },
+    {
+      id: "demo-guard-1",
+      type: "guard",
+      title: "Jordan 1 Lost & Found listing",
+      status: "medium",
+      date: new Date().toISOString(),
+      href: "/guard/new",
+    },
+  ],
+  listings: [
+    {
+      id: "demo-listing-1",
+      title: "Nike Dunk Low Panda Black White Trainers UK 8",
+      price: "82",
+      status: "draft",
+      lens: "ShoeLens",
+      photoUrls: [],
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "demo-listing-2",
+      title: "Sony Alpha A7 III camera body",
+      price: "980",
+      status: "needs-evidence",
+      lens: "GeneralLens",
+      photoUrls: [],
+      createdAt: new Date().toISOString(),
+    },
+  ],
+};
 
 function planLabel(tier: string): string {
   switch (tier) {
@@ -40,29 +107,81 @@ function planLabel(tier: string): string {
   }
 }
 
-function creditsBannerText(data: DashboardData): string {
-  if (data.planTier !== "free") return `${planLabel(data.planTier)} plan active`;
-  const remaining = Math.max(0, 3 - data.studioCount);
-  return `Free trial — ${remaining} listing${remaining === 1 ? "" : "s"} remaining`;
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
 
 function ActivityRow({ item }: { item: RecentActivity }) {
   const isStudio = item.type === "studio";
   return (
     <Link href={item.href}>
-      <div className="flex items-center gap-3 py-3 px-1 rounded-lg hover:bg-zinc-800/40 transition-colors cursor-pointer group">
-        <span className="text-base shrink-0">{isStudio ? "📸" : "🛡️"}</span>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-white font-medium truncate group-hover:text-cyan-400 transition-colors">
-            {item.title}
-          </p>
-          <p className="text-xs text-zinc-500 mt-0.5">
-            {isStudio ? "Studio" : "Guard"} · {new Date(item.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+      <div className="group flex items-center gap-3 rounded-lg border border-white/10 bg-black/20 p-3 transition hover:border-cyan-300/35 hover:bg-white/5">
+        <LensOrb icon={isStudio ? Camera : ShieldCheck} tone={isStudio ? "cyan" : "violet"} size="sm" />
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-white group-hover:text-cyan-200">{item.title}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {isStudio ? "Studio draft" : "Guard report"} · {formatDate(item.date)}
           </p>
         </div>
-        <Badge variant={isStudio ? "secondary" : "secondary"} className="shrink-0 text-xs">
+        <span
+          className={cn(
+            "shrink-0 rounded-md border px-2 py-1 font-mono-hud text-[10px] uppercase tracking-[0.14em]",
+            isStudio
+              ? "border-cyan-300/25 text-cyan-200"
+              : "border-violet-300/25 text-violet-200",
+          )}
+        >
           {item.status}
-        </Badge>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function StatPanel({
+  label,
+  value,
+  tone,
+  icon,
+}: {
+  label: string;
+  value: string | number;
+  tone: "cyan" | "violet" | "green" | "amber";
+  icon: typeof Camera;
+}) {
+  return (
+    <HudPanel tone={tone} className="p-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="font-mono-hud text-[10px] uppercase tracking-[0.18em] text-slate-500">{label}</p>
+          <p className="mt-2 text-3xl font-black text-white">{value}</p>
+        </div>
+        <LensOrb icon={icon} tone={tone} size="sm" />
+      </div>
+    </HudPanel>
+  );
+}
+
+function ListingRow({ listing }: { listing: ListingSummary }) {
+  const Icon = LENS_ICON_MAP[listing.lens] ?? Sparkles;
+  return (
+    <Link href={listing.id.startsWith("demo") ? "/studio/new" : `/studio/${listing.id}`}>
+      <div className="group grid gap-3 rounded-lg border border-white/10 bg-black/20 p-4 transition hover:border-cyan-300/35 hover:bg-white/5 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+        <LensOrb icon={Icon} tone={listing.lens === "ShoeLens" ? "cyan" : "blue"} size="sm" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-semibold text-white">{listing.title ?? `${listing.lens} draft`}</p>
+          <p className="mt-1 text-xs text-slate-500">
+            {listing.lens} · {formatDate(listing.createdAt)}
+          </p>
+        </div>
+        <div className="flex items-center gap-2 sm:justify-end">
+          {listing.price ? (
+            <span className="font-mono-hud text-sm font-bold text-cyan-300">GBP {listing.price}</span>
+          ) : null}
+          <StatusPill tone={listing.status === "needs-evidence" ? "amber" : "cyan"}>
+            {listing.status}
+          </StatusPill>
+        </div>
       </div>
     </Link>
   );
@@ -71,16 +190,28 @@ function ActivityRow({ item }: { item: RecentActivity }) {
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
+  const [mode, setMode] = useState<"live" | "demo" | "signed-out">("demo");
 
   const fetchDashboard = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
-      const r = await fetch("/api/dashboard");
-      if (r.status === 401) { setLoggedIn(false); return; }
-      const d = await r.json() as DashboardData;
-      setData(d);
-    } catch {
+      const response = await fetch("/api/dashboard");
+      if (response.status === 401) {
+        setMode("signed-out");
+        setData(demoDashboard);
+        return;
+      }
+      if (!response.ok) throw new Error(`Dashboard unavailable (${response.status})`);
+      const result = (await response.json()) as DashboardData;
+      setMode("live");
+      setData(result);
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Dashboard unavailable");
+      setMode("demo");
+      // Keep previous data if available; fall back to demo only on first load
+      setData((prev) => prev ?? demoDashboard);
     } finally {
       setLoading(false);
     }
@@ -88,236 +219,196 @@ export default function DashboardPage() {
 
   useEffect(() => {
     void fetchDashboard();
-    const onVisible = () => { if (document.visibilityState === "visible") void fetchDashboard(); };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void fetchDashboard();
+    };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
   }, [fetchDashboard]);
 
-  const planBadge = data ? planLabel(data.planTier) : "Free trial";
-  const isUpgradeable = !data || data.planTier === "free";
+  const activeData = data ?? demoDashboard;
+  const liveLens = useMemo(
+    () => MVP_LENSES.filter((lens) => lens.status === "live" || lens.status === "fallback"),
+    [],
+  );
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <ListLensShell>
       <Navbar />
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
-            <p className="text-zinc-400 text-sm mt-1">Welcome to ListLens. Start listing or checking listings below.</p>
-          </div>
-          {loading ? (
-            <div className="h-6 w-24 bg-zinc-800 rounded-full animate-pulse" />
-          ) : (
-            <Badge variant={data?.planTier !== "free" ? "success" : "secondary"}>{planBadge}</Badge>
-          )}
-        </div>
-
-        {/* Stats row */}
-        {!loading && data && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="brand-card p-4 text-center">
-              <p className="text-2xl font-bold text-white">{data.studioCount}</p>
-              <p className="text-xs text-zinc-400 mt-0.5">Studio listings</p>
-            </div>
-            <div className="brand-card p-4 text-center">
-              <p className="text-2xl font-bold text-white">{data.guardCount}</p>
-              <p className="text-xs text-zinc-400 mt-0.5">Guard checks</p>
-            </div>
-            <div className="brand-card p-4 text-center">
-              <p className="text-2xl font-bold text-violet-400">{data.credits}</p>
-              <p className="text-xs text-zinc-400 mt-0.5">Guard credits</p>
-            </div>
+      <main className="mx-auto max-w-7xl space-y-6 px-4 py-8 sm:px-6 lg:px-8">
+        {fetchError && (
+          <div className="flex items-center justify-between gap-4 rounded-lg border border-amber-700/50 bg-amber-900/20 px-4 py-3 text-sm text-amber-300">
+            <span>⚠ {fetchError}. Showing cached data.</span>
+            <button
+              onClick={() => void fetchDashboard()}
+              className="shrink-0 rounded border border-amber-600/50 px-3 py-1 text-xs font-semibold text-amber-200 transition hover:bg-amber-800/40"
+            >
+              Retry
+            </button>
           </div>
         )}
-        {loading && (
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[0, 1, 2].map((i) => (
-              <div key={i} className="brand-card p-4 text-center animate-pulse">
-                <div className="h-8 w-12 bg-zinc-800 rounded mx-auto mb-1" />
-                <div className="h-3 w-20 bg-zinc-800 rounded mx-auto" />
+        <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <HudPanel tone="cyan" className="p-6">
+            <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
+              <div>
+                <div className="flex flex-wrap items-center gap-3">
+                  <StatusPill tone={mode === "live" ? "green" : "amber"}>
+                    {mode === "live" ? "Live workspace" : mode === "signed-out" ? "Sign in available" : "Demo workspace"}
+                  </StatusPill>
+                  <StatusPill tone="cyan">{planLabel(activeData.planTier)}</StatusPill>
+                </div>
+                <h1 className="mt-5 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                  ListLens cockpit
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
+                  Start with Studio or Guard, then keep drafts, reports, credits and Lens evidence in one place.
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-
-        {/* My Listings panel */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
-              <span className="text-lg">📋</span> My Listings
-              {!loading && data && data.listings.length > 0 && (
-                <Badge variant="secondary" className="text-xs">{data.listings.length}</Badge>
-              )}
-            </h2>
-            <Link href="/studio/new">
-              <span className="text-xs text-zinc-400 hover:text-white transition-colors">+ New listing</span>
-            </Link>
-          </div>
-
-          {!loading && data && data.listings.length > 0 && (() => {
-            const drafts = data.listings.filter((l) => l.status !== "analysed" && l.status !== "analyzed" && l.status !== "published").length;
-            const analysed = data.listings.filter((l) => l.status === "analysed" || l.status === "analyzed").length;
-            const published = data.listings.filter((l) => l.status === "published").length;
-            const parts: string[] = [];
-            if (drafts > 0) parts.push(`${drafts} draft${drafts === 1 ? "" : "s"}`);
-            if (analysed > 0) parts.push(`${analysed} analysed`);
-            if (published > 0) parts.push(`${published} published`);
-            return (
-              <p className="text-xs text-zinc-500 mb-3">{parts.join(" · ")}</p>
-            );
-          })()}
-
-          {loading ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {[0, 1, 2, 3, 4].map((i) => (
-                <div key={i} className="brand-card overflow-hidden animate-pulse">
-                  <div className="aspect-square bg-zinc-800" />
-                  <div className="p-3 space-y-2">
-                    <div className="h-3 bg-zinc-800 rounded w-4/5" />
-                    <div className="h-3 bg-zinc-800 rounded w-2/5" />
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : data && data.listings.length > 0 ? (
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-              {data.listings.map((listing) => (
-                <ListingCard key={listing.id} listing={listing} />
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center py-12 rounded-xl border border-dashed border-zinc-800 gap-3 bg-zinc-900/30">
-              <span className="text-3xl">📸</span>
-              <p className="text-zinc-400 text-sm font-medium">No listings yet</p>
-              <p className="text-zinc-600 text-xs">Upload photos and let AI write your listing</p>
-              <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500 mt-1">
-                <Link href="/studio/new">Create your first listing</Link>
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {/* Quick action grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {QUICK_LINKS.map((link) => (
-            <Link key={link.href} href={link.href}>
-              <div className="brand-card p-5 transition-all cursor-pointer group hover:shadow-[0_0_32px_-12px_rgba(34,211,238,0.6)] hover:-translate-y-0.5">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${link.color} flex items-center justify-center text-lg mb-3`}>
-                  {link.icon}
-                </div>
-                <p className="font-semibold text-white text-sm group-hover:text-cyan-400 transition-colors">{link.label}</p>
-                <p className="text-zinc-500 text-xs mt-0.5">{link.desc}</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Button asChild size="lg" className="border-0 bg-cyan-400 font-bold text-slate-950 hover:bg-cyan-300">
+                  <Link href="/studio/new">
+                    <Camera size={18} />
+                    Create listing
+                  </Link>
+                </Button>
+                <Button asChild size="lg" className="border-0 bg-violet-500 font-bold text-white hover:bg-violet-400">
+                  <Link href="/guard/new">
+                    <ShieldCheck size={18} />
+                    Check listing
+                  </Link>
+                </Button>
               </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+            <EvidenceStrip className="mt-7" />
+          </HudPanel>
 
-        {/* Recent activity + panels row */}
-        <div className="grid md:grid-cols-2 gap-6">
-          {/* Studio */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <span className="text-lg">📸</span> Studio
-                {!loading && data && data.studioCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">{data.studioCount}</Badge>
-                )}
-              </CardTitle>
-              <Link href="/history">
-                <span className="text-xs text-zinc-400 hover:text-white transition-colors">View all</span>
+          <HudPanel tone="violet" className="p-6">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-white">Guard credits</h2>
+                <p className="mt-1 text-sm text-slate-500">Point-of-need buyer checks.</p>
+              </div>
+              <LensOrb icon={WalletCards} tone="violet" />
+            </div>
+            <p className="mt-5 text-5xl font-black text-white">{loading ? "-" : activeData.credits}</p>
+            <p className="mt-2 text-sm text-slate-400">
+              {activeData.credits > 0
+                ? "Credits available for full Guard reports."
+                : "Buy a single Guard check or use demo mode while Stripe is not connected."}
+            </p>
+            <Button asChild variant="outline" className="mt-5 w-full border-violet-300/35 bg-violet-300/10 text-violet-100 hover:bg-violet-300/20">
+              <Link href="/billing">
+                <CreditCard size={16} />
+                Manage credits
               </Link>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="py-8 space-y-2 animate-pulse">
-                  {[0, 1].map((i) => <div key={i} className="h-10 bg-zinc-800 rounded" />)}
-                </div>
-              ) : data && data.recentActivity.filter((a) => a.type === "studio").length > 0 ? (
-                <div className="divide-y divide-zinc-800/50">
-                  {data.recentActivity.filter((a) => a.type === "studio").slice(0, 3).map((item) => (
-                    <ActivityRow key={item.id} item={item} />
-                  ))}
-                </div>
+            </Button>
+          </HudPanel>
+        </section>
+
+        <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <StatPanel label="Studio drafts" value={loading ? "-" : activeData.studioCount} tone="cyan" icon={FileText} />
+          <StatPanel label="Guard reports" value={loading ? "-" : activeData.guardCount} tone="violet" icon={ShieldCheck} />
+          <StatPanel label="Live lenses" value={liveLens.length} tone="green" icon={Sparkles} />
+          <StatPanel label="Saved loop" value="Rev 1.0" tone="amber" icon={History} />
+        </section>
+
+        <section className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+          <HudPanel tone="cyan" className="p-5">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-bold text-white">Saved Studio drafts</h2>
+                <p className="mt-1 text-sm text-slate-500">Marketplace-ready drafts and missing-evidence notes.</p>
+              </div>
+              <Link href="/studio/new" className="text-sm font-semibold text-cyan-300 hover:text-white">
+                New draft
+              </Link>
+            </div>
+            <div className="space-y-3">
+              {activeData.listings.length > 0 ? (
+                activeData.listings.map((listing) => (
+                  <ListingRow key={listing.id} listing={listing} />
+                ))
               ) : (
-                <div className="flex flex-col items-center justify-center py-8 rounded-lg border border-dashed border-zinc-800 gap-3">
-                  <p className="text-zinc-500 text-sm">No listings yet</p>
-                  <Button asChild size="sm" className="bg-cyan-600 hover:bg-cyan-500">
-                    <Link href="/studio/new">Create first listing</Link>
-                  </Button>
+                <div className="rounded-lg border border-dashed border-cyan-300/25 p-8 text-center">
+                  <FileText className="mx-auto text-cyan-300" size={30} />
+                  <p className="mt-3 text-sm font-semibold text-white">No drafts yet</p>
+                  <p className="mt-1 text-xs text-slate-500">Upload photos in Studio to create your first draft.</p>
                 </div>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </HudPanel>
 
-          {/* Guard */}
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <span className="text-lg">🛡️</span> Guard
-                {!loading && data && data.guardCount > 0 && (
-                  <Badge variant="secondary" className="text-xs">{data.guardCount}</Badge>
-                )}
-              </CardTitle>
-              <Link href="/history">
-                <span className="text-xs text-zinc-400 hover:text-white transition-colors">View all</span>
-              </Link>
-            </CardHeader>
-            <CardContent>
-              {loading ? (
-                <div className="py-8 space-y-2 animate-pulse">
-                  {[0, 1].map((i) => <div key={i} className="h-10 bg-zinc-800 rounded" />)}
-                </div>
-              ) : data && data.recentActivity.filter((a) => a.type === "guard").length > 0 ? (
-                <div className="divide-y divide-zinc-800/50">
-                  {data.recentActivity.filter((a) => a.type === "guard").slice(0, 3).map((item) => (
+          <div className="space-y-6">
+            <HudPanel tone="violet" className="p-5">
+              <div className="mb-5 flex items-center justify-between gap-4">
+                <h2 className="text-lg font-bold text-white">Recent activity</h2>
+                <Link href="/history" className="text-sm font-semibold text-violet-300 hover:text-white">
+                  History
+                </Link>
+              </div>
+              <div className="space-y-3">
+                {activeData.recentActivity.length > 0 ? (
+                  activeData.recentActivity.map((item) => (
                     <ActivityRow key={item.id} item={item} />
-                  ))}
-                </div>
-              ) : (
-                <div className="flex flex-col items-center justify-center py-8 rounded-lg border border-dashed border-zinc-800 gap-3">
-                  <p className="text-zinc-500 text-sm">No checks yet</p>
-                  <Button asChild size="sm" className="bg-violet-600 hover:bg-violet-500">
-                    <Link href="/guard/new">Check a listing</Link>
-                  </Button>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Credits / upgrade banner */}
-        <Card className="border-cyan-900/40 bg-gradient-to-r from-cyan-950/30 to-violet-950/30">
-          <CardContent className="flex items-center justify-between flex-wrap gap-4 pt-6">
-            <div>
-              {loading ? (
-                <>
-                  <div className="h-5 w-48 bg-zinc-800 rounded animate-pulse mb-2" />
-                  <div className="h-3 w-72 bg-zinc-800 rounded animate-pulse" />
-                </>
-              ) : (
-                <>
-                  <p className="text-white font-semibold">{data ? creditsBannerText(data) : "Free trial"}</p>
-                  <p className="text-zinc-400 text-sm mt-0.5">
-                    {isUpgradeable
-                      ? "Upgrade to Studio Starter for unlimited listings from £19.00/month"
-                      : "Manage your subscription anytime in Billing & Plans."}
+                  ))
+                ) : (
+                  <p className="rounded-lg border border-dashed border-violet-300/25 p-5 text-sm text-slate-500">
+                    Your Studio drafts and Guard reports will appear here.
                   </p>
-                </>
-              )}
+                )}
+              </div>
+            </HudPanel>
+
+            <HudPanel tone="green" className="p-5">
+              <h2 className="text-lg font-bold text-white">Rev 1.0 loop</h2>
+              <div className="mt-4 space-y-3">
+                {WORKFLOW_STEPS.map((step, index) => (
+                  <div key={step} className="flex items-center gap-3">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-emerald-300/25 bg-emerald-300/10 font-mono-hud text-[10px] text-emerald-200">
+                      {index + 1}
+                    </span>
+                    <span className="text-sm text-slate-300">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </HudPanel>
+          </div>
+        </section>
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          <HudPanel tone="cyan" className="p-5">
+            <h2 className="text-lg font-bold text-white">Lens routing</h2>
+            <div className="mt-4 space-y-1">
+              {liveLens.map((lens) => {
+                const Icon = LENS_ICON_MAP[lens.id] ?? Sparkles;
+                return (
+                  <div key={lens.id} className="flex items-center gap-3 border-b border-white/10 py-3 last:border-0">
+                    <LensOrb icon={Icon} tone={lens.accent} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-white">{lens.displayName}</p>
+                      <p className="text-xs text-slate-500">{lens.category}</p>
+                    </div>
+                    <StatusPill tone={lens.accent}>{lens.phase}</StatusPill>
+                  </div>
+                );
+              })}
             </div>
-            {!loggedIn ? (
-              <Button asChild className="bg-gradient-to-r from-cyan-500 to-violet-600 border-0">
-                <a href="/api/auth/login">Log in to see your stats</a>
-              </Button>
-            ) : (
-              <Button asChild className="bg-gradient-to-r from-cyan-500 to-violet-600 border-0">
-                <Link href="/billing">{isUpgradeable ? "Upgrade plan" : "Manage plan"}</Link>
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+          </HudPanel>
+
+          <HudPanel tone="violet" className="p-5">
+            <h2 className="text-lg font-bold text-white">Safe Guard wording</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-400">
+              Guard reports stay in evidence and risk language. They do not claim formal authentication.
+            </p>
+            <div className="mt-4 space-y-1">
+              {SAFE_GUARD_PHRASES.slice(0, 4).map((phrase) => (
+                <MiniEvidenceRow key={phrase} label={phrase} value="Allowed" tone="green" />
+              ))}
+            </div>
+          </HudPanel>
+        </section>
       </main>
-    </div>
+    </ListLensShell>
   );
 }
+

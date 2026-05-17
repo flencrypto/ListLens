@@ -482,7 +482,7 @@ const LENS_TRUST_RULES: Partial<Record<string, string>> = {
   AutographLens: `CRITICAL TRUST RULES for AutographLens: You do NOT authenticate signatures. Your role is to produce a provenance and evidence risk report only. Never state a signature is genuine. In listing_description, describe the item and the provenance evidence present (COA, event photos, source). If the item is high-value, always include a warning recommending third-party authentication (PSA/DNA, Beckett, JSA, AFTAL). identity.brand should be the claimed signer; identity.model should be the signed item type.`,
   WatchLens: `CRITICAL TRUST RULES for WatchLens: You do NOT authenticate watches. Describe observable details only — dial text, case finish, bracelet style, engravings. For any watch priced above £500, include a warning in warnings[] recommending in-person inspection by a qualified watchmaker. Never state a watch is genuine. identity.brand = the brand name; identity.model = the model reference. If box and papers are not clearly shown, note the absence.`,
   CardLens: `CRITICAL TRUST RULES for CardLens: You do NOT grade cards. Describe the observable condition only — centering, surface, corners, edges. If the card is already graded (PSA/BGS/CGC slab visible), read and report the grade from the label exactly. Never invent a grade. For high-value cards (recommended price above £50), include a warning recommending professional grading before listing. identity.brand = the card set publisher; identity.model = the card name.`,
-  MotorLens: `IMPORTANT for MotorLens: If the item is a full vehicle, identity.brand = make, identity.model = model + year. If it is a part, identity.brand = the manufacturer/brand, identity.model = the part name. Always note fitment compatibility in attributes.fitment_vehicles. If VIN or part numbers are visible, include them. Flag any signs of accident damage, rust, or poor repairs in warnings[].`,
+  MotorLens: `IMPORTANT for MotorLens: MotorLens is a separate higher-risk scope. If the item is a full vehicle, identity.brand = make, identity.model = model + year. If it is a part, identity.brand = the manufacturer/brand, identity.model = the part name. Note visible fitment evidence only; never guarantee fitment, MOT, roadworthiness or mechanical safety. If VIN or part numbers are visible, include them. Flag visible accident damage, rust or poor repairs as evidence gaps/warnings, not definitive safety judgements.`,
   MeasureLens: `IMPORTANT for MeasureLens: Your primary task is to estimate the physical dimensions of the item from the photos using any visible reference objects (coins, credit cards, rulers, hands). State your measurement method clearly in attributes.measurement_method and identify the reference object in attributes.reference_object_used. Express all dimensions in centimetres. Be explicit about your confidence in the measurements — low confidence must be flagged in warnings[]. identity.brand and identity.model should describe the item type being measured, not a brand.`,
 };
 
@@ -1201,7 +1201,7 @@ function buildGuardSystemPrompt(lens: string): string {
 
   const authMarkers = lensSpecificAuthMarkers[lens] ?? `Check key authenticity markers relevant to ${lensLabel}s including branding consistency, materials, construction quality, and condition vs description accuracy.`;
 
-  return `You are a senior fraud and risk analyst specialising in second-hand ${lensLabel} listings. You have deep expertise in spotting fakes, scams, and misrepresented items.
+  return `You are a senior resale evidence and marketplace risk analyst specialising in second-hand ${lensLabel} listings. Your job is to assess available evidence, missing proof, unsupported claims, unusual pricing and buyer questions before purchase.
 
 ${authMarkers}
 
@@ -1246,6 +1246,9 @@ Analyse the provided listing URL and/or screenshots comprehensively and return O
 }
 
 Rules:
+- This is NOT formal authentication. Never say an item is definitely fake, definitely genuine, guaranteed authentic, guaranteed safe, or that a seller is scamming.
+- Use evidence language such as "cannot be confirmed from the available evidence", "missing key proof", "risk indicators are present", and "ask the seller for more photos".
+- For high-value items, recommend platform verification or professional authentication where available.
 - red_flags[*].message: cite specific observed evidence — not generic labels. Bad: "Missing photos." Good: "Only 2 photos visible: one main shot and one sole — no size label, no heel close-up, no tongue/insole shot."
 - risk_dimensions[*].verdict: write one complete sentence explaining WHY the score is what it is. Bad: "Low risk." Good: "Price sits 5% above the typical eBay sold range for this colourway, suggesting no pressure-sale motivation."
 - buy_recommendation.reasoning: end with 1–3 numbered action steps the buyer can take right now (e.g. "1. Request a close-up of the size tag. 2. Check seller feedback for previous trainer sales. 3. Use eBay buyer protection and pay via PayPal goods & services.")
@@ -2700,31 +2703,40 @@ router.post("/lenses/record/identify-with-matrix", async (req, res) => {
 
 const LENS_REGISTRY_META = [
   {
+    id: "ShoeLens",
+    name: "SoleLens / ShoeLens",
+    icon: "👟",
+    category: "Footwear",
+    description:
+      "Rev 1.0 wedge: trainers, sneakers and shoes. Style code, size label, sole wear and box evidence.",
+    status: "live",
+  },
+  {
+    id: "GeneralLens",
+    name: "General Lens",
+    icon: "✨",
+    category: "Fallback",
+    description:
+      "Rev 1.0 fallback evidence checklist for items that do not yet have a specialist Lens.",
+    status: "fallback",
+  },
+  {
     id: "RecordLens",
     name: "RecordLens",
     icon: "💿",
     category: "Music Media",
     description:
-      "Vinyl, CDs and cassettes. Identifies release from a label photo, with a matrix runout clarification flow.",
-    status: "live",
-  },
-  {
-    id: "ShoeLens",
-    name: "ShoeLens",
-    icon: "👟",
-    category: "Footwear",
-    description:
-      "Trainers, sneakers and shoes. Style code, size label and sole checks.",
-    status: "live",
+      "Rev 1.2 depth: pressing, matrix/runout, catalogue number, label and grading evidence.",
+    status: "next",
   },
   {
     id: "ClothingLens",
-    name: "ClothingLens",
+    name: "ClothingLens / ThreadLens",
     icon: "👕",
     category: "Apparel",
     description:
       "Clothing, vintage garments and apparel. Size label, fit and measurements.",
-    status: "live",
+    status: "planned",
   },
   {
     id: "CardLens",
@@ -2733,7 +2745,7 @@ const LENS_REGISTRY_META = [
     category: "Trading Cards",
     description:
       "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
-    status: "live",
+    status: "planned",
   },
   {
     id: "ToyLens",
@@ -2742,7 +2754,7 @@ const LENS_REGISTRY_META = [
     category: "Toys & Collectibles",
     description:
       "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
-    status: "live",
+    status: "planned",
   },
   {
     id: "WatchLens",
@@ -2751,7 +2763,7 @@ const LENS_REGISTRY_META = [
     category: "Watches",
     description:
       "Watches and timepieces. Reference, dial and provenance evidence checks.",
-    status: "live",
+    status: "planned",
   },
   {
     id: "MeasureLens",
@@ -2760,16 +2772,7 @@ const LENS_REGISTRY_META = [
     category: "Measurement",
     description:
       "Physical reference object for accurate dimension estimation. Ideal for garments and parts.",
-    status: "live",
-  },
-  {
-    id: "MotorLens",
-    name: "MotorLens",
-    icon: "🚗",
-    category: "Vehicles & Parts",
-    description:
-      "Vehicles, parts and campers. Image + dimension-based fitment checks.",
-    status: "live",
+    status: "planned",
   },
   {
     id: "TechLens",
@@ -2778,7 +2781,7 @@ const LENS_REGISTRY_META = [
     category: "Electronics",
     description:
       "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
-    status: "live",
+    status: "planned",
     href: "/lenses/tech",
   },
   {
@@ -2788,7 +2791,7 @@ const LENS_REGISTRY_META = [
     category: "Books",
     description:
       "Books, first editions and collectable print. ISBN, edition and condition.",
-    status: "live",
+    status: "planned",
     href: "/lenses/book",
   },
   {
@@ -2798,7 +2801,7 @@ const LENS_REGISTRY_META = [
     category: "Antiques & Vintage",
     description:
       "Antiques and decorative objects. Maker marks, era and reproduction risk.",
-    status: "live",
+    status: "planned",
     href: "/lenses/antiques",
   },
   {
@@ -2808,10 +2811,45 @@ const LENS_REGISTRY_META = [
     category: "Autographs",
     description:
       "Signed items and provenance. Evidence-led — never authenticates signatures.",
-    status: "live",
+    status: "planned",
     href: "/lenses/autograph",
   },
+  {
+    id: "MarketLens",
+    name: "MarketLens",
+    icon: "📈",
+    category: "Resale Marketplace Intelligence",
+    description:
+      "Rev 1.4: pricing, demand, sell-through, trends and best-marketplace recommendation.",
+    status: "planned",
+  },
+  {
+    id: "StockLens",
+    name: "StockLens",
+    icon: "📊",
+    category: "Equities Intelligence",
+    description:
+      "Separate stock-market intelligence product direction, not core resale MVP scope.",
+    status: "separate",
+  },
+  {
+    id: "MotorLens",
+    name: "MotorLens",
+    icon: "🚗",
+    category: "Vehicles & Parts",
+    description:
+      "Separate higher-risk product track requiring fitment, safety and legal scope controls.",
+    status: "separate",
+  },
 ] as const;
+
+type MobileLensStatus = "live" | "planned" | "deprecated";
+
+function toMobileLensStatus(status: string): MobileLensStatus {
+  if (status === "live") return "live";
+  if (status === "deprecated") return "deprecated";
+  return "planned";
+}
 
 router.get("/lenses/watch/lookup", async (req, res) => {
   const ref = (req.query["ref"] as string | undefined)?.trim();
@@ -2848,7 +2886,11 @@ router.get("/lenses/watch/lookup", async (req, res) => {
 router.get("/lenses", (_req, res) => {
   res.json({
     lenses: LENS_REGISTRY_META.map((l) => l.id),
-    registry: LENS_REGISTRY_META,
+    registry: LENS_REGISTRY_META.map((lens) => ({
+      ...lens,
+      status: toMobileLensStatus(lens.status),
+      mvpStatus: lens.status,
+    })),
   });
 });
 

@@ -25,7 +25,7 @@ const PLANS: PlanDisplay[] = [
     price: "£0",
     period: "",
     desc: "Get started",
-    features: ["3 Studio listings", "ShoeLens", "Vinted export"],
+    features: ["First 3 Studio listings", "SoleLens / ShoeLens", "Limited Guard preview"],
     credits: "3 listings",
     cta: "Current plan",
     highlight: false,
@@ -37,13 +37,13 @@ const PLANS: PlanDisplay[] = [
     period: "/month",
     desc: "For casual sellers",
     features: [
-      "Unlimited listings",
-      "eBay + Vinted export",
-      "ShoeLens + RecordLens",
-      "Listing history",
-      "Priority AI analysis",
+      "Photo-to-listing workflow",
+      "eBay + Vinted copy/export",
+      "Basic price range",
+      "Saved drafts",
+      "SoleLens + General fallback",
     ],
-    credits: "Unlimited",
+    credits: "Starter allowance",
     cta: "Subscribe",
     highlight: true,
     priceId: STRIPE_PLANS.studio_starter.priceId,
@@ -56,12 +56,13 @@ const PLANS: PlanDisplay[] = [
     desc: "For power sellers",
     features: [
       "Everything in Starter",
-      "All Lenses (as released)",
-      "Bulk listing tools",
-      "API access",
-      "Priority support",
+      "Higher draft allowance",
+      "Saved history",
+      "Lens guidance",
+      "Stronger pricing/comps workflow",
+      "Guard credits-ready workflow",
     ],
-    credits: "Unlimited",
+    credits: "Reseller allowance",
     cta: "Subscribe",
     highlight: false,
     priceId: STRIPE_PLANS.studio_reseller.priceId,
@@ -689,7 +690,7 @@ export default function BillingPage() {
               </div>
               <p className="text-zinc-500 text-xs mb-4">10 checks/month</p>
               <ul className="space-y-2 flex-1 mb-5">
-                {["10 checks per month", "All Lenses", "Report history", "PDF export"].map((f) => (
+                {["10 checks per month", "SoleLens + General fallback", "Saved report history", "PDF export"].map((f) => (
                   <li key={f} className="text-sm text-zinc-300 flex items-start gap-2">
                     <span className="text-violet-400 shrink-0">✓</span>
                     {f}
