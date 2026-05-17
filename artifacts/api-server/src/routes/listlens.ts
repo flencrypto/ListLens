@@ -2705,7 +2705,7 @@ const LENS_REGISTRY_META = [
   {
     id: "ShoeLens",
     name: "SoleLens / ShoeLens",
-    icon: "",
+    icon: "👟",
     category: "Footwear",
     description:
       "Rev 1.0 wedge: trainers, sneakers and shoes. Style code, size label, sole wear and box evidence.",
@@ -2714,7 +2714,7 @@ const LENS_REGISTRY_META = [
   {
     id: "GeneralLens",
     name: "General Lens",
-    icon: "",
+    icon: "✨",
     category: "Fallback",
     description:
       "Rev 1.0 fallback evidence checklist for items that do not yet have a specialist Lens.",
@@ -2723,7 +2723,7 @@ const LENS_REGISTRY_META = [
   {
     id: "RecordLens",
     name: "RecordLens",
-    icon: "",
+    icon: "💿",
     category: "Music Media",
     description:
       "Rev 1.2 depth: pressing, matrix/runout, catalogue number, label and grading evidence.",
@@ -2732,7 +2732,7 @@ const LENS_REGISTRY_META = [
   {
     id: "ClothingLens",
     name: "ClothingLens / ThreadLens",
-    icon: "",
+    icon: "👕",
     category: "Apparel",
     description:
       "Clothing, vintage garments and apparel. Size label, fit and measurements.",
@@ -2741,7 +2741,7 @@ const LENS_REGISTRY_META = [
   {
     id: "CardLens",
     name: "CardLens",
-    icon: "",
+    icon: "🎴",
     category: "Trading Cards",
     description:
       "Pokémon, Yu-Gi-Oh!, Magic and sports cards. Set, rarity and grading checks.",
@@ -2750,7 +2750,7 @@ const LENS_REGISTRY_META = [
   {
     id: "ToyLens",
     name: "ToyLens",
-    icon: "",
+    icon: "🧸",
     category: "Toys & Collectibles",
     description:
       "Toys, figures and LEGO. Completeness, packaging and reproduction checks.",
@@ -2759,7 +2759,7 @@ const LENS_REGISTRY_META = [
   {
     id: "WatchLens",
     name: "WatchLens",
-    icon: "",
+    icon: "⌚",
     category: "Watches",
     description:
       "Watches and timepieces. Reference, dial and provenance evidence checks.",
@@ -2768,7 +2768,7 @@ const LENS_REGISTRY_META = [
   {
     id: "MeasureLens",
     name: "MeasureLens",
-    icon: "",
+    icon: "📐",
     category: "Measurement",
     description:
       "Physical reference object for accurate dimension estimation. Ideal for garments and parts.",
@@ -2777,7 +2777,7 @@ const LENS_REGISTRY_META = [
   {
     id: "TechLens",
     name: "TechLens",
-    icon: "",
+    icon: "📱",
     category: "Electronics",
     description:
       "Phones, laptops, cameras and audio gear. Model, condition and accessories.",
@@ -2787,7 +2787,7 @@ const LENS_REGISTRY_META = [
   {
     id: "BookLens",
     name: "BookLens",
-    icon: "",
+    icon: "📚",
     category: "Books",
     description:
       "Books, first editions and collectable print. ISBN, edition and condition.",
@@ -2797,7 +2797,7 @@ const LENS_REGISTRY_META = [
   {
     id: "AntiquesLens",
     name: "AntiquesLens",
-    icon: "",
+    icon: "🏺",
     category: "Antiques & Vintage",
     description:
       "Antiques and decorative objects. Maker marks, era and reproduction risk.",
@@ -2807,7 +2807,7 @@ const LENS_REGISTRY_META = [
   {
     id: "AutographLens",
     name: "AutographLens",
-    icon: "",
+    icon: "✍️",
     category: "Autographs",
     description:
       "Signed items and provenance. Evidence-led — never authenticates signatures.",
@@ -2817,7 +2817,7 @@ const LENS_REGISTRY_META = [
   {
     id: "MarketLens",
     name: "MarketLens",
-    icon: "",
+    icon: "📈",
     category: "Resale Marketplace Intelligence",
     description:
       "Rev 1.4: pricing, demand, sell-through, trends and best-marketplace recommendation.",
@@ -2826,7 +2826,7 @@ const LENS_REGISTRY_META = [
   {
     id: "StockLens",
     name: "StockLens",
-    icon: "",
+    icon: "📊",
     category: "Equities Intelligence",
     description:
       "Separate stock-market intelligence product direction, not core resale MVP scope.",
@@ -2835,13 +2835,21 @@ const LENS_REGISTRY_META = [
   {
     id: "MotorLens",
     name: "MotorLens",
-    icon: "",
+    icon: "🚗",
     category: "Vehicles & Parts",
     description:
       "Separate higher-risk product track requiring fitment, safety and legal scope controls.",
     status: "separate",
   },
 ] as const;
+
+type MobileLensStatus = "live" | "planned" | "deprecated";
+
+function toMobileLensStatus(status: string): MobileLensStatus {
+  if (status === "live") return "live";
+  if (status === "deprecated") return "deprecated";
+  return "planned";
+}
 
 router.get("/lenses/watch/lookup", async (req, res) => {
   const ref = (req.query["ref"] as string | undefined)?.trim();
@@ -2878,7 +2886,11 @@ router.get("/lenses/watch/lookup", async (req, res) => {
 router.get("/lenses", (_req, res) => {
   res.json({
     lenses: LENS_REGISTRY_META.map((l) => l.id),
-    registry: LENS_REGISTRY_META,
+    registry: LENS_REGISTRY_META.map((lens) => ({
+      ...lens,
+      status: toMobileLensStatus(lens.status),
+      mvpStatus: lens.status,
+    })),
   });
 });
 

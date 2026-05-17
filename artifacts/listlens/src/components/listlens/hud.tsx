@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 
 import { BrandGlyph } from "@/components/brand/brand-glyph";
+import { LENS_ICON_MAP as CANONICAL_LENS_ICON_MAP } from "@/lib/lenses-registry";
 import { cn } from "@/lib/utils";
 
 export type HudTone = "cyan" | "blue" | "green" | "violet" | "amber" | "orange" | "red";
@@ -93,23 +94,7 @@ export const toneClasses: Record<
   },
 };
 
-export const LENS_ICON_MAP: Record<string, LensIcon> = {
-  ShoeLens: Footprints,
-  GeneralLens: Sparkles,
-  RecordLens: CircleDot,
-  WatchLens: Watch,
-  CardLens: BadgeCheck,
-  ToyLens: Trophy,
-  TechLens: Camera,
-  BookLens: BookOpen,
-  ClothingLens: Shirt,
-  MeasureLens: Ruler,
-  AntiquesLens: Box,
-  AutographLens: PenTool,
-  MarketLens: BarChart3,
-  StockLens: Gauge,
-  MotorLens: Car,
-};
+export const LENS_ICON_MAP: Record<string, LensIcon> = CANONICAL_LENS_ICON_MAP;
 
 export function ListLensShell({
   children,
