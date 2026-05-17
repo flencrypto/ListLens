@@ -1,7 +1,18 @@
 {
+  "version": 2,
+  "framework": "vite",
   "installCommand": "corepack enable && pnpm install --frozen-lockfile",
   "buildCommand": "pnpm --filter @workspace/listlens run build",
   "outputDirectory": "artifacts/listlens/dist",
+  "builds": [
+    {
+      "src": "artifacts/listlens/package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
   "routes": [
     { "handle": "filesystem" },
     { "src": "/api/(.*)", "dest": "/api/$1" },
