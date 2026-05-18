@@ -44,32 +44,32 @@ export const toneClasses: Record<
   }
 > = {
   cyan: {
-    text: "text-cyan-300",
-    border: "border-cyan-400/35",
-    bg: "bg-cyan-400/10",
-    glow: "shadow-[0_0_28px_-12px_rgba(34,211,238,0.9)]",
-    fill: "bg-cyan-400",
+    text: "text-[#7fefff]",
+    border: "border-[#00f0ff]/30",
+    bg: "bg-[#00f0ff]/10",
+    glow: "shadow-[0_0_28px_-12px_rgba(0,240,255,0.7)]",
+    fill: "bg-[#00f0ff]",
   },
   blue: {
-    text: "text-blue-300",
-    border: "border-blue-400/35",
-    bg: "bg-blue-400/10",
-    glow: "shadow-[0_0_28px_-12px_rgba(62,168,255,0.9)]",
-    fill: "bg-blue-400",
+    text: "text-[#9dc4ff]",
+    border: "border-[#0082ff]/32",
+    bg: "bg-[#0082ff]/10",
+    glow: "shadow-[0_0_28px_-12px_rgba(0,130,255,0.72)]",
+    fill: "bg-[#0082ff]",
   },
   green: {
-    text: "text-emerald-300",
-    border: "border-emerald-400/35",
-    bg: "bg-emerald-400/10",
-    glow: "shadow-[0_0_28px_-12px_rgba(74,222,128,0.9)]",
-    fill: "bg-emerald-400",
+    text: "text-[#8ff7ff]",
+    border: "border-[#19d8ff]/30",
+    bg: "bg-[#19d8ff]/10",
+    glow: "shadow-[0_0_28px_-12px_rgba(25,216,255,0.72)]",
+    fill: "bg-[#19d8ff]",
   },
   violet: {
-    text: "text-violet-300",
-    border: "border-violet-400/35",
-    bg: "bg-violet-400/10",
-    glow: "shadow-[0_0_28px_-12px_rgba(139,92,246,0.9)]",
-    fill: "bg-violet-400",
+    text: "text-[#d8b6ff]",
+    border: "border-[#7a00ff]/32",
+    bg: "bg-[#7a00ff]/10",
+    glow: "shadow-[0_0_28px_-12px_rgba(122,0,255,0.72)]",
+    fill: "bg-[#7a00ff]",
   },
   amber: {
     text: "text-amber-300",
@@ -101,7 +101,7 @@ export function ListLensShell({
   className,
 }: HTMLAttributes<HTMLDivElement>) {
   return (
-    <div className={cn("listlens-shell-bg min-h-screen text-slate-100", className)}>
+    <div className={cn("listlens-shell-bg min-h-screen text-[color:var(--brand-text)]", className)}>
       <div
         aria-hidden="true"
         className="pointer-events-none fixed inset-0 z-0 opacity-70"
@@ -123,8 +123,8 @@ export function HudPanel({
   return (
     <div
       className={cn(
-        "hud-frame relative overflow-hidden rounded-lg border bg-[#061120]/82",
-        "shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] backdrop-blur-xl",
+        "hud-frame relative overflow-hidden rounded-[1.35rem] border bg-[color:var(--brand-card)]",
+        "shadow-[inset_0_1px_0_rgba(255,255,255,0.05),var(--brand-panel-shadow)] backdrop-blur-xl",
         toneClass.border,
         toneClass.glow,
         className,
@@ -137,6 +137,7 @@ export function HudPanel({
           toneClass.text,
         )}
       />
+      <div className="pointer-events-none absolute inset-x-5 bottom-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
       {children}
     </div>
   );
@@ -221,14 +222,14 @@ export function EvidenceStrip({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "grid grid-cols-2 gap-2 border-t border-cyan-400/15 pt-4 sm:grid-cols-3 lg:grid-cols-6",
+        "grid grid-cols-2 gap-2 border-t border-[color:var(--brand-outline)] pt-4 sm:grid-cols-3 lg:grid-cols-6",
         className,
       )}
     >
       {items.map(({ label, icon: Icon }) => (
         <div
           key={label}
-          className="flex items-center gap-2 text-cyan-300/85"
+          className="flex items-center gap-2 text-[color:var(--brand-text)]"
         >
           <Icon size={17} strokeWidth={1.7} />
           <span className="font-mono-hud text-[10px] font-semibold uppercase tracking-[0.18em]">
@@ -243,13 +244,13 @@ export function EvidenceStrip({ className }: { className?: string }) {
 export function BrandCartOrb({ className }: { className?: string }) {
   return (
     <div
-      className={cn(
-        "relative flex h-24 w-24 items-center justify-center rounded-full border border-cyan-400/30 bg-cyan-400/10 shadow-[0_0_48px_-16px_rgba(34,211,238,0.9)]",
-        className,
-      )}
-    >
-      <span className="absolute inset-2 rounded-full border border-cyan-300/10" />
-      <span className="absolute inset-5 rounded-full border border-cyan-300/10" />
+        className={cn(
+          "relative flex h-24 w-24 items-center justify-center rounded-[2rem] border border-[color:var(--brand-outline-strong)] bg-[color:var(--brand-nav-bg)] shadow-[0_30px_60px_-42px_rgba(0,130,255,0.6)] backdrop-blur-xl",
+          className,
+        )}
+      >
+      <span className="absolute inset-2 rounded-[1.5rem] border border-white/10" />
+      <span className="absolute inset-5 rounded-[1rem] border border-white/6" />
       <BrandGlyph size={58} animated showSparks={false} />
     </div>
   );

@@ -27,6 +27,7 @@ import {
   StatusPill,
   toneClasses,
 } from "@/components/listlens/hud";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   BANNED_GUARD_PHRASES,
@@ -299,18 +300,21 @@ export default function HomePage() {
           <BrandGlyph size={42} animated showSparks={false} />
           <BrandWordmark layout="inline" size="sm" />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm text-slate-400 md:flex">
-          <Link href="/studio/new" className="hover:text-white">Studio</Link>
-          <Link href="/guard/new" className="hover:text-white">Guard</Link>
-          <Link href="/lenses" className="hover:text-white">Lenses</Link>
-          <Link href="/billing" className="hover:text-white">Credits</Link>
+        <nav className="hidden items-center gap-6 text-sm text-[color:var(--brand-text-muted)] md:flex">
+          <Link href="/studio/new" className="hover:text-[color:var(--brand-text-strong)]">Studio</Link>
+          <Link href="/guard/new" className="hover:text-[color:var(--brand-text-strong)]">Guard</Link>
+          <Link href="/lenses" className="hover:text-[color:var(--brand-text-strong)]">Lenses</Link>
+          <Link href="/billing" className="hover:text-[color:var(--brand-text-strong)]">Credits</Link>
         </nav>
-        <Button asChild className="border-0 bg-cyan-400 text-slate-950 hover:bg-cyan-300">
-          <Link href="/dashboard">
-            Open cockpit
-            <ArrowRight size={16} />
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle className="hidden lg:inline-flex" />
+          <Button asChild className="border-0 bg-gradient-to-r from-[#0082ff] to-[#00f0ff] text-white shadow-[0_20px_36px_-24px_rgba(0,130,255,0.95)] hover:brightness-110">
+            <Link href="/dashboard">
+              Open cockpit
+              <ArrowRight size={16} />
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 pb-12 sm:px-6 lg:px-8">
@@ -319,20 +323,20 @@ export default function HomePage() {
             <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <StatusPill tone="cyan">Rev 1.0 POC / MVP</StatusPill>
-                <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-6 max-w-3xl font-brand-display text-4xl font-black uppercase leading-tight tracking-[0.08em] text-white sm:text-5xl lg:text-6xl">
                   List smarter. Buy safer.
                 </h1>
                 <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
                   ListLens turns item photos, listing links and screenshots into evidence-led seller drafts and buyer risk reports.
                 </p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild size="lg" className="border-0 bg-cyan-400 font-bold text-slate-950 hover:bg-cyan-300">
+                  <Button asChild size="lg" className="border-0 bg-gradient-to-r from-[#0082ff] to-[#00f0ff] font-bold text-white hover:brightness-110">
                     <Link href="/studio/new">
                       <Camera size={18} />
                       Create seller listing
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline" className="border-violet-400/45 bg-violet-400/10 font-bold text-violet-100 hover:bg-violet-400/20 hover:text-white">
+                  <Button asChild size="lg" variant="outline" className="border-[#7a00ff]/45 bg-[#7a00ff]/10 font-bold text-[#ead8ff] hover:bg-[#7a00ff]/20 hover:text-white">
                     <Link href="/guard/new">
                       <ShieldCheck size={18} />
                       Check buyer listing
@@ -465,7 +469,7 @@ export default function HomePage() {
           </HudPanel>
         </section>
 
-        <footer className="flex flex-col items-center justify-between gap-4 border-t border-cyan-400/15 py-6 text-xs text-slate-500 sm:flex-row">
+        <footer className="flex flex-col items-center justify-between gap-4 border-t border-[color:var(--brand-outline)] py-6 text-xs text-[color:var(--brand-text-muted)] sm:flex-row">
           <div className="flex items-center gap-2">
             <BrandGlyph size={24} showSparks={false} />
             <span>All products. One intelligence. Powered by ListLens.</span>

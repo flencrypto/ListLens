@@ -1,3 +1,29 @@
 <svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+  <defs>
+    <linearGradient id="bg" x1="26" y1="18" x2="154" y2="162" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0082FF"/>
+      <stop offset="0.72" stop-color="#00F0FF"/>
+      <stop offset="1" stop-color="#7A00FF"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="#08152F"/>
+  <rect x="12" y="12" width="156" height="156" rx="30" fill="#0B1730" stroke="url(#bg)" stroke-opacity="0.35" stroke-width="4"/>
+  <path d="M34 48H56" stroke="url(#bg)" stroke-width="8" stroke-linecap="round"/>
+  <path d="M56 48L68 110H136" stroke="url(#bg)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M70 70H142L128 106H78" stroke="url(#bg)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M84 84H120" stroke="#8AD7FF" stroke-opacity="0.4" stroke-width="3"/>
+  <path d="M84 95H116" stroke="#8AD7FF" stroke-opacity="0.3" stroke-width="3"/>
+  <path d="M92 58C92 47.5066 100.507 39 111 39C114.26 39 117.328 39.8179 120 41.2607C122.672 39.8179 125.74 39 129 39C139.493 39 148 47.5066 148 58C154.075 60.2863 158 65.9873 158 72.5C158 79.8024 153.067 86.0731 146.017 87.8201C144.243 95.9172 137.028 102 128.5 102C124.635 102 121.039 100.751 118.118 98.6356C114.935 101.982 110.439 104 105.5 104C96.0902 104 88.2898 96.6743 87.304 87.5187C80.1645 84.8965 75 78.0356 75 70C75 64.9378 77.0568 60.356 80.3848 57.0479C81.2815 46.7371 89.9285 39 100.5 39C103.847 39 107 39.7869 109.82 41.1856" stroke="url(#bg)" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M109 52V92" stroke="url(#bg)" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M96 61L109 68L122 61" stroke="url(#bg)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M88 78H100" stroke="url(#bg)" stroke-width="4.5" stroke-linecap="round"/>
+  <path d="M118 76H130" stroke="url(#bg)" stroke-width="4.5" stroke-linecap="round"/>
+  <circle cx="88" cy="78" r="3" fill="#C4F8FF"/>
+  <circle cx="130" cy="76" r="3" fill="#C4F8FF"/>
+  <circle cx="100" cy="61" r="3" fill="#C4F8FF"/>
+  <circle cx="122" cy="61" r="3" fill="#C4F8FF"/>
+  <circle cx="84" cy="132" r="11" fill="white" stroke="url(#bg)" stroke-width="8"/>
+  <circle cx="124" cy="132" r="11" fill="white" stroke="url(#bg)" stroke-width="8"/>
+  <circle cx="84" cy="132" r="3.5" fill="#0082FF"/>
+  <circle cx="124" cy="132" r="3.5" fill="#0082FF"/>
 </svg>

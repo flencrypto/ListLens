@@ -2,10 +2,10 @@
 
 import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
-import { BrandLens } from "@/components/brand/brand-lens";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
 import { BrandBackground } from "@/components/brand/brand-background";
 import { BrandGlyph } from "@/components/brand/brand-glyph";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -29,41 +29,52 @@ export default function SplashPage() {
         };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#040a14] text-zinc-50">
+    <main className="relative min-h-screen overflow-hidden bg-[var(--background)] text-[color:var(--brand-text)]">
       <BrandBackground />
 
       <div className="relative z-10 flex min-h-screen flex-col">
-        {/* Top chrome — minimal, mirrors the artwork's quiet header */}
         <header className="flex items-center justify-between px-6 py-5 sm:px-10">
           <BrandWordmark layout="inline" size="sm" />
-          <Link
-            href="/dashboard"
-            className="text-xs uppercase tracking-[0.3em] text-cyan-200/70 transition-colors hover:text-cyan-100"
-          >
-            Skip →
-          </Link>
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+            <Link
+              href="/dashboard"
+              className="brand-page-eyebrow text-[10px] text-[color:var(--brand-text-muted)] transition-colors hover:text-[color:var(--brand-text-strong)]"
+            >
+              Skip →
+            </Link>
+          </div>
         </header>
 
         <section className="flex flex-1 flex-col items-center justify-center px-6 pb-10 text-center">
-          {/* Composed brand lens — wordmark + readouts live inside the ring,
-              exactly like the rebrand artwork. The lens is fully responsive
-              via container queries inside BrandLens. */}
           <motion.div
             {...fade(0.05)}
-            className="w-full max-w-[min(92vw,560px)] aspect-square"
+            className="w-full max-w-[min(92vw,720px)]"
           >
-            <div className={prefersReducedMotion ? "" : "brand-spin-up"}>
-              <BrandLens variant="composed" className="!w-full !h-full" />
+            <div
+              className={[
+                "brand-card brand-card-glow mx-auto flex max-w-3xl flex-col items-center rounded-[2rem] px-8 py-10 sm:px-14 sm:py-14",
+                prefersReducedMotion ? "" : "brand-spin-up",
+              ].join(" ")}
+            >
+              <span className="brand-page-eyebrow text-[11px] text-[#0082ff]">
+                Primary logo
+              </span>
+              <BrandGlyph size={180} className="mt-6 sm:[&_svg]:drop-shadow-[0_20px_42px_rgba(0,130,255,0.28)]" />
+              <BrandWordmark layout="stacked" size="lg" className="mt-6" />
+              <span className="brand-page-eyebrow mt-4 text-[10px] text-[color:var(--brand-text-muted)]">
+                AI-powered marketplace intelligence
+              </span>
             </div>
           </motion.div>
 
           <motion.p
             {...fade(0.55)}
-            className="mt-2 max-w-xl text-base text-cyan-100/70 sm:text-lg"
+            className="mt-8 max-w-2xl text-base text-[color:var(--brand-text)] sm:text-lg"
           >
             AI resale intelligence. Layered specialist Lenses, evidence-led
             listings, buyer risk checks. <br className="hidden sm:block" />
-            <span className="font-medium text-cyan-200/90">
+            <span className="font-semibold text-[color:var(--brand-text-strong)]">
               List smarter. Buy safer.
             </span>
           </motion.p>
@@ -75,7 +86,7 @@ export default function SplashPage() {
             <Button
               asChild
               size="lg"
-              className="border-0 bg-gradient-to-r from-[#22d3ee] via-[#4ade80] to-[#fb923c] px-8 text-[#040a14] hover:brightness-110"
+              className="border-0 bg-gradient-to-r from-[#0082ff] via-[#19d8ff] to-[#00f0ff] px-8 text-white hover:brightness-110"
             >
               <Link href="/studio/new">Enter Studio</Link>
             </Button>
@@ -83,27 +94,30 @@ export default function SplashPage() {
               asChild
               size="lg"
               variant="outline"
-              className="border-cyan-400/40 px-8 text-cyan-100 hover:bg-cyan-400/10"
+              className="border-[#7a00ff]/30 bg-[#7a00ff]/8 px-8 text-[color:var(--brand-text-strong)] hover:bg-[#7a00ff]/14"
             >
               <Link href="/guard/new">Run a Guard check</Link>
             </Button>
           </motion.div>
 
-          {/* Brand glyph (brain-in-cart) — matches the icon at the bottom of
-              the rebrand artwork. */}
           <motion.div {...fade(1.0)} className="mt-10">
-            <BrandGlyph size={44} className="opacity-90" />
+            <div className="inline-flex items-center gap-3 rounded-full border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-4 py-2 shadow-[var(--brand-nav-shadow)] backdrop-blur-xl">
+              <BrandGlyph size={34} className="opacity-95" />
+              <span className="brand-page-eyebrow text-[10px] text-[color:var(--brand-text-muted)]">
+                Brandpack dark + light ready
+              </span>
+            </div>
           </motion.div>
 
           <motion.p
             {...fade(1.15)}
-            className="mt-3 text-[10px] uppercase tracking-[0.4em] text-cyan-200/45"
+            className="brand-page-eyebrow mt-3 text-[10px] text-[color:var(--brand-text-muted)]"
           >
             Powered by RecordLens · ShoeLens · ClothingLens · MeasureLens
           </motion.p>
         </section>
 
-        <footer className="relative z-10 flex items-center justify-between border-t border-cyan-400/10 px-6 py-4 text-[10px] uppercase tracking-[0.3em] text-cyan-200/40 sm:px-10">
+        <footer className="relative z-10 flex items-center justify-between border-t border-[color:var(--brand-outline)] px-6 py-4 text-[10px] uppercase tracking-[0.3em] text-[color:var(--brand-text-muted)] sm:px-10">
           <span>© 2026 Mr.FLENS · List-LENS</span>
           <span>AI · Evidence · Confidence</span>
         </footer>

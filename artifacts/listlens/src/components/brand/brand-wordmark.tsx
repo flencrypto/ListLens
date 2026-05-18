@@ -31,22 +31,23 @@ export function BrandWordmark({
     return (
       <span
         className={cn(
-          "inline-flex flex-col items-start gap-0.5 font-extrabold",
+          "inline-flex flex-col items-start gap-1",
           className,
         )}
       >
         <span
           className={cn(
             top,
-            "neon-wordmark font-black uppercase leading-none text-white",
+            "font-brand-display neon-wordmark inline-flex items-baseline gap-[0.04em] font-black uppercase leading-none tracking-[0.08em] text-[color:var(--brand-text-strong)]",
           )}
         >
-          LIST-<span className="text-cyan-300">LENS</span>
+          <span className="-mr-[0.04em] skew-x-[-12deg]">LIST-</span>
+          <span className="brand-wordmark-accent skew-x-[-12deg]">LENS</span>
         </span>
         <span
           className={cn(
             sub,
-            "font-mono-hud uppercase tracking-[0.32em] text-cyan-200/80 font-semibold",
+            "brand-page-eyebrow text-[color:var(--brand-text-muted)]",
           )}
         >
           AI-powered marketplace intelligence
@@ -60,16 +61,16 @@ export function BrandWordmark({
       <span
         className={cn(
           top,
-          "neon-wordmark font-black uppercase leading-none text-white",
-          "drop-shadow-[0_0_24px_rgba(34,211,238,0.35)]",
+          "font-brand-display neon-wordmark inline-flex items-baseline gap-[0.04em] font-black uppercase leading-none tracking-[0.08em] text-[color:var(--brand-text-strong)]",
         )}
       >
-        LIST-<span className="text-cyan-300">LENS</span>
+        <span className="-mr-[0.04em] skew-x-[-12deg]">LIST-</span>
+        <span className="brand-wordmark-accent skew-x-[-12deg]">LENS</span>
       </span>
       <span
         className={cn(
           sub,
-          "font-mono-hud font-semibold uppercase tracking-[0.5em] text-cyan-200/80",
+          "brand-page-eyebrow text-[color:var(--brand-text-muted)]",
         )}
       >
         AI-powered marketplace intelligence

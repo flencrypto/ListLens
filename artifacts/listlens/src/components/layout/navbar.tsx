@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 
 import { useAuth } from "@workspace/replit-auth-web";
 import { BrandWordmark } from "@/components/brand/brand-wordmark";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -24,7 +25,7 @@ export function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 border-b border-cyan-400/15 bg-[#040a14]/85 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 border-b border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
         <Link
           href="/dashboard"
@@ -45,28 +46,29 @@ export function Navbar() {
                 className={cn(
                   "relative rounded-md px-3 py-1.5 text-sm transition-colors",
                   isActive
-                    ? "text-cyan-200"
-                    : "text-zinc-400 hover:text-white",
+                    ? "text-[color:var(--brand-text-strong)]"
+                    : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)]",
                 )}
               >
                 {link.label}
                 {isActive ? (
                   <span
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-transparent via-cyan-300 to-transparent shadow-[0_0_8px_rgba(34,211,238,0.6)]"
-                  />
-                ) : null}
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-x-2 -bottom-px h-px bg-gradient-to-r from-transparent via-[#00f0ff] to-transparent shadow-[0_0_8px_rgba(0,240,255,0.55)]"
+                    />
+                  ) : null}
               </Link>
             );
           })}
+          <ThemeToggle className="ml-2" />
           {!isLoading && (
             <button
               onClick={isAuthenticated ? handleLogout : login}
               className={cn(
                 "ml-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
                 isAuthenticated
-                  ? "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
-                  : "border-cyan-700/60 bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/50 hover:text-cyan-100",
+                  ? "border-white/12 text-[color:var(--brand-text-muted)] hover:border-white/24 hover:text-[color:var(--brand-text-strong)]"
+                  : "border-[#0082ff]/28 bg-[#0082ff]/8 text-[#7fefff] hover:bg-[#0082ff]/16 hover:text-white",
               )}
             >
               {isAuthenticated ? "Log out" : "Log in"}
@@ -76,7 +78,7 @@ export function Navbar() {
 
         {/* Mobile hamburger */}
         <button
-          className="sm:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5 rounded-md text-zinc-400 hover:text-white transition-colors"
+          className="sm:hidden flex flex-col justify-center items-center w-9 h-9 gap-1.5 rounded-md text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)] transition-colors"
           aria-label={menuOpen ? "Close menu" : "Open menu"}
           onClick={() => setMenuOpen((v) => !v)}
         >
@@ -88,7 +90,8 @@ export function Navbar() {
 
       {/* Mobile drawer */}
       {menuOpen && (
-        <div className="sm:hidden border-t border-cyan-400/10 bg-[#040a14]/95 backdrop-blur-md px-4 py-3 space-y-1">
+        <div className="sm:hidden border-t border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] backdrop-blur-xl px-4 py-3 space-y-2">
+          <ThemeToggle />
           {NAV_LINKS.map((link) => {
             const isActive = link.match.test(location);
             return (
@@ -99,8 +102,8 @@ export function Navbar() {
                 className={cn(
                   "block rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
-                    ? "text-cyan-200 bg-cyan-950/40"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800/50",
+                    ? "text-[color:var(--brand-text-strong)] bg-[color:var(--brand-accent-soft)]"
+                    : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)] hover:bg-white/6",
                 )}
               >
                 {link.label}
@@ -113,8 +116,8 @@ export function Navbar() {
               className={cn(
                 "w-full mt-1 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors text-left",
                 isAuthenticated
-                  ? "border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-white"
-                  : "border-cyan-700/60 bg-cyan-950/40 text-cyan-300 hover:bg-cyan-900/50 hover:text-cyan-100",
+                  ? "border-white/12 text-[color:var(--brand-text-muted)] hover:border-white/24 hover:text-[color:var(--brand-text-strong)]"
+                  : "border-[#0082ff]/28 bg-[#0082ff]/8 text-[#7fefff] hover:bg-[#0082ff]/16 hover:text-white",
               )}
             >
               {isAuthenticated ? "Log out" : "Log in"}
