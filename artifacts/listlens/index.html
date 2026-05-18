@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en-GB">
+<html lang="en-GB" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5" />
@@ -51,6 +51,28 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <script>
+      (() => {
+        const storageKey = "theme";
+        const html = document.documentElement;
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        const metaTileColor = document.querySelector('meta[name="msapplication-TileColor"]');
+        const storedTheme = window.localStorage.getItem(storageKey);
+        const theme = storedTheme === "light" ? "light" : "dark";
+        const themeColor = theme === "light" ? "#edf4ff" : "#05070d";
+
+        html.classList.toggle("dark", theme === "dark");
+        html.style.colorScheme = theme;
+
+        if (metaThemeColor instanceof HTMLMetaElement) {
+          metaThemeColor.content = themeColor;
+        }
+
+        if (metaTileColor instanceof HTMLMetaElement) {
+          metaTileColor.content = themeColor;
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

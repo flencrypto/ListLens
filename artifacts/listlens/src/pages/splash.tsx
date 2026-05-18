@@ -60,7 +60,10 @@ export default function SplashPage() {
               <span className="brand-page-eyebrow text-[11px] text-[#0082ff]">
                 Primary logo
               </span>
-              <BrandGlyph size={180} className="mt-6 sm:[&_svg]:drop-shadow-[0_20px_42px_rgba(0,130,255,0.28)]" />
+              <BrandGlyph
+                size={180}
+                className="mt-6 sm:drop-shadow-[0_20px_42px_rgba(0,130,255,0.28)]"
+              />
               <BrandWordmark layout="stacked" size="lg" className="mt-6" />
               <span className="brand-page-eyebrow mt-4 text-[10px] text-[color:var(--brand-text-muted)]">
                 AI-powered marketplace intelligence

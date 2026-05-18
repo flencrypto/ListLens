@@ -26,7 +26,8 @@ export function ThemeToggle({ className }: { className?: string }) {
         "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] shadow-[var(--brand-nav-shadow)] backdrop-blur-xl",
         className,
       )}
-      aria-label="Theme switcher"
+      role="group"
+      aria-label="Select color theme"
     >
       {themeOptions.map(({ value, label, icon: Icon }) => {
         const isActive = activeTheme === value;
@@ -41,7 +42,9 @@ export function ThemeToggle({ className }: { className?: string }) {
                 ? "bg-[color:var(--brand-accent-soft)] text-[color:var(--brand-text-strong)] shadow-[0_10px_24px_-18px_rgba(0,130,255,0.85)]"
                 : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)]",
             )}
+            aria-label={`${label} theme`}
             aria-pressed={isActive}
+            title={label}
           >
             <Icon size={13} strokeWidth={1.8} />
             <span className="hidden sm:inline">{label}</span>

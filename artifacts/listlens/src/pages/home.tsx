@@ -323,10 +323,10 @@ export default function HomePage() {
             <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <StatusPill tone="cyan">Rev 1.0 POC / MVP</StatusPill>
-                <h1 className="mt-6 max-w-3xl font-brand-display text-4xl font-black uppercase leading-tight tracking-[0.08em] text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-6 max-w-3xl font-brand-display text-4xl font-black uppercase leading-tight tracking-[0.08em] text-[color:var(--brand-text-strong)] sm:text-5xl lg:text-6xl">
                   List smarter. Buy safer.
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
+                <p className="mt-5 max-w-2xl text-base leading-7 text-[color:var(--brand-text)]">
                   ListLens turns item photos, listing links and screenshots into evidence-led seller drafts and buyer risk reports.
                 </p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
