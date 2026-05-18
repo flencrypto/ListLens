@@ -9,7 +9,6 @@ const jsonHeaders = {
 const aiRequestBuckets = new Map();
 const aiRateLimitWindowMs = 60_000;
 const aiRateLimitMaxRequests = 20;
-const trustProxyForwardedFor = process.env.SOLELENS_TRUST_PROXY === "true";
 const maxEvidenceItems = 8;
 const minConfidenceDelta = -0.2;
 const maxConfidenceDelta = 0.2;
@@ -36,6 +35,7 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
+const trustProxyForwardedFor = process.env.SOLELENS_TRUST_PROXY === "true";
 const openAiModel = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
 const xaiModel = process.env.XAI_MODEL ?? "grok-4.3";
 
