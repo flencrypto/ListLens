@@ -9,6 +9,10 @@ const jsonHeaders = {
 const aiRequestBuckets = new Map();
 const aiRateLimitWindowMs = 60_000;
 const aiRateLimitMaxRequests = 20;
+const trustProxyForwardedFor = process.env.SOLELENS_TRUST_PROXY === "true";
+const maxEvidenceItems = 8;
+const minConfidenceDelta = -0.2;
+const maxConfidenceDelta = 0.2;
 
 function loadLocalEnv() {
   const envPath = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".env");
@@ -60,7 +64,7 @@ function sendJson(res, statusCode, body) {
 
 function getClientIdentifier(req) {
   const forwarded = req.headers["x-forwarded-for"];
-  if (typeof forwarded === "string" && forwarded.trim()) {
+  if (trustProxyForwardedFor && typeof forwarded === "string" && forwarded.trim()) {
     return forwarded.split(",")[0].trim();
   }
   return req.socket?.remoteAddress ?? "unknown";
@@ -87,6 +91,12 @@ function hasValidScanToken(req) {
 
 function isWithinRateLimit(req) {
   const now = Date.now();
+  for (const [clientId, bucket] of aiRequestBuckets.entries()) {
+    if (now >= bucket.resetAt) {
+      aiRequestBuckets.delete(clientId);
+    }
+  }
+
   const key = getClientIdentifier(req);
   const current = aiRequestBuckets.get(key);
   if (!current || now >= current.resetAt) {
@@ -229,14 +239,14 @@ function normalizeStringList(value, fallback) {
     .filter((entry) => typeof entry === "string")
     .map((entry) => entry.trim())
     .filter(Boolean);
-  return cleaned.length ? cleaned.slice(0, 8) : fallback;
+  return cleaned.length ? cleaned.slice(0, maxEvidenceItems) : fallback;
 }
 
 function normalizeScanAnalysis(raw, fallback) {
   const parsed = raw && typeof raw === "object" ? raw : {};
   const rawDelta = Number(parsed.identityConfidenceDelta);
   const identityConfidenceDelta = Number.isFinite(rawDelta)
-    ? Math.max(-0.2, Math.min(0.2, rawDelta))
+    ? Math.max(minConfidenceDelta, Math.min(maxConfidenceDelta, rawDelta))
     : fallback.identityConfidenceDelta;
 
   return {
