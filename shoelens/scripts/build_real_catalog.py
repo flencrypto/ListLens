@@ -1,5 +1,7 @@
+import argparse
 import csv
 import json
+import os
 import re
 import shutil
 import zipfile
@@ -8,7 +10,6 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ARCHIVE_PATH = Path(r"C:\Users\benrf\Downloads\archive.zip")
 PUBLIC_DATA_DIR = ROOT / "public" / "data"
 CATALOG_ASSET_DIR = ROOT / "public" / "assets" / "catalog"
 CATALOG_PATH = PUBLIC_DATA_DIR / "solelens-catalog.json"
@@ -82,14 +83,29 @@ def copy_reference_images(archive: zipfile.ZipFile, class_name: str, members: li
     return output_paths
 
 
+def resolve_archive_path(cli_archive_path: str | None) -> Path:
+    path_value = cli_archive_path or os.getenv("SOLELENS_ARCHIVE_PATH")
+    if not path_value:
+        raise FileNotFoundError(
+            "Dataset archive path is required. Pass --archive /path/to/archive.zip "
+            "or set SOLELENS_ARCHIVE_PATH."
+        )
+    return Path(path_value).expanduser().resolve()
+
+
 def main() -> None:
-    if not ARCHIVE_PATH.exists():
-        raise FileNotFoundError(f"Dataset archive not found: {ARCHIVE_PATH}")
+    parser = argparse.ArgumentParser(description="Build SoleLens catalog JSON from a sneaker archive ZIP file.")
+    parser.add_argument("--archive", help="Path to archive.zip. Defaults to SOLELENS_ARCHIVE_PATH.")
+    args = parser.parse_args()
+
+    archive_path = resolve_archive_path(args.archive)
+    if not archive_path.exists():
+        raise FileNotFoundError(f"Dataset archive not found: {archive_path}")
 
     PUBLIC_DATA_DIR.mkdir(parents=True, exist_ok=True)
     CATALOG_ASSET_DIR.mkdir(parents=True, exist_ok=True)
 
-    with zipfile.ZipFile(ARCHIVE_PATH) as archive:
+    with zipfile.ZipFile(archive_path) as archive:
         stats = load_stats(archive)
         members_by_class = image_members_by_class(archive)
 
@@ -126,7 +142,7 @@ def main() -> None:
                     "sampleImages": sample_images,
                     "source": {
                         "type": "local_archive",
-                        "archive": ARCHIVE_PATH.name,
+                        "archive": archive_path.name,
                         "classFolder": f"sneakers-dataset/sneakers-dataset/{folder_class}/",
                     },
                 }
@@ -140,7 +156,7 @@ def main() -> None:
         "sampleImageCount": sum(len(profile["sampleImages"]) for profile in profiles),
         "corruptFileCount": sum(profile["corruptFiles"] for profile in profiles),
         "brands": sorted({profile["brand"] for profile in profiles}),
-        "sourceArchive": ARCHIVE_PATH.name,
+        "sourceArchive": archive_path.name,
         "generatedFrom": "dataset_stats.csv + sneakers-dataset image folders",
     }
 

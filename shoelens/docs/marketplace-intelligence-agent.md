@@ -48,11 +48,11 @@ Each marketplace recommendation should return:
 ```json
 {
   "marketplace": "eBay",
-  "rank_label": "Best balanced return",
-  "sale_value_range": [130, 140],
-  "sale_speed_days": [7, 12],
-  "weekly_comps": 46,
-  "exact_match": 0.92,
+  "rankLabel": "Best balanced return",
+  "saleValueRange": [130, 140],
+  "saleSpeedDays": [7, 12],
+  "weeklyComps": 46,
+  "exactMatch": 0.92,
   "confidence": 0.88,
   "notes": [
     "Strong exact-SKU volume",

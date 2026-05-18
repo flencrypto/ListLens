@@ -40,12 +40,13 @@ POST /api/ai/expert-summary
 These routes are now implemented by the local server middleware in `server/aiApi.mjs`.
 During `npm run dev`, Vite serves them as same-origin API routes. For a built
 deployment, run `npm run build` and `npm start` to serve `dist` plus the API
-routes from `server.mjs`.
+routes from `server.mjs`. Provider-backed AI routes are rate-limited and can be
+token-gated with `SOLELENS_PUBLIC_SCAN_TOKEN` (send via `Authorization: Bearer ...`
+or `x-solelens-scan-token`).
 
 ## Real sneaker reference data
 
-The local sneaker archive in `C:\Users\benrf\Downloads\archive.zip` is ingested
-into a browser/API-ready catalog with:
+The local sneaker archive ZIP is ingested into a browser/API-ready catalog with:
 
 - 50 real sneaker model classes
 - 5,953 catalog image references from `dataset_stats.csv`
@@ -55,7 +56,9 @@ into a browser/API-ready catalog with:
 Regenerate the catalog whenever the archive changes:
 
 ```bash
-python scripts/build_real_catalog.py
+python scripts/build_real_catalog.py --archive /path/to/archive.zip
+# or:
+SOLELENS_ARCHIVE_PATH=/path/to/archive.zip python scripts/build_real_catalog.py
 ```
 
 The generated artifact is `public/data/solelens-catalog.json`. It is served
@@ -82,6 +85,7 @@ Recommended server environment:
 ```bash
 XAI_API=...
 OPENAI_API=...
+SOLELENS_PUBLIC_SCAN_TOKEN=... # optional token gate for provider-backed AI routes
 # Alias names are also supported:
 XAI_API_KEY=...
 OPENAI_API_KEY=...
