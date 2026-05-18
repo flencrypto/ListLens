@@ -1,0 +1,1796 @@
+{
+  "schemaVersion": 1,
+  "generatedAt": "2026-05-17T00:00:00Z",
+  "summary": {
+    "profileCount": 50,
+    "imageCount": 5953,
+    "availableImageCount": 5953,
+    "sampleImageCount": 200,
+    "corruptFileCount": 0,
+    "brands": [
+      "ASICS",
+      "Adidas",
+      "Converse",
+      "New Balance",
+      "Nike",
+      "Puma",
+      "Reebok",
+      "Salomon",
+      "Vans",
+      "Yeezy"
+    ],
+    "sourceArchive": "archive.zip",
+    "generatedFrom": "dataset_stats.csv + sneakers-dataset image folders"
+  },
+  "profiles": [
+    {
+      "id": "asics_gel-lyte_iii",
+      "className": "asics_gel-lyte_iii",
+      "datasetClassName": "asics_gel-lyte_iii",
+      "brand": "ASICS",
+      "model": "Gel Lyte Iii",
+      "referenceId": "SOLE-ASICS_GEL_LYTE_III",
+      "imageCount": 91,
+      "availableImageCount": 91,
+      "averageImage": {
+        "width": 151,
+        "height": 124
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 74,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/asics_gel-lyte_iii/0001.jpg",
+        "/assets/catalog/asics_gel-lyte_iii/0002.jpg",
+        "/assets/catalog/asics_gel-lyte_iii/0003.jpg",
+        "/assets/catalog/asics_gel-lyte_iii/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/asics_gel-lyte_iii/"
+      }
+    },
+    {
+      "id": "adidas_forum_high",
+      "className": "adidas_forum_high",
+      "datasetClassName": "adidas_forum_high",
+      "brand": "Adidas",
+      "model": "Forum High",
+      "referenceId": "SOLE-ADIDAS_FORUM_HIGH",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 143,
+        "height": 124
+      },
+      "imageBounds": {
+        "minWidth": 78,
+        "minHeight": 81,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_forum_high/0001.jpg",
+        "/assets/catalog/adidas_forum_high/0002.jpg",
+        "/assets/catalog/adidas_forum_high/0003.jpg",
+        "/assets/catalog/adidas_forum_high/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_forum_high/"
+      }
+    },
+    {
+      "id": "adidas_forum_low",
+      "className": "adidas_forum_low",
+      "datasetClassName": "adidas_forum_low",
+      "brand": "Adidas",
+      "model": "Forum Low",
+      "referenceId": "SOLE-ADIDAS_FORUM_LOW",
+      "imageCount": 92,
+      "availableImageCount": 92,
+      "averageImage": {
+        "width": 135,
+        "height": 131
+      },
+      "imageBounds": {
+        "minWidth": 78,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_forum_low/0001.jpg",
+        "/assets/catalog/adidas_forum_low/0002.jpg",
+        "/assets/catalog/adidas_forum_low/0003.jpg",
+        "/assets/catalog/adidas_forum_low/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_forum_low/"
+      }
+    },
+    {
+      "id": "adidas_gazelle",
+      "className": "adidas_gazelle",
+      "datasetClassName": "adidas_gazelle",
+      "brand": "Adidas",
+      "model": "Gazelle",
+      "referenceId": "SOLE-ADIDAS_GAZELLE",
+      "imageCount": 149,
+      "availableImageCount": 149,
+      "averageImage": {
+        "width": 133,
+        "height": 133
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 68,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_gazelle/0001.jpg",
+        "/assets/catalog/adidas_gazelle/0002.jpg",
+        "/assets/catalog/adidas_gazelle/0003.jpg",
+        "/assets/catalog/adidas_gazelle/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_gazelle/"
+      }
+    },
+    {
+      "id": "adidas_nmd_r1",
+      "className": "adidas_nmd_r1",
+      "datasetClassName": "adidas_nmd_r1",
+      "brand": "Adidas",
+      "model": "NMD R1",
+      "referenceId": "SOLE-ADIDAS_NMD_R1",
+      "imageCount": 95,
+      "availableImageCount": 95,
+      "averageImage": {
+        "width": 143,
+        "height": 124
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 77,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_nmd_r1/0001.jpg",
+        "/assets/catalog/adidas_nmd_r1/0002.jpg",
+        "/assets/catalog/adidas_nmd_r1/0003.jpg",
+        "/assets/catalog/adidas_nmd_r1/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_nmd_r1/"
+      }
+    },
+    {
+      "id": "adidas_samba",
+      "className": "adidas_samba",
+      "datasetClassName": "adidas_samba",
+      "brand": "Adidas",
+      "model": "Samba",
+      "referenceId": "SOLE-ADIDAS_SAMBA",
+      "imageCount": 74,
+      "availableImageCount": 74,
+      "averageImage": {
+        "width": 139,
+        "height": 129
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_samba/0001.jpg",
+        "/assets/catalog/adidas_samba/0002.jpg",
+        "/assets/catalog/adidas_samba/0003.jpg",
+        "/assets/catalog/adidas_samba/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_samba/"
+      }
+    },
+    {
+      "id": "adidas_stan_smith",
+      "className": "adidas_stan_smith",
+      "datasetClassName": "adidas_stan_smith",
+      "brand": "Adidas",
+      "model": "Stan Smith",
+      "referenceId": "SOLE-ADIDAS_STAN_SMITH",
+      "imageCount": 147,
+      "availableImageCount": 147,
+      "averageImage": {
+        "width": 137,
+        "height": 127
+      },
+      "imageBounds": {
+        "minWidth": 49,
+        "minHeight": 57,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_stan_smith/0001.jpg",
+        "/assets/catalog/adidas_stan_smith/0002.jpg",
+        "/assets/catalog/adidas_stan_smith/0003.jpg",
+        "/assets/catalog/adidas_stan_smith/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_stan_smith/"
+      }
+    },
+    {
+      "id": "adidas_superstar",
+      "className": "adidas_superstar",
+      "datasetClassName": "adidas_superstar",
+      "brand": "Adidas",
+      "model": "Superstar",
+      "referenceId": "SOLE-ADIDAS_SUPERSTAR",
+      "imageCount": 93,
+      "availableImageCount": 93,
+      "averageImage": {
+        "width": 132,
+        "height": 133
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 70,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_superstar/0001.jpg",
+        "/assets/catalog/adidas_superstar/0002.jpg",
+        "/assets/catalog/adidas_superstar/0003.jpg",
+        "/assets/catalog/adidas_superstar/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_superstar/"
+      }
+    },
+    {
+      "id": "adidas_ultraboost",
+      "className": "adidas_ultraboost",
+      "datasetClassName": "adidas_ultraboost",
+      "brand": "Adidas",
+      "model": "Ultraboost",
+      "referenceId": "SOLE-ADIDAS_ULTRABOOST",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 142,
+        "height": 128
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 49,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/adidas_ultraboost/0001.jpg",
+        "/assets/catalog/adidas_ultraboost/0002.jpg",
+        "/assets/catalog/adidas_ultraboost/0003.jpg",
+        "/assets/catalog/adidas_ultraboost/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/adidas_ultraboost/"
+      }
+    },
+    {
+      "id": "converse_chuck_70_high",
+      "className": "converse_chuck_70_high",
+      "datasetClassName": "converse_chuck_70_high",
+      "brand": "Converse",
+      "model": "Chuck 70 High",
+      "referenceId": "SOLE-CONVERSE_CHUCK_70_HIGH",
+      "imageCount": 75,
+      "availableImageCount": 75,
+      "averageImage": {
+        "width": 132,
+        "height": 135
+      },
+      "imageBounds": {
+        "minWidth": 84,
+        "minHeight": 91,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/converse_chuck_70_high/0001.jpg",
+        "/assets/catalog/converse_chuck_70_high/0002.jpg",
+        "/assets/catalog/converse_chuck_70_high/0003.jpg",
+        "/assets/catalog/converse_chuck_70_high/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/converse_chuck_70_high/"
+      }
+    },
+    {
+      "id": "converse_chuck_70_low",
+      "className": "converse_chuck_70_low",
+      "datasetClassName": "converse_chuck_70_low",
+      "brand": "Converse",
+      "model": "Chuck 70 Low",
+      "referenceId": "SOLE-CONVERSE_CHUCK_70_LOW",
+      "imageCount": 148,
+      "availableImageCount": 148,
+      "averageImage": {
+        "width": 132,
+        "height": 133
+      },
+      "imageBounds": {
+        "minWidth": 84,
+        "minHeight": 69,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/converse_chuck_70_low/0001.jpg",
+        "/assets/catalog/converse_chuck_70_low/0002.jpg",
+        "/assets/catalog/converse_chuck_70_low/0003.jpg",
+        "/assets/catalog/converse_chuck_70_low/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/converse_chuck_70_low/"
+      }
+    },
+    {
+      "id": "converse_chuck_taylor_all-star_high",
+      "className": "converse_chuck_taylor_all-star_high",
+      "datasetClassName": "converse_chuck_taylor_all-star_high",
+      "brand": "Converse",
+      "model": "Chuck Taylor All Star High",
+      "referenceId": "SOLE-CONVERSE_CHUCK_TAYLOR_ALL_STAR_HIGH",
+      "imageCount": 78,
+      "availableImageCount": 78,
+      "averageImage": {
+        "width": 134,
+        "height": 135
+      },
+      "imageBounds": {
+        "minWidth": 91,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/converse_chuck_taylor_all-star_high/0001.jpg",
+        "/assets/catalog/converse_chuck_taylor_all-star_high/0002.jpg",
+        "/assets/catalog/converse_chuck_taylor_all-star_high/0003.jpg",
+        "/assets/catalog/converse_chuck_taylor_all-star_high/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/converse_chuck_taylor_all-star_high/"
+      }
+    },
+    {
+      "id": "converse_chuck_taylor_all-star_low",
+      "className": "converse_chuck_taylor_all-star_low",
+      "datasetClassName": "converse_chuck_taylor_all-star_low",
+      "brand": "Converse",
+      "model": "Chuck Taylor All Star Low",
+      "referenceId": "SOLE-CONVERSE_CHUCK_TAYLOR_ALL_STAR_LOW",
+      "imageCount": 93,
+      "availableImageCount": 93,
+      "averageImage": {
+        "width": 133,
+        "height": 135
+      },
+      "imageBounds": {
+        "minWidth": 91,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/converse_chuck_taylor_all-star_low/0001.jpg",
+        "/assets/catalog/converse_chuck_taylor_all-star_low/0002.jpg",
+        "/assets/catalog/converse_chuck_taylor_all-star_low/0003.jpg",
+        "/assets/catalog/converse_chuck_taylor_all-star_low/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/converse_chuck_taylor_all-star_low/"
+      }
+    },
+    {
+      "id": "converse_one_star",
+      "className": "converse_one_star",
+      "datasetClassName": "converse_one_star",
+      "brand": "Converse",
+      "model": "One Star",
+      "referenceId": "SOLE-CONVERSE_ONE_STAR",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 138,
+        "height": 130
+      },
+      "imageBounds": {
+        "minWidth": 82,
+        "minHeight": 67,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/converse_one_star/0001.jpg",
+        "/assets/catalog/converse_one_star/0002.jpg",
+        "/assets/catalog/converse_one_star/0003.jpg",
+        "/assets/catalog/converse_one_star/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/converse_one_star/"
+      }
+    },
+    {
+      "id": "new_balance_327",
+      "className": "new_balance_327",
+      "datasetClassName": "new_balance_327",
+      "brand": "New Balance",
+      "model": "327",
+      "referenceId": "SOLE-NEW_BALANCE_327",
+      "imageCount": 108,
+      "availableImageCount": 108,
+      "averageImage": {
+        "width": 130,
+        "height": 135
+      },
+      "imageBounds": {
+        "minWidth": 79,
+        "minHeight": 90,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/new_balance_327/0001.jpg",
+        "/assets/catalog/new_balance_327/0002.jpg",
+        "/assets/catalog/new_balance_327/0003.jpg",
+        "/assets/catalog/new_balance_327/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/new_balance_327/"
+      }
+    },
+    {
+      "id": "new_balance_550",
+      "className": "new_balance_550",
+      "datasetClassName": "new_balance_550",
+      "brand": "New Balance",
+      "model": "550",
+      "referenceId": "SOLE-NEW_BALANCE_550",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 134,
+        "height": 129
+      },
+      "imageBounds": {
+        "minWidth": 79,
+        "minHeight": 40,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/new_balance_550/0001.jpg",
+        "/assets/catalog/new_balance_550/0002.jpg",
+        "/assets/catalog/new_balance_550/0003.jpg",
+        "/assets/catalog/new_balance_550/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/new_balance_550/"
+      }
+    },
+    {
+      "id": "new_balance_574",
+      "className": "new_balance_574",
+      "datasetClassName": "new_balance_574",
+      "brand": "New Balance",
+      "model": "574",
+      "referenceId": "SOLE-NEW_BALANCE_574",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 131,
+        "height": 133
+      },
+      "imageBounds": {
+        "minWidth": 78,
+        "minHeight": 68,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/new_balance_574/0001.jpg",
+        "/assets/catalog/new_balance_574/0002.jpg",
+        "/assets/catalog/new_balance_574/0003.jpg",
+        "/assets/catalog/new_balance_574/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/new_balance_574/"
+      }
+    },
+    {
+      "id": "new_balance_990",
+      "className": "new_balance_990",
+      "datasetClassName": "new_balance_990",
+      "brand": "New Balance",
+      "model": "990",
+      "referenceId": "SOLE-NEW_BALANCE_990",
+      "imageCount": 95,
+      "availableImageCount": 95,
+      "averageImage": {
+        "width": 143,
+        "height": 124
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/new_balance_990/0001.jpg",
+        "/assets/catalog/new_balance_990/0002.jpg",
+        "/assets/catalog/new_balance_990/0003.jpg",
+        "/assets/catalog/new_balance_990/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/new_balance_990/"
+      }
+    },
+    {
+      "id": "new_balance_992",
+      "className": "new_balance_992",
+      "datasetClassName": "new_balance_992",
+      "brand": "New Balance",
+      "model": "992",
+      "referenceId": "SOLE-NEW_BALANCE_992",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 144,
+        "height": 122
+      },
+      "imageBounds": {
+        "minWidth": 76,
+        "minHeight": 73,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/new_balance_992/0001.jpg",
+        "/assets/catalog/new_balance_992/0002.jpg",
+        "/assets/catalog/new_balance_992/0003.jpg",
+        "/assets/catalog/new_balance_992/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/new_balance_992/"
+      }
+    },
+    {
+      "id": "nike_air_force_1_high",
+      "className": "nike_air_force_1_high",
+      "datasetClassName": "nike_air_force_1_high",
+      "brand": "Nike",
+      "model": "Air Force 1 High",
+      "referenceId": "SOLE-NIKE_AIR_FORCE_1_HIGH",
+      "imageCount": 87,
+      "availableImageCount": 87,
+      "averageImage": {
+        "width": 148,
+        "height": 126
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 87,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_force_1_high/0001.jpg",
+        "/assets/catalog/nike_air_force_1_high/0002.jpg",
+        "/assets/catalog/nike_air_force_1_high/0003.jpg",
+        "/assets/catalog/nike_air_force_1_high/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_force_1_high/"
+      }
+    },
+    {
+      "id": "nike_air_force_1_low",
+      "className": "nike_air_force_1_low",
+      "datasetClassName": "nike_air_force_1_low",
+      "brand": "Nike",
+      "model": "Air Force 1 Low",
+      "referenceId": "SOLE-NIKE_AIR_FORCE_1_LOW",
+      "imageCount": 147,
+      "availableImageCount": 147,
+      "averageImage": {
+        "width": 141,
+        "height": 127
+      },
+      "imageBounds": {
+        "minWidth": 97,
+        "minHeight": 78,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_force_1_low/0001.jpg",
+        "/assets/catalog/nike_air_force_1_low/0002.jpg",
+        "/assets/catalog/nike_air_force_1_low/0003.jpg",
+        "/assets/catalog/nike_air_force_1_low/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_force_1_low/"
+      }
+    },
+    {
+      "id": "nike_air_force_1_mid",
+      "className": "nike_air_force_1_mid",
+      "datasetClassName": "nike_air_force_1_mid",
+      "brand": "Nike",
+      "model": "Air Force 1 Mid",
+      "referenceId": "SOLE-NIKE_AIR_FORCE_1_MID",
+      "imageCount": 148,
+      "availableImageCount": 148,
+      "averageImage": {
+        "width": 145,
+        "height": 124
+      },
+      "imageBounds": {
+        "minWidth": 84,
+        "minHeight": 84,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_force_1_mid/0001.jpg",
+        "/assets/catalog/nike_air_force_1_mid/0002.jpg",
+        "/assets/catalog/nike_air_force_1_mid/0003.jpg",
+        "/assets/catalog/nike_air_force_1_mid/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_force_1_mid/"
+      }
+    },
+    {
+      "id": "nike_air_jordan_1_high",
+      "className": "nike_air_jordan_1_high",
+      "datasetClassName": "nike_air_jordan_1_high",
+      "brand": "Nike",
+      "model": "Air Jordan 1 High",
+      "referenceId": "SOLE-NIKE_AIR_JORDAN_1_HIGH",
+      "imageCount": 77,
+      "availableImageCount": 77,
+      "averageImage": {
+        "width": 139,
+        "height": 128
+      },
+      "imageBounds": {
+        "minWidth": 97,
+        "minHeight": 81,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_jordan_1_high/0001.jpg",
+        "/assets/catalog/nike_air_jordan_1_high/0002.jpg",
+        "/assets/catalog/nike_air_jordan_1_high/0003.jpg",
+        "/assets/catalog/nike_air_jordan_1_high/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_jordan_1_high/"
+      }
+    },
+    {
+      "id": "nike_air_jordan_1_low",
+      "className": "nike_air_jordan_1_low",
+      "datasetClassName": "nike_air_jordan_1_low",
+      "brand": "Nike",
+      "model": "Air Jordan 1 Low",
+      "referenceId": "SOLE-NIKE_AIR_JORDAN_1_LOW",
+      "imageCount": 79,
+      "availableImageCount": 79,
+      "averageImage": {
+        "width": 135,
+        "height": 130
+      },
+      "imageBounds": {
+        "minWidth": 97,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_jordan_1_low/0001.jpg",
+        "/assets/catalog/nike_air_jordan_1_low/0002.jpg",
+        "/assets/catalog/nike_air_jordan_1_low/0003.jpg",
+        "/assets/catalog/nike_air_jordan_1_low/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_jordan_1_low/"
+      }
+    },
+    {
+      "id": "nike_air_jordan_11",
+      "className": "nike_air_jordan_11",
+      "datasetClassName": "nike_air_jordan_11",
+      "brand": "Nike",
+      "model": "Air Jordan 11",
+      "referenceId": "SOLE-NIKE_AIR_JORDAN_11",
+      "imageCount": 93,
+      "availableImageCount": 93,
+      "averageImage": {
+        "width": 147,
+        "height": 123
+      },
+      "imageBounds": {
+        "minWidth": 78,
+        "minHeight": 68,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_jordan_11/0001.jpg",
+        "/assets/catalog/nike_air_jordan_11/0002.jpg",
+        "/assets/catalog/nike_air_jordan_11/0003.jpg",
+        "/assets/catalog/nike_air_jordan_11/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_jordan_11/"
+      }
+    },
+    {
+      "id": "nike_air_jordan_3",
+      "className": "nike_air_jordan_3",
+      "datasetClassName": "nike_air_jordan_3",
+      "brand": "Nike",
+      "model": "Air Jordan 3",
+      "referenceId": "SOLE-NIKE_AIR_JORDAN_3",
+      "imageCount": 100,
+      "availableImageCount": 100,
+      "averageImage": {
+        "width": 143,
+        "height": 123
+      },
+      "imageBounds": {
+        "minWidth": 89,
+        "minHeight": 67,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_jordan_3/0001.jpg",
+        "/assets/catalog/nike_air_jordan_3/0002.jpg",
+        "/assets/catalog/nike_air_jordan_3/0003.jpg",
+        "/assets/catalog/nike_air_jordan_3/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_jordan_3/"
+      }
+    },
+    {
+      "id": "nike_air_jordan_4",
+      "className": "nike_air_jordan_4",
+      "datasetClassName": "nike_air_jordan_4",
+      "brand": "Nike",
+      "model": "Air Jordan 4",
+      "referenceId": "SOLE-NIKE_AIR_JORDAN_4",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 137,
+        "height": 130
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 84,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_jordan_4/0001.jpg",
+        "/assets/catalog/nike_air_jordan_4/0002.jpg",
+        "/assets/catalog/nike_air_jordan_4/0003.jpg",
+        "/assets/catalog/nike_air_jordan_4/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_jordan_4/"
+      }
+    },
+    {
+      "id": "nike_air_max_1",
+      "className": "nike_air_max_1",
+      "datasetClassName": "nike_air_max_1",
+      "brand": "Nike",
+      "model": "Air Max 1",
+      "referenceId": "SOLE-NIKE_AIR_MAX_1",
+      "imageCount": 106,
+      "availableImageCount": 106,
+      "averageImage": {
+        "width": 141,
+        "height": 126
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 65,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_max_1/0001.jpg",
+        "/assets/catalog/nike_air_max_1/0002.jpg",
+        "/assets/catalog/nike_air_max_1/0003.jpg",
+        "/assets/catalog/nike_air_max_1/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_max_1/"
+      }
+    },
+    {
+      "id": "nike_air_max_270",
+      "className": "nike_air_max_270",
+      "datasetClassName": "nike_air_max_270",
+      "brand": "Nike",
+      "model": "Air Max 270",
+      "referenceId": "SOLE-NIKE_AIR_MAX_270",
+      "imageCount": 149,
+      "availableImageCount": 149,
+      "averageImage": {
+        "width": 136,
+        "height": 130
+      },
+      "imageBounds": {
+        "minWidth": 82,
+        "minHeight": 76,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_max_270/0001.jpg",
+        "/assets/catalog/nike_air_max_270/0002.jpg",
+        "/assets/catalog/nike_air_max_270/0003.jpg",
+        "/assets/catalog/nike_air_max_270/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_max_270/"
+      }
+    },
+    {
+      "id": "nike_air_max_90",
+      "className": "nike_air_max_90",
+      "datasetClassName": "nike_air_max_90",
+      "brand": "Nike",
+      "model": "Air Max 90",
+      "referenceId": "SOLE-NIKE_AIR_MAX_90",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 141,
+        "height": 127
+      },
+      "imageBounds": {
+        "minWidth": 84,
+        "minHeight": 65,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_max_90/0001.jpg",
+        "/assets/catalog/nike_air_max_90/0002.jpg",
+        "/assets/catalog/nike_air_max_90/0003.jpg",
+        "/assets/catalog/nike_air_max_90/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_max_90/"
+      }
+    },
+    {
+      "id": "nike_air_max_95",
+      "className": "nike_air_max_95",
+      "datasetClassName": "nike_air_max_95",
+      "brand": "Nike",
+      "model": "Air Max 95",
+      "referenceId": "SOLE-NIKE_AIR_MAX_95",
+      "imageCount": 86,
+      "availableImageCount": 86,
+      "averageImage": {
+        "width": 137,
+        "height": 128
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 81,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_max_95/0001.jpg",
+        "/assets/catalog/nike_air_max_95/0002.jpg",
+        "/assets/catalog/nike_air_max_95/0003.jpg",
+        "/assets/catalog/nike_air_max_95/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_max_95/"
+      }
+    },
+    {
+      "id": "nike_air_max_97",
+      "className": "nike_air_max_97",
+      "datasetClassName": "nike_air_max_97",
+      "brand": "Nike",
+      "model": "Air Max 97",
+      "referenceId": "SOLE-NIKE_AIR_MAX_97",
+      "imageCount": 97,
+      "availableImageCount": 97,
+      "averageImage": {
+        "width": 142,
+        "height": 125
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 65,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_max_97/0001.jpg",
+        "/assets/catalog/nike_air_max_97/0002.jpg",
+        "/assets/catalog/nike_air_max_97/0003.jpg",
+        "/assets/catalog/nike_air_max_97/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_max_97/"
+      }
+    },
+    {
+      "id": "nike_air_max_plus_(tn)",
+      "className": "nike_air_max_plus_(tn)",
+      "datasetClassName": "nike_air_max_plus_(tn)",
+      "brand": "Nike",
+      "model": "Air Max Plus (tn)",
+      "referenceId": "SOLE-NIKE_AIR_MAX_PLUS_(TN)",
+      "imageCount": 93,
+      "availableImageCount": 93,
+      "averageImage": {
+        "width": 141,
+        "height": 128
+      },
+      "imageBounds": {
+        "minWidth": 105,
+        "minHeight": 73,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_max_plus_(tn)/0001.jpg",
+        "/assets/catalog/nike_air_max_plus_(tn)/0002.jpg",
+        "/assets/catalog/nike_air_max_plus_(tn)/0003.jpg",
+        "/assets/catalog/nike_air_max_plus_(tn)/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_max_plus_(tn)/"
+      }
+    },
+    {
+      "id": "nike_air_vapormax_flyknit",
+      "className": "nike_air_vapormax_flyknit",
+      "datasetClassName": "nike_air_vapormax_flyknit",
+      "brand": "Nike",
+      "model": "Air Vapormax Flyknit",
+      "referenceId": "SOLE-NIKE_AIR_VAPORMAX_FLYKNIT",
+      "imageCount": 149,
+      "availableImageCount": 149,
+      "averageImage": {
+        "width": 143,
+        "height": 129
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 73,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_vapormax_flyknit/0001.jpg",
+        "/assets/catalog/nike_air_vapormax_flyknit/0002.jpg",
+        "/assets/catalog/nike_air_vapormax_flyknit/0003.jpg",
+        "/assets/catalog/nike_air_vapormax_flyknit/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_vapormax_flyknit/"
+      }
+    },
+    {
+      "id": "nike_air_vapormax_plus",
+      "className": "nike_air_vapormax_plus",
+      "datasetClassName": "nike_air_vapormax_plus",
+      "brand": "Nike",
+      "model": "Air Vapormax Plus",
+      "referenceId": "SOLE-NIKE_AIR_VAPORMAX_PLUS",
+      "imageCount": 107,
+      "availableImageCount": 107,
+      "averageImage": {
+        "width": 145,
+        "height": 125
+      },
+      "imageBounds": {
+        "minWidth": 97,
+        "minHeight": 69,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_air_vapormax_plus/0001.jpg",
+        "/assets/catalog/nike_air_vapormax_plus/0002.jpg",
+        "/assets/catalog/nike_air_vapormax_plus/0003.jpg",
+        "/assets/catalog/nike_air_vapormax_plus/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_air_vapormax_plus/"
+      }
+    },
+    {
+      "id": "nike_blazer_mid_77",
+      "className": "nike_blazer_mid_77",
+      "datasetClassName": "nike_blazer_mid_'77",
+      "brand": "Nike",
+      "model": "Blazer Mid 77",
+      "referenceId": "SOLE-NIKE_BLAZER_MID_77",
+      "imageCount": 97,
+      "availableImageCount": 97,
+      "averageImage": {
+        "width": 133,
+        "height": 131
+      },
+      "imageBounds": {
+        "minWidth": 97,
+        "minHeight": 81,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_blazer_mid_77/0001.jpg",
+        "/assets/catalog/nike_blazer_mid_77/0002.jpg",
+        "/assets/catalog/nike_blazer_mid_77/0003.jpg",
+        "/assets/catalog/nike_blazer_mid_77/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_blazer_mid_77/"
+      }
+    },
+    {
+      "id": "nike_cortez",
+      "className": "nike_cortez",
+      "datasetClassName": "nike_cortez",
+      "brand": "Nike",
+      "model": "Cortez",
+      "referenceId": "SOLE-NIKE_CORTEZ",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 137,
+        "height": 131
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 76,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_cortez/0001.jpg",
+        "/assets/catalog/nike_cortez/0002.jpg",
+        "/assets/catalog/nike_cortez/0003.jpg",
+        "/assets/catalog/nike_cortez/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_cortez/"
+      }
+    },
+    {
+      "id": "nike_dunk_high",
+      "className": "nike_dunk_high",
+      "datasetClassName": "nike_dunk_high",
+      "brand": "Nike",
+      "model": "Dunk High",
+      "referenceId": "SOLE-NIKE_DUNK_HIGH",
+      "imageCount": 150,
+      "availableImageCount": 150,
+      "averageImage": {
+        "width": 147,
+        "height": 122
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 56,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_dunk_high/0001.jpg",
+        "/assets/catalog/nike_dunk_high/0002.jpg",
+        "/assets/catalog/nike_dunk_high/0003.jpg",
+        "/assets/catalog/nike_dunk_high/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_dunk_high/"
+      }
+    },
+    {
+      "id": "nike_dunk_low",
+      "className": "nike_dunk_low",
+      "datasetClassName": "nike_dunk_low",
+      "brand": "Nike",
+      "model": "Dunk Low",
+      "referenceId": "SOLE-NIKE_DUNK_LOW",
+      "imageCount": 80,
+      "availableImageCount": 80,
+      "averageImage": {
+        "width": 136,
+        "height": 129
+      },
+      "imageBounds": {
+        "minWidth": 105,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/nike_dunk_low/0001.jpg",
+        "/assets/catalog/nike_dunk_low/0002.jpg",
+        "/assets/catalog/nike_dunk_low/0003.jpg",
+        "/assets/catalog/nike_dunk_low/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/nike_dunk_low/"
+      }
+    },
+    {
+      "id": "puma_suede_classic",
+      "className": "puma_suede_classic",
+      "datasetClassName": "puma_suede_classic",
+      "brand": "Puma",
+      "model": "Suede Classic",
+      "referenceId": "SOLE-PUMA_SUEDE_CLASSIC",
+      "imageCount": 148,
+      "availableImageCount": 148,
+      "averageImage": {
+        "width": 134,
+        "height": 131
+      },
+      "imageBounds": {
+        "minWidth": 84,
+        "minHeight": 70,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/puma_suede_classic/0001.jpg",
+        "/assets/catalog/puma_suede_classic/0002.jpg",
+        "/assets/catalog/puma_suede_classic/0003.jpg",
+        "/assets/catalog/puma_suede_classic/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/puma_suede_classic/"
+      }
+    },
+    {
+      "id": "reebok_classic_leather",
+      "className": "reebok_classic_leather",
+      "datasetClassName": "reebok_classic_leather",
+      "brand": "Reebok",
+      "model": "Classic Leather",
+      "referenceId": "SOLE-REEBOK_CLASSIC_LEATHER",
+      "imageCount": 98,
+      "availableImageCount": 98,
+      "averageImage": {
+        "width": 140,
+        "height": 129
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 68,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/reebok_classic_leather/0001.jpg",
+        "/assets/catalog/reebok_classic_leather/0002.jpg",
+        "/assets/catalog/reebok_classic_leather/0003.jpg",
+        "/assets/catalog/reebok_classic_leather/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/reebok_classic_leather/"
+      }
+    },
+    {
+      "id": "reebok_club_c_85",
+      "className": "reebok_club_c_85",
+      "datasetClassName": "reebok_club_c_85",
+      "brand": "Reebok",
+      "model": "Club C 85",
+      "referenceId": "SOLE-REEBOK_CLUB_C_85",
+      "imageCount": 148,
+      "availableImageCount": 148,
+      "averageImage": {
+        "width": 134,
+        "height": 132
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 72,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/reebok_club_c_85/0001.jpg",
+        "/assets/catalog/reebok_club_c_85/0002.jpg",
+        "/assets/catalog/reebok_club_c_85/0003.jpg",
+        "/assets/catalog/reebok_club_c_85/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/reebok_club_c_85/"
+      }
+    },
+    {
+      "id": "salomon_xt-6",
+      "className": "salomon_xt-6",
+      "datasetClassName": "salomon_xt-6",
+      "brand": "Salomon",
+      "model": "XT 6",
+      "referenceId": "SOLE-SALOMON_XT_6",
+      "imageCount": 147,
+      "availableImageCount": 147,
+      "averageImage": {
+        "width": 130,
+        "height": 134
+      },
+      "imageBounds": {
+        "minWidth": 79,
+        "minHeight": 89,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/salomon_xt-6/0001.jpg",
+        "/assets/catalog/salomon_xt-6/0002.jpg",
+        "/assets/catalog/salomon_xt-6/0003.jpg",
+        "/assets/catalog/salomon_xt-6/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/salomon_xt-6/"
+      }
+    },
+    {
+      "id": "vans_authentic",
+      "className": "vans_authentic",
+      "datasetClassName": "vans_authentic",
+      "brand": "Vans",
+      "model": "Authentic",
+      "referenceId": "SOLE-VANS_AUTHENTIC",
+      "imageCount": 148,
+      "availableImageCount": 148,
+      "averageImage": {
+        "width": 129,
+        "height": 136
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 85,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/vans_authentic/0001.jpg",
+        "/assets/catalog/vans_authentic/0002.jpg",
+        "/assets/catalog/vans_authentic/0003.jpg",
+        "/assets/catalog/vans_authentic/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/vans_authentic/"
+      }
+    },
+    {
+      "id": "vans_old_skool",
+      "className": "vans_old_skool",
+      "datasetClassName": "vans_old_skool",
+      "brand": "Vans",
+      "model": "Old Skool",
+      "referenceId": "SOLE-VANS_OLD_SKOOL",
+      "imageCount": 93,
+      "availableImageCount": 93,
+      "averageImage": {
+        "width": 130,
+        "height": 134
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 84,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/vans_old_skool/0001.jpg",
+        "/assets/catalog/vans_old_skool/0002.jpg",
+        "/assets/catalog/vans_old_skool/0003.jpg",
+        "/assets/catalog/vans_old_skool/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/vans_old_skool/"
+      }
+    },
+    {
+      "id": "vans_sk8-hi",
+      "className": "vans_sk8-hi",
+      "datasetClassName": "vans_sk8-hi",
+      "brand": "Vans",
+      "model": "Sk8 Hi",
+      "referenceId": "SOLE-VANS_SK8_HI",
+      "imageCount": 149,
+      "availableImageCount": 149,
+      "averageImage": {
+        "width": 133,
+        "height": 134
+      },
+      "imageBounds": {
+        "minWidth": 93,
+        "minHeight": 75,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/vans_sk8-hi/0001.jpg",
+        "/assets/catalog/vans_sk8-hi/0002.jpg",
+        "/assets/catalog/vans_sk8-hi/0003.jpg",
+        "/assets/catalog/vans_sk8-hi/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/vans_sk8-hi/"
+      }
+    },
+    {
+      "id": "vans_slip-on_checkerboard",
+      "className": "vans_slip-on_checkerboard",
+      "datasetClassName": "vans_slip-on_checkerboard",
+      "brand": "Vans",
+      "model": "Slip On Checkerboard",
+      "referenceId": "SOLE-VANS_SLIP_ON_CHECKERBOARD",
+      "imageCount": 88,
+      "availableImageCount": 88,
+      "averageImage": {
+        "width": 137,
+        "height": 129
+      },
+      "imageBounds": {
+        "minWidth": 90,
+        "minHeight": 55,
+        "maxWidth": 300,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg",
+        "png"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/vans_slip-on_checkerboard/0001.jpg",
+        "/assets/catalog/vans_slip-on_checkerboard/0002.jpg",
+        "/assets/catalog/vans_slip-on_checkerboard/0003.jpg",
+        "/assets/catalog/vans_slip-on_checkerboard/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/vans_slip-on_checkerboard/"
+      }
+    },
+    {
+      "id": "yeezy_700_wave_runner",
+      "className": "yeezy_700_wave_runner",
+      "datasetClassName": "yeezy_700_wave_runner",
+      "brand": "Yeezy",
+      "model": "700 Wave Runner",
+      "referenceId": "SOLE-YEEZY_700_WAVE_RUNNER",
+      "imageCount": 108,
+      "availableImageCount": 108,
+      "averageImage": {
+        "width": 141,
+        "height": 122
+      },
+      "imageBounds": {
+        "minWidth": 78,
+        "minHeight": 62,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/yeezy_700_wave_runner/0001.jpg",
+        "/assets/catalog/yeezy_700_wave_runner/0002.jpg",
+        "/assets/catalog/yeezy_700_wave_runner/0003.jpg",
+        "/assets/catalog/yeezy_700_wave_runner/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/yeezy_700_wave_runner/"
+      }
+    },
+    {
+      "id": "yeezy_boost_350_v2",
+      "className": "yeezy_boost_350_v2",
+      "datasetClassName": "yeezy_boost_350_v2",
+      "brand": "Yeezy",
+      "model": "Boost 350 V2",
+      "referenceId": "SOLE-YEEZY_BOOST_350_V2",
+      "imageCount": 148,
+      "availableImageCount": 148,
+      "averageImage": {
+        "width": 148,
+        "height": 119
+      },
+      "imageBounds": {
+        "minWidth": 104,
+        "minHeight": 43,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/yeezy_boost_350_v2/0001.jpg",
+        "/assets/catalog/yeezy_boost_350_v2/0002.jpg",
+        "/assets/catalog/yeezy_boost_350_v2/0003.jpg",
+        "/assets/catalog/yeezy_boost_350_v2/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/yeezy_boost_350_v2/"
+      }
+    },
+    {
+      "id": "yeezy_slide",
+      "className": "yeezy_slide",
+      "datasetClassName": "yeezy_slide",
+      "brand": "Yeezy",
+      "model": "Slide",
+      "referenceId": "SOLE-YEEZY_SLIDE",
+      "imageCount": 145,
+      "availableImageCount": 145,
+      "averageImage": {
+        "width": 146,
+        "height": 121
+      },
+      "imageBounds": {
+        "minWidth": 78,
+        "minHeight": 63,
+        "maxWidth": 162,
+        "maxHeight": 140
+      },
+      "formats": [
+        "jpeg"
+      ],
+      "corruptFiles": 0,
+      "sampleImages": [
+        "/assets/catalog/yeezy_slide/0001.jpg",
+        "/assets/catalog/yeezy_slide/0002.jpg",
+        "/assets/catalog/yeezy_slide/0003.jpg",
+        "/assets/catalog/yeezy_slide/0004.jpg"
+      ],
+      "source": {
+        "type": "local_archive",
+        "archive": "archive.zip",
+        "classFolder": "sneakers-dataset/sneakers-dataset/yeezy_slide/"
+      }
+    }
+  ],
+  "marketplaceFeeds": {
+    "enabled": false,
+    "reason": "No live marketplace API credentials or feed contracts are configured yet.",
+    "requiredForProductionComps": [
+      "eBay Browse/Sell Analytics or Terapeak-equivalent feed",
+      "StockX/GOAT/consignment partner feeds",
+      "Sold-price, fee, region, size, and time-to-sell fields"
+    ]
+  }
+}

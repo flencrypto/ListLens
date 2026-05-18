@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+node_modules/
+dist/
+*.tsbuildinfo
+__pycache__/
+tmp_contact_sheets/

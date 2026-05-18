@@ -1,0 +1,98 @@
+[
+  {
+    "class": "adidas_forum_high",
+    "image_count": "150",
+    "avg_width": "143",
+    "avg_height": "124",
+    "min_width": "78",
+    "min_height": "81",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "new_balance_550",
+    "image_count": "150",
+    "avg_width": "134",
+    "avg_height": "129",
+    "min_width": "79",
+    "min_height": "40",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "nike_dunk_high",
+    "image_count": "150",
+    "avg_width": "147",
+    "avg_height": "122",
+    "min_width": "93",
+    "min_height": "56",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "nike_air_max_90",
+    "image_count": "150",
+    "avg_width": "141",
+    "avg_height": "127",
+    "min_width": "84",
+    "min_height": "65",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "nike_air_jordan_4",
+    "image_count": "150",
+    "avg_width": "137",
+    "avg_height": "130",
+    "min_width": "93",
+    "min_height": "84",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "yeezy_boost_350_v2",
+    "image_count": "148",
+    "avg_width": "148",
+    "avg_height": "119",
+    "min_width": "104",
+    "min_height": "43",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "reebok_club_c_85",
+    "image_count": "148",
+    "avg_width": "134",
+    "avg_height": "132",
+    "min_width": "93",
+    "min_height": "72",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  },
+  {
+    "class": "salomon_xt-6",
+    "image_count": "147",
+    "avg_width": "130",
+    "avg_height": "134",
+    "min_width": "79",
+    "min_height": "89",
+    "max_width": "162",
+    "max_height": "140",
+    "formats": "jpeg",
+    "corrupt_files": "0"
+  }
+]
