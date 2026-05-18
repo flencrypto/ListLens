@@ -94,8 +94,8 @@ local fallback rather than exposing errors to the browser.
 ## Run locally
 
 ```bash
-npm install
-npm run dev
+pnpm install
+pnpm --filter @list-lens/sole-lens run dev
 ```
 
 Then open the Vite URL shown in the terminal.
@@ -103,8 +103,8 @@ Then open the Vite URL shown in the terminal.
 ## Production checks
 
 ```bash
-npm run build
-npm run preview
+pnpm --filter @list-lens/sole-lens run build
+pnpm --filter @list-lens/sole-lens run preview
 ```
 
 ## Included assets
