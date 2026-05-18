@@ -1,6 +1,8 @@
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "next-themes";
+import { useEffect } from "react";
+import { useTheme } from "next-themes";
 
 import HomePage from "@/pages/home";
 import SplashPage from "@/pages/splash";
@@ -32,6 +34,10 @@ import AdminLogsPage from "@/pages/admin/logs";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
+const THEME_COLOR_MAP = {
+  dark: "#05070d",
+  light: "#edf4ff",
+} as const;
 
 function Router() {
   return (
@@ -69,6 +75,27 @@ function Router() {
   );
 }
 
+function ThemeMetaSync() {
+  const { resolvedTheme } = useTheme();
+
+  useEffect(() => {
+    const appliedTheme = resolvedTheme === "light" ? "light" : "dark";
+    const themeColor = THEME_COLOR_MAP[appliedTheme];
+    const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+    const metaTileColor = document.querySelector('meta[name="msapplication-TileColor"]');
+
+    if (metaThemeColor instanceof HTMLMetaElement) {
+      metaThemeColor.content = themeColor;
+    }
+
+    if (metaTileColor instanceof HTMLMetaElement) {
+      metaTileColor.content = themeColor;
+    }
+  }, [resolvedTheme]);
+
+  return null;
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
@@ -78,6 +105,7 @@ function App() {
         enableSystem={false}
         disableTransitionOnChange
       >
+        <ThemeMetaSync />
         <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
           <Router />
         </WouterRouter>

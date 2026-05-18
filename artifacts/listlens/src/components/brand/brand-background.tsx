@@ -52,7 +52,10 @@ export function BrandBackground({ className }: { className?: string }) {
             "repeating-linear-gradient(180deg, color-mix(in srgb, var(--brand-cyan) 12%, transparent) 0px, color-mix(in srgb, var(--brand-cyan) 12%, transparent) 1px, transparent 1px, transparent 3px)",
         }}
       />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_transparent_32%,_rgba(4,10,20,0.16)_100%)] dark:bg-[radial-gradient(ellipse_at_center,_transparent_30%,_rgba(0,0,0,0.62)_100%)]" />
+      <div
+        className="absolute inset-0"
+        style={{ background: "var(--brand-vignette)" }}
+      />
     </div>
   );
 }

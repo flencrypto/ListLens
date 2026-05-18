@@ -31,6 +31,7 @@
   --brand-grid-line: rgba(0, 130, 255, 0.08);
   --brand-grid-dot: rgba(0, 130, 255, 0.18);
   --brand-accent-soft: rgba(0, 130, 255, 0.1);
+  --brand-vignette: radial-gradient(ellipse at center, transparent 32%, rgba(4, 10, 20, 0.16) 100%);
   --brand-wordmark-shadow:
     0 10px 26px rgba(0, 130, 255, 0.14),
     0 0 18px rgba(0, 240, 255, 0.1);
@@ -68,6 +69,7 @@
   --brand-grid-line: rgba(0, 194, 255, 0.08);
   --brand-grid-dot: rgba(0, 240, 255, 0.18);
   --brand-accent-soft: rgba(0, 130, 255, 0.18);
+  --brand-vignette: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.62) 100%);
   --brand-wordmark-shadow:
     0 0 18px rgba(0, 240, 255, 0.24),
     0 0 42px rgba(0, 130, 255, 0.12);
