@@ -74,7 +74,7 @@ export async function handleDataApiRequest(req, res) {
     const catalog = loadCatalog();
 
     if (url.pathname === "/api/data/readiness") {
-      sendJson(res, catalog ? 200 : 503, summarizeReadiness(catalog));
+      sendJson(res, 200, summarizeReadiness(catalog));
       return true;
     }
 

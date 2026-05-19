@@ -289,6 +289,7 @@ export default function App() {
   const [catalogCandidates, setCatalogCandidates] = useState<ProductCandidate[]>([]);
   const [remoteListingDraft, setRemoteListingDraft] = useState<ListingDraft | null>(null);
   const [listingLoading, setListingLoading] = useState(false);
+  const generatedPreviewUrlsRef = useRef<Set<string>>(new Set());
 
   const selectedProduct = useMemo(() => {
     const candidates = [...catalogCandidates, ...productCandidates];
@@ -336,8 +337,17 @@ export default function App() {
 
   const listingDraft = remoteListingDraft ?? baseListingDraft;
 
+  function revokePreviewUrl(url?: string) {
+    if (url && generatedPreviewUrlsRef.current.delete(url)) {
+      URL.revokeObjectURL(url);
+    }
+  }
+
   function setFreshScanState() {
-    setSlots(createFreshScanSlots());
+    setSlots((current) => {
+      current.forEach((slot) => revokePreviewUrl(slot.preview));
+      return createFreshScanSlots();
+    });
     setActiveSlotId("upper-lateral");
     setAnalysisState("ready");
     setScanAnalysis(null);
@@ -349,7 +359,15 @@ export default function App() {
     setSlots((current) =>
       current.map((slot) =>
         slot.id === slotId
-          ? { ...slot, captured: true, preview: file ? URL.createObjectURL(file) : slot.preview }
+          ? (() => {
+              if (!file) {
+                return { ...slot, captured: true, preview: slot.preview };
+              }
+              revokePreviewUrl(slot.preview);
+              const nextPreview = URL.createObjectURL(file);
+              generatedPreviewUrlsRef.current.add(nextPreview);
+              return { ...slot, captured: true, preview: nextPreview };
+            })()
           : slot,
       ),
     );
@@ -365,7 +383,15 @@ export default function App() {
   }
 
   function handleRetake(slotId: string) {
-    setSlots((current) => current.map((slot) => (slot.id === slotId ? { ...slot, captured: false, preview: undefined } : slot)));
+    setSlots((current) =>
+      current.map((slot) => {
+        if (slot.id !== slotId) {
+          return slot;
+        }
+        revokePreviewUrl(slot.preview);
+        return { ...slot, captured: false, preview: undefined };
+      }),
+    );
     setActiveSlotId(slotId);
     setAnalysisState("ready");
     setScanAnalysis(null);
@@ -491,17 +517,32 @@ export default function App() {
   }, [membershipTier]);
 
   useEffect(() => {
+    return () => {
+      generatedPreviewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+      generatedPreviewUrlsRef.current.clear();
+    };
+  }, []);
+
+  useEffect(() => {
     let cancelled = false;
     async function loadProductionData() {
       try {
-        const [readiness, catalog] = await Promise.all([requestDataReadiness(), requestCatalog()]);
+        const readiness = await requestDataReadiness();
         if (cancelled) return;
         setDataReadiness(readiness);
+      } catch {
+        if (!cancelled) {
+          setDataReadiness(null);
+        }
+      }
+
+      try {
+        const catalog = await requestCatalog();
+        if (cancelled) return;
         setCatalogSummary(catalog.summary);
         setCatalogCandidates(catalog.profiles.slice(0, 50).map(catalogProfileToProductCandidate));
       } catch {
         if (!cancelled) {
-          setDataReadiness(null);
           setCatalogSummary(null);
           setCatalogCandidates([]);
         }

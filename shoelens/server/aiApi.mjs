@@ -6,6 +6,12 @@ const jsonHeaders = {
   "Content-Type": "application/json; charset=utf-8",
   "Cache-Control": "no-store",
 };
+const aiRequestBuckets = new Map();
+const aiRateLimitWindowMs = 60_000;
+const aiRateLimitMaxRequests = 20;
+const maxEvidenceItems = 8;
+const minConfidenceDelta = -0.2;
+const maxConfidenceDelta = 0.2;
 
 function loadLocalEnv() {
   const envPath = resolve(dirname(fileURLToPath(import.meta.url)), "..", ".env");
@@ -29,6 +35,7 @@ function loadLocalEnv() {
 
 loadLocalEnv();
 
+const trustProxyForwardedFor = process.env.SOLELENS_TRUST_PROXY === "true";
 const openAiModel = process.env.OPENAI_MODEL ?? "gpt-4.1-mini";
 const xaiModel = process.env.XAI_MODEL ?? "grok-4.3";
 
@@ -53,6 +60,75 @@ function sendJson(res, statusCode, body) {
   res.statusCode = statusCode;
   Object.entries(jsonHeaders).forEach(([key, value]) => res.setHeader(key, value));
   res.end(JSON.stringify(body));
+}
+
+function getClientIdentifier(req) {
+  const forwarded = req.headers["x-forwarded-for"];
+  if (trustProxyForwardedFor && typeof forwarded === "string" && forwarded.trim()) {
+    return forwarded.split(",")[0].trim();
+  }
+  return req.socket?.remoteAddress ?? "unknown";
+}
+
+function hasValidScanToken(req) {
+  const expected = process.env.SOLELENS_PUBLIC_SCAN_TOKEN;
+  if (!expected) {
+    return true;
+  }
+
+  const headerToken = req.headers["x-solelens-scan-token"];
+  if (typeof headerToken === "string" && headerToken === expected) {
+    return true;
+  }
+
+  const authorization = req.headers.authorization;
+  if (typeof authorization === "string" && authorization.startsWith("Bearer ")) {
+    return authorization.slice("Bearer ".length).trim() === expected;
+  }
+
+  return false;
+}
+
+function isWithinRateLimit(req) {
+  const now = Date.now();
+  for (const [clientId, bucket] of aiRequestBuckets.entries()) {
+    if (now >= bucket.resetAt) {
+      aiRequestBuckets.delete(clientId);
+    }
+  }
+
+  const key = getClientIdentifier(req);
+  const current = aiRequestBuckets.get(key);
+  if (!current || now >= current.resetAt) {
+    aiRequestBuckets.set(key, { count: 1, resetAt: now + aiRateLimitWindowMs });
+    return { allowed: true, retryAfterSeconds: 0 };
+  }
+
+  if (current.count >= aiRateLimitMaxRequests) {
+    return {
+      allowed: false,
+      retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000)),
+    };
+  }
+
+  current.count += 1;
+  return { allowed: true, retryAfterSeconds: 0 };
+}
+
+function canAccessProviderRoutes(req, res) {
+  if (!hasValidScanToken(req)) {
+    sendJson(res, 401, { ok: false, error: "Unauthorized" });
+    return false;
+  }
+
+  const rateLimit = isWithinRateLimit(req);
+  if (!rateLimit.allowed) {
+    res.setHeader("Retry-After", String(rateLimit.retryAfterSeconds));
+    sendJson(res, 429, { ok: false, error: "Rate limit exceeded. Try again shortly." });
+    return false;
+  }
+
+  return true;
 }
 
 function readJson(req) {
@@ -155,6 +231,40 @@ function scanFallback(input) {
   };
 }
 
+function normalizeStringList(value, fallback) {
+  if (!Array.isArray(value)) {
+    return fallback;
+  }
+  const cleaned = value
+    .filter((entry) => typeof entry === "string")
+    .map((entry) => entry.trim())
+    .filter(Boolean);
+  return cleaned.length ? cleaned.slice(0, maxEvidenceItems) : fallback;
+}
+
+function normalizeScanAnalysis(raw, fallback) {
+  const parsed = raw && typeof raw === "object" ? raw : {};
+  const rawDelta = Number(parsed.identityConfidenceDelta);
+  const identityConfidenceDelta = Number.isFinite(rawDelta)
+    ? Math.max(minConfidenceDelta, Math.min(maxConfidenceDelta, rawDelta))
+    : fallback.identityConfidenceDelta;
+
+  return {
+    summary: typeof parsed.summary === "string" && parsed.summary.trim() ? parsed.summary : fallback.summary,
+    identityConfidenceDelta,
+    authenticityRisk:
+      typeof parsed.authenticityRisk === "string" && parsed.authenticityRisk.trim()
+        ? parsed.authenticityRisk
+        : fallback.authenticityRisk,
+    recommendedAction:
+      typeof parsed.recommendedAction === "string" && parsed.recommendedAction.trim()
+        ? parsed.recommendedAction
+        : fallback.recommendedAction,
+    evidence: normalizeStringList(parsed.evidence, fallback.evidence),
+    missingEvidence: normalizeStringList(parsed.missingEvidence, fallback.missingEvidence),
+  };
+}
+
 function defaultEditionStory(product) {
   const signature = `${product.id ?? ""} ${product.brand ?? ""} ${product.model ?? ""} ${product.colorway ?? ""}`.toLowerCase();
 
@@ -183,7 +293,7 @@ function defaultEditionStory(product) {
 function listingFallback(input) {
   const product = input.product ?? {};
   const marketplace = input.marketplaceAgentResults?.[0];
-  const marketplaceFeedsEnabled = input.marketplaceFeedStatus?.enabled !== false;
+  const marketplaceFeedsEnabled = input.marketplaceFeedStatus?.enabled === true;
   const editionStory = product.editionStory ?? defaultEditionStory(product);
   if (product.dataSource === "catalog") {
     return {
@@ -275,6 +385,7 @@ function expertFallback(input) {
 }
 
 async function handleScanAnalysis(input) {
+  const fallback = scanFallback(input);
   const messages = [
     {
       role: "system",
@@ -299,13 +410,27 @@ async function handleScanAnalysis(input) {
   for (const provider of preferredProviders) {
     try {
       const analysis = await postChatJson({ provider, messages, temperature: 0.15 });
-      return { ok: true, mode: "provider", provider, providerStatus: status, analysis, errors };
+      return {
+        ok: true,
+        mode: "provider",
+        provider,
+        providerStatus: status,
+        analysis: normalizeScanAnalysis(analysis, fallback),
+        errors,
+      };
     } catch (error) {
       errors.push({ provider, message: error.message });
     }
   }
 
-  return { ok: true, mode: "fallback", provider: "local", providerStatus: status, analysis: scanFallback(input), errors };
+  return {
+    ok: true,
+    mode: "fallback",
+    provider: "local",
+    providerStatus: status,
+    analysis: fallback,
+    errors,
+  };
 }
 
 async function handleListingDraft(input) {
@@ -326,7 +451,7 @@ async function handleListingDraft(input) {
           "Condition/details: only use supplied scan evidence; mark missing evidence as pending.",
         ],
         marketplaceAgentResults: input.marketplaceAgentResults?.slice?.(0, 3) ?? [],
-        marketplaceFeedStatus: input.marketplaceFeedStatus ?? { enabled: true },
+        marketplaceFeedStatus: input.marketplaceFeedStatus ?? { enabled: false },
         conditionFindings: input.conditionFindings ?? [],
       }),
     },
@@ -396,12 +521,16 @@ export async function handleAiApiRequest(req, res) {
   }
 
   try {
-    const input = await readJson(req);
-
     if (url.pathname === "/api/ai/health") {
       sendJson(res, 200, { ok: true, providerStatus: providerStatus() });
       return true;
     }
+
+    if (!canAccessProviderRoutes(req, res)) {
+      return true;
+    }
+
+    const input = await readJson(req);
 
     if (url.pathname === "/api/ai/scan-analysis") {
       sendJson(res, 200, await handleScanAnalysis(input));
