@@ -138,18 +138,18 @@ export default function NewGuardPage() {
           <p className="text-violet-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Guard · New check
           </p>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-2">Check buyer listing</h1>
-          <p className="text-zinc-400 text-sm">Paste a listing URL or upload screenshots before you buy.</p>
+          <h1 className="text-3xl font-black tracking-tight text-[color:var(--brand-text-strong)] mb-2">Check buyer listing</h1>
+          <p className="text-[color:var(--brand-text-muted)] text-sm">Paste a listing URL or upload screenshots before you buy.</p>
           <div className="hud-divider mt-3 max-w-[160px]" />
         </div>
 
         {/* Input method tabs */}
         <HudPanel tone="violet" className="p-5 mb-4">
-          <div className="flex rounded-lg border border-zinc-700 overflow-hidden w-fit mb-5">
+          <div className="flex rounded-lg border border-[color:var(--brand-outline)] overflow-hidden w-fit mb-5">
             <button
               onClick={() => setTab("url")}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
-                tab === "url" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
+                tab === "url" ? "bg-violet-600 text-white" : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)]"
               }`}
             >
               🔗 Listing URL
@@ -157,7 +157,7 @@ export default function NewGuardPage() {
             <button
               onClick={() => setTab("screenshots")}
               className={`px-4 py-2 text-sm font-medium transition-colors ${
-                tab === "screenshots" ? "bg-violet-600 text-white" : "text-zinc-400 hover:text-white"
+                tab === "screenshots" ? "bg-violet-600 text-white" : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)]"
               }`}
             >
               🖼 Screenshots
@@ -166,20 +166,20 @@ export default function NewGuardPage() {
 
           {tab === "url" && (
             <div className="space-y-3">
-              <p className="text-zinc-500 text-sm">Paste an eBay or Vinted listing URL</p>
+              <p className="text-[color:var(--brand-text-muted)] text-sm">Paste an eBay or Vinted listing URL</p>
               <Input
                 placeholder="https://www.ebay.co.uk/itm/... or https://www.vinted.co.uk/items/..."
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleStart()}
-                className="bg-zinc-900 border-zinc-700 focus:border-violet-600"
+                className="bg-[color:var(--brand-nav-bg)] border-[color:var(--brand-outline)] focus:border-violet-600"
               />
             </div>
           )}
 
           {tab === "screenshots" && (
             <div className="space-y-3">
-              <p className="text-zinc-500 text-sm">Upload screenshots or paste image URLs (up to {MAX_SCREENSHOTS})</p>
+              <p className="text-[color:var(--brand-text-muted)] text-sm">Upload screenshots or paste image URLs (up to {MAX_SCREENSHOTS})</p>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -205,13 +205,13 @@ export default function NewGuardPage() {
                 ) : (
                   <>
                     <span className="text-sm font-semibold text-violet-100">Choose screenshot files</span>
-                    <span className="mt-1 text-xs text-zinc-500">JPG, PNG, WebP or AVIF</span>
+                    <span className="mt-1 text-xs text-[color:var(--brand-text-muted)]">JPG, PNG, WebP or AVIF</span>
                   </>
                 )}
               </button>
               <div className="flex gap-2">
                 <input
-                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-violet-600"
+                  className="flex-1 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-violet-600"
                   placeholder="https://example.com/screenshot.jpg"
                   value={screenshotInput}
                   onChange={(e) => setScreenshotInput(e.target.value)}
@@ -222,10 +222,10 @@ export default function NewGuardPage() {
               {screenshotUrls.length > 0 && (
                 <div className="space-y-1">
                   {screenshotUrls.map((u, i) => (
-                    <div key={i} className="flex items-center gap-2 text-xs text-zinc-400 rounded-lg border border-violet-900/30 bg-zinc-900/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.06)]">
-                      <span className="text-zinc-600 w-4">{i + 1}</span>
+                    <div key={i} className="flex items-center gap-2 text-xs text-[color:var(--brand-text-muted)] rounded-lg border border-violet-900/30 bg-[color:var(--brand-nav-bg)]/60 px-3 py-2 shadow-[inset_0_0_0_1px_rgba(139,92,246,0.06)]">
+                      <span className="text-[color:var(--brand-text-muted)] w-4">{i + 1}</span>
                       <span className="truncate flex-1">{u}</span>
-                      <button onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))} className="text-zinc-600 hover:text-red-400 transition-colors">✕</button>
+                      <button onClick={() => setScreenshotUrls((prev) => prev.filter((_, j) => j !== i))} className="text-[color:var(--brand-text-muted)] hover:text-red-400 transition-colors">✕</button>
                     </div>
                   ))}
                 </div>
@@ -238,8 +238,8 @@ export default function NewGuardPage() {
         <HudPanel tone="violet" className="p-5 mb-6">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-white">Choose Lens</h2>
-              <p className="mt-1 text-xs text-zinc-500">Rev 1.0 routes Guard through ShoeLens or General fallback.</p>
+              <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)]">Choose Lens</h2>
+              <p className="mt-1 text-xs text-[color:var(--brand-text-muted)]">Rev 1.0 routes Guard through ShoeLens or General fallback.</p>
             </div>
             <StatusPill tone="violet">AI-assisted risk screen</StatusPill>
           </div>
@@ -250,8 +250,8 @@ export default function NewGuardPage() {
                 onClick={() => setLens(l.id)}
                 className={`rounded-lg border p-4 text-left transition-all ${
                   lens === l.id
-                    ? "border-violet-500 bg-violet-950/40"
-                    : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
+                    ? "border-violet-500 bg-violet-950/40 dark:bg-violet-950/40"
+                    : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] hover:border-[color:var(--brand-outline-strong)]"
                 }`}
               >
                 <div className="mb-3 flex items-start justify-between gap-3">
@@ -262,8 +262,8 @@ export default function NewGuardPage() {
                   />
                   <StatusPill tone={l.tone}>{l.phase}</StatusPill>
                 </div>
-                <div className="font-semibold text-sm text-white leading-tight">{l.name}</div>
-                <div className="mt-1 text-xs text-zinc-400">{l.desc}</div>
+                <div className="font-semibold text-sm text-[color:var(--brand-text-strong)] leading-tight">{l.name}</div>
+                <div className="mt-1 text-xs text-[color:var(--brand-text-muted)]">{l.desc}</div>
               </button>
             ))}
           </div>
@@ -279,7 +279,7 @@ export default function NewGuardPage() {
           {loading ? "Starting check…" : isUploading ? "Uploading screenshots…" : "Run Guard Check →"}
         </Button>
 
-        <p className="text-center text-xs text-zinc-600 mt-4">
+        <p className="text-center text-xs text-[color:var(--brand-text-muted)] mt-4">
           {SAFE_GUARD_PHRASES[0]} This is not formal authentication.
         </p>
       </main>

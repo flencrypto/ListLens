@@ -3,32 +3,32 @@ import { Badge } from "@/components/ui/badge";
 import type { GuardOutput } from "@/lib/ai/schemas";
 
 const RISK_COLORS = {
-  low: { badge: "success", bar: "bg-emerald-500", text: "text-emerald-400", ring: "ring-emerald-500/30", bg: "bg-emerald-950/20" },
-  medium: { badge: "warning", bar: "bg-amber-500", text: "text-amber-400", ring: "ring-amber-500/30", bg: "bg-amber-950/20" },
-  medium_high: { badge: "warning", bar: "bg-orange-500", text: "text-orange-400", ring: "ring-orange-500/30", bg: "bg-orange-950/20" },
-  high: { badge: "destructive", bar: "bg-red-500", text: "text-red-400", ring: "ring-red-500/30", bg: "bg-red-950/20" },
-  inconclusive: { badge: "secondary", bar: "bg-zinc-500", text: "text-zinc-400", ring: "ring-zinc-500/30", bg: "bg-zinc-900/40" },
+  low: { badge: "success", bar: "bg-emerald-500", text: "text-emerald-700 dark:text-emerald-400", ring: "ring-emerald-500/30", bg: "bg-emerald-100 dark:bg-emerald-950/20" },
+  medium: { badge: "warning", bar: "bg-amber-500", text: "text-amber-700 dark:text-amber-400", ring: "ring-amber-500/30", bg: "bg-amber-100 dark:bg-amber-950/20" },
+  medium_high: { badge: "warning", bar: "bg-orange-500", text: "text-orange-700 dark:text-orange-400", ring: "ring-orange-500/30", bg: "bg-orange-100 dark:bg-orange-950/20" },
+  high: { badge: "destructive", bar: "bg-red-500", text: "text-red-700 dark:text-red-400", ring: "ring-red-500/30", bg: "bg-red-100 dark:bg-red-950/20" },
+  inconclusive: { badge: "secondary", bar: "bg-zinc-500", text: "text-[color:var(--brand-text-muted)]", ring: "ring-zinc-500/30", bg: "bg-[color:var(--brand-nav-bg)]/40" },
 } as const;
 
 const BUY_RECOMMENDATION = {
-  proceed: { label: "Proceed", icon: "✓", color: "text-emerald-400", bg: "bg-emerald-950/30", border: "border-emerald-800/50" },
-  proceed_with_caution: { label: "Proceed with Caution", icon: "⚠", color: "text-amber-400", bg: "bg-amber-950/25", border: "border-amber-800/50" },
-  ask_questions_first: { label: "Ask Questions First", icon: "?", color: "text-orange-400", bg: "bg-orange-950/25", border: "border-orange-800/50" },
-  avoid: { label: "Avoid", icon: "✕", color: "text-red-400", bg: "bg-red-950/25", border: "border-red-900/50" },
+  proceed: { label: "Proceed", icon: "✓", color: "text-emerald-700 dark:text-emerald-400", bg: "bg-emerald-100 dark:bg-emerald-950/30", border: "border-emerald-300 dark:border-emerald-800/50" },
+  proceed_with_caution: { label: "Proceed with Caution", icon: "⚠", color: "text-amber-700 dark:text-amber-400", bg: "bg-amber-100 dark:bg-amber-950/25", border: "border-amber-300 dark:border-amber-800/50" },
+  ask_questions_first: { label: "Ask Questions First", icon: "?", color: "text-orange-700 dark:text-orange-400", bg: "bg-orange-100 dark:bg-orange-950/25", border: "border-orange-300 dark:border-orange-800/50" },
+  avoid: { label: "Avoid", icon: "✕", color: "text-red-700 dark:text-red-400", bg: "bg-red-100 dark:bg-red-950/25", border: "border-red-300 dark:border-red-900/50" },
 } as const;
 
 const PRICE_VERDICTS = {
-  fair: { label: "Fair Price", color: "text-emerald-400" },
-  low_risk_deal: { label: "Good Deal", color: "text-cyan-400" },
-  suspiciously_low: { label: "Suspiciously Low", color: "text-red-400" },
-  overpriced: { label: "Overpriced", color: "text-amber-400" },
-  unknown: { label: "Price Unknown", color: "text-zinc-400" },
+  fair: { label: "Fair Price", color: "text-emerald-700 dark:text-emerald-400" },
+  low_risk_deal: { label: "Good Deal", color: "text-cyan-700 dark:text-cyan-400" },
+  suspiciously_low: { label: "Suspiciously Low", color: "text-red-700 dark:text-red-400" },
+  overpriced: { label: "Overpriced", color: "text-amber-700 dark:text-amber-400" },
+  unknown: { label: "Price Unknown", color: "text-[color:var(--brand-text-muted)]" },
 } as const;
 
 const AUTHENTICITY_VERDICT_ICONS = {
-  pass: { icon: "✓", color: "text-emerald-400 bg-emerald-950/40 border-emerald-800/40" },
-  fail: { icon: "✕", color: "text-red-400 bg-red-950/30 border-red-900/40" },
-  unclear: { icon: "?", color: "text-zinc-400 bg-zinc-900/50 border-zinc-700/40" },
+  pass: { icon: "✓", color: "text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-800/40" },
+  fail: { icon: "✕", color: "text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-950/30 border-red-300 dark:border-red-900/40" },
+  unclear: { icon: "?", color: "text-[color:var(--brand-text-muted)] bg-[color:var(--brand-nav-bg)]/50 border-[color:var(--brand-outline)]/40" },
 } as const;
 
 const AUTH_SERVICES = [
@@ -68,18 +68,18 @@ function ScoreBar({ score, label, verdict }: { score: number; label: string; ver
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-medium text-zinc-300">{label}</span>
-        <span className={`text-xs font-mono ${score >= 8 ? "text-emerald-400" : score >= 5 ? "text-amber-400" : "text-red-400"}`}>
+        <span className="text-xs font-medium text-[color:var(--brand-text)]">{label}</span>
+        <span className={`text-xs font-mono ${score >= 8 ? "text-emerald-700 dark:text-emerald-400" : score >= 5 ? "text-amber-700 dark:text-amber-400" : "text-red-700 dark:text-red-400"}`}>
           {score}/10
         </span>
       </div>
-      <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden mb-1">
+      <div className="h-1.5 bg-[color:var(--brand-outline)] rounded-full overflow-hidden mb-1">
         <div
           className={`h-full rounded-full transition-all ${color}`}
           style={{ width: `${pct}%` }}
         />
       </div>
-      <p className="text-xs text-zinc-500 leading-tight">{verdict}</p>
+      <p className="text-xs text-[color:var(--brand-text-muted)] leading-tight">{verdict}</p>
     </div>
   );
 }
@@ -95,7 +95,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="ml-auto shrink-0 text-xs text-zinc-600 hover:text-cyan-400 transition-colors px-2 py-0.5 rounded border border-transparent hover:border-zinc-700"
+      className="ml-auto shrink-0 text-xs text-[color:var(--brand-text-muted)] hover:text-cyan-400 transition-colors px-2 py-0.5 rounded border border-transparent hover:border-[color:var(--brand-outline)]"
     >
       {copied ? "Copied" : "Copy"}
     </button>
@@ -141,17 +141,17 @@ export function RiskReport({ report }: RiskReportProps) {
               <Badge variant={riskStyle.badge as "success" | "warning" | "destructive" | "secondary"} className="text-sm px-3 py-0.5">
                 {report.risk.level.replace("_", " ").toUpperCase()}
               </Badge>
-              <span className="text-zinc-500 text-sm">
+              <span className="text-[color:var(--brand-text-muted)] text-sm">
                 {Math.round(report.risk.confidence * 100)}% confidence
               </span>
             </div>
-            <p className="text-zinc-300 text-sm leading-relaxed max-w-lg">
+            <p className="text-[color:var(--brand-text)] text-sm leading-relaxed max-w-lg">
               {report.risk.summary}
             </p>
           </div>
           <div className={`rounded-xl border ${riskStyle.ring.replace("ring-", "border-").replace("/30", "/60")} ${riskStyle.bg} px-4 py-3 text-center shrink-0`}>
             <div className={`text-3xl font-extrabold font-mono ${riskStyle.text}`}>{overallScore}</div>
-            <div className="text-xs text-zinc-500 mt-0.5">risk score /10</div>
+            <div className="text-xs text-[color:var(--brand-text-muted)] mt-0.5">risk score /10</div>
           </div>
         </div>
       </div>
@@ -161,13 +161,13 @@ export function RiskReport({ report }: RiskReportProps) {
         <div className={`text-2xl font-bold ${buyRec.color} shrink-0 w-8 text-center`}>{buyRec.icon}</div>
         <div>
           <p className={`font-bold text-base ${buyRec.color} mb-1`}>{buyRec.label}</p>
-          <p className="text-sm text-zinc-300 leading-relaxed">{report.buy_recommendation.reasoning}</p>
+          <p className="text-sm text-[color:var(--brand-text)] leading-relaxed">{report.buy_recommendation.reasoning}</p>
         </div>
       </div>
 
       {/* ── Risk Scorecard ───────────────────────────────────────────────── */}
       <div className="brand-card p-5">
-        <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-4 flex items-center gap-2">
           <span className="inline-block w-1 h-4 bg-violet-500 rounded-full" />
           Risk Scorecard
         </h2>
@@ -182,25 +182,25 @@ export function RiskReport({ report }: RiskReportProps) {
 
       {/* ── Price Analysis ───────────────────────────────────────────────── */}
       <div className="brand-card p-5">
-        <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+        <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-4 flex items-center gap-2">
           <span className="inline-block w-1 h-4 bg-cyan-500 rounded-full" />
           Price Analysis
         </h2>
         <div className="flex flex-wrap gap-4 mb-3">
           {report.price_analysis.asking_price && (
             <div>
-              <p className="text-xs text-zinc-500 mb-0.5">Asking price</p>
-              <p className="text-lg font-bold text-white">{report.price_analysis.asking_price}</p>
+              <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Asking price</p>
+              <p className="text-lg font-bold text-[color:var(--brand-text-strong)]">{report.price_analysis.asking_price}</p>
             </div>
           )}
           {report.price_analysis.market_estimate && (
             <div>
-              <p className="text-xs text-zinc-500 mb-0.5">Market estimate</p>
-              <p className="text-lg font-bold text-zinc-300">{report.price_analysis.market_estimate}</p>
+              <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Market estimate</p>
+              <p className="text-lg font-bold text-[color:var(--brand-text)]">{report.price_analysis.market_estimate}</p>
             </div>
           )}
           <div>
-            <p className="text-xs text-zinc-500 mb-0.5">Verdict</p>
+            <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Verdict</p>
             <p className={`text-sm font-semibold ${priceStyle.color}`}>{priceStyle.label}</p>
           </div>
         </div>
@@ -209,22 +209,22 @@ export function RiskReport({ report }: RiskReportProps) {
             <span className="text-[10px] font-mono tracking-widest uppercase text-cyan-400/70 shrink-0">
               {report.price_analysis.market_data.source}
             </span>
-            <span className="text-xs text-zinc-400">
+            <span className="text-xs text-[color:var(--brand-text-muted)]">
               {report.price_analysis.market_data.listing_count} live listing{report.price_analysis.market_data.listing_count !== 1 ? "s" : ""}
             </span>
             {report.price_analysis.market_data.price_min_gbp !== null && report.price_analysis.market_data.price_max_gbp !== null && (
-              <span className="text-xs text-zinc-300 font-medium">
+              <span className="text-xs text-[color:var(--brand-text)] font-medium">
                 £{report.price_analysis.market_data.price_min_gbp}–£{report.price_analysis.market_data.price_max_gbp}
               </span>
             )}
             {report.price_analysis.market_data.price_median_gbp !== null && (
-              <span className="text-xs text-zinc-400">
+              <span className="text-xs text-[color:var(--brand-text-muted)]">
                 median <span className="text-cyan-300 font-semibold">£{report.price_analysis.market_data.price_median_gbp}</span>
               </span>
             )}
           </div>
         )}
-        <p className="text-sm text-zinc-400 leading-relaxed">{report.price_analysis.price_note}</p>
+        <p className="text-sm text-[color:var(--brand-text-muted)] leading-relaxed">{report.price_analysis.price_note}</p>
       </div>
 
       {/* ── Red Flags + Green Signals ─────────────────────────────────────── */}
@@ -233,10 +233,10 @@ export function RiskReport({ report }: RiskReportProps) {
         {/* Red Flags */}
         {report.red_flags.length > 0 && (
           <div className="brand-card p-5">
-            <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-4 flex items-center gap-2">
               <span className="inline-block w-1 h-4 bg-red-500 rounded-full" />
               Red Flags
-              <span className="ml-auto text-xs text-zinc-600">{report.red_flags.length}</span>
+              <span className="ml-auto text-xs text-[color:var(--brand-text-muted)]">{report.red_flags.length}</span>
             </h2>
             <div className="space-y-3">
               {[...highFlags, ...medFlags, ...lowFlags].map((flag, i) => (
@@ -248,10 +248,10 @@ export function RiskReport({ report }: RiskReportProps) {
                     {flag.severity}
                   </Badge>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-0.5">
+                    <p className="text-xs font-semibold text-[color:var(--brand-text-muted)] uppercase tracking-wide mb-0.5">
                       {flag.type.replace(/_/g, " ")}
                     </p>
-                    <p className="text-sm text-zinc-300 leading-snug">{flag.message}</p>
+                    <p className="text-sm text-[color:var(--brand-text)] leading-snug">{flag.message}</p>
                   </div>
                 </div>
               ))}
@@ -262,20 +262,20 @@ export function RiskReport({ report }: RiskReportProps) {
         {/* Green Signals */}
         {report.green_signals.length > 0 && (
           <div className="brand-card p-5">
-            <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+            <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-4 flex items-center gap-2">
               <span className="inline-block w-1 h-4 bg-emerald-500 rounded-full" />
               Positive Signals
-              <span className="ml-auto text-xs text-zinc-600">{report.green_signals.length}</span>
+              <span className="ml-auto text-xs text-[color:var(--brand-text-muted)]">{report.green_signals.length}</span>
             </h2>
             <div className="space-y-3">
               {report.green_signals.map((sig, i) => (
                 <div key={i} className="flex items-start gap-3">
-                  <span className="text-emerald-400 shrink-0 text-sm font-bold mt-0.5">✓</span>
+                  <span className="text-emerald-700 dark:text-emerald-400 shrink-0 text-sm font-bold mt-0.5">✓</span>
                   <div className="min-w-0">
-                    <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-0.5">
+                    <p className="text-xs font-semibold text-[color:var(--brand-text-muted)] uppercase tracking-wide mb-0.5">
                       {sig.type.replace(/_/g, " ")}
                     </p>
-                    <p className="text-sm text-zinc-300 leading-snug">{sig.message}</p>
+                    <p className="text-sm text-[color:var(--brand-text)] leading-snug">{sig.message}</p>
                   </div>
                 </div>
               ))}
@@ -287,7 +287,7 @@ export function RiskReport({ report }: RiskReportProps) {
       {/* ── Authenticity Markers ─────────────────────────────────────────── */}
       {report.authenticity_signals.length > 0 && (
         <div className="brand-card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-4 flex items-center gap-2">
             <span className="inline-block w-1 h-4 bg-amber-500 rounded-full" />
             Authenticity Check
           </h2>
@@ -295,19 +295,19 @@ export function RiskReport({ report }: RiskReportProps) {
             {report.authenticity_signals.map((sig, i) => {
               const vs = AUTHENTICITY_VERDICT_ICONS[sig.verdict];
               return (
-                <div key={i} className="flex items-start gap-3 py-2 border-b border-zinc-800/60 last:border-0">
+                <div key={i} className="flex items-start gap-3 py-2 border-b border-[color:var(--brand-outline)]/60 last:border-0">
                   <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold border shrink-0 mt-0.5 ${vs.color}`}>
                     {vs.icon}
                   </span>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs font-semibold text-zinc-300">{sig.marker}</p>
-                    <p className="text-xs text-zinc-500 leading-snug">{sig.observed}</p>
+                    <p className="text-xs font-semibold text-[color:var(--brand-text)]">{sig.marker}</p>
+                    <p className="text-xs text-[color:var(--brand-text-muted)] leading-snug">{sig.observed}</p>
                   </div>
                 </div>
               );
             })}
           </div>
-          <div className="flex gap-4 mt-3 pt-3 border-t border-zinc-800/60">
+          <div className="flex gap-4 mt-3 pt-3 border-t border-[color:var(--brand-outline)]/60">
             {(["pass", "fail", "unclear"] as const).map((v) => {
               const count = report.authenticity_signals.filter((s) => s.verdict === v).length;
               return (
@@ -315,7 +315,7 @@ export function RiskReport({ report }: RiskReportProps) {
                   <span className={`text-xs ${AUTHENTICITY_VERDICT_ICONS[v].color.split(" ")[0]}`}>
                     {AUTHENTICITY_VERDICT_ICONS[v].icon}
                   </span>
-                  <span className="text-xs text-zinc-500">{count} {v}</span>
+                  <span className="text-xs text-[color:var(--brand-text-muted)]">{count} {v}</span>
                 </div>
               );
             })}
@@ -326,13 +326,13 @@ export function RiskReport({ report }: RiskReportProps) {
       {/* ── Questions to Ask Seller ───────────────────────────────────────── */}
       {report.seller_questions.length > 0 && (
         <div className="brand-card p-5">
-          <h2 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-4 flex items-center gap-2">
             <span className="inline-block w-1 h-4 bg-violet-500 rounded-full" />
             Questions to Ask the Seller
           </h2>
           <ol className="space-y-2.5">
             {report.seller_questions.map((q, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm text-zinc-300 rounded-lg bg-zinc-900/50 border border-zinc-800/60 px-3 py-2.5">
+              <li key={i} className="flex items-start gap-3 text-sm text-[color:var(--brand-text)] rounded-lg bg-[color:var(--brand-nav-bg)]/50 border border-[color:var(--brand-outline)]/60 px-3 py-2.5">
                 <span className="font-mono-hud text-[10px] text-violet-400 w-4 shrink-0 mt-0.5">{i + 1}.</span>
                 <span className="flex-1 leading-snug">{q}</span>
                 <CopyButton text={q} />
@@ -340,7 +340,7 @@ export function RiskReport({ report }: RiskReportProps) {
             ))}
           </ol>
           <button
-            className="mt-3 text-xs text-zinc-600 hover:text-cyan-400 transition-colors underline underline-offset-2"
+            className="mt-3 text-xs text-[color:var(--brand-text-muted)] hover:text-cyan-400 transition-colors underline underline-offset-2"
             onClick={() => {
               void navigator.clipboard.writeText(report.seller_questions.join("\n"));
             }}
@@ -353,14 +353,14 @@ export function RiskReport({ report }: RiskReportProps) {
       {/* ── Missing Photos ───────────────────────────────────────────────── */}
       {report.missing_photos.length > 0 && (
         <div className="brand-card p-5">
-          <h2 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-3 flex items-center gap-2">
             <span className="inline-block w-1 h-4 bg-zinc-500 rounded-full" />
             Photos to Request
           </h2>
           <ul className="space-y-1.5">
             {report.missing_photos.map((p, i) => (
-              <li key={i} className="text-sm text-zinc-400 flex items-start gap-2">
-                <span className="text-zinc-600 shrink-0">•</span>
+              <li key={i} className="text-sm text-[color:var(--brand-text-muted)] flex items-start gap-2">
+                <span className="text-[color:var(--brand-text-muted)] shrink-0">•</span>
                 {p}
               </li>
             ))}
@@ -371,11 +371,11 @@ export function RiskReport({ report }: RiskReportProps) {
       {/* ── Third-party Authentication ───────────────────────────────────── */}
       {report.lens === "AutographLens" && (report.risk.level === "medium_high" || report.risk.level === "high") && (
         <div className="brand-card p-5 ring-1 ring-red-500/30">
-          <h2 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+          <h2 className="text-sm font-semibold text-[color:var(--brand-text-strong)] mb-1 flex items-center gap-2">
             <span className="inline-block w-1 h-4 bg-red-500 rounded-full" />
             Get it authenticated
           </h2>
-          <p className="text-xs text-zinc-400 leading-relaxed mb-4">
+          <p className="text-xs text-[color:var(--brand-text-muted)] leading-relaxed mb-4">
             The risk level on this autograph is elevated. Consider submitting the item to a recognised third-party authentication service before buying.
           </p>
           <div className="grid sm:grid-cols-2 gap-3">
@@ -385,13 +385,13 @@ export function RiskReport({ report }: RiskReportProps) {
                 href={svc.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-start gap-3 rounded-lg border border-zinc-800/70 bg-zinc-900/50 hover:border-red-500/40 hover:bg-red-950/20 transition-colors px-4 py-3 group"
+                className="flex items-start gap-3 rounded-lg border border-[color:var(--brand-outline)]/70 bg-[color:var(--brand-nav-bg)]/50 hover:border-red-500/40 hover:bg-red-950/20 transition-colors px-4 py-3 group"
               >
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-200 group-hover:text-white transition-colors">{svc.name}</p>
-                  <p className="text-xs text-zinc-500 leading-snug mt-0.5">{svc.description}</p>
+                  <p className="text-sm font-semibold text-[color:var(--brand-text)] group-hover:text-[color:var(--brand-text-strong)] transition-colors">{svc.name}</p>
+                  <p className="text-xs text-[color:var(--brand-text-muted)] leading-snug mt-0.5">{svc.description}</p>
                 </div>
-                <span className="text-zinc-600 group-hover:text-red-400 transition-colors shrink-0 mt-0.5">↗</span>
+                <span className="text-[color:var(--brand-text-muted)] group-hover:text-red-400 transition-colors shrink-0 mt-0.5">↗</span>
               </a>
             ))}
           </div>
@@ -399,7 +399,7 @@ export function RiskReport({ report }: RiskReportProps) {
       )}
 
       {/* ── Disclaimer ───────────────────────────────────────────────────── */}
-      <p className="text-center text-xs text-zinc-600 pb-2">{report.disclaimer}</p>
+      <p className="text-center text-xs text-[color:var(--brand-text-muted)] pb-2">{report.disclaimer}</p>
     </div>
   );
 }

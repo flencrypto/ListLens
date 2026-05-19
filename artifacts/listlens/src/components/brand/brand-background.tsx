@@ -46,7 +46,7 @@ export function BrandBackground({ className }: { className?: string }) {
         }}
       />
       <div
-        className="absolute inset-0 opacity-30 mix-blend-overlay"
+        className="absolute inset-0 opacity-20"
         style={{
           backgroundImage:
             "repeating-linear-gradient(180deg, color-mix(in srgb, var(--brand-cyan) 12%, transparent) 0px, color-mix(in srgb, var(--brand-cyan) 12%, transparent) 1px, transparent 1px, transparent 3px)",

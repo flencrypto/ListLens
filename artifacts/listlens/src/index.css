@@ -1,19 +1,22 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Class-based dark mode: next-themes adds .dark to <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
   color-scheme: light;
   --background: #edf4ff;
   --foreground: #08152f;
   --brand-navy: #0a0f1a;
   --brand-navy-2: #13233c;
-  --brand-card: rgba(10, 26, 54, 0.82);
-  --brand-panel-bg: linear-gradient(180deg, rgba(11, 26, 53, 0.88), rgba(7, 20, 43, 0.92));
+  --brand-card: rgba(255, 255, 255, 0.82);
+  --brand-panel-bg: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(237,244,255,0.92));
   --brand-cyan: #00f0ff;
   --brand-cyan-soft: #8dfbff;
   --brand-blue: #0082ff;
   --brand-green: #19d8ff;
-  --brand-amber: #7a00ff;
+  --brand-amber: #d97706;
   --brand-violet: #7a00ff;
   --brand-white: #ffffff;
   --brand-outline: rgba(0, 130, 255, 0.18);
@@ -35,6 +38,7 @@
   --brand-wordmark-shadow:
     0 10px 26px rgba(0, 130, 255, 0.14),
     0 0 18px rgba(0, 240, 255, 0.1);
+  --brand-card-inset: rgba(8, 21, 47, 0.06);
   --font-brand-display: "Orbitron", "Eurostile", sans-serif;
   --font-brand-body: "Exo 2", "Segoe UI", sans-serif;
 }
@@ -73,6 +77,7 @@
   --brand-wordmark-shadow:
     0 0 18px rgba(0, 240, 255, 0.24),
     0 0 42px rgba(0, 130, 255, 0.12);
+  --brand-card-inset: rgba(255, 255, 255, 0.06);
 }
 
 html,
@@ -159,15 +164,15 @@ body {
     var(--brand-panel-bg);
   border: 1px solid var(--brand-outline);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.03),
+    inset 0 1px 0 var(--brand-card-inset),
+    inset 0 0 0 1px color-mix(in srgb, var(--brand-card-inset) 50%, transparent),
     var(--brand-panel-shadow);
   border-radius: 1rem;
 }
 
 .brand-card-glow {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 var(--brand-card-inset),
     inset 0 0 0 1px rgba(0, 240, 255, 0.08),
     0 0 0 1px rgba(0, 130, 255, 0.12),
     0 28px 60px -28px rgba(0, 130, 255, 0.35);
@@ -180,7 +185,7 @@ body {
     var(--brand-panel-bg);
   border-color: rgba(122, 0, 255, 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 var(--brand-card-inset),
     inset 0 0 0 1px rgba(122, 0, 255, 0.05),
     0 24px 48px -28px rgba(122, 0, 255, 0.25);
 }

@@ -155,28 +155,28 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
   if (loading) {
     return (
       <div className="space-y-2 animate-pulse">
-        <div className="h-3 bg-zinc-800 rounded w-32" />
-        <div className="h-8 bg-zinc-800 rounded" />
+        <div className="h-3 bg-[color:var(--brand-outline)] rounded w-32" />
+        <div className="h-8 bg-[color:var(--brand-outline)] rounded" />
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSave} className="space-y-4 pt-1">
-      <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+      <p className="text-xs font-semibold text-[color:var(--brand-text-muted)] uppercase tracking-wider">
         Listing defaults
       </p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">
+          <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
             Shipping cost (£)
           </label>
           <input
             type="number"
             min="0"
             step="0.01"
-            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
             value={settings.shippingCost}
             onChange={(e) =>
               setSettings((s) => ({ ...s, shippingCost: e.target.value }))
@@ -185,11 +185,11 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
         </div>
 
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">
+          <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
             Payment method
           </label>
           <select
-            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
             value={settings.paymentMethod}
             onChange={(e) =>
               setSettings((s) => ({ ...s, paymentMethod: e.target.value }))
@@ -205,14 +205,14 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
       </div>
 
       <div className="flex items-center justify-between">
-        <label className="text-sm text-zinc-300">Accept returns</label>
+        <label className="text-sm text-[color:var(--brand-text)]">Accept returns</label>
         <button
           type="button"
           onClick={() =>
             setSettings((s) => ({ ...s, returnsAccepted: !s.returnsAccepted }))
           }
           className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-            settings.returnsAccepted ? "bg-cyan-600" : "bg-zinc-700"
+            settings.returnsAccepted ? "bg-cyan-600" : "bg-[color:var(--brand-outline)]"
           }`}
         >
           <span
@@ -225,11 +225,11 @@ function EbaySettingsForm({ onSaved }: { onSaved?: () => void }) {
 
       {settings.returnsAccepted && (
         <div>
-          <label className="block text-xs text-zinc-400 mb-1">
+          <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
             Return period
           </label>
           <select
-            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
             value={settings.returnPeriod}
             onChange={(e) =>
               setSettings((s) => ({ ...s, returnPeriod: e.target.value }))
@@ -287,8 +287,8 @@ function EbayConnectSection() {
   if (!status) {
     return (
       <div className="brand-card p-6 animate-pulse">
-        <div className="h-4 bg-zinc-800 rounded w-40 mb-2" />
-        <div className="h-3 bg-zinc-800 rounded w-64" />
+        <div className="h-4 bg-[color:var(--brand-outline)] rounded w-40 mb-2" />
+        <div className="h-3 bg-[color:var(--brand-outline)] rounded w-64" />
       </div>
     );
   }
@@ -297,7 +297,7 @@ function EbayConnectSection() {
     <div className="brand-card p-6 space-y-4">
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-base font-semibold text-white mb-1 flex items-center gap-2">
+          <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)] mb-1 flex items-center gap-2">
             eBay Account
             {status.sandbox && (
               <Badge variant="secondary" className="text-xs">
@@ -305,7 +305,7 @@ function EbayConnectSection() {
               </Badge>
             )}
           </h2>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-[color:var(--brand-text-muted)] text-sm">
             Connect your eBay account to publish listings directly from the
             Studio editor.
           </p>
@@ -329,7 +329,7 @@ function EbayConnectSection() {
       ) : status.connected ? (
         <div className="space-y-4">
           {status.expiresAt && (
-            <p className="text-zinc-500 text-xs">
+            <p className="text-[color:var(--brand-text-muted)] text-xs">
               Token valid until {new Date(status.expiresAt).toLocaleString()}
             </p>
           )}
@@ -343,7 +343,7 @@ function EbayConnectSection() {
             </Button>
             <Button
               variant="ghost"
-              className="text-zinc-500 hover:text-red-400 hover:bg-red-950/20"
+              className="text-[color:var(--brand-text-muted)] hover:text-red-400 hover:bg-red-950/20"
               disabled={disconnecting}
               onClick={handleDisconnect}
             >
@@ -351,7 +351,7 @@ function EbayConnectSection() {
             </Button>
           </div>
 
-          <div className="border-t border-zinc-800 pt-4">
+          <div className="border-t border-[color:var(--brand-outline)] pt-4">
             <EbaySettingsForm />
           </div>
         </div>
@@ -425,17 +425,17 @@ export default function BillingPage() {
   const demoMode = !stripeConfigured;
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-10">
         <div>
           <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Account · Billing
           </p>
-          <h1 className="text-2xl font-bold text-white mb-1">
+          <h1 className="text-2xl font-bold text-[color:var(--brand-text-strong)] mb-1">
             Billing &amp; Plans
           </h1>
-          <p className="text-zinc-400 text-sm">
+          <p className="text-[color:var(--brand-text-muted)] text-sm">
             Choose the plan that works for you. Cancel anytime.
           </p>
           <div className="hud-divider mt-3 max-w-[160px]" />
@@ -465,12 +465,12 @@ export default function BillingPage() {
 
         {/* Demo checkout redirect feedback */}
         {demoParam === "checkout" && !checkoutStatus && (
-          <div className="rounded-lg border border-zinc-700/60 bg-zinc-900/40 px-4 py-3 text-sm text-zinc-400">
+          <div className="rounded-lg border border-[color:var(--brand-outline)]/60 bg-[color:var(--brand-nav-bg)]/40 px-4 py-3 text-sm text-[color:var(--brand-text-muted)]">
             Checkout would open here — use the demo buttons above to simulate plan selection.
           </div>
         )}
         {demoParam === "portal" && (
-          <div className="rounded-lg border border-zinc-700/60 bg-zinc-900/40 px-4 py-3 text-sm text-zinc-400">
+          <div className="rounded-lg border border-[color:var(--brand-outline)]/60 bg-[color:var(--brand-nav-bg)]/40 px-4 py-3 text-sm text-[color:var(--brand-text-muted)]">
             Billing portal will be available once Stripe is connected.
           </div>
         )}
@@ -481,7 +481,7 @@ export default function BillingPage() {
           </div>
         )}
         {checkoutStatus === "cancelled" && (
-          <div className="rounded-lg border border-zinc-700/60 bg-zinc-900/40 px-4 py-3 text-sm text-zinc-400">
+          <div className="rounded-lg border border-[color:var(--brand-outline)]/60 bg-[color:var(--brand-nav-bg)]/40 px-4 py-3 text-sm text-[color:var(--brand-text-muted)]">
             Checkout cancelled — no charge was made.
           </div>
         )}
@@ -489,8 +489,8 @@ export default function BillingPage() {
         {/* Current plan */}
         <div className="brand-card brand-card-glow p-6 flex items-center justify-between flex-wrap gap-4">
           <div>
-            <p className="text-zinc-400 text-sm mb-1">Current plan</p>
-            <p className="text-white font-bold text-lg">
+            <p className="text-[color:var(--brand-text-muted)] text-sm mb-1">Current plan</p>
+            <p className="text-[color:var(--brand-text-strong)] font-bold text-lg">
               {planLabel}
               {demoMode && !isFree && (
                 <span className="ml-2 text-xs font-normal text-amber-400 border border-amber-700/60 rounded px-1.5 py-0.5">
@@ -499,9 +499,9 @@ export default function BillingPage() {
               )}
             </p>
             {isFree ? (
-              <p className="text-zinc-400 text-sm mt-0.5">3 listings remaining</p>
+              <p className="text-[color:var(--brand-text-muted)] text-sm mt-0.5">3 listings remaining</p>
             ) : (
-              <p className="text-zinc-400 text-sm mt-0.5">
+              <p className="text-[color:var(--brand-text-muted)] text-sm mt-0.5">
                 {demoMode ? "Simulated active subscription" : "Active subscription"}
               </p>
             )}
@@ -519,7 +519,7 @@ export default function BillingPage() {
               <button
                 onClick={() => handleDemoUpgrade("free", "Free Trial")}
                 disabled={demoLoading === "free"}
-                className="text-xs text-zinc-500 hover:text-red-400 underline underline-offset-2 transition-colors"
+                className="text-xs text-[color:var(--brand-text-muted)] hover:text-red-400 underline underline-offset-2 transition-colors"
               >
                 {demoLoading === "free" ? "Reverting…" : "Reset to free"}
               </button>
@@ -529,7 +529,7 @@ export default function BillingPage() {
 
         {/* Studio plans */}
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">
+          <h2 className="text-lg font-semibold text-[color:var(--brand-text-strong)] mb-4">
             Studio Plans
           </h2>
           <div className="grid md:grid-cols-3 gap-5">
@@ -549,19 +549,19 @@ export default function BillingPage() {
                       Most popular
                     </span>
                   )}
-                  <h3 className="font-bold text-white">{plan.name}</h3>
+                  <h3 className="font-bold text-[color:var(--brand-text-strong)]">{plan.name}</h3>
                   <div className="mt-1 mb-1">
-                    <span className="text-3xl font-extrabold text-white">
+                    <span className="text-3xl font-extrabold text-[color:var(--brand-text-strong)]">
                       {plan.price}
                     </span>
-                    <span className="text-zinc-400 text-sm">{plan.period}</span>
+                    <span className="text-[color:var(--brand-text-muted)] text-sm">{plan.period}</span>
                   </div>
-                  <p className="text-zinc-500 text-xs mb-4">{plan.desc}</p>
+                  <p className="text-[color:var(--brand-text-muted)] text-xs mb-4">{plan.desc}</p>
                   <ul className="space-y-2 flex-1 mb-5">
                     {plan.features.map((f) => (
                       <li
                         key={f}
-                        className="text-sm text-zinc-300 flex items-start gap-2"
+                        className="text-sm text-[color:var(--brand-text)] flex items-start gap-2"
                       >
                         <span className="text-cyan-400 shrink-0">✓</span>
                         {f}
@@ -620,20 +620,20 @@ export default function BillingPage() {
 
         {/* Guard plans */}
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">
+          <h2 className="text-lg font-semibold text-[color:var(--brand-text-strong)] mb-4">
             Guard Plans
           </h2>
           <div className="grid md:grid-cols-2 gap-5 max-w-2xl">
             {/* Single Check */}
             <div className="brand-card brand-card-violet p-6 flex flex-col">
-              <h3 className="font-bold text-white">Single Check</h3>
+              <h3 className="font-bold text-[color:var(--brand-text-strong)]">Single Check</h3>
               <div className="mt-1 mb-1">
-                <span className="text-3xl font-extrabold text-white">£1.99</span>
+                <span className="text-3xl font-extrabold text-[color:var(--brand-text-strong)]">£1.99</span>
               </div>
-              <p className="text-zinc-500 text-xs mb-4">Pay per check</p>
+              <p className="text-[color:var(--brand-text-muted)] text-xs mb-4">Pay per check</p>
               <ul className="space-y-2 flex-1 mb-5">
                 {["Full risk report", "Red flags", "Seller questions"].map((f) => (
-                  <li key={f} className="text-sm text-zinc-300 flex items-start gap-2">
+                  <li key={f} className="text-sm text-[color:var(--brand-text)] flex items-start gap-2">
                     <span className="text-violet-400 shrink-0">✓</span>
                     {f}
                   </li>
@@ -676,7 +676,7 @@ export default function BillingPage() {
                 currentPlanKey === "guard_monthly" ? "ring-1 ring-violet-500/50" : ""
               }`}
             >
-              <h3 className="font-bold text-white flex items-center gap-2">
+              <h3 className="font-bold text-[color:var(--brand-text-strong)] flex items-center gap-2">
                 Guard Monthly
                 {currentPlanKey === "guard_monthly" && demoMode && (
                   <span className="text-xs font-normal text-amber-400 border border-amber-700/60 rounded px-1.5 py-0.5">
@@ -685,13 +685,13 @@ export default function BillingPage() {
                 )}
               </h3>
               <div className="mt-1 mb-1">
-                <span className="text-3xl font-extrabold text-white">£6.99</span>
-                <span className="text-zinc-400 text-sm">/month</span>
+                <span className="text-3xl font-extrabold text-[color:var(--brand-text-strong)]">£6.99</span>
+                <span className="text-[color:var(--brand-text-muted)] text-sm">/month</span>
               </div>
-              <p className="text-zinc-500 text-xs mb-4">10 checks/month</p>
+              <p className="text-[color:var(--brand-text-muted)] text-xs mb-4">10 checks/month</p>
               <ul className="space-y-2 flex-1 mb-5">
                 {["10 checks per month", "SoleLens + General fallback", "Saved report history", "PDF export"].map((f) => (
-                  <li key={f} className="text-sm text-zinc-300 flex items-start gap-2">
+                  <li key={f} className="text-sm text-[color:var(--brand-text)] flex items-start gap-2">
                     <span className="text-violet-400 shrink-0">✓</span>
                     {f}
                   </li>
@@ -706,7 +706,7 @@ export default function BillingPage() {
                     <button
                       onClick={() => handleDemoUpgrade("free", "Free Trial")}
                       disabled={demoLoading === "free"}
-                      className="w-full text-xs text-zinc-500 hover:text-red-400 underline underline-offset-2 transition-colors text-center"
+                      className="w-full text-xs text-[color:var(--brand-text-muted)] hover:text-red-400 underline underline-offset-2 transition-colors text-center"
                     >
                       {demoLoading === "free" ? "Reverting…" : "Reset to free"}
                     </button>
@@ -751,7 +751,7 @@ export default function BillingPage() {
 
         {/* eBay Connect */}
         <div>
-          <h2 className="text-lg font-semibold text-white mb-4">
+          <h2 className="text-lg font-semibold text-[color:var(--brand-text-strong)] mb-4">
             Connected Accounts
           </h2>
           <EbayConnectSection />
@@ -763,10 +763,10 @@ export default function BillingPage() {
         {stripeConfigured && (
           <div className="brand-card p-6 flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-base font-semibold text-white mb-1">
+              <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)] mb-1">
                 Manage Billing
               </h2>
-              <p className="text-zinc-400 text-sm">
+              <p className="text-[color:var(--brand-text-muted)] text-sm">
                 Access your invoices, update payment method, or cancel your
                 subscription.
               </p>

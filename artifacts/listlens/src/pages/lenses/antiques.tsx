@@ -37,10 +37,10 @@ export default function AntiquesLensPage() {
   const [, navigate] = useLocation();
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        <Link href="/lenses" className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white/90 transition-colors">
+        <Link href="/lenses" className="inline-flex items-center gap-1.5 text-sm text-[color:var(--brand-text-strong)]/50 hover:text-[color:var(--brand-text-strong)]/90 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Lenses
         </Link>
@@ -51,8 +51,8 @@ export default function AntiquesLensPage() {
           <div className="flex items-center gap-3">
             <span className="text-3xl">🏺</span>
             <div>
-              <h1 className="text-2xl font-bold text-white">AntiquesLens</h1>
-              <p className="text-zinc-400 text-sm">
+              <h1 className="text-2xl font-bold text-[color:var(--brand-text-strong)]">AntiquesLens</h1>
+              <p className="text-[color:var(--brand-text-muted)] text-sm">
                 Antiques, ceramics, silverplate, vintage homeware and estate items.
                 Maker marks, era consistency, condition and reproduction risk — expressed with careful,
                 evidence-led language.
@@ -89,7 +89,7 @@ export default function AntiquesLensPage() {
           <CardContent>
             <ul className="space-y-2">
               {ANTIQUES_FOCUS.map((item) => (
-                <li key={item} className="flex items-start gap-2 text-sm text-zinc-300">
+                <li key={item} className="flex items-start gap-2 text-sm text-[color:var(--brand-text)]">
                   <span className="text-cyan-400 mt-0.5">▸</span>
                   {item}
                 </li>
@@ -105,7 +105,7 @@ export default function AntiquesLensPage() {
           <CardContent>
             <ul className="space-y-2">
               {ANTIQUES_PHOTO_TIPS.map((tip) => (
-                <li key={tip} className="flex items-start gap-2 text-sm text-zinc-400">
+                <li key={tip} className="flex items-start gap-2 text-sm text-[color:var(--brand-text-muted)]">
                   <span className="text-emerald-400 mt-0.5">📷</span>
                   {tip}
                 </li>
@@ -119,7 +119,7 @@ export default function AntiquesLensPage() {
             <CardTitle className="text-base">Guard checks for buyers</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-xs text-zinc-500 mb-3">
+            <p className="text-xs text-[color:var(--brand-text-muted)] mb-3">
               When used with Guard, AntiquesLens flags these specific risk signals:
             </p>
             <ul className="space-y-2">
@@ -142,7 +142,7 @@ export default function AntiquesLensPage() {
           </Button>
           <Button
             variant="outline"
-            className="border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+            className="border-[color:var(--brand-outline)] text-[color:var(--brand-text)] hover:bg-[color:var(--brand-outline-strong)]"
             onClick={() => navigate("/guard/new?lens=AntiquesLens")}
           >
             Check a listing with Guard

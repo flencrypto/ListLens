@@ -142,8 +142,8 @@ export function BrandGlyph({
         <circle cx="20" cy="23" r="1.5" fill="#A9D8FF" stroke="none" />
         <circle cx="29" cy="23" r="1.5" fill="#A9D8FF" stroke="none" />
       </g>
-      <circle cx="46" cy="69" r="5.5" fill="#fff" stroke="url(#strokeId)" strokeWidth="4" />
-      <circle cx="67" cy="69" r="5.5" fill="#fff" stroke="url(#strokeId)" strokeWidth="4" />
+      <circle cx="46" cy="69" r="5.5" fill="var(--background)" stroke="url(#strokeId)" strokeWidth="4" />
+      <circle cx="67" cy="69" r="5.5" fill="var(--background)" stroke="url(#strokeId)" strokeWidth="4" />
       <circle cx="46" cy="69" r="1.6" fill="#0082FF" />
       <circle cx="67" cy="69" r="1.6" fill="#0082FF" />
     </svg>

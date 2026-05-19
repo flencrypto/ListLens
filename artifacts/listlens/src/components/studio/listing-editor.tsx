@@ -186,8 +186,8 @@ function LensAttributesPanel({ lens, attributes }: { lens: string; attributes: R
         <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5">
           {rows.map(({ label, value }) => (
             <div key={label} className="flex flex-col gap-0.5 min-w-0">
-              <dt className="text-xs text-zinc-500 font-medium uppercase tracking-wide">{label}</dt>
-              <dd className="text-sm text-zinc-200 break-words">{value}</dd>
+              <dt className="text-xs text-[color:var(--brand-text-muted)] font-medium uppercase tracking-wide">{label}</dt>
+              <dd className="text-sm text-[color:var(--brand-text)] break-words">{value}</dd>
             </div>
           ))}
         </dl>
@@ -398,7 +398,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-2">
-          <p className="text-zinc-300 font-medium">
+          <p className="text-[color:var(--brand-text)] font-medium">
             {analysis.identity.brand} {analysis.identity.model}
           </p>
           {analysis.warnings.map((w, i) => (
@@ -457,13 +457,13 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
         <CardHeader><CardTitle className="text-base">Title</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           <input
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+            className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             maxLength={80}
           />
           <div className="flex items-center justify-between">
-            <span className="text-xs text-zinc-500">{title.length}/80 characters</span>
+            <span className="text-xs text-[color:var(--brand-text-muted)]">{title.length}/80 characters</span>
             <button onClick={() => handleCopy(title, "title")} className="text-xs text-cyan-500 hover:text-cyan-400 transition-colors">
               {copied === "title" ? "Copied!" : "Copy"}
             </button>
@@ -476,7 +476,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
         <CardHeader><CardTitle className="text-base">Description</CardTitle></CardHeader>
         <CardContent className="space-y-2">
           <textarea
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 resize-none"
+            className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600 resize-none"
             rows={6}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -523,24 +523,24 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
             </div>
           )}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-center">
-              <p className="text-zinc-500 text-xs mb-1">Quick Sale</p>
-              <p className="text-xl font-bold text-zinc-300">{formatPrice(analysis.pricing.quick_sale, analysis.pricing.currency)}</p>
+            <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/50 p-3 text-center">
+              <p className="text-[color:var(--brand-text-muted)] text-xs mb-1">Quick Sale</p>
+              <p className="text-xl font-bold text-[color:var(--brand-text)]">{formatPrice(analysis.pricing.quick_sale, analysis.pricing.currency)}</p>
             </div>
             <div className="rounded-lg border border-emerald-900/50 bg-emerald-950/20 p-3 text-center">
               <p className="text-emerald-400 text-xs mb-1">Recommended ✓</p>
               <p className="text-xl font-bold text-emerald-400">{formatPrice(analysis.pricing.recommended, analysis.pricing.currency)}</p>
             </div>
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 text-center">
-              <p className="text-zinc-500 text-xs mb-1">High</p>
-              <p className="text-xl font-bold text-zinc-300">{formatPrice(analysis.pricing.high, analysis.pricing.currency)}</p>
+            <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/50 p-3 text-center">
+              <p className="text-[color:var(--brand-text-muted)] text-xs mb-1">High</p>
+              <p className="text-xl font-bold text-[color:var(--brand-text)]">{formatPrice(analysis.pricing.high, analysis.pricing.currency)}</p>
             </div>
           </div>
           <div>
-            <label className="text-xs text-zinc-500 mb-1 block">Your price (£)</label>
+            <label className="text-xs text-[color:var(--brand-text-muted)] mb-1 block">Your price (£)</label>
             <input
               type="number"
-              className="w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 focus:outline-none focus:border-cyan-600"
+              className="w-32 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] focus:outline-none focus:border-cyan-600"
               value={price}
               onChange={(e) => setPrice(Number(e.target.value))}
               min={0}
@@ -556,10 +556,10 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
             <CardTitle className="text-base text-amber-400">⚠ Missing Photos</CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-zinc-400 text-sm mb-3">Add these photos to strengthen your listing:</p>
+            <p className="text-[color:var(--brand-text-muted)] text-sm mb-3">Add these photos to strengthen your listing:</p>
             <ul className="space-y-1">
               {analysis.missing_photos.map((p, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-zinc-300">
+                <li key={i} className="flex items-center gap-2 text-sm text-[color:var(--brand-text)]">
                   <span className="text-amber-500">•</span> {p}
                 </li>
               ))}
@@ -586,7 +586,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setHtmlPreviewOpen((v) => !v)}
-                className="text-xs text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors"
+                className="text-xs text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text)] underline underline-offset-2 transition-colors"
               >
                 {htmlPreviewOpen ? "Hide preview" : "Show preview"}
               </button>
@@ -601,18 +601,18 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-zinc-400 text-sm">
-            Copy the HTML below and paste it into eBay's <strong className="text-zinc-300">custom description editor</strong> when creating your listing.
+          <p className="text-[color:var(--brand-text-muted)] text-sm">
+            Copy the HTML below and paste it into eBay's <strong className="text-[color:var(--brand-text)]">custom description editor</strong> when creating your listing.
           </p>
 
           {/* Preview */}
           {htmlPreviewOpen && (
-            <div className="rounded-lg border border-zinc-700 overflow-hidden">
-              <div className="bg-zinc-800 px-3 py-1.5 flex items-center gap-2 border-b border-zinc-700">
+            <div className="rounded-lg border border-[color:var(--brand-outline)] overflow-hidden">
+              <div className="bg-[color:var(--brand-nav-bg)] px-3 py-1.5 flex items-center gap-2 border-b border-[color:var(--brand-outline)]">
                 <span className="w-3 h-3 rounded-full bg-red-500/70 inline-block" />
                 <span className="w-3 h-3 rounded-full bg-yellow-500/70 inline-block" />
                 <span className="w-3 h-3 rounded-full bg-green-500/70 inline-block" />
-                <span className="ml-2 text-xs text-zinc-500">Preview — how it looks on eBay</span>
+                <span className="ml-2 text-xs text-[color:var(--brand-text-muted)]">Preview — how it looks on eBay</span>
               </div>
               <iframe
                 ref={iframeRef}
@@ -627,19 +627,19 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
 
           {/* HTML code block */}
           <div className="relative">
-            <pre className="rounded-lg border border-zinc-800 bg-zinc-950 p-3 text-xs text-zinc-400 overflow-auto max-h-48 leading-relaxed whitespace-pre-wrap break-all font-mono">
+            <pre className="rounded-lg border border-[color:var(--brand-outline)] bg-[var(--background)] p-3 text-xs text-[color:var(--brand-text-muted)] overflow-auto max-h-48 leading-relaxed whitespace-pre-wrap break-all font-mono">
               {ebayHtml}
             </pre>
             <button
               onClick={handleCopyHtml}
-              className="absolute top-2 right-2 text-xs text-zinc-500 hover:text-zinc-200 bg-zinc-900 border border-zinc-700 rounded px-2 py-1 transition-colors"
+              className="absolute top-2 right-2 text-xs text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text)] bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] rounded px-2 py-1 transition-colors"
             >
               {htmlCopied ? "✓" : "Copy"}
             </button>
           </div>
 
-          <p className="text-zinc-500 text-xs">
-            On eBay: Create listing → Scroll to Description → click <strong className="text-zinc-400">HTML</strong> → paste this code.
+          <p className="text-[color:var(--brand-text-muted)] text-xs">
+            On eBay: Create listing → Scroll to Description → click <strong className="text-[color:var(--brand-text-muted)]">HTML</strong> → paste this code.
           </p>
         </CardContent>
       </Card>
@@ -648,43 +648,43 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
       <Card>
         <CardHeader><CardTitle className="text-base">eBay API Draft</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-zinc-400 text-sm">
+          <p className="text-[color:var(--brand-text-muted)] text-sm">
             Optionally create a draft listing directly via the eBay API.
             {" "}<a href="/billing?tab=ebay" className="text-cyan-500 underline hover:text-cyan-400 text-xs">Connect your eBay account →</a>
           </p>
 
           {/* Listing defaults preview */}
           {ebaySettingsLoading ? (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-xs text-zinc-500 animate-pulse">
+            <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40 px-4 py-3 text-xs text-[color:var(--brand-text-muted)] animate-pulse">
               Loading listing defaults…
             </div>
           ) : ebaySettings ? (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 space-y-2">
-              <p className="text-xs text-zinc-500 font-medium uppercase tracking-wide">Listing defaults</p>
+            <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40 px-4 py-3 space-y-2">
+              <p className="text-xs text-[color:var(--brand-text-muted)] font-medium uppercase tracking-wide">Listing defaults</p>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-center">
                 <div>
-                  <p className="text-xs text-zinc-500 mb-0.5">Shipping</p>
-                  <p className="text-sm font-semibold text-zinc-200">{formatShippingCost(ebaySettings.shippingCost)}</p>
+                  <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Shipping</p>
+                  <p className="text-sm font-semibold text-[color:var(--brand-text)]">{formatShippingCost(ebaySettings.shippingCost)}</p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500 mb-0.5">Returns</p>
-                  <p className="text-sm font-semibold text-zinc-200">
+                  <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Returns</p>
+                  <p className="text-sm font-semibold text-[color:var(--brand-text)]">
                     {ebaySettings.returnsAccepted ? formatReturnPeriod(ebaySettings.returnPeriod) : "No returns"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-xs text-zinc-500 mb-0.5">Payment</p>
-                  <p className="text-sm font-semibold text-zinc-200">{ebaySettings.paymentMethod}</p>
+                  <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Payment</p>
+                  <p className="text-sm font-semibold text-[color:var(--brand-text)]">{ebaySettings.paymentMethod}</p>
                 </div>
               </div>
-              <p className="text-xs text-zinc-600 text-right">
+              <p className="text-xs text-[color:var(--brand-text-muted)] text-right">
                 <a href="/billing?tab=ebay" className="text-cyan-600 hover:text-cyan-400 underline underline-offset-2 transition-colors">
                   Update settings →
                 </a>
               </p>
             </div>
           ) : ebaySettingsError ? (
-            <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-4 py-3 text-xs text-zinc-500">
+            <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40 px-4 py-3 text-xs text-[color:var(--brand-text-muted)]">
               Could not load listing defaults.{" "}
               <a href="/billing?tab=ebay" className="text-cyan-600 hover:text-cyan-400 underline underline-offset-2 transition-colors">
                 Check eBay settings →
@@ -695,7 +695,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
           {published ? (
             <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 space-y-1">
               <p className="text-emerald-400 text-sm font-medium">✓ Draft created</p>
-              <p className="text-zinc-400 text-xs">Listing ID: {published.listingId}</p>
+              <p className="text-[color:var(--brand-text-muted)] text-xs">Listing ID: {published.listingId}</p>
               <a
                 href={published.viewItemURL}
                 target="_blank"
@@ -717,12 +717,12 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
       <Card>
         <CardHeader><CardTitle className="text-base">Vinted Export</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <p className="text-zinc-400 text-sm">Vinted-ready title and description. Copy or export as CSV.</p>
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3 space-y-2">
+          <p className="text-[color:var(--brand-text-muted)] text-sm">Vinted-ready title and description. Copy or export as CSV.</p>
+          <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/50 p-3 space-y-2">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <p className="text-xs text-zinc-500 mb-1">Title</p>
-                <p className="text-sm text-zinc-300">{(vinted.title as string) ?? title}</p>
+                <p className="text-xs text-[color:var(--brand-text-muted)] mb-1">Title</p>
+                <p className="text-sm text-[color:var(--brand-text)]">{(vinted.title as string) ?? title}</p>
               </div>
               <button onClick={() => handleCopy((vinted.title as string) ?? title, "vtitle")} className="text-xs text-cyan-500 hover:text-cyan-400 shrink-0 transition-colors">
                 {copied === "vtitle" ? "Copied!" : "Copy"}
@@ -740,7 +740,7 @@ export function ListingEditor({ itemId, analysis, onReset }: ListingEditorProps)
       {/* Reset */}
       {onReset && (
         <div className="pt-2">
-          <button onClick={onReset} className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">
+          <button onClick={onReset} className="text-sm text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text)] transition-colors">
             ← Start new analysis
           </button>
         </div>

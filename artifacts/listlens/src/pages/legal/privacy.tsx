@@ -2,7 +2,7 @@ import { Navbar } from "@/components/layout/navbar";
 
 export default function PrivacyPage() {
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
       <main className="mx-auto max-w-3xl px-6 py-12">
         <div className="brand-card p-8 prose prose-invert">
@@ -62,7 +62,7 @@ export default function PrivacyPage() {
             retention window.
           </p>
 
-          <p className="text-zinc-500 text-sm mt-12 not-prose">Last updated: 2026-04-28</p>
+          <p className="text-[color:var(--brand-text-muted)] text-sm mt-12 not-prose">Last updated: 2026-04-28</p>
         </div>
       </main>
     </div>

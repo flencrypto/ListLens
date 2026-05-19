@@ -67,8 +67,8 @@ export function Navbar() {
               className={cn(
                 "ml-2 rounded-md border px-3 py-1.5 text-sm font-medium transition-colors",
                 isAuthenticated
-                  ? "border-white/12 text-[color:var(--brand-text-muted)] hover:border-white/24 hover:text-[color:var(--brand-text-strong)]"
-                  : "border-[#0082ff]/28 bg-[#0082ff]/8 text-[#7fefff] hover:bg-[#0082ff]/16 hover:text-white",
+                  ? "border-[color:var(--brand-outline)] text-[color:var(--brand-text-muted)] hover:border-[color:var(--brand-outline-strong)] hover:text-[color:var(--brand-text-strong)]"
+                  : "border-[#0082ff]/28 bg-[#0082ff]/8 text-cyan-600 dark:text-[#7fefff] hover:bg-[#0082ff]/16 hover:text-cyan-700 dark:hover:text-white",
               )}
             >
               {isAuthenticated ? "Log out" : "Log in"}
@@ -103,7 +103,7 @@ export function Navbar() {
                   "block rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
                   isActive
                     ? "text-[color:var(--brand-text-strong)] bg-[color:var(--brand-accent-soft)]"
-                    : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)] hover:bg-white/6",
+                    : "text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-strong)] hover:bg-[color:var(--brand-accent-soft)]",
                 )}
               >
                 {link.label}
@@ -116,8 +116,8 @@ export function Navbar() {
               className={cn(
                 "w-full mt-1 rounded-md border px-3 py-2.5 text-sm font-medium transition-colors text-left",
                 isAuthenticated
-                  ? "border-white/12 text-[color:var(--brand-text-muted)] hover:border-white/24 hover:text-[color:var(--brand-text-strong)]"
-                  : "border-[#0082ff]/28 bg-[#0082ff]/8 text-[#7fefff] hover:bg-[#0082ff]/16 hover:text-white",
+                  ? "border-[color:var(--brand-outline)] text-[color:var(--brand-text-muted)] hover:border-[color:var(--brand-outline-strong)] hover:text-[color:var(--brand-text-strong)]"
+                  : "border-[#0082ff]/28 bg-[#0082ff]/8 text-cyan-600 dark:text-[#7fefff] hover:bg-[#0082ff]/16 hover:text-cyan-700 dark:hover:text-white",
               )}
             >
               {isAuthenticated ? "Log out" : "Log in"}

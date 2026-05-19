@@ -307,7 +307,7 @@ function GlowBlob({ className = "" }: { className?: string }) {
 
 function GlassPanel({ children, className = "", glow = false }: { children: React.ReactNode; className?: string; glow?: boolean }) {
   return (
-    <div className={cx("relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.045] shadow-xl shadow-black/20 backdrop-blur-xl", className)}>
+    <div className={cx("relative overflow-hidden rounded-3xl border border-[color:var(--brand-outline)] bg-white/[0.045] shadow-xl shadow-black/20 backdrop-blur-xl", className)}>
       {glow && <div className="pointer-events-none absolute -right-16 -top-16 h-36 w-36 rounded-full bg-cyan-300/20 blur-3xl" />}
       <div className="relative z-10">{children}</div>
     </div>
@@ -319,7 +319,7 @@ function Badge({ children, tone = "cyan", icon, className = "" }: { children: Re
     cyan: "border-cyan-300/20 bg-cyan-300/10 text-cyan-200",
     green: "border-emerald-300/20 bg-emerald-300/10 text-emerald-200",
     blue: "border-blue-300/20 bg-blue-300/10 text-blue-200",
-    neutral: "border-white/10 bg-white/5 text-white/65",
+    neutral: "border-[color:var(--brand-outline)] bg-white/5 text-[color:var(--brand-text-strong)]/65",
     warn: "border-amber-300/20 bg-amber-300/10 text-amber-200",
   };
 
@@ -344,8 +344,8 @@ function Button({
 }) {
   const variants = {
     solid: "bg-cyan-300 text-black shadow-lg shadow-cyan-300/20 hover:bg-cyan-200",
-    outline: "border border-white/15 bg-white/5 text-white hover:border-cyan-300/25 hover:bg-white/10",
-    ghost: "bg-transparent text-white/75 hover:bg-white/5 hover:text-white",
+    outline: "border border-white/15 bg-white/5 text-[color:var(--brand-text-strong)] hover:border-cyan-300/25 hover:bg-white/10",
+    ghost: "bg-transparent text-[color:var(--brand-text-strong)]/75 hover:bg-[color:var(--brand-accent-soft)] hover:text-[color:var(--brand-text-strong)]",
   };
 
   return (
@@ -357,7 +357,7 @@ function Button({
 
 function IconButton({ icon, label }: { icon: IconName; label: string }) {
   return (
-    <button type="button" aria-label={label} className="grid h-10 w-10 place-items-center rounded-2xl border border-white/10 bg-white/5 text-white/75 shadow-lg shadow-black/10 backdrop-blur transition hover:border-cyan-300/25 hover:bg-cyan-300/10 hover:text-cyan-200">
+    <button type="button" aria-label={label} className="grid h-10 w-10 place-items-center rounded-2xl border border-[color:var(--brand-outline)] bg-white/5 text-white/75 shadow-lg shadow-black/10 backdrop-blur transition hover:border-cyan-300/25 hover:bg-cyan-300/10 hover:text-cyan-200">
       <Icon name={icon} size={18} />
     </button>
   );
@@ -367,8 +367,8 @@ function SectionHeader({ eyebrow, title, action }: { eyebrow?: string; title: st
   return (
     <div className="mb-3 flex items-end justify-between gap-3">
       <div>
-        {eyebrow && <div className={cx(fontSystem.mono, "mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/40")}>{eyebrow}</div>}
-        <h3 className={cx(fontSystem.display, "text-base font-black tracking-[-0.04em] text-white")}>{title}</h3>
+        {eyebrow && <div className={cx(fontSystem.mono, "mb-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[color:var(--brand-text-strong)]/40")}>{eyebrow}</div>}
+        <h3 className={cx(fontSystem.display, "text-base font-black tracking-[-0.04em] text-[color:var(--brand-text-strong)]")}>{title}</h3>
       </div>
       {action}
     </div>
@@ -380,7 +380,7 @@ function PhoneFrame({ children }: { children: React.ReactNode }) {
     <div className="relative mx-auto w-full max-w-[390px] rounded-[2.4rem] border border-white/15 bg-black/70 p-3 shadow-2xl shadow-cyan-500/10">
       <div className="absolute left-1/2 top-3 z-20 h-6 w-28 -translate-x-1/2 rounded-full bg-black" />
       <div className="absolute inset-0 rounded-[2.4rem] bg-gradient-to-br from-white/10 via-transparent to-cyan-300/10" />
-      <div className="relative min-h-[740px] overflow-hidden rounded-[1.8rem] border border-white/10 bg-[#05070c]">
+      <div className="relative min-h-[740px] overflow-hidden rounded-[1.8rem] border border-[color:var(--brand-outline)] bg-[#05070c]">
         {children}
       </div>
     </div>
@@ -392,7 +392,7 @@ function Header() {
     <div className="relative z-10 flex items-center justify-between p-5 pt-8">
       <div>
         <div className={cx(fontSystem.mono, "text-xs font-semibold uppercase tracking-[0.32em] text-cyan-300/80")}>Mr.FLEN</div>
-        <div className={cx(fontSystem.display, "mt-1 text-2xl font-black tracking-[-0.04em] text-white")}>SOLE-LENS™</div>
+        <div className={cx(fontSystem.display, "mt-1 text-2xl font-black tracking-[-0.04em] text-[color:var(--brand-text-strong)]")}>SOLE-LENS™</div>
       </div>
       <div className="flex gap-2">
         <IconButton icon="bell" label="Notifications" />
@@ -404,7 +404,7 @@ function Header() {
 
 function BottomNav({ active, setActive }: { active: string; setActive: React.Dispatch<React.SetStateAction<string>> }) {
   return (
-    <div className="absolute bottom-0 left-0 right-0 z-30 border-t border-white/10 bg-black/70 px-3 py-3 backdrop-blur-xl">
+    <div className="absolute bottom-0 left-0 right-0 z-30 border-t border-[color:var(--brand-outline)] bg-black/70 px-3 py-3 backdrop-blur-xl">
       <div className="grid grid-cols-4 gap-2">
         {tabs.map((tab) => {
           const selected = active === tab.id;
@@ -430,7 +430,7 @@ function HeroNotice() {
         </div>
         <div className="min-w-0">
           <div className={cx(fontSystem.display, "font-bold tracking-[-0.03em]")}>Scan trainers. Price them. List them.</div>
-          <div className="text-sm leading-5 text-white/60">Camera-first resale intelligence.</div>
+          <div className="text-sm leading-5 text-[color:var(--brand-text-strong)]/60">Camera-first resale intelligence.</div>
         </div>
       </div>
     </GlassPanel>
@@ -441,12 +441,12 @@ function DemoScanStrip() {
   return (
     <div className="mb-4 grid grid-cols-3 gap-2">
       {demoSneakers.map((item) => (
-        <div key={item.id} className="rounded-2xl border border-white/10 bg-white/5 p-3">
-          <div className={cx(fontSystem.display, "truncate text-xs font-black tracking-[-0.03em] text-white/85")}>{item.name.replace("Nike ", "")}</div>
-          <div className="mt-1 truncate text-[10px] text-white/40">{item.size} · {item.condition.replace("Used · ", "")}</div>
+        <div key={item.id} className="rounded-2xl border border-[color:var(--brand-outline)] bg-white/5 p-3">
+          <div className={cx(fontSystem.display, "truncate text-xs font-black tracking-[-0.03em] text-[color:var(--brand-text-strong)]/85")}>{item.name.replace("Nike ", "")}</div>
+          <div className="mt-1 truncate text-[10px] text-[color:var(--brand-text-strong)]/40">{item.size} · {item.condition.replace("Used · ", "")}</div>
           <div className="mt-2 flex items-center justify-between">
             <span className={cx(fontSystem.display, "text-sm font-black text-cyan-200")}>{item.maxValue}</span>
-            <span className="text-[10px] text-white/35">{item.confidence}%</span>
+            <span className="text-[10px] text-[color:var(--brand-text-strong)]/35">{item.confidence}%</span>
           </div>
         </div>
       ))}
@@ -462,7 +462,7 @@ function CaptureProgress({ active = 0 }: { active?: number }) {
         return (
           <div key={step} className="min-w-0">
             <div className={cx("mb-1 h-1.5 rounded-full", done ? "bg-cyan-300 shadow-[0_0_12px_rgba(103,232,249,.65)]" : "bg-white/15")} />
-            <div className={cx(fontSystem.mono, "truncate text-[9px] uppercase tracking-[0.12em]", done ? "text-cyan-100" : "text-white/35")}>{step}</div>
+            <div className={cx(fontSystem.mono, "truncate text-[9px] uppercase tracking-[0.12em]", done ? "text-cyan-100" : "text-[color:var(--brand-text-strong)]/35")}>{step}</div>
           </div>
         );
       })}
@@ -487,7 +487,7 @@ function SneakerSilhouette() {
 
 function ScanViewport() {
   return (
-    <div className="relative h-[430px] overflow-hidden rounded-[2rem] border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-black shadow-2xl">
+    <div className="relative h-[430px] overflow-hidden rounded-[2rem] border border-[color:var(--brand-outline)] bg-gradient-to-br from-slate-900 via-slate-950 to-black shadow-2xl">
       <div className="absolute inset-0 opacity-30" style={{ backgroundImage: "radial-gradient(circle at 50% 35%, rgba(34,211,238,.42), transparent 28%), linear-gradient(135deg, rgba(255,255,255,.09) 0 1px, transparent 1px)", backgroundSize: "100% 100%, 24px 24px" }} />
       <div className="absolute inset-x-8 top-20 h-64 rounded-[2rem] border-2 border-dashed border-cyan-300/50" />
       <motion.div animate={{ y: [0, 260, 0] }} transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }} className="absolute left-8 right-8 top-20 h-[2px] bg-cyan-300 shadow-[0_0_22px_rgba(103,232,249,.9)]" />
@@ -500,11 +500,11 @@ function ScanViewport() {
         <div className="mb-3 flex items-center justify-between">
           <div>
             <div className={cx(fontSystem.display, "text-sm font-bold tracking-[-0.03em]")}>Guided capture</div>
-            <div className="text-xs text-white/45">Complete the angles for stronger ID confidence.</div>
+            <div className="text-xs text-[color:var(--brand-text-strong)]/45">Complete the angles for stronger ID confidence.</div>
           </div>
           <div className="rounded-2xl bg-cyan-300/10 px-3 py-2 text-right ring-1 ring-cyan-300/15">
             <div className={cx(fontSystem.display, "text-sm font-black text-cyan-200")}>1/4</div>
-            <div className={cx(fontSystem.mono, "text-[9px] uppercase tracking-[0.12em] text-white/35")}>Shots</div>
+            <div className={cx(fontSystem.mono, "text-[9px] uppercase tracking-[0.12em] text-[color:var(--brand-text-strong)]/35")}>Shots</div>
           </div>
         </div>
         <CaptureProgress active={0} />
@@ -527,7 +527,7 @@ function ScanScreen({
   error: string | null;
 }) {
   return (
-    <div className="relative min-h-[740px] pb-24 text-white">
+    <div className="relative min-h-[740px] pb-24 text-[color:var(--brand-text-strong)]">
       <GlowBlob className="-top-20 right-0 h-56 w-56 bg-cyan-500/25" />
       <GlowBlob className="bottom-24 left-0 h-64 w-64 bg-blue-600/20" />
       <Header />
@@ -537,12 +537,12 @@ function ScanScreen({
         <ScanViewport />
         <GlassPanel className="mt-4 p-4">
           <label className="block">
-            <span className={cx(fontSystem.mono, "mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/45")}>KicksCrew product URL · optional</span>
+            <span className={cx(fontSystem.mono, "mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--brand-text-strong)]/45")}>KicksCrew product URL · optional</span>
             <input
               value={kickscrewUrl}
               onChange={(event) => setKickscrewUrl(event.target.value)}
               placeholder="Paste a KicksCrew product URL"
-              className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
+              className="w-full rounded-2xl border border-[color:var(--brand-outline)] bg-[color:var(--brand-accent-soft)] px-4 py-3 text-sm text-[color:var(--brand-text-strong)] outline-none transition placeholder:text-[color:var(--brand-text-strong)]/25 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
             />
           </label>
           {error ? <p className="mt-2 text-xs text-amber-200">{error}</p> : null}
@@ -570,13 +570,13 @@ function ConfidenceRing({ value }: { value: number }) {
 
 function ProductImageCard({ sneaker }: { sneaker: DisplaySneaker }) {
   return (
-    <div className="relative overflow-hidden rounded-[1.6rem] border border-white/10 bg-gradient-to-br from-white/12 via-slate-500/10 to-cyan-400/10 p-4">
+    <div className="relative overflow-hidden rounded-[1.6rem] border border-[color:var(--brand-outline)] bg-gradient-to-br from-white/12 via-slate-500/10 to-cyan-400/10 p-4">
       <div className="absolute right-4 top-4"><Badge tone="cyan">{sneaker.platform}</Badge></div>
       <div className="grid h-36 place-items-center overflow-hidden rounded-3xl">{sneaker.imageUrl ? <img src={sneaker.imageUrl} alt={sneaker.name} className="h-full w-full object-contain" /> : <SneakerSilhouette />}</div>
       <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between rounded-2xl bg-black/45 p-3 backdrop-blur">
         <div>
           <div className={cx(fontSystem.display, "text-sm font-black tracking-[-0.03em]")}>{sneaker.condition}</div>
-          <div className="text-xs text-white/45">Photo evidence: {sneaker.photoEvidence}</div>
+          <div className="text-xs text-[color:var(--brand-text-strong)]/45">Photo evidence: {sneaker.photoEvidence}</div>
         </div>
         <Badge tone="green" icon="shield">{sneaker.authenticity}</Badge>
       </div>
@@ -586,10 +586,10 @@ function ProductImageCard({ sneaker }: { sneaker: DisplaySneaker }) {
 
 function Metric({ label, value, icon }: { label: string; value: string; icon: IconName }) {
   return (
-    <div className="rounded-2xl border border-white/10 bg-black/30 p-3 shadow-lg shadow-black/10">
+    <div className="rounded-2xl border border-[color:var(--brand-outline)] bg-[color:var(--brand-accent-soft)] p-3 shadow-lg shadow-black/10">
       <Icon name={icon} size={18} className="mb-2 text-cyan-300" />
       <div className={cx(fontSystem.display, "text-sm font-black tracking-[-0.04em]")}>{value}</div>
-      <div className={cx(fontSystem.mono, "text-[10px] uppercase tracking-[0.12em] text-white/45")}>{label}</div>
+      <div className={cx(fontSystem.mono, "text-[10px] uppercase tracking-[0.12em] text-[color:var(--brand-text-strong)]/45")}>{label}</div>
     </div>
   );
 }
@@ -601,7 +601,7 @@ function ResultHero({ sneaker }: { sneaker: DisplaySneaker }) {
         <div>
           <Badge tone="cyan" icon="sparkles">{sneaker.source === "KicksCrew" ? "Live KicksCrew match" : "AI match found"}</Badge>
           <h2 className={cx(fontSystem.display, "mt-3 text-2xl font-black leading-7 tracking-[-0.045em]")}>{sneaker.name}</h2>
-          <p className="mt-1 text-sm leading-5 text-white/60">{sneaker.colourway} · {sneaker.size}</p>
+          <p className="mt-1 text-sm leading-5 text-[color:var(--brand-text-strong)]/60">{sneaker.colourway} · {sneaker.size}</p>
         </div>
         <ConfidenceRing value={sneaker.confidence} />
       </div>
@@ -623,8 +623,8 @@ function AuthenticityPanel({ sneaker }: { sneaker: DisplaySneaker }) {
         {qualityChecks.map((check) => (
           <div key={check.label} className="rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
             <Icon name={check.tone === "success" ? "check" : "alert"} size={15} className={check.tone === "success" ? "text-emerald-300" : "text-amber-300"} />
-            <div className={cx(fontSystem.display, "mt-2 text-xs font-black tracking-[-0.02em] text-white/80")}>{check.label}</div>
-            <div className="mt-1 text-[11px] text-white/45">{check.status}</div>
+            <div className={cx(fontSystem.display, "mt-2 text-xs font-black tracking-[-0.02em] text-[color:var(--brand-text-strong)]/80")}>{check.label}</div>
+            <div className="mt-1 text-[11px] text-[color:var(--brand-text-strong)]/45">{check.status}</div>
           </div>
         ))}
       </div>
@@ -647,10 +647,10 @@ function MarketSignalPanel({ sneaker }: { sneaker: DisplaySneaker }) {
 
 function CompRow({ comp }: { comp: (typeof comps)[number] }) {
   return (
-    <div className="group flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 p-3 transition hover:border-cyan-300/20 hover:bg-cyan-300/10">
+    <div className="group flex items-center justify-between rounded-2xl border border-[color:var(--brand-outline)] bg-white/5 p-3 transition hover:border-cyan-300/20 hover:bg-cyan-300/10">
       <div className="min-w-0 pr-3">
-        <div className="truncate text-sm font-semibold tracking-[-0.02em] text-white/90">{comp.title}</div>
-        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-white/45">
+        <div className="truncate text-sm font-semibold tracking-[-0.02em] text-[color:var(--brand-text-strong)]/90">{comp.title}</div>
+        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-[color:var(--brand-text-strong)]/45">
           <span>{comp.platform}</span><span className="h-1 w-1 rounded-full bg-white/25" /><span>{comp.state}</span><span className="h-1 w-1 rounded-full bg-white/25" /><span>{comp.match}% fit</span><span className="h-1 w-1 rounded-full bg-white/25" /><span>{comp.date}</span>
         </div>
       </div>
@@ -670,7 +670,7 @@ function CompsPanel() {
 
 function ResultScreen({ setActive, sneaker }: { setActive: React.Dispatch<React.SetStateAction<string>>; sneaker: DisplaySneaker }) {
   return (
-    <div className="relative min-h-[740px] pb-24 text-white">
+    <div className="relative min-h-[740px] pb-24 text-[color:var(--brand-text-strong)]">
       <GlowBlob className="-right-14 top-16 h-64 w-64 bg-cyan-400/20" />
       <Header />
       <div className="relative z-10 px-5">
@@ -691,11 +691,11 @@ function ListingScoreCard({ sneaker }: { sneaker: DisplaySneaker }) {
         <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-cyan-300 text-black shadow-lg shadow-cyan-300/25"><Icon name="wand" size={20} /></div>
         <div className="min-w-0 flex-1">
           <div className={cx(fontSystem.display, "font-black tracking-[-0.035em]")}>Listing generated</div>
-          <div className="text-sm leading-5 text-white/60">SEO, condition notes and item specifics ready.</div>
+          <div className="text-sm leading-5 text-[color:var(--brand-text-strong)]/60">SEO, condition notes and item specifics ready.</div>
         </div>
         <div className="text-right">
           <div className={cx(fontSystem.display, "text-xl font-black text-cyan-200")}>{sneaker.listingScore}</div>
-          <div className={cx(fontSystem.mono, "text-[9px] uppercase tracking-[0.14em] text-white/35")}>Score</div>
+          <div className={cx(fontSystem.mono, "text-[9px] uppercase tracking-[0.14em] text-[color:var(--brand-text-strong)]/35")}>Score</div>
         </div>
       </div>
       <div className="mt-4 h-2 rounded-full bg-white/10"><div className="h-full rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,.45)]" style={{ width: `${sneaker.listingScore}%` }} /></div>
@@ -708,8 +708,8 @@ function ListingAnalyticsStrip() {
     <div className="mb-4 grid grid-cols-3 gap-2">
       {listingAnalytics.map((metric) => (
         <GlassPanel key={metric.label} className="p-3">
-          <div className={cx(fontSystem.display, "text-lg font-black tracking-[-0.05em] text-white")}>{metric.value}</div>
-          <div className={cx(fontSystem.mono, "text-[9px] uppercase tracking-[0.12em] text-white/35")}>{metric.label}</div>
+          <div className={cx(fontSystem.display, "text-lg font-black tracking-[-0.05em] text-[color:var(--brand-text-strong)]")}>{metric.value}</div>
+          <div className={cx(fontSystem.mono, "text-[9px] uppercase tracking-[0.12em] text-[color:var(--brand-text-strong)]/35")}>{metric.label}</div>
           <div className="mt-1 text-[10px] font-bold text-cyan-200">{metric.change}</div>
         </GlassPanel>
       ))}
@@ -720,26 +720,26 @@ function ListingAnalyticsStrip() {
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <GlassPanel className="p-4">
-      <div className={cx(fontSystem.mono, "mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40")}>{label}</div>
-      <div className={cx(fontSystem.display, "text-sm font-semibold leading-5 tracking-[-0.025em] text-white/85")}>{value}</div>
+      <div className={cx(fontSystem.mono, "mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--brand-text-strong)]/40")}>{label}</div>
+      <div className={cx(fontSystem.display, "text-sm font-semibold leading-5 tracking-[-0.025em] text-[color:var(--brand-text-strong)]/85")}>{value}</div>
     </GlassPanel>
   );
 }
 
 function ItemSpecificsGrid({ sneaker }: { sneaker: DisplaySneaker }) {
   const specifics = [`Brand: ${sneaker.brand}`, `Model: ${sneaker.name}`, `Size: ${sneaker.size}`, `SKU: ${sneaker.sku}`];
-  return <div className="grid grid-cols-2 gap-2 text-xs">{specifics.map((item) => <div key={item} className="rounded-2xl bg-white/5 p-3 text-white/65 ring-1 ring-white/10">{item}</div>)}</div>;
+  return <div className="grid grid-cols-2 gap-2 text-xs">{specifics.map((item) => <div key={item} className="rounded-2xl bg-white/5 p-3 text-[color:var(--brand-text-strong)]/65 ring-1 ring-white/10">{item}</div>)}</div>;
 }
 
 function PublishCard({ draft }: { draft: (typeof marketplaceDrafts)[number] }) {
   const detail = draft.platform === "eBay" ? "Best for max value" : draft.platform === "Vinted" ? "Best for quick sale" : "Best for style discovery";
   return (
-    <div className={cx("rounded-3xl border p-4 transition", draft.selected ? "border-cyan-300/30 bg-cyan-300/10" : "border-white/10 bg-white/5")}>
+    <div className={cx("rounded-3xl border p-4 transition", draft.selected ? "border-cyan-300/30 bg-cyan-300/10" : "border-[color:var(--brand-outline)] bg-white/5")}>
       <div className="mb-3 flex items-center justify-between">
         <div className={cx(fontSystem.display, "font-black tracking-[-0.03em]")}>{draft.platform}</div>
-        <Icon name="check" size={18} className={draft.selected ? "text-cyan-200" : "text-white/35"} />
+        <Icon name="check" size={18} className={draft.selected ? "text-cyan-200" : "text-[color:var(--brand-text-strong)]/35"} />
       </div>
-      <div className="text-xs leading-5 text-white/50">{detail}</div>
+      <div className="text-xs leading-5 text-[color:var(--brand-text-strong)]/50">{detail}</div>
       <div className={cx(fontSystem.display, "mt-2 text-xl font-black tracking-[-0.05em] text-cyan-200")}>{draft.price}</div>
       <div className="mt-3 flex flex-wrap gap-1.5"><Badge tone={draft.selected ? "cyan" : "neutral"}>{draft.status}</Badge><Badge tone="neutral">{draft.fee}</Badge><Badge tone="blue">{draft.reach}</Badge></div>
     </div>
@@ -748,7 +748,7 @@ function PublishCard({ draft }: { draft: (typeof marketplaceDrafts)[number] }) {
 
 function ListingScreen({ sneaker }: { sneaker: DisplaySneaker }) {
   return (
-    <div className="relative min-h-[740px] pb-24 text-white">
+    <div className="relative min-h-[740px] pb-24 text-[color:var(--brand-text-strong)]">
       <GlowBlob className="left-0 top-20 h-64 w-64 bg-blue-500/20" />
       <Header />
       <div className="relative z-10 px-5">
@@ -758,8 +758,8 @@ function ListingScreen({ sneaker }: { sneaker: DisplaySneaker }) {
           <Field label="SEO title" value={`${sneaker.name} ${sneaker.colourway} Trainers ${sneaker.size} ${sneaker.condition}`} />
           <Field label="Subtitle" value="AI-priced · Clean condition · Fast dispatch · Genuine pair" />
           <GlassPanel className="p-4">
-            <div className={cx(fontSystem.mono, "mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-white/40")}>Description</div>
-            <p className="text-sm leading-6 text-white/75">{sneaker.name} in the {sneaker.colourway} colourway. {sneaker.size}. {sneaker.condition} condition with clear resale demand, AI-supported pricing and marketplace-ready item specifics.</p>
+            <div className={cx(fontSystem.mono, "mb-2 text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--brand-text-strong)]/40")}>Description</div>
+            <p className="text-sm leading-6 text-[color:var(--brand-text-strong)]/75">{sneaker.name} in the {sneaker.colourway} colourway. {sneaker.size}. {sneaker.condition} condition with clear resale demand, AI-supported pricing and marketplace-ready item specifics.</p>
             <div className="mt-4"><ItemSpecificsGrid sneaker={sneaker} /></div>
           </GlassPanel>
         </div>
@@ -778,7 +778,7 @@ function StatCard({ stat }: { stat: (typeof stats)[number] }) {
         <div className="flex min-w-0 items-center gap-3">
           <div className={cx("grid h-10 w-10 shrink-0 place-items-center rounded-2xl", toneClass)}><Icon name={stat.icon} size={19} /></div>
           <div className="min-w-0">
-            <div className={cx(fontSystem.mono, "truncate text-[10px] uppercase tracking-[0.14em] text-white/50")}>{stat.label}</div>
+            <div className={cx(fontSystem.mono, "truncate text-[10px] uppercase tracking-[0.14em] text-[color:var(--brand-text-strong)]/50")}>{stat.label}</div>
             <div className={cx(fontSystem.display, "text-xl font-black tracking-[-0.05em]")}>{stat.value}</div>
           </div>
         </div>
@@ -791,9 +791,9 @@ function StatCard({ stat }: { stat: (typeof stats)[number] }) {
 function Insight({ icon, title, body, tone = "cyan" }: { icon: IconName; title: string; body: string; tone?: string }) {
   const iconTone = tone === "warn" ? "text-amber-300" : tone === "green" ? "text-emerald-300" : "text-cyan-300";
   return (
-    <div className="rounded-2xl bg-black/30 p-3 ring-1 ring-white/10 transition hover:bg-white/5">
+    <div className="rounded-2xl bg-[color:var(--brand-accent-soft)] p-3 ring-1 ring-white/10 transition hover:bg-[color:var(--brand-accent-soft)]">
       <div className={cx(fontSystem.display, "mb-1 flex items-center gap-2 font-bold tracking-[-0.025em]")}><Icon name={icon} size={16} className={iconTone} /> {title}</div>
-      <p className="text-xs leading-5 text-white/50">{body}</p>
+      <p className="text-xs leading-5 text-[color:var(--brand-text-strong)]/50">{body}</p>
     </div>
   );
 }
@@ -805,8 +805,8 @@ function RecentScansPanel() {
       <div className="space-y-2">
         {recentScans.map((scan) => (
           <div key={scan.id} className="flex items-center justify-between rounded-2xl bg-white/5 p-3 ring-1 ring-white/10">
-            <div className="min-w-0"><div className="truncate text-sm font-bold text-white/85">{scan.item}</div><div className="mt-1 text-[11px] text-white/40">{scan.id} · {scan.confidence}% confidence</div></div>
-            <div className="text-right"><div className={cx(fontSystem.display, "text-sm font-black text-cyan-200")}>{scan.value}</div><div className="text-[10px] text-white/35">{scan.status}</div></div>
+            <div className="min-w-0"><div className="truncate text-sm font-bold text-[color:var(--brand-text-strong)]/85">{scan.item}</div><div className="mt-1 text-[11px] text-[color:var(--brand-text-strong)]/40">{scan.id} · {scan.confidence}% confidence</div></div>
+            <div className="text-right"><div className={cx(fontSystem.display, "text-sm font-black text-cyan-200")}>{scan.value}</div><div className="text-[10px] text-[color:var(--brand-text-strong)]/35">{scan.status}</div></div>
           </div>
         ))}
       </div>
@@ -820,10 +820,10 @@ function ActivityPanel() {
       <SectionHeader title="Activity feed" eyebrow="Live demo events" />
       <div className="space-y-2">
         {activityFeed.map((item) => (
-          <div key={item.event} className="flex gap-3 rounded-2xl bg-black/25 p-3 ring-1 ring-white/10">
+          <div key={item.event} className="flex gap-3 rounded-2xl bg-[color:var(--brand-accent-soft)] p-3 ring-1 ring-white/10">
             <div className={cx("mt-1 h-2.5 w-2.5 shrink-0 rounded-full", item.tone === "green" ? "bg-emerald-300" : item.tone === "warn" ? "bg-amber-300" : "bg-cyan-300")} />
-            <div className="min-w-0 flex-1"><div className="text-xs font-bold text-white/85">{item.event}</div><div className="truncate text-[11px] text-white/45">{item.detail}</div></div>
-            <div className="text-[10px] text-white/35">{item.time}</div>
+            <div className="min-w-0 flex-1"><div className="text-xs font-bold text-[color:var(--brand-text-strong)]/85">{item.event}</div><div className="truncate text-[11px] text-[color:var(--brand-text-strong)]/45">{item.detail}</div></div>
+            <div className="text-[10px] text-[color:var(--brand-text-strong)]/35">{item.time}</div>
           </div>
         ))}
       </div>
@@ -833,11 +833,11 @@ function ActivityPanel() {
 
 function DashboardScreen() {
   return (
-    <div className="relative min-h-[740px] pb-24 text-white">
+    <div className="relative min-h-[740px] pb-24 text-[color:var(--brand-text-strong)]">
       <GlowBlob className="right-0 top-0 h-72 w-72 bg-cyan-500/20" />
       <Header />
       <div className="relative z-10 px-5">
-        <div className="mb-4 flex items-center gap-2 rounded-2xl border border-white/10 bg-white/5 p-3 shadow-lg shadow-black/10"><Icon name="search" size={17} className="text-white/40" /><span className="text-sm text-white/40">Search scans, brands, listings...</span><Icon name="sliders" size={17} className="ml-auto text-white/35" /></div>
+        <div className="mb-4 flex items-center gap-2 rounded-2xl border border-[color:var(--brand-outline)] bg-white/5 p-3 shadow-lg shadow-black/10"><Icon name="search" size={17} className="text-[color:var(--brand-text-strong)]/40" /><span className="text-sm text-[color:var(--brand-text-strong)]/40">Search scans, brands, listings...</span><Icon name="sliders" size={17} className="ml-auto text-[color:var(--brand-text-strong)]/35" /></div>
         <div className="grid grid-cols-2 gap-3">{stats.map((stat) => <StatCard key={stat.label} stat={stat} />)}</div>
         <RecentScansPanel />
         <GlassPanel className="mt-4 p-4" glow>
@@ -860,7 +860,7 @@ function HeroCard({ icon, title, text }: { icon: IconName; title: string; text: 
     <GlassPanel className="p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/25 hover:bg-cyan-300/10">
       <Icon name={icon} className="mb-4 text-cyan-300" size={26} />
       <div className={cx(fontSystem.display, "font-black tracking-[-0.035em]")}>{title}</div>
-      <div className="mt-1 text-sm leading-5 text-white/50">{text}</div>
+      <div className="mt-1 text-sm leading-5 text-[color:var(--brand-text-strong)]/50">{text}</div>
     </GlassPanel>
   );
 }
@@ -908,13 +908,13 @@ export default function SoleLensPrototype() {
   const hasResult = analysisResult !== null;
 
   return (
-    <div className={cx(fontSystem.app, "relative min-h-screen overflow-hidden bg-[#03050a] text-white")}>
+    <div className={cx(fontSystem.app, "relative min-h-screen overflow-hidden bg-[#03050a] text-[color:var(--brand-text-strong)]")}>
       <GlowBlob className="left-1/3 -top-40 h-[450px] w-[450px] bg-cyan-500/12" />
       <GlowBlob className="bottom-0 right-0 h-80 w-80 bg-blue-600/8" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-10">
 
-        <Link href="/" className="inline-flex items-center gap-1.5 mb-8 text-xs text-zinc-400 hover:text-cyan-300 transition-colors">
+        <Link href="/" className="inline-flex items-center gap-1.5 mb-8 text-xs text-[color:var(--brand-text-muted)] hover:text-cyan-300 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Back to Home
         </Link>
@@ -926,14 +926,14 @@ export default function SoleLensPrototype() {
 
           {/* Copy panel */}
           <div className="col-span-12 lg:col-span-5">
-            <div className="relative flex h-full min-h-[380px] flex-col justify-between overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-8">
+            <div className="relative flex h-full min-h-[380px] flex-col justify-between overflow-hidden rounded-3xl border border-[color:var(--brand-outline)] bg-white/[0.03] p-8">
               <GlowBlob className="right-0 top-0 h-48 w-48 bg-cyan-500/12" />
               <div className="relative z-10">
                 <Badge tone="cyan" icon="sparkles">AI resale operating system · vertical prototype</Badge>
                 <h1 className={cx(fontSystem.display, "mt-5 text-4xl font-black leading-[0.92] tracking-[-0.065em]")}>
                   Turn a trainer photo into a sell-ready listing.
                 </h1>
-                <p className="mt-4 max-w-xs text-sm leading-6 text-white/50">
+                <p className="mt-4 max-w-xs text-sm leading-6 text-[color:var(--brand-text-strong)]/50">
                   SOLE-LENS™ identifies sneakers, checks risk, prices against live comps and generates platform-ready listings.
                 </p>
               </div>
@@ -951,7 +951,7 @@ export default function SoleLensPrototype() {
 
           {/* Scan panel */}
           <div className="col-span-12 lg:col-span-7">
-            <div className="relative flex h-full flex-col gap-0 overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-slate-900 via-slate-950 to-black p-5">
+            <div className="relative flex h-full flex-col gap-0 overflow-hidden rounded-3xl border border-[color:var(--brand-outline)] bg-gradient-to-br from-slate-900 via-slate-950 to-black p-5">
               <GlowBlob className="-right-10 -top-10 h-48 w-48 bg-cyan-500/15" />
               <div className="relative z-10 space-y-4">
                 <HeroNotice />
@@ -959,12 +959,12 @@ export default function SoleLensPrototype() {
                 <ScanViewport />
                 <GlassPanel className="p-4">
                   <label className="block">
-                    <span className={cx(fontSystem.mono, "mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-white/45")}>KicksCrew product URL · optional</span>
+                    <span className={cx(fontSystem.mono, "mb-2 block text-[10px] font-bold uppercase tracking-[0.16em] text-[color:var(--brand-text-strong)]/45")}>KicksCrew product URL · optional</span>
                     <input
                       value={kickscrewUrl}
                       onChange={(e) => setKickscrewUrl(e.target.value)}
                       placeholder="Paste a KicksCrew product URL"
-                      className="w-full rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-sm text-white outline-none transition placeholder:text-white/25 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
+                      className="w-full rounded-2xl border border-[color:var(--brand-outline)] bg-[color:var(--brand-accent-soft)] px-4 py-3 text-sm text-[color:var(--brand-text-strong)] outline-none transition placeholder:text-[color:var(--brand-text-strong)]/25 focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-300/20"
                     />
                   </label>
                   {analysisError ? <p className="mt-2 text-xs text-amber-200">{analysisError}</p> : null}
@@ -986,11 +986,11 @@ export default function SoleLensPrototype() {
 
           {/* Result panel */}
           <div className="col-span-12 lg:col-span-5">
-            <div className="relative h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="relative h-full overflow-hidden rounded-3xl border border-[color:var(--brand-outline)] bg-white/[0.03] p-5">
               <GlowBlob className="-right-8 -top-8 h-28 w-28 bg-cyan-400/15" />
               <div className="relative z-10">
                 {!hasResult && (
-                  <div className={cx(fontSystem.mono, "mb-3 text-[9px] font-bold uppercase tracking-[0.18em] text-white/30")}>
+                  <div className={cx(fontSystem.mono, "mb-3 text-[9px] font-bold uppercase tracking-[0.18em] text-[color:var(--brand-text-strong)]/30")}>
                     Demo data · scan to update
                   </div>
                 )}
@@ -1002,7 +1002,7 @@ export default function SoleLensPrototype() {
 
           {/* Comps panel */}
           <div className="col-span-12 lg:col-span-4">
-            <div className="h-full overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-5">
+            <div className="h-full overflow-hidden rounded-3xl border border-[color:var(--brand-outline)] bg-white/[0.03] p-5">
               <CompsPanel />
             </div>
           </div>
@@ -1013,7 +1013,7 @@ export default function SoleLensPrototype() {
               <GlowBlob className="-left-8 -top-8 h-24 w-24 bg-cyan-400/15" />
               <div className="relative z-10">
                 <ListingScoreCard sneaker={displaySneaker} />
-                <div className={cx(fontSystem.mono, "mb-2 mt-4 text-[9px] font-bold uppercase tracking-[0.16em] text-white/35")}>
+                <div className={cx(fontSystem.mono, "mb-2 mt-4 text-[9px] font-bold uppercase tracking-[0.16em] text-[color:var(--brand-text-strong)]/35")}>
                   Marketplace drafts
                 </div>
                 <div className="space-y-2">
@@ -1027,7 +1027,7 @@ export default function SoleLensPrototype() {
                     >
                       <div>
                         <div className={cx(fontSystem.display, "text-xs font-black")}>{draft.platform}</div>
-                        <div className="mt-0.5 text-[10px] text-white/40">{draft.fee} · {draft.reach}</div>
+                        <div className="mt-0.5 text-[10px] text-[color:var(--brand-text-strong)]/40">{draft.fee} · {draft.reach}</div>
                       </div>
                       <div className="text-right">
                         <div className={cx(fontSystem.display, "text-sm font-black text-cyan-200")}>{draft.price}</div>
