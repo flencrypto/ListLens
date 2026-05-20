@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "prisma": "^5.22.0",
-    "turbo": "^2.0.0",
+    "turbo": "^2.9.14",
     "typescript": "^5.4.5"
   },
   "packageManager": "npm@10.5.0"
