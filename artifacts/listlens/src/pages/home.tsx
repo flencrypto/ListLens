@@ -27,6 +27,7 @@ import {
   StatusPill,
   toneClasses,
 } from "@/components/listlens/hud";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import {
   BANNED_GUARD_PHRASES,
@@ -76,8 +77,8 @@ function LensRoadmap() {
     <HudPanel tone="cyan" className="p-5">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-white">Core Resale Lenses</h2>
-          <p className="mt-1 text-sm text-slate-400">
+          <h2 className="text-lg font-bold text-[color:var(--brand-text-strong)]">Core Resale Lenses</h2>
+          <p className="mt-1 text-sm text-[color:var(--brand-text-muted)]">
             Different category intelligence. Same trust layer.
           </p>
         </div>
@@ -93,7 +94,7 @@ function LensRoadmap() {
             <div
               key={lens.id}
               className={cn(
-                "rounded-lg border bg-[#071423]/75 p-4",
+                "rounded-lg border bg-[color:var(--brand-nav-bg)] p-4",
                 toneClasses[tone].border,
               )}
             >
@@ -103,11 +104,11 @@ function LensRoadmap() {
                   {isLive ? lens.phase : "Next"}
                 </StatusPill>
               </div>
-              <h3 className="text-sm font-bold text-white">{lens.displayName}</h3>
-              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+              <h3 className="text-sm font-bold text-[color:var(--brand-text-strong)]">{lens.displayName}</h3>
+              <p className="mt-1 text-[11px] uppercase tracking-[0.16em] text-[color:var(--brand-text-muted)]">
                 {lens.category}
               </p>
-              <p className="mt-3 text-xs leading-5 text-slate-400">{lens.purpose}</p>
+              <p className="mt-3 text-xs leading-5 text-[color:var(--brand-text-muted)]">{lens.purpose}</p>
             </div>
           );
         })}
@@ -122,7 +123,7 @@ function StudioPreview() {
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <StatusPill tone="cyan">ListLens Studio</StatusPill>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-[color:var(--brand-text-strong)]">
             Photo evidence to seller draft
           </h2>
         </div>
@@ -131,14 +132,14 @@ function StudioPreview() {
 
       <div className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <div className="rounded-lg border border-dashed border-cyan-300/30 bg-cyan-300/10 p-4">
-          <div className="mb-4 flex items-center justify-between text-xs text-slate-400">
+          <div className="mb-4 flex items-center justify-between text-xs text-[color:var(--brand-text-muted)]">
             <span>Upload photos</span>
             <span>0 / 8</span>
           </div>
-          <div className="flex min-h-48 flex-col items-center justify-center rounded-md border border-cyan-300/20 bg-black/25 text-center">
+          <div className="flex min-h-48 flex-col items-center justify-center rounded-md border border-cyan-300/20 bg-[color:var(--brand-accent-soft)] text-center">
             <ImagePlus className="mb-3 text-cyan-300" size={34} strokeWidth={1.6} />
-            <p className="text-sm font-semibold text-white">Drag item photos here</p>
-            <p className="mt-1 max-w-56 text-xs leading-5 text-slate-500">
+            <p className="text-sm font-semibold text-[color:var(--brand-text-strong)]">Drag item photos here</p>
+            <p className="mt-1 max-w-56 text-xs leading-5 text-[color:var(--brand-text-muted)]">
               Sole, size label, box, condition marks and proof of purchase if available.
             </p>
           </div>
@@ -151,14 +152,14 @@ function StudioPreview() {
         </div>
 
         <div className="space-y-3">
-          <div className="rounded-lg border border-cyan-300/20 bg-[#061120] p-4">
+          <div className="rounded-lg border border-cyan-300/20 bg-[color:var(--brand-accent-soft)] p-4">
             <p className="font-mono-hud text-[10px] uppercase tracking-[0.2em] text-cyan-300">
               Marketplace title
             </p>
-            <p className="mt-2 text-sm font-semibold leading-6 text-white">
+            <p className="mt-2 text-sm font-semibold leading-6 text-[color:var(--brand-text-strong)]">
               Nike Dunk Low Panda Black White Trainers UK 8 · Box Included
             </p>
-            <div className="mt-3 flex items-center justify-between text-xs text-slate-500">
+            <div className="mt-3 flex items-center justify-between text-xs text-[color:var(--brand-text-muted)]">
               <span>72 / 80 characters</span>
               <span className="text-cyan-300">eBay-ready</span>
             </div>
@@ -173,13 +174,13 @@ function StudioPreview() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-lg border border-white/10 bg-black/20 p-3">
-              <p className="text-xs text-slate-500">Quick sale</p>
-              <p className="mt-1 text-lg font-bold text-white">£62-70</p>
+            <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-accent-soft)] p-3">
+              <p className="text-xs text-[color:var(--brand-text-muted)]">Quick sale</p>
+              <p className="mt-1 text-lg font-bold text-[color:var(--brand-text-strong)]">£62-70</p>
             </div>
             <div className="rounded-lg border border-cyan-300/20 bg-cyan-300/10 p-3">
               <p className="text-xs text-cyan-300">Recommended</p>
-              <p className="mt-1 text-lg font-bold text-white">£78-86</p>
+              <p className="mt-1 text-lg font-bold text-[color:var(--brand-text-strong)]">£78-86</p>
             </div>
           </div>
         </div>
@@ -194,7 +195,7 @@ function GuardPreview() {
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <StatusPill tone="violet">ListLens Guard</StatusPill>
-          <h2 className="mt-3 text-2xl font-black tracking-tight text-white">
+          <h2 className="mt-3 text-2xl font-black tracking-tight text-[color:var(--brand-text-strong)]">
             Listing evidence to buyer report
           </h2>
         </div>
@@ -202,7 +203,7 @@ function GuardPreview() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-lg border border-violet-300/20 bg-[#061120] p-4">
+        <div className="rounded-lg border border-violet-300/20 bg-[color:var(--brand-accent-soft)] p-4">
           <div className="mb-4 flex items-center justify-between">
             <p className="font-mono-hud text-[10px] uppercase tracking-[0.2em] text-violet-300">
               Guard report
@@ -215,10 +216,10 @@ function GuardPreview() {
               { icon: CheckCircle2, label: "Price check", value: "High", tone: "amber" as const },
               { icon: HelpCircle, label: "Questions", value: "7", tone: "blue" as const },
             ].map(({ icon: Icon, label, value, tone }) => (
-              <div key={label} className="rounded-lg border border-white/10 bg-black/20 p-3">
+              <div key={label} className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-accent-soft)] p-3">
                 <Icon className={toneClasses[tone].text} size={18} strokeWidth={1.7} />
-                <p className="mt-3 text-xs text-slate-500">{label}</p>
-                <p className="mt-1 text-lg font-bold text-white">{value}</p>
+                <p className="mt-3 text-xs text-[color:var(--brand-text-muted)]">{label}</p>
+                <p className="mt-1 text-lg font-bold text-[color:var(--brand-text-strong)]">{value}</p>
               </div>
             ))}
           </div>
@@ -234,7 +235,7 @@ function GuardPreview() {
             <p className="font-mono-hud text-[10px] uppercase tracking-[0.2em] text-violet-300">
               Paste listing URL
             </p>
-            <div className="mt-3 rounded-md border border-violet-300/20 bg-black/30 px-3 py-3 text-xs text-slate-500">
+            <div className="mt-3 rounded-md border border-violet-300/20 bg-[color:var(--brand-accent-soft)] px-3 py-3 text-xs text-[color:var(--brand-text-muted)]">
               https://www.ebay.co.uk/itm/...
             </div>
           </div>
@@ -264,24 +265,24 @@ function HistoryColumn({
   return (
     <HudPanel tone={tone} className="p-5">
       <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="text-base font-bold text-white">{title}</h2>
+        <h2 className="text-base font-bold text-[color:var(--brand-text-strong)]">{title}</h2>
         <Link href={href} className={cn("text-xs font-semibold", toneClasses[tone].text)}>
           View all
         </Link>
       </div>
       <div className="space-y-3">
         {items.map((item) => (
-          <div key={item.title} className="rounded-lg border border-white/10 bg-black/20 p-4">
+          <div key={item.title} className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-accent-soft)] p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-white">{item.title}</p>
-                <p className="mt-1 text-xs text-slate-500">{item.meta}</p>
+                <p className="truncate text-sm font-semibold text-[color:var(--brand-text-strong)]">{item.title}</p>
+                <p className="mt-1 text-xs text-[color:var(--brand-text-muted)]">{item.meta}</p>
               </div>
               <span className={cn("shrink-0 text-xs font-semibold", toneClasses[tone].text)}>
                 {item.status}
               </span>
             </div>
-            <p className="mt-3 font-mono-hud text-[10px] uppercase tracking-[0.18em] text-slate-500">
+            <p className="mt-3 font-mono-hud text-[10px] uppercase tracking-[0.18em] text-[color:var(--brand-text-muted)]">
               {item.score}
             </p>
           </div>
@@ -299,18 +300,21 @@ export default function HomePage() {
           <BrandGlyph size={42} animated showSparks={false} />
           <BrandWordmark layout="inline" size="sm" />
         </Link>
-        <nav className="hidden items-center gap-6 text-sm text-slate-400 md:flex">
-          <Link href="/studio/new" className="hover:text-white">Studio</Link>
-          <Link href="/guard/new" className="hover:text-white">Guard</Link>
-          <Link href="/lenses" className="hover:text-white">Lenses</Link>
-          <Link href="/billing" className="hover:text-white">Credits</Link>
+        <nav className="hidden items-center gap-6 text-sm text-[color:var(--brand-text-muted)] md:flex">
+          <Link href="/studio/new" className="hover:text-[color:var(--brand-text-strong)]">Studio</Link>
+          <Link href="/guard/new" className="hover:text-[color:var(--brand-text-strong)]">Guard</Link>
+          <Link href="/lenses" className="hover:text-[color:var(--brand-text-strong)]">Lenses</Link>
+          <Link href="/billing" className="hover:text-[color:var(--brand-text-strong)]">Credits</Link>
         </nav>
-        <Button asChild className="border-0 bg-cyan-400 text-slate-950 hover:bg-cyan-300">
-          <Link href="/dashboard">
-            Open cockpit
-            <ArrowRight size={16} />
-          </Link>
-        </Button>
+        <div className="flex items-center gap-3">
+          <ThemeToggle className="hidden lg:inline-flex" />
+          <Button asChild className="border-0 bg-gradient-to-r from-[#0082ff] to-[#00f0ff] text-white shadow-[0_20px_36px_-24px_rgba(0,130,255,0.95)] hover:brightness-110">
+            <Link href="/dashboard">
+              Open cockpit
+              <ArrowRight size={16} />
+            </Link>
+          </Button>
+        </div>
       </header>
 
       <main className="mx-auto max-w-7xl space-y-6 px-4 pb-12 sm:px-6 lg:px-8">
@@ -319,20 +323,20 @@ export default function HomePage() {
             <div className="grid gap-6 md:grid-cols-[1fr_auto] md:items-center">
               <div>
                 <StatusPill tone="cyan">Rev 1.0 POC / MVP</StatusPill>
-                <h1 className="mt-6 max-w-3xl text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-6 max-w-3xl font-brand-display text-4xl font-black uppercase leading-tight tracking-[0.08em] text-[color:var(--brand-text-strong)] sm:text-5xl lg:text-6xl">
                   List smarter. Buy safer.
                 </h1>
-                <p className="mt-5 max-w-2xl text-base leading-7 text-slate-300">
+                <p className="mt-5 max-w-2xl text-base leading-7 text-[color:var(--brand-text)]">
                   ListLens turns item photos, listing links and screenshots into evidence-led seller drafts and buyer risk reports.
                 </p>
                 <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-                  <Button asChild size="lg" className="border-0 bg-cyan-400 font-bold text-slate-950 hover:bg-cyan-300">
+                  <Button asChild size="lg" className="border-0 bg-gradient-to-r from-[#0082ff] to-[#00f0ff] font-bold text-white hover:brightness-110">
                     <Link href="/studio/new">
                       <Camera size={18} />
                       Create seller listing
                     </Link>
                   </Button>
-                  <Button asChild size="lg" variant="outline" className="border-violet-400/45 bg-violet-400/10 font-bold text-violet-100 hover:bg-violet-400/20 hover:text-white">
+                  <Button asChild size="lg" variant="outline" className="border-[#7a00ff]/45 bg-[#7a00ff]/10 font-bold text-[#ead8ff] hover:bg-[#7a00ff]/20 hover:text-[color:var(--brand-text-strong)]">
                     <Link href="/guard/new">
                       <ShieldCheck size={18} />
                       Check buyer listing
@@ -378,12 +382,12 @@ export default function HomePage() {
           <div className="space-y-6">
             <HudPanel tone="green" className="p-5">
               <div className="mb-5 flex items-center justify-between gap-4">
-                <h2 className="text-lg font-bold text-white">SoleLens evidence</h2>
+                <h2 className="text-lg font-bold text-[color:var(--brand-text-strong)]">SoleLens evidence</h2>
                 <StatusPill tone="green">Live wedge</StatusPill>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {SOLELENS_EVIDENCE.map((item) => (
-                  <div key={item} className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-3 py-2 text-sm text-slate-200">
+                  <div key={item} className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-3 py-2 text-sm text-[color:var(--brand-text)]">
                     {item}
                   </div>
                 ))}
@@ -394,8 +398,8 @@ export default function HomePage() {
               <div className="mb-4 flex items-center gap-3">
                 <LensOrb icon={FileText} tone="amber" size="sm" />
                 <div>
-                  <h2 className="text-lg font-bold text-white">Credits & pricing</h2>
-                  <p className="text-sm text-slate-500">Built for subscriptions and point-of-need checks.</p>
+                  <h2 className="text-lg font-bold text-[color:var(--brand-text-strong)]">Credits & pricing</h2>
+                  <p className="text-sm text-[color:var(--brand-text-muted)]">Built for subscriptions and point-of-need checks.</p>
                 </div>
               </div>
               <div className="space-y-1">
@@ -418,14 +422,14 @@ export default function HomePage() {
 
         <section className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
           <HudPanel tone="blue" className="p-5">
-            <h2 className="text-lg font-bold text-white">Sticky loop</h2>
+            <h2 className="text-lg font-bold text-[color:var(--brand-text-strong)]">Sticky loop</h2>
             <div className="mt-4 space-y-3">
               {WORKFLOW_STEPS.map((step, index) => (
                 <div key={step} className="flex items-center gap-3">
                   <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-blue-300/25 bg-blue-300/10 font-mono-hud text-[10px] text-blue-200">
                     {String(index + 1).padStart(2, "0")}
                   </span>
-                  <span className="text-sm text-slate-300">{step}</span>
+                  <span className="text-sm text-[color:var(--brand-text)]">{step}</span>
                 </div>
               ))}
             </div>
@@ -433,7 +437,7 @@ export default function HomePage() {
 
           <HudPanel tone="violet" className="p-5">
             <div className="mb-5 flex items-center justify-between gap-4">
-              <h2 className="text-lg font-bold text-white">Safe Guard wording</h2>
+              <h2 className="text-lg font-bold text-[color:var(--brand-text-strong)]">Safe Guard wording</h2>
               <StatusPill tone="violet">Not authentication</StatusPill>
             </div>
             <div className="grid gap-4 md:grid-cols-2">
@@ -443,7 +447,7 @@ export default function HomePage() {
                 </p>
                 <div className="space-y-2">
                   {SAFE_GUARD_PHRASES.slice(0, 4).map((phrase) => (
-                    <p key={phrase} className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-3 py-2 text-xs leading-5 text-slate-300">
+                    <p key={phrase} className="rounded-md border border-emerald-300/15 bg-emerald-300/10 px-3 py-2 text-xs leading-5 text-[color:var(--brand-text)]">
                       {phrase}
                     </p>
                   ))}
@@ -455,7 +459,7 @@ export default function HomePage() {
                 </p>
                 <div className="space-y-2">
                   {BANNED_GUARD_PHRASES.slice(0, 4).map((phrase) => (
-                    <p key={phrase} className="rounded-md border border-red-300/15 bg-red-300/10 px-3 py-2 text-xs leading-5 text-slate-400">
+                    <p key={phrase} className="rounded-md border border-red-300/15 bg-red-300/10 px-3 py-2 text-xs leading-5 text-[color:var(--brand-text-muted)]">
                       {phrase}
                     </p>
                   ))}
@@ -465,7 +469,7 @@ export default function HomePage() {
           </HudPanel>
         </section>
 
-        <footer className="flex flex-col items-center justify-between gap-4 border-t border-cyan-400/15 py-6 text-xs text-slate-500 sm:flex-row">
+        <footer className="flex flex-col items-center justify-between gap-4 border-t border-[color:var(--brand-outline)] py-6 text-xs text-[color:var(--brand-text-muted)] sm:flex-row">
           <div className="flex items-center gap-2">
             <BrandGlyph size={24} showSparks={false} />
             <span>All products. One intelligence. Powered by ListLens.</span>

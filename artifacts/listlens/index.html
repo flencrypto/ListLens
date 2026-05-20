@@ -12,8 +12,7 @@
 
     <!-- PWA manifest -->
     <link rel="manifest" href="./manifest.json" />
-    <meta name="theme-color" content="#22d3ee" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#040a14" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#05070d" />
     <meta name="color-scheme" content="dark light" />
     <meta name="mobile-web-app-capable" content="yes" />
 
@@ -51,7 +50,29 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&family=Orbitron:wght@600;700;800;900&display=swap" rel="stylesheet" />
+    <script>
+      (() => {
+        const storageKey = "theme";
+        const html = document.documentElement;
+        const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+        const metaTileColor = document.querySelector('meta[name="msapplication-TileColor"]');
+        const storedTheme = window.localStorage.getItem(storageKey);
+        const theme = storedTheme === "light" ? "light" : "dark";
+        const themeColor = theme === "light" ? "#edf4ff" : "#05070d";
+
+        html.classList.toggle("dark", theme === "dark");
+        html.style.colorScheme = theme;
+
+        if (metaThemeColor instanceof HTMLMetaElement) {
+          metaThemeColor.content = themeColor;
+        }
+
+        if (metaTileColor instanceof HTMLMetaElement) {
+          metaTileColor.content = themeColor;
+        }
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

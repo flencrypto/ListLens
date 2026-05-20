@@ -30,7 +30,7 @@ function riskBadgeClass(level: string | null) {
   if (level === "high") return "bg-red-950/40 text-red-400 border border-red-800/30";
   if (level === "medium") return "bg-amber-950/40 text-amber-400 border border-amber-800/30";
   if (level === "low") return "bg-emerald-950/30 text-emerald-400 border border-emerald-800/30";
-  return "bg-zinc-800 text-zinc-400";
+  return "bg-zinc-800 text-[color:var(--brand-text-muted)]";
 }
 
 export default function HistoryPage() {
@@ -79,7 +79,7 @@ export default function HistoryPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
       <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -87,8 +87,8 @@ export default function HistoryPage() {
             <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
               Archive · v1.0
             </p>
-            <h1 className="text-2xl font-bold text-white mb-1">History</h1>
-            <p className="text-zinc-400 text-sm">Your saved listings and Guard checks.</p>
+            <h1 className="text-2xl font-bold text-[color:var(--brand-text-strong)] mb-1">History</h1>
+            <p className="text-[color:var(--brand-text-muted)] text-sm">Your saved listings and Guard checks.</p>
             <div className="hud-divider mt-3 max-w-[160px]" />
           </div>
           <div className="flex gap-2">
@@ -104,7 +104,7 @@ export default function HistoryPage() {
         {/* Studio Listings */}
         <div className="brand-card p-6">
           <div className="flex items-center justify-between pb-3">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)] flex items-center gap-2">
               <span>📸</span> Studio Listings
             </h2>
             {!listingsLoading && !listingsError && (
@@ -121,15 +121,15 @@ export default function HistoryPage() {
           )}
 
           {!listingsLoading && listingsError && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-400 text-sm">{listingsError}</p>
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-[color:var(--brand-outline)] gap-3">
+              <p className="text-[color:var(--brand-text-muted)] text-sm">{listingsError}</p>
             </div>
           )}
 
           {!listingsLoading && !listingsError && listings.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-500 text-sm">No listings yet.</p>
-              <p className="text-zinc-600 text-xs max-w-xs text-center">
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-[color:var(--brand-outline)] gap-3">
+              <p className="text-[color:var(--brand-text-muted)] text-sm">No listings yet.</p>
+              <p className="text-[color:var(--brand-text-muted)] text-xs max-w-xs text-center">
                 Create a listing in Studio. After analysis, your drafts will appear here.
               </p>
               <Button asChild size="sm" variant="outline">
@@ -142,20 +142,20 @@ export default function HistoryPage() {
             <div className="space-y-3">
               {listings.map((listing) => (
                 <Link key={listing.id} href={`/studio/${listing.id}`}>
-                  <div className="flex items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-3 hover:border-cyan-800/50 hover:bg-zinc-900 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/60 px-4 py-3 hover:border-cyan-800/50 hover:bg-[color:var(--brand-nav-bg)] transition-colors cursor-pointer">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-medium text-[color:var(--brand-text-strong)] truncate">
                         {listing.title ?? `${listing.lens} draft`}
                       </p>
                       {listing.description && (
-                        <p className="text-xs text-zinc-500 truncate mt-0.5">{listing.description}</p>
+                        <p className="text-xs text-[color:var(--brand-text-muted)] truncate mt-0.5">{listing.description}</p>
                       )}
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {listing.price && (
                         <span className="text-xs text-cyan-400 font-mono-hud">£{listing.price}</span>
                       )}
-                      <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-400">
+                      <Badge variant="outline" className="text-xs border-[color:var(--brand-outline)] text-[color:var(--brand-text-muted)]">
                         {listing.lens}
                       </Badge>
                       <Badge
@@ -163,12 +163,12 @@ export default function HistoryPage() {
                         className={
                           listing.status === "analysed"
                             ? "bg-cyan-900/30 text-cyan-400 border border-cyan-800/30"
-                            : "bg-zinc-800 text-zinc-400"
+                            : "bg-zinc-800 text-[color:var(--brand-text-muted)]"
                         }
                       >
                         {listing.status}
                       </Badge>
-                      <span className="text-xs text-zinc-600">{formatDate(listing.createdAt)}</span>
+                      <span className="text-xs text-[color:var(--brand-text-muted)]">{formatDate(listing.createdAt)}</span>
                     </div>
                   </div>
                 </Link>
@@ -182,7 +182,7 @@ export default function HistoryPage() {
         {/* Guard Checks */}
         <div className="brand-card brand-card-violet p-6">
           <div className="flex items-center justify-between pb-3">
-            <h2 className="text-base font-semibold text-white flex items-center gap-2">
+            <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)] flex items-center gap-2">
               <span>🛡️</span> Guard Checks
             </h2>
             {!checksLoading && !checksError && (
@@ -199,15 +199,15 @@ export default function HistoryPage() {
           )}
 
           {!checksLoading && checksError && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-400 text-sm">{checksError}</p>
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-[color:var(--brand-outline)] gap-3">
+              <p className="text-[color:var(--brand-text-muted)] text-sm">{checksError}</p>
             </div>
           )}
 
           {!checksLoading && !checksError && checks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-zinc-800 gap-3">
-              <p className="text-zinc-500 text-sm">No Guard checks yet.</p>
-              <p className="text-zinc-600 text-xs max-w-xs text-center">
+            <div className="flex flex-col items-center justify-center py-10 rounded-lg border border-dashed border-[color:var(--brand-outline)] gap-3">
+              <p className="text-[color:var(--brand-text-muted)] text-sm">No Guard checks yet.</p>
+              <p className="text-[color:var(--brand-text-muted)] text-xs max-w-xs text-center">
                 Check a listing before you buy. Saved reports will appear here.
               </p>
               <Button asChild size="sm" variant="outline">
@@ -220,14 +220,14 @@ export default function HistoryPage() {
             <div className="space-y-3">
               {checks.map((check) => (
                 <Link key={check.id} href={`/guard/${check.id}`}>
-                  <div className="flex items-center gap-4 rounded-lg border border-zinc-800 bg-zinc-900/60 px-4 py-3 hover:border-violet-800/50 hover:bg-zinc-900 transition-colors cursor-pointer">
+                  <div className="flex items-center gap-4 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/60 px-4 py-3 hover:border-violet-800/50 hover:bg-[color:var(--brand-nav-bg)] transition-colors cursor-pointer">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-white truncate">
+                      <p className="text-sm font-medium text-[color:var(--brand-text-strong)] truncate">
                         {check.url
                           ? check.url.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60)
                           : "Screenshot check"}
                       </p>
-                      <p className="text-xs text-zinc-500 mt-0.5">{check.lens}</p>
+                      <p className="text-xs text-[color:var(--brand-text-muted)] mt-0.5">{check.lens}</p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {check.riskLevel && (
@@ -238,7 +238,7 @@ export default function HistoryPage() {
                           {check.riskLevel} risk
                         </Badge>
                       )}
-                      <span className="text-xs text-zinc-600">{formatDate(check.createdAt)}</span>
+                      <span className="text-xs text-[color:var(--brand-text-muted)]">{formatDate(check.createdAt)}</span>
                     </div>
                   </div>
                 </Link>

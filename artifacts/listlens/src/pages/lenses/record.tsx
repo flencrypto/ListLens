@@ -150,10 +150,10 @@ export default function RecordLensIdentifyPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
-        <Link href="/lenses" className="inline-flex items-center gap-1.5 text-sm text-white/50 hover:text-white/90 transition-colors">
+        <Link href="/lenses" className="inline-flex items-center gap-1.5 text-sm text-[color:var(--brand-text-strong)]/50 hover:text-[color:var(--brand-text-strong)]/90 transition-colors">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
           Lenses
         </Link>
@@ -164,8 +164,8 @@ export default function RecordLensIdentifyPage() {
           <div className="flex items-center gap-3">
             <span className="text-3xl">💿</span>
             <div>
-              <h1 className="text-2xl font-bold text-white">RecordLens · Label Identify</h1>
-              <p className="text-zinc-400 text-sm">
+              <h1 className="text-2xl font-bold text-[color:var(--brand-text-strong)]">RecordLens · Label Identify</h1>
+              <p className="text-[color:var(--brand-text-muted)] text-sm">
                 Upload label photo(s) to get ranked likely releases. Add matrix runout details
                 to clarify the pressing.
               </p>
@@ -178,7 +178,7 @@ export default function RecordLensIdentifyPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Label photos</CardTitle>
-              <span className="text-xs text-zinc-400">{photoUrls.length}/{MAX_PHOTOS}</span>
+              <span className="text-xs text-[color:var(--brand-text-muted)]">{photoUrls.length}/{MAX_PHOTOS}</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -191,7 +191,7 @@ export default function RecordLensIdentifyPage() {
                 "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 transition-colors cursor-pointer",
                 isDragging
                   ? "border-cyan-500 bg-cyan-950/30"
-                  : "border-zinc-700 bg-zinc-900/40 hover:border-zinc-600",
+                  : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40 hover:border-[color:var(--brand-outline-strong)]",
               ].join(" ")}
               onClick={() => !isUploading && fileInputRef.current?.click()}
             >
@@ -216,7 +216,7 @@ export default function RecordLensIdentifyPage() {
                 <>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-8 w-8 text-zinc-500"
+                    className="h-8 w-8 text-[color:var(--brand-text-muted)]"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -229,11 +229,11 @@ export default function RecordLensIdentifyPage() {
                     />
                   </svg>
                   <div className="text-center">
-                    <p className="text-sm text-zinc-300">
+                    <p className="text-sm text-[color:var(--brand-text)]">
                       <span className="text-cyan-400 font-medium">Click to upload</span>{" "}
                       or drag & drop
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs text-[color:var(--brand-text-muted)] mt-1">
                       JPG, PNG, WebP — front label, back label, and matrix etchings
                     </p>
                   </div>
@@ -247,7 +247,7 @@ export default function RecordLensIdentifyPage() {
                 {photoUrls.map((u, i) => (
                   <div
                     key={i}
-                    className="relative group aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900"
+                    className="relative group aspect-square rounded-lg overflow-hidden border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]"
                   >
                     <img
                       src={u}
@@ -258,11 +258,11 @@ export default function RecordLensIdentifyPage() {
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
-                      <span className="text-xs text-zinc-300">{i + 1}</span>
+                      <span className="text-xs text-[color:var(--brand-text)]">{i + 1}</span>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removePhoto(u); }}
-                      className="absolute top-1 right-1 bg-black/70 rounded-full w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
+                      className="absolute top-1 right-1 bg-black/70 rounded-full w-5 h-5 flex items-center justify-center text-[color:var(--brand-text-muted)] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
                     >
                       ✕
                     </button>
@@ -273,12 +273,12 @@ export default function RecordLensIdentifyPage() {
 
             {/* Optional hint */}
             <div>
-              <label htmlFor="seller-hint" className="block text-xs text-zinc-400 mb-1">
-                Optional hint <span className="text-zinc-600">(artist, title, or context)</span>
+              <label htmlFor="seller-hint" className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
+                Optional hint <span className="text-[color:var(--brand-text-muted)]">(artist, title, or context)</span>
               </label>
               <input
                 id="seller-hint"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                 value={hint}
                 onChange={(e) => setHint(e.target.value)}
                 placeholder="e.g. Radiohead OK Computer, UK pressing"
@@ -310,38 +310,38 @@ export default function RecordLensIdentifyPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {result.matrix_clarification_questions.length > 0 && (
-                <ul className="text-sm text-zinc-400 list-disc pl-5">
+                <ul className="text-sm text-[color:var(--brand-text-muted)] list-disc pl-5">
                   {result.matrix_clarification_questions.map((q, i) => (
                     <li key={i}>{q}</li>
                   ))}
                 </ul>
               )}
-              <label htmlFor="matrix-side-a" className="block text-xs text-zinc-400 mt-2 mb-1">
+              <label htmlFor="matrix-side-a" className="block text-xs text-[color:var(--brand-text-muted)] mt-2 mb-1">
                 Side A matrix runout
               </label>
               <input
                 id="matrix-side-a"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                 value={matrixA}
                 onChange={(e) => setMatrixA(e.target.value)}
                 placeholder="e.g. OKNOTOK A-1"
               />
-              <label htmlFor="matrix-side-b" className="block text-xs text-zinc-400 mb-1">
+              <label htmlFor="matrix-side-b" className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
                 Side B matrix runout
               </label>
               <input
                 id="matrix-side-b"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                 value={matrixB}
                 onChange={(e) => setMatrixB(e.target.value)}
                 placeholder="e.g. OKNOTOK B-1"
               />
-              <label htmlFor="matrix-extra-symbols" className="block text-xs text-zinc-400 mb-1">
+              <label htmlFor="matrix-extra-symbols" className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
                 Extra symbols / initials
               </label>
               <input
                 id="matrix-extra-symbols"
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                 value={extraSymbols}
                 onChange={(e) => setExtraSymbols(e.target.value)}
                 placeholder="e.g. MPO, RL, ▲"
@@ -375,21 +375,21 @@ export default function RecordLensIdentifyPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
-                <p className="text-white font-semibold">{result.top_match.likely_release}</p>
-                <p className="text-sm text-zinc-400">
+                <p className="text-[color:var(--brand-text-strong)] font-semibold">{result.top_match.likely_release}</p>
+                <p className="text-sm text-[color:var(--brand-text-muted)]">
                   {[result.top_match.artist, result.top_match.title]
                     .filter(Boolean)
                     .join(" — ") || "Artist/title not yet identified"}
                 </p>
                 {(result.top_match.label || result.top_match.catalogue_number) && (
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-[color:var(--brand-text-muted)]">
                     {[result.top_match.label, result.top_match.catalogue_number]
                       .filter(Boolean)
                       .join(" · ")}
                   </p>
                 )}
                 {result.top_match.evidence.length > 0 && (
-                  <ul className="text-xs text-zinc-400 list-disc pl-5 mt-2">
+                  <ul className="text-xs text-[color:var(--brand-text-muted)] list-disc pl-5 mt-2">
                     {result.top_match.evidence.map((e, i) => (
                       <li key={i}>{e}</li>
                     ))}
@@ -405,13 +405,13 @@ export default function RecordLensIdentifyPage() {
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {result.alternate_matches.map((m, i) => (
-                    <div key={i} className="border-t border-zinc-800 pt-2 first:border-0 first:pt-0">
+                    <div key={i} className="border-t border-[color:var(--brand-outline)] pt-2 first:border-0 first:pt-0">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm text-white">{m.likely_release}</p>
+                        <p className="text-sm text-[color:var(--brand-text-strong)]">{m.likely_release}</p>
                         <Badge variant="secondary">{m.likelihood_percent}%</Badge>
                       </div>
                       {m.evidence.length > 0 && (
-                        <ul className="text-xs text-zinc-500 list-disc pl-5 mt-1">
+                        <ul className="text-xs text-[color:var(--brand-text-muted)] list-disc pl-5 mt-1">
                           {m.evidence.map((e, j) => (
                             <li key={j}>{e}</li>
                           ))}
@@ -438,7 +438,7 @@ export default function RecordLensIdentifyPage() {
               </Card>
             )}
 
-            <p className="text-xs text-zinc-500 italic">{result.disclaimer}</p>
+            <p className="text-xs text-[color:var(--brand-text-muted)] italic">{result.disclaimer}</p>
           </div>
         )}
       </main>

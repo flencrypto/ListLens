@@ -7,35 +7,35 @@ import { cn } from "@/lib/utils";
 function StatusBadge({ status }: { status: LensEntry["status"] }) {
   if (status === "live") {
     return (
-      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-emerald-900/50 text-emerald-300 border border-emerald-700/50">
+      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700/50">
         Rev 1.0
       </span>
     );
   }
   if (status === "fallback") {
     return (
-      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-300 border border-blue-700/50">
+      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-700/50">
         Fallback
       </span>
     );
   }
   if (status === "next") {
     return (
-      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-orange-900/50 text-orange-300 border border-orange-700/50">
+      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700/50">
         Next
       </span>
     );
   }
   if (status === "planned") {
     return (
-      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-slate-800/60 text-slate-400 border border-slate-700/50">
+      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-[color:var(--brand-accent-soft)] text-[color:var(--brand-text-muted)] border border-[color:var(--brand-outline)]">
         Soon
       </span>
     );
   }
   if (status === "separate") {
     return (
-      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-red-950/50 text-red-300 border border-red-800/50">
+      <span className="text-[10px] font-semibold tracking-widest uppercase px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-950/50 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-800/50">
         Separate
       </span>
     );
@@ -54,12 +54,12 @@ function LensCard({ lens }: { lens: LensEntry }) {
       className={cn(
         "group relative flex flex-col gap-3 rounded-2xl p-4 h-full overflow-hidden",
         "border transition-all duration-300",
-        "bg-[radial-gradient(130%_100%_at_50%_0%,rgba(34,211,238,0.05),transparent_60%),linear-gradient(180deg,rgba(10,22,40,0.85),rgba(8,19,37,0.9))]",
+        "bg-[radial-gradient(130%_100%_at_50%_0%,rgba(34,211,238,0.05),transparent_60%),var(--brand-panel-bg)]",
         isLive
           ? "border-cyan-500/20"
           : isNext
           ? "border-orange-500/20"
-          : "border-zinc-800/60 opacity-60",
+          : "border-[color:var(--brand-outline)]/60 opacity-60",
         interactive && "hover:border-cyan-400/50 cursor-pointer hover:shadow-[0_0_28px_-8px_rgba(34,211,238,0.45)]"
       )}
     >
@@ -89,7 +89,7 @@ function LensCard({ lens }: { lens: LensEntry }) {
               ? "bg-cyan-950/50 border-cyan-500/25 text-cyan-300 group-hover:border-cyan-400/50 group-hover:text-cyan-200 group-hover:shadow-[0_0_12px_-2px_rgba(34,211,238,0.35)]"
               : isNext
               ? "bg-orange-950/30 border-orange-500/25 text-orange-300"
-              : "bg-zinc-900/50 border-zinc-700/40 text-zinc-500"
+              : "bg-[color:var(--brand-nav-bg)]/50 border-[color:var(--brand-outline)]/40 text-[color:var(--brand-text-muted)]"
           )}
         >
           {Icon ? <Icon size={18} strokeWidth={1.5} /> : <span className="text-base">{lens.icon}</span>}
@@ -103,7 +103,7 @@ function LensCard({ lens }: { lens: LensEntry }) {
           <span
             className={cn(
               "text-sm font-semibold leading-tight transition-colors duration-200",
-              isLive ? "text-zinc-100 group-hover:text-white" : "text-zinc-400"
+              isLive ? "text-[color:var(--brand-text-strong)] group-hover:text-[color:var(--brand-text-strong)]" : "text-[color:var(--brand-text-muted)]"
             )}
           >
             {lens.name}
@@ -118,7 +118,7 @@ function LensCard({ lens }: { lens: LensEntry }) {
         <p
           className={cn(
             "text-[10px] font-medium tracking-wider uppercase",
-            isLive ? "text-cyan-500/70" : isNext ? "text-orange-400/70" : "text-zinc-600"
+            isLive ? "text-cyan-500/70" : isNext ? "text-orange-400/70" : "text-[color:var(--brand-text-muted)]"
           )}
         >
           {lens.category}
@@ -130,10 +130,10 @@ function LensCard({ lens }: { lens: LensEntry }) {
         className={cn(
           "text-xs leading-relaxed mt-auto",
           isLive
-            ? "text-zinc-400 group-hover:text-zinc-300 transition-colors duration-200"
+            ? "text-[color:var(--brand-text-muted)] group-hover:text-[color:var(--brand-text)] transition-colors duration-200"
             : isNext
-            ? "text-zinc-500"
-            : "text-zinc-600"
+            ? "text-[color:var(--brand-text-muted)]"
+            : "text-[color:var(--brand-text-muted)]"
         )}
       >
         {lens.description}
@@ -160,8 +160,8 @@ export default function LensesPage() {
           <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Catalogue · Lenses
           </p>
-          <h1 className="text-3xl font-black tracking-tight text-white">Core resale Lenses</h1>
-          <p className="text-zinc-400 text-sm mt-1">
+          <h1 className="text-3xl font-black tracking-tight text-[color:var(--brand-text-strong)]">Core resale Lenses</h1>
+          <p className="text-[color:var(--brand-text-muted)] text-sm mt-1">
             Each category has its own evidence hierarchy. Rev 1.0 keeps the live workflow tight while the wider Lens family stays mapped.
           </p>
           <div className="hud-divider mt-3 max-w-[160px]" />

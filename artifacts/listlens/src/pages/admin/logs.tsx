@@ -65,14 +65,14 @@ function KeyPrompt({ onKey }: { onKey: (k: string) => void }) {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[var(--background)] flex items-center justify-center px-4">
       <div className="w-full max-w-sm brand-card p-8 space-y-5">
         <div>
           <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Mr.FLENS · Admin
           </p>
-          <h1 className="text-xl font-bold text-white">Admin Access</h1>
-          <p className="text-zinc-400 text-sm mt-1">
+          <h1 className="text-xl font-bold text-[color:var(--brand-text-strong)]">Admin Access</h1>
+          <p className="text-[color:var(--brand-text-muted)] text-sm mt-1">
             Enter your admin API key to continue.
           </p>
         </div>
@@ -83,7 +83,7 @@ function KeyPrompt({ onKey }: { onKey: (k: string) => void }) {
             placeholder="ADMIN_API_KEY"
             value={val}
             onChange={(e) => setVal(e.target.value)}
-            className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+            className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
           />
           <Button
             type="submit"
@@ -109,9 +109,9 @@ function StatCard({
 }) {
   return (
     <div className="brand-card p-4 flex flex-col gap-1">
-      <p className="text-xs text-zinc-500 uppercase tracking-wider">{label}</p>
-      <p className="text-white text-xl font-bold">{value}</p>
-      {sub && <p className="text-zinc-500 text-xs">{sub}</p>}
+      <p className="text-xs text-[color:var(--brand-text-muted)] uppercase tracking-wider">{label}</p>
+      <p className="text-[color:var(--brand-text-strong)] text-xl font-bold">{value}</p>
+      {sub && <p className="text-[color:var(--brand-text-muted)] text-xs">{sub}</p>}
     </div>
   );
 }
@@ -226,19 +226,19 @@ export default function AdminLogsPage() {
   const currentPage = pagination?.page ?? 1;
 
   return (
-    <div className="min-h-screen bg-zinc-950">
-      <header className="border-b border-zinc-800 bg-zinc-950 sticky top-0 z-10">
+    <div className="min-h-screen bg-[var(--background)]">
+      <header className="border-b border-[color:var(--brand-outline)] bg-[var(--background)] sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase">
               Mr.FLENS
             </p>
             <span className="text-zinc-700">/</span>
-            <p className="text-white text-sm font-semibold">Admin · AI Job Logs</p>
+            <p className="text-[color:var(--brand-text-strong)] text-sm font-semibold">Admin · AI Job Logs</p>
           </div>
           <button
             onClick={signOut}
-            className="text-xs text-zinc-500 hover:text-red-400 transition-colors"
+            className="text-xs text-[color:var(--brand-text-muted)] hover:text-red-400 transition-colors"
           >
             Sign out
           </button>
@@ -249,7 +249,7 @@ export default function AdminLogsPage() {
         {/* Summary stats */}
         {agg && (
           <section className="space-y-3">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-[color:var(--brand-text-muted)] uppercase tracking-wider">
               Summary{" "}
               {(jobType || userId || from || to) && (
                 <span className="text-cyan-500 normal-case font-normal">
@@ -276,22 +276,22 @@ export default function AdminLogsPage() {
 
             {agg.byJobType.length > 0 && (
               <div className="brand-card p-4">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3">
+                <p className="text-xs text-[color:var(--brand-text-muted)] uppercase tracking-wider mb-3">
                   Cost by job type
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {agg.byJobType.map((jt) => (
                     <div
                       key={jt.jobType ?? "unknown"}
-                      className="flex items-center gap-2 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2"
+                      className="flex items-center gap-2 bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] rounded-lg px-3 py-2"
                     >
                       <Badge variant="secondary" className="text-xs shrink-0">
                         {jt.jobType ?? "unknown"}
                       </Badge>
-                      <span className="text-white text-sm font-medium">
+                      <span className="text-[color:var(--brand-text-strong)] text-sm font-medium">
                         {jt.jobCount} jobs
                       </span>
-                      <span className="text-zinc-500 text-xs">
+                      <span className="text-[color:var(--brand-text-muted)] text-xs">
                         {fmtGBP(jt.totalCostPence)}
                       </span>
                     </div>
@@ -305,12 +305,12 @@ export default function AdminLogsPage() {
         {/* Filters */}
         <section className="brand-card p-4">
           <form onSubmit={handleFilter} className="space-y-4">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-[color:var(--brand-text-muted)] uppercase tracking-wider">
               Filters
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">
+                <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
                   Job type
                 </label>
                 <input
@@ -318,11 +318,11 @@ export default function AdminLogsPage() {
                   placeholder="e.g. studio_analyse"
                   value={jobType}
                   onChange={(e) => setJobType(e.target.value)}
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+                  className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">
+                <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">
                   User ID
                 </label>
                 <input
@@ -330,25 +330,25 @@ export default function AdminLogsPage() {
                   placeholder="user_…"
                   value={userId}
                   onChange={(e) => setUserId(e.target.value)}
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+                  className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">From</label>
+                <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">From</label>
                 <input
                   type="date"
                   value={from}
                   onChange={(e) => setFrom(e.target.value)}
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+                  className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
                 />
               </div>
               <div>
-                <label className="block text-xs text-zinc-400 mb-1">To</label>
+                <label className="block text-xs text-[color:var(--brand-text-muted)] mb-1">To</label>
                 <input
                   type="date"
                   value={to}
                   onChange={(e) => setTo(e.target.value)}
-                  className="w-full rounded-md bg-zinc-900 border border-zinc-700 text-white text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
+                  className="w-full rounded-md bg-[color:var(--brand-nav-bg)] border border-[color:var(--brand-outline)] text-[color:var(--brand-text-strong)] text-sm px-3 py-2 focus:outline-none focus:border-cyan-700"
                 />
               </div>
             </div>
@@ -365,7 +365,7 @@ export default function AdminLogsPage() {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                  className="text-xs text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text)] transition-colors"
                 >
                   Clear filters
                 </button>
@@ -384,29 +384,29 @@ export default function AdminLogsPage() {
         {/* Logs table */}
         <section className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wider">
+            <p className="text-xs font-semibold text-[color:var(--brand-text-muted)] uppercase tracking-wider">
               Logs
               {pagination && (
-                <span className="text-zinc-600 normal-case font-normal ml-2">
+                <span className="text-[color:var(--brand-text-muted)] normal-case font-normal ml-2">
                   ({pagination.total.toLocaleString()} total)
                 </span>
               )}
             </p>
             {loading && (
-              <span className="text-xs text-zinc-500 animate-pulse">
+              <span className="text-xs text-[color:var(--brand-text-muted)] animate-pulse">
                 Fetching…
               </span>
             )}
           </div>
 
           {rows.length === 0 && !loading ? (
-            <div className="brand-card p-8 text-center text-zinc-500 text-sm">
+            <div className="brand-card p-8 text-center text-[color:var(--brand-text-muted)] text-sm">
               No logs found for the current filters.
             </div>
           ) : (
-            <div className="overflow-x-auto rounded-xl border border-zinc-800">
+            <div className="overflow-x-auto rounded-xl border border-[color:var(--brand-outline)]">
               <table className="w-full text-sm text-left">
-                <thead className="bg-zinc-900 text-zinc-400 text-xs uppercase tracking-wider">
+                <thead className="bg-[color:var(--brand-nav-bg)] text-[color:var(--brand-text-muted)] text-xs uppercase tracking-wider">
                   <tr>
                     <th className="px-4 py-3">ID</th>
                     <th className="px-4 py-3">Job type</th>
@@ -422,9 +422,9 @@ export default function AdminLogsPage() {
                   {rows.map((row) => (
                     <tr
                       key={row.id}
-                      className="bg-zinc-950 hover:bg-zinc-900 transition-colors"
+                      className="bg-[var(--background)] hover:bg-[color:var(--brand-nav-bg)] transition-colors"
                     >
-                      <td className="px-4 py-3 text-zinc-500 font-mono text-xs">
+                      <td className="px-4 py-3 text-[color:var(--brand-text-muted)] font-mono text-xs">
                         {row.id}
                       </td>
                       <td className="px-4 py-3">
@@ -433,19 +433,19 @@ export default function AdminLogsPage() {
                             {row.jobType}
                           </Badge>
                         ) : (
-                          <span className="text-zinc-600">—</span>
+                          <span className="text-[color:var(--brand-text-muted)]">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 font-mono text-xs max-w-[140px] truncate">
-                        {row.userId ?? <span className="text-zinc-600">—</span>}
+                      <td className="px-4 py-3 text-[color:var(--brand-text-muted)] font-mono text-xs max-w-[140px] truncate">
+                        {row.userId ?? <span className="text-[color:var(--brand-text-muted)]">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-zinc-400 text-xs">
-                        {row.model ?? <span className="text-zinc-600">—</span>}
+                      <td className="px-4 py-3 text-[color:var(--brand-text-muted)] text-xs">
+                        {row.model ?? <span className="text-[color:var(--brand-text-muted)]">—</span>}
                       </td>
-                      <td className="px-4 py-3 text-right text-zinc-300">
+                      <td className="px-4 py-3 text-right text-[color:var(--brand-text)]">
                         {fmt(row.promptTokens)}
                       </td>
-                      <td className="px-4 py-3 text-right text-zinc-300">
+                      <td className="px-4 py-3 text-right text-[color:var(--brand-text)]">
                         {fmt(row.completionTokens)}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -454,10 +454,10 @@ export default function AdminLogsPage() {
                             {row.estimatedCostPence}p
                           </span>
                         ) : (
-                          <span className="text-zinc-600">—</span>
+                          <span className="text-[color:var(--brand-text-muted)]">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3 text-zinc-500 text-xs whitespace-nowrap">
+                      <td className="px-4 py-3 text-[color:var(--brand-text-muted)] text-xs whitespace-nowrap">
                         {fmtDate(row.createdAt)}
                       </td>
                     </tr>
@@ -470,7 +470,7 @@ export default function AdminLogsPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-1">
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-[color:var(--brand-text-muted)]">
                 Page {currentPage} of {totalPages}
               </p>
               <div className="flex gap-2">

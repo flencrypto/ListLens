@@ -1,25 +1,90 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
 
+/* Class-based dark mode: next-themes adds .dark to <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --background: #040a14;
-  --foreground: #fafafa;
-  --brand-navy: #040a14;
-  --brand-navy-2: #081325;
-  --brand-card: #0a1628;
-  --brand-cyan: #22d3ee;
-  --brand-cyan-soft: #67e8f9;
-  --brand-blue: #3ea8ff;
-  --brand-green: #4ade80;
-  --brand-amber: #fb923c;
-  --brand-violet: #8b5cf6;
+  color-scheme: light;
+  --background: #edf4ff;
+  --foreground: #08152f;
+  --brand-navy: #0a0f1a;
+  --brand-navy-2: #13233c;
+  --brand-card: rgba(255, 255, 255, 0.82);
+  --brand-panel-bg: linear-gradient(180deg, rgba(255,255,255,0.88), rgba(237,244,255,0.92));
+  --brand-cyan: #00f0ff;
+  --brand-cyan-soft: #8dfbff;
+  --brand-blue: #0082ff;
+  --brand-green: #19d8ff;
+  --brand-amber: #d97706;
+  --brand-violet: #7a00ff;
+  --brand-white: #ffffff;
+  --brand-outline: rgba(0, 130, 255, 0.18);
+  --brand-outline-strong: rgba(0, 130, 255, 0.34);
+  --brand-panel-shadow: 0 28px 70px -42px rgba(0, 130, 255, 0.24);
+  --brand-shell-top: rgba(0, 130, 255, 0.14);
+  --brand-shell-right: rgba(0, 240, 255, 0.12);
+  --brand-shell-bottom: rgba(122, 0, 255, 0.08);
+  --brand-shell-base: linear-gradient(180deg, #f8fbff 0%, #edf4ff 48%, #e8f0ff 100%);
+  --brand-nav-bg: rgba(255, 255, 255, 0.74);
+  --brand-nav-shadow: 0 22px 50px -42px rgba(8, 21, 47, 0.34);
+  --brand-text-strong: #07152f;
+  --brand-text: #16335a;
+  --brand-text-muted: rgba(22, 51, 90, 0.72);
+  --brand-grid-line: rgba(0, 130, 255, 0.08);
+  --brand-grid-dot: rgba(0, 130, 255, 0.18);
+  --brand-accent-soft: rgba(0, 130, 255, 0.1);
+  --brand-vignette: radial-gradient(ellipse at center, transparent 32%, rgba(4, 10, 20, 0.16) 100%);
+  --brand-wordmark-shadow:
+    0 10px 26px rgba(0, 130, 255, 0.14),
+    0 0 18px rgba(0, 240, 255, 0.1);
+  --brand-card-inset: rgba(8, 21, 47, 0.06);
+  --font-brand-display: "Orbitron", "Eurostile", sans-serif;
+  --font-brand-body: "Exo 2", "Segoe UI", sans-serif;
+}
+
+.dark {
+  color-scheme: dark;
+  --background: #05070d;
+  --foreground: #f5fbff;
+  --brand-navy: #05070d;
+  --brand-navy-2: #0b1324;
+  --brand-card: rgba(7, 18, 37, 0.84);
+  --brand-panel-bg: linear-gradient(180deg, rgba(9, 20, 42, 0.88), rgba(4, 10, 20, 0.94));
+  --brand-cyan: #00f0ff;
+  --brand-cyan-soft: #67f5ff;
+  --brand-blue: #0082ff;
+  --brand-green: #19d8ff;
+  --brand-amber: #7a00ff;
+  --brand-violet: #7a00ff;
+  --brand-white: #ffffff;
+  --brand-outline: rgba(0, 130, 255, 0.18);
+  --brand-outline-strong: rgba(0, 240, 255, 0.34);
+  --brand-panel-shadow: 0 34px 80px -42px rgba(0, 130, 255, 0.36);
+  --brand-shell-top: rgba(0, 130, 255, 0.18);
+  --brand-shell-right: rgba(0, 240, 255, 0.12);
+  --brand-shell-bottom: rgba(122, 0, 255, 0.12);
+  --brand-shell-base: linear-gradient(180deg, #03050b 0%, #060914 44%, #04070d 100%);
+  --brand-nav-bg: rgba(5, 10, 20, 0.78);
+  --brand-nav-shadow: 0 22px 60px -40px rgba(0, 240, 255, 0.25);
+  --brand-text-strong: #ffffff;
+  --brand-text: rgba(234, 245, 255, 0.86);
+  --brand-text-muted: rgba(179, 205, 232, 0.68);
+  --brand-grid-line: rgba(0, 194, 255, 0.08);
+  --brand-grid-dot: rgba(0, 240, 255, 0.18);
+  --brand-accent-soft: rgba(0, 130, 255, 0.18);
+  --brand-vignette: radial-gradient(ellipse at center, transparent 30%, rgba(0, 0, 0, 0.62) 100%);
+  --brand-wordmark-shadow:
+    0 0 18px rgba(0, 240, 255, 0.24),
+    0 0 42px rgba(0, 130, 255, 0.12);
+  --brand-card-inset: rgba(255, 255, 255, 0.06);
 }
 
 html,
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: var(--font-brand-body);
   min-height: 100%;
   overflow-x: hidden;
 }
@@ -30,18 +95,18 @@ body {
 
 .listlens-shell-bg {
   background:
-    radial-gradient(circle at 18% 8%, rgba(34, 211, 238, 0.18), transparent 28rem),
-    radial-gradient(circle at 88% 18%, rgba(62, 168, 255, 0.13), transparent 32rem),
-    radial-gradient(circle at 50% 100%, rgba(4, 124, 255, 0.16), transparent 38rem),
-    linear-gradient(180deg, #03070f 0%, #050b16 44%, #02040a 100%);
+    radial-gradient(circle at 15% 10%, var(--brand-shell-top), transparent 30rem),
+    radial-gradient(circle at 84% 12%, var(--brand-shell-right), transparent 30rem),
+    radial-gradient(circle at 50% 100%, var(--brand-shell-bottom), transparent 40rem),
+    var(--brand-shell-base);
 }
 
 .circuit-board-bg {
   background-image:
-    linear-gradient(90deg, rgba(0, 194, 255, 0.08) 1px, transparent 1px),
-    linear-gradient(180deg, rgba(0, 194, 255, 0.055) 1px, transparent 1px),
-    radial-gradient(circle at 20% 20%, rgba(0, 194, 255, 0.12) 0 1px, transparent 1px),
-    radial-gradient(circle at 78% 10%, rgba(62, 168, 255, 0.16) 0 1px, transparent 1px);
+    linear-gradient(90deg, var(--brand-grid-line) 1px, transparent 1px),
+    linear-gradient(180deg, color-mix(in srgb, var(--brand-grid-line) 85%, transparent) 1px, transparent 1px),
+    radial-gradient(circle at 20% 20%, var(--brand-grid-dot) 0 1px, transparent 1px),
+    radial-gradient(circle at 78% 10%, color-mix(in srgb, var(--brand-grid-dot) 88%, transparent) 0 1px, transparent 1px);
   background-size: 80px 80px, 80px 80px, 120px 120px, 140px 140px;
   mask-image: radial-gradient(ellipse at center, black 16%, transparent 78%);
   -webkit-mask-image: radial-gradient(ellipse at center, black 16%, transparent 78%);
@@ -74,9 +139,7 @@ body {
 
 .neon-wordmark {
   letter-spacing: 0;
-  text-shadow:
-    0 0 18px rgba(34, 211, 238, 0.28),
-    0 0 42px rgba(62, 168, 255, 0.12);
+  text-shadow: var(--brand-wordmark-shadow);
 }
 
 .angled-rail {
@@ -97,34 +160,34 @@ body {
 .brand-card {
   position: relative;
   background:
-    radial-gradient(120% 100% at 50% 0%, rgba(34, 211, 238, 0.06), transparent 60%),
-    linear-gradient(180deg, rgba(10, 22, 40, 0.85), rgba(8, 19, 37, 0.9));
-  border: 1px solid rgba(34, 211, 238, 0.18);
+    radial-gradient(120% 100% at 50% 0%, rgba(0, 240, 255, 0.08), transparent 60%),
+    var(--brand-panel-bg);
+  border: 1px solid var(--brand-outline);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(34, 211, 238, 0.04),
-    0 24px 48px -28px rgba(34, 211, 238, 0.18);
+    inset 0 1px 0 var(--brand-card-inset),
+    inset 0 0 0 1px color-mix(in srgb, var(--brand-card-inset) 50%, transparent),
+    var(--brand-panel-shadow);
   border-radius: 1rem;
 }
 
 .brand-card-glow {
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 0 1px rgba(34, 211, 238, 0.08),
-    0 0 0 1px rgba(34, 211, 238, 0.12),
-    0 28px 60px -28px rgba(34, 211, 238, 0.35);
+    inset 0 1px 0 var(--brand-card-inset),
+    inset 0 0 0 1px rgba(0, 240, 255, 0.08),
+    0 0 0 1px rgba(0, 130, 255, 0.12),
+    0 28px 60px -28px rgba(0, 130, 255, 0.35);
 }
 
 /* Highlighted (Guard / violet) variant of brand-card. */
 .brand-card-violet {
   background:
-    radial-gradient(120% 100% at 50% 0%, rgba(139, 92, 246, 0.08), transparent 60%),
-    linear-gradient(180deg, rgba(20, 14, 36, 0.85), rgba(8, 19, 37, 0.9));
-  border-color: rgba(139, 92, 246, 0.22);
+    radial-gradient(120% 100% at 50% 0%, rgba(122, 0, 255, 0.12), transparent 60%),
+    var(--brand-panel-bg);
+  border-color: rgba(122, 0, 255, 0.28);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.04),
-    inset 0 0 0 1px rgba(139, 92, 246, 0.05),
-    0 24px 48px -28px rgba(139, 92, 246, 0.25);
+    inset 0 1px 0 var(--brand-card-inset),
+    inset 0 0 0 1px rgba(122, 0, 255, 0.05),
+    0 24px 48px -28px rgba(122, 0, 255, 0.25);
 }
 
 /* Cyan→green→amber HUD divider (used between sections / under the navbar). */
@@ -133,9 +196,9 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(34, 211, 238, 0.5) 20%,
-    rgba(74, 222, 128, 0.55) 50%,
-    rgba(251, 146, 60, 0.5) 80%,
+    rgba(0, 130, 255, 0.45) 18%,
+    rgba(0, 240, 255, 0.55) 48%,
+    rgba(122, 0, 255, 0.45) 82%,
     transparent 100%
   );
 }
@@ -144,6 +207,23 @@ body {
 .font-mono-hud {
   font-family: "JetBrains Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
   font-feature-settings: "tnum" 1, "ss01" 1;
+}
+
+.font-brand-display {
+  font-family: var(--font-brand-display);
+}
+
+.brand-page-eyebrow {
+  font-family: var(--font-brand-display);
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+.brand-wordmark-accent {
+  background: linear-gradient(90deg, var(--brand-blue) 0%, var(--brand-cyan) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* HUD spinner: dual cyan ring + slow rotating tick scale. Pure CSS, GPU. */

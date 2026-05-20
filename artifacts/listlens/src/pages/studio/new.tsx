@@ -55,9 +55,9 @@ function LensGuidancePanel({
         </p>
         <ul className="space-y-1.5">
           {shots.map((shot) => (
-            <li key={shot} className="flex items-start gap-2 text-xs text-zinc-300">
+            <li key={shot} className="flex items-start gap-2 text-xs text-[color:var(--brand-text)]">
               <span className="mt-0.5 h-1.5 w-1.5 shrink-0 rounded-full bg-cyan-500/70" />
-              Include a photo of the <span className="text-white">{shot}</span>
+              Include a photo of the <span className="text-[color:var(--brand-text-strong)]">{shot}</span>
             </li>
           ))}
         </ul>
@@ -410,8 +410,8 @@ export default function NewStudioPage() {
           <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
             Studio · New listing
           </p>
-          <h1 className="text-3xl font-black tracking-tight text-white mb-2">Create seller listing</h1>
-          <p className="text-zinc-400 text-sm">
+          <h1 className="text-3xl font-black tracking-tight text-[color:var(--brand-text-strong)] mb-2">Create seller listing</h1>
+          <p className="text-[color:var(--brand-text-muted)] text-sm">
             Upload item evidence, choose eBay or Vinted, then save a marketplace-ready draft.
           </p>
           <div className="hud-divider mt-3 max-w-[160px]" />
@@ -421,8 +421,8 @@ export default function NewStudioPage() {
         <HudPanel tone="cyan" className="mb-4 p-5">
           <div className="mb-4 flex items-center justify-between gap-4">
             <div>
-              <h2 className="text-base font-semibold text-white">Choose Lens</h2>
-              <p className="mt-1 text-xs text-zinc-500">Rev 1.0 starts with SoleLens/ShoeLens and a General fallback.</p>
+              <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)]">Choose Lens</h2>
+              <p className="mt-1 text-xs text-[color:var(--brand-text-muted)]">Rev 1.0 starts with SoleLens/ShoeLens and a General fallback.</p>
             </div>
             <StatusPill tone="cyan">Rev 1.0</StatusPill>
           </div>
@@ -430,7 +430,7 @@ export default function NewStudioPage() {
             <div className="mb-4 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-200/80">
               <span className="font-mono-hud tracking-[0.14em] uppercase">Note</span>:{" "}
               <span className="text-amber-100">{unsupportedLensNotice}</span> is not available in Studio yet — using{" "}
-              <span className="text-white">{fallbackLens}</span> for this listing.
+              <span className="text-[color:var(--brand-text-strong)]">{fallbackLens}</span> for this listing.
             </div>
           )}
           <div className="grid gap-3 sm:grid-cols-2">
@@ -444,7 +444,7 @@ export default function NewStudioPage() {
                   className={`rounded-lg border p-4 text-left transition-all ${
                     selectedLens === lens.id
                       ? "border-cyan-500 bg-cyan-950/40"
-                      : "border-zinc-700 bg-zinc-900 hover:border-zinc-500"
+                      : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] hover:border-[color:var(--brand-outline-strong)]"
                   }`}
                 >
                   <div className="mb-3 flex items-start justify-between gap-3">
@@ -455,8 +455,8 @@ export default function NewStudioPage() {
                     />
                     <StatusPill tone={lens.tone}>{lens.phase}</StatusPill>
                   </div>
-                  <div className="font-semibold text-sm text-white">{lens.name}</div>
-                  <div className="text-xs text-zinc-400 mt-1">{lens.desc}</div>
+                  <div className="font-semibold text-sm text-[color:var(--brand-text-strong)]">{lens.name}</div>
+                  <div className="text-xs text-[color:var(--brand-text-muted)] mt-1">{lens.desc}</div>
                 </button>
               ))}
           </div>
@@ -471,14 +471,14 @@ export default function NewStudioPage() {
                   WatchLens · Reference lookup
                 </p>
               </div>
-              <p className="text-zinc-400 text-xs mt-1">
+              <p className="text-[color:var(--brand-text-muted)] text-xs mt-1">
                 Know the reference number? Search Chrono24 to auto-fill watch details and live pricing.
               </p>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex gap-2">
                 <input
-                  className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                  className="flex-1 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                   placeholder="e.g. 116610LN, 5711/1A, 3135…"
                   value={refInput}
                   onChange={(e) => setRefInput(e.target.value)}
@@ -501,7 +501,7 @@ export default function NewStudioPage() {
               )}
 
               {refResult && !refResult.found && (
-                <p className="text-zinc-500 text-xs">
+                <p className="text-[color:var(--brand-text-muted)] text-xs">
                   No Chrono24 listings found for "{refResult.ref}". Check the reference number or continue without it.
                 </p>
               )}
@@ -510,24 +510,24 @@ export default function NewStudioPage() {
                 <div className="rounded-xl border border-cyan-800/50 bg-cyan-950/20 p-4 space-y-2">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div>
-                      <p className="text-sm font-semibold text-white">
+                      <p className="text-sm font-semibold text-[color:var(--brand-text-strong)]">
                         {refResult.brand ?? "Unknown brand"}{refResult.model ? ` · ${refResult.model}` : ""}
                       </p>
                       {refResult.reference_number && (
-                        <p className="text-xs text-zinc-400 mt-0.5">Ref {refResult.reference_number}</p>
+                        <p className="text-xs text-[color:var(--brand-text-muted)] mt-0.5">Ref {refResult.reference_number}</p>
                       )}
                       {refResult.case_material && (
-                        <p className="text-xs text-zinc-500">Case: {refResult.case_material}</p>
+                        <p className="text-xs text-[color:var(--brand-text-muted)]">Case: {refResult.case_material}</p>
                       )}
                     </div>
                     {refResult.price_median_gbp != null && (
                       <div className="text-right shrink-0">
-                        <p className="text-xs text-zinc-500 mb-0.5">Chrono24 median</p>
+                        <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Chrono24 median</p>
                         <p className="text-base font-semibold text-cyan-300">
                           £{refResult.price_median_gbp.toLocaleString()}
                         </p>
                         {refResult.price_min_gbp != null && refResult.price_max_gbp != null && (
-                          <p className="text-xs text-zinc-500">
+                          <p className="text-xs text-[color:var(--brand-text-muted)]">
                             £{refResult.price_min_gbp.toLocaleString()}–£{refResult.price_max_gbp.toLocaleString()}
                           </p>
                         )}
@@ -535,7 +535,7 @@ export default function NewStudioPage() {
                     )}
                   </div>
                   {refResult.total_count != null && (
-                    <p className="text-xs text-zinc-600">
+                    <p className="text-xs text-[color:var(--brand-text-muted)]">
                       Based on {refResult.total_count.toLocaleString()} active Chrono24 listings
                     </p>
                   )}
@@ -565,7 +565,7 @@ export default function NewStudioPage() {
                   className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${
                     selectedMarketplace === mp.id
                       ? "border-violet-500 bg-violet-950/40 text-violet-300"
-                      : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-500"
+                      : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] text-[color:var(--brand-text-muted)] hover:border-[color:var(--brand-outline-strong)]"
                   }`}
                 >
                   {mp.label}
@@ -580,7 +580,7 @@ export default function NewStudioPage() {
           <CardHeader>
             <div className="flex items-center justify-between">
               <CardTitle className="text-base">Upload Photos</CardTitle>
-              <span className="text-xs text-zinc-400">{photoUrls.length}/{MAX_PHOTOS}</span>
+              <span className="text-xs text-[color:var(--brand-text-muted)]">{photoUrls.length}/{MAX_PHOTOS}</span>
             </div>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -592,7 +592,7 @@ export default function NewStudioPage() {
                 "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 transition-colors cursor-pointer",
                 isDragging
                   ? "border-cyan-500 bg-cyan-950/30"
-                  : "border-zinc-700 bg-zinc-900/40 hover:border-zinc-600",
+                  : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40 hover:border-[color:var(--brand-outline-strong)]",
               ].join(" ")}
               onClick={() => !isBusy && fileInputRef.current?.click()}
             >
@@ -617,7 +617,7 @@ export default function NewStudioPage() {
                 <>
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-8 w-8 text-zinc-500"
+                    className="h-8 w-8 text-[color:var(--brand-text-muted)]"
                     fill="none"
                     viewBox="0 0 24 24"
                     stroke="currentColor"
@@ -630,11 +630,11 @@ export default function NewStudioPage() {
                     />
                   </svg>
                   <div className="text-center">
-                    <p className="text-sm text-zinc-300">
+                    <p className="text-sm text-[color:var(--brand-text)]">
                       <span className="text-cyan-400 font-medium">Click to upload</span>{" "}
                       or drag & drop
                     </p>
-                    <p className="text-xs text-zinc-500 mt-1">
+                    <p className="text-xs text-[color:var(--brand-text-muted)] mt-1">
                       JPG, PNG, WebP — up to {MAX_PHOTOS} photos
                     </p>
                   </div>
@@ -647,13 +647,13 @@ export default function NewStudioPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-3">
                   <div className="flex-1 h-px bg-zinc-800" />
-                  <span className="text-xs text-zinc-600 shrink-0">or add by URL</span>
+                  <span className="text-xs text-[color:var(--brand-text-muted)] shrink-0">or add by URL</span>
                   <div className="flex-1 h-px bg-zinc-800" />
                 </div>
                 <div className="flex gap-2">
                   <input
                     type="url"
-                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                    className="flex-1 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                     placeholder="Image URL or eBay / Depop / Vinted listing"
                     value={urlInput}
                     onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); setUrlSuccess(null); }}
@@ -684,7 +684,7 @@ export default function NewStudioPage() {
                 {photoUrls.map((u, i) => (
                   <div
                     key={i}
-                    className="relative group aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900"
+                    className="relative group aspect-square rounded-lg overflow-hidden border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]"
                   >
                     <img
                       src={u}
@@ -695,11 +695,11 @@ export default function NewStudioPage() {
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
-                      <span className="text-xs text-zinc-300">{i + 1}</span>
+                      <span className="text-xs text-[color:var(--brand-text)]">{i + 1}</span>
                     </div>
                     <button
                       onClick={(e) => { e.stopPropagation(); removePhoto(u); }}
-                      className="absolute top-1 right-1 bg-black/70 rounded-full w-6 h-6 flex items-center justify-center text-zinc-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
+                      className="absolute top-1 right-1 bg-black/70 rounded-full w-6 h-6 flex items-center justify-center text-[color:var(--brand-text-muted)] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
                     >
                       ✕
                     </button>
@@ -709,7 +709,7 @@ export default function NewStudioPage() {
             )}
 
             {!hasPhotos && (
-              <p className="text-xs text-zinc-500 text-center">
+              <p className="text-xs text-[color:var(--brand-text-muted)] text-center">
                 Optional — you can also add photos on the next page.
               </p>
             )}
@@ -744,7 +744,7 @@ export default function NewStudioPage() {
         </Button>
 
         {hasPhotos && (
-          <p className="text-xs text-zinc-500 text-center mt-3">
+          <p className="text-xs text-[color:var(--brand-text-muted)] text-center mt-3">
             {photoUrls.length} photo{photoUrls.length !== 1 ? "s" : ""} ready · AI analysis starts immediately
           </p>
         )}

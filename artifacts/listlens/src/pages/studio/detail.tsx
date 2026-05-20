@@ -91,23 +91,23 @@ function MatchCard({
         "rounded-xl border p-4 space-y-3",
         isTop
           ? "border-emerald-800/60 bg-emerald-950/20"
-          : "border-zinc-800 bg-zinc-900/40",
+          : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40",
       ].join(" ")}
     >
       <div className="flex items-start justify-between gap-2 flex-wrap">
         <div>
-          <p className="text-sm font-semibold text-white">
+          <p className="text-sm font-semibold text-[color:var(--brand-text-strong)]">
             {match.artist ?? "Unknown artist"}{" "}
             {match.title ? `— ${match.title}` : ""}
           </p>
           {match.label && (
-            <p className="text-xs text-zinc-400 mt-0.5">
+            <p className="text-xs text-[color:var(--brand-text-muted)] mt-0.5">
               {match.label}
               {match.catalogue_number ? ` · ${match.catalogue_number}` : ""}
             </p>
           )}
           {match.likely_release && (
-            <p className="text-xs text-zinc-500 mt-0.5">{match.likely_release}</p>
+            <p className="text-xs text-[color:var(--brand-text-muted)] mt-0.5">{match.likely_release}</p>
           )}
         </div>
         <Badge
@@ -121,7 +121,7 @@ function MatchCard({
       {match.evidence && match.evidence.length > 0 && (
         <ul className="space-y-0.5">
           {match.evidence.map((e, i) => (
-            <li key={i} className="text-xs text-zinc-400 flex items-center gap-1.5">
+            <li key={i} className="text-xs text-[color:var(--brand-text-muted)] flex items-center gap-1.5">
               <span className="text-cyan-500 shrink-0">·</span> {e}
             </li>
           ))}
@@ -503,7 +503,7 @@ export default function StudioItemPage() {
   );
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
 
       {showReveal && (
@@ -516,7 +516,7 @@ export default function StudioItemPage() {
             <p className="text-cyan-300 text-xs font-mono-hud tracking-[0.2em] uppercase mb-2">
               Studio · Analysis
             </p>
-            <h1 className="text-2xl font-bold text-white mb-1">Studio</h1>
+            <h1 className="text-2xl font-bold text-[color:var(--brand-text-strong)] mb-1">Studio</h1>
             <div className="hud-divider mt-2 max-w-[120px]" />
           </div>
           <Badge variant="secondary">Item {id.slice(-8)}</Badge>
@@ -533,8 +533,8 @@ export default function StudioItemPage() {
             {/* Photo input */}
             <div className="brand-card p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="text-base font-semibold text-white">Add Photos</h2>
-                <span className="text-xs font-normal text-zinc-400">
+                <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)]">Add Photos</h2>
+                <span className="text-xs font-normal text-[color:var(--brand-text-muted)]">
                   {photoUrls.length}/{MAX_PHOTOS} photos
                 </span>
               </div>
@@ -547,7 +547,7 @@ export default function StudioItemPage() {
                   "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-6 py-8 transition-colors cursor-pointer",
                   isDragging
                     ? "border-cyan-500 bg-cyan-950/30"
-                    : "border-zinc-700 bg-zinc-900/40 hover:border-zinc-600",
+                    : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40 hover:border-[color:var(--brand-outline-strong)]",
                 ].join(" ")}
                 onClick={() => !isUploading && fileInputRef.current?.click()}
               >
@@ -572,7 +572,7 @@ export default function StudioItemPage() {
                   <>
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
-                      className="h-8 w-8 text-zinc-500"
+                      className="h-8 w-8 text-[color:var(--brand-text-muted)]"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -585,11 +585,11 @@ export default function StudioItemPage() {
                       />
                     </svg>
                     <div className="text-center">
-                      <p className="text-sm text-zinc-300">
+                      <p className="text-sm text-[color:var(--brand-text)]">
                         <span className="text-cyan-400 font-medium">Click to upload</span>{" "}
                         or drag & drop
                       </p>
-                      <p className="text-xs text-zinc-500 mt-1">
+                      <p className="text-xs text-[color:var(--brand-text-muted)] mt-1">
                         JPG, PNG, WebP — up to {MAX_PHOTOS} photos
                       </p>
                     </div>
@@ -598,7 +598,7 @@ export default function StudioItemPage() {
               </div>
 
               <details className="group">
-                <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1">
+                <summary className="text-xs text-[color:var(--brand-text-muted)] cursor-pointer select-none hover:text-[color:var(--brand-text-muted)] transition-colors list-none flex items-center gap-1">
                   <svg
                     className="h-3 w-3 transition-transform group-open:rotate-90"
                     viewBox="0 0 6 10"
@@ -618,7 +618,7 @@ export default function StudioItemPage() {
                 <div className="mt-2 space-y-1.5">
                   <div className="flex gap-2">
                     <input
-                      className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                      className="flex-1 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                       placeholder="https://example.com/photo.jpg"
                       value={urlInput}
                       onChange={(e) => { setUrlInput(e.target.value); setUrlError(null); }}
@@ -646,7 +646,7 @@ export default function StudioItemPage() {
                   {photoUrls.map((u, i) => (
                     <div
                       key={i}
-                      className="relative group aspect-square rounded-lg overflow-hidden border border-zinc-800 bg-zinc-900"
+                      className="relative group aspect-square rounded-lg overflow-hidden border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]"
                     >
                       <img
                         src={u}
@@ -657,11 +657,11 @@ export default function StudioItemPage() {
                         }}
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-1">
-                        <span className="text-xs text-zinc-300">{i + 1}</span>
+                        <span className="text-xs text-[color:var(--brand-text)]">{i + 1}</span>
                       </div>
                       <button
                         onClick={() => handleRemoveUrl(u)}
-                        className="absolute top-1 right-1 bg-black/70 rounded-full w-5 h-5 flex items-center justify-center text-zinc-400 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
+                        className="absolute top-1 right-1 bg-black/70 rounded-full w-5 h-5 flex items-center justify-center text-[color:var(--brand-text-muted)] hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all text-xs"
                       >
                         ✕
                       </button>
@@ -680,13 +680,13 @@ export default function StudioItemPage() {
                   <p className="text-xs font-mono-hud tracking-[0.18em] uppercase text-cyan-300 mb-1">
                     WatchLens · Reference lookup
                   </p>
-                  <p className="text-zinc-400 text-xs">
+                  <p className="text-[color:var(--brand-text-muted)] text-xs">
                     Know the reference number? Search Chrono24 to auto-fill watch details and live pricing into the hint below.
                   </p>
                 </div>
                 <div className="flex gap-2">
                   <input
-                    className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600"
+                    className="flex-1 rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600"
                     placeholder="e.g. 116610LN, 5711/1A, 3135…"
                     value={refInput}
                     onChange={(e) => setRefInput(e.target.value)}
@@ -707,7 +707,7 @@ export default function StudioItemPage() {
                 {refError && <p className="text-red-400 text-xs">{refError}</p>}
 
                 {refResult && !refResult.found && (
-                  <p className="text-zinc-500 text-xs">
+                  <p className="text-[color:var(--brand-text-muted)] text-xs">
                     No Chrono24 listings found for "{refResult.ref}". Check the reference number or continue without it.
                   </p>
                 )}
@@ -716,24 +716,24 @@ export default function StudioItemPage() {
                   <div className="rounded-xl border border-cyan-800/50 bg-cyan-950/20 p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2 flex-wrap">
                       <div>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-[color:var(--brand-text-strong)]">
                           {refResult.brand ?? "Unknown brand"}{refResult.model ? ` · ${refResult.model}` : ""}
                         </p>
                         {refResult.reference_number && (
-                          <p className="text-xs text-zinc-400 mt-0.5">Ref {refResult.reference_number}</p>
+                          <p className="text-xs text-[color:var(--brand-text-muted)] mt-0.5">Ref {refResult.reference_number}</p>
                         )}
                         {refResult.case_material && (
-                          <p className="text-xs text-zinc-500">Case: {refResult.case_material}</p>
+                          <p className="text-xs text-[color:var(--brand-text-muted)]">Case: {refResult.case_material}</p>
                         )}
                       </div>
                       {refResult.price_median_gbp != null && (
                         <div className="text-right shrink-0">
-                          <p className="text-xs text-zinc-500 mb-0.5">Chrono24 median</p>
+                          <p className="text-xs text-[color:var(--brand-text-muted)] mb-0.5">Chrono24 median</p>
                           <p className="text-base font-semibold text-cyan-300">
                             £{refResult.price_median_gbp.toLocaleString()}
                           </p>
                           {refResult.price_min_gbp != null && refResult.price_max_gbp != null && (
-                            <p className="text-xs text-zinc-500">
+                            <p className="text-xs text-[color:var(--brand-text-muted)]">
                               £{refResult.price_min_gbp.toLocaleString()}–£{refResult.price_max_gbp.toLocaleString()}
                             </p>
                           )}
@@ -741,7 +741,7 @@ export default function StudioItemPage() {
                       )}
                     </div>
                     {refResult.total_count != null && (
-                      <p className="text-xs text-zinc-600">
+                      <p className="text-xs text-[color:var(--brand-text-muted)]">
                         Based on {refResult.total_count.toLocaleString()} active Chrono24 listings
                       </p>
                     )}
@@ -755,12 +755,12 @@ export default function StudioItemPage() {
 
             {/* Hint */}
             <div className="brand-card p-6">
-              <h2 className="text-base font-semibold text-white mb-3">
+              <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)] mb-3">
                 Optional Hint{" "}
-                <span className="text-zinc-500 font-normal text-xs">(optional)</span>
+                <span className="text-[color:var(--brand-text-muted)] font-normal text-xs">(optional)</span>
               </h2>
               <textarea
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 resize-none"
+                className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600 resize-none"
                 rows={3}
                 placeholder="e.g. 'Nike Air Max 90 size UK 10, bought 2022, worn maybe 5 times' — helps the AI identify your item faster"
                 value={hint}
@@ -839,13 +839,13 @@ export default function StudioItemPage() {
                     </p>
                     <Badge variant="secondary" className="text-xs">{wm.source}</Badge>
                   </div>
-                  <p className="text-zinc-400 text-xs">
+                  <p className="text-[color:var(--brand-text-muted)] text-xs">
                     Live pre-owned pricing from {wm.total_count.toLocaleString()} active listings
                     {wm.search_query ? ` for "${wm.search_query}"` : ""}. Pricing has been adjusted to reflect this market data.
                   </p>
                   <div className="grid grid-cols-3 gap-3">
                     {[
-                      { label: "Min", value: wm.price_min_gbp, color: "text-zinc-300" },
+                      { label: "Min", value: wm.price_min_gbp, color: "text-[color:var(--brand-text)]" },
                       { label: "Median", value: wm.price_median_gbp, color: "text-cyan-300", highlight: true },
                       { label: "Max", value: wm.price_max_gbp, color: "text-emerald-300" },
                     ].map(({ label, value, color, highlight }) => (
@@ -855,10 +855,10 @@ export default function StudioItemPage() {
                           "rounded-xl border p-3 text-center",
                           highlight
                             ? "border-cyan-800/60 bg-cyan-950/20"
-                            : "border-zinc-800 bg-zinc-900/40",
+                            : "border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/40",
                         ].join(" ")}
                       >
-                        <p className="text-xs text-zinc-500 mb-1">{label}</p>
+                        <p className="text-xs text-[color:var(--brand-text-muted)] mb-1">{label}</p>
                         <p className={`text-base font-semibold ${color}`}>
                           {value !== null && value !== undefined
                             ? `£${value.toLocaleString()}`
@@ -867,7 +867,7 @@ export default function StudioItemPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-zinc-600">
+                  <p className="text-xs text-[color:var(--brand-text-muted)]">
                     Market data from {wm.source} · {wm.listing_count} listings retrieved · Used to anchor recommended price
                   </p>
                 </div>
@@ -884,7 +884,7 @@ export default function StudioItemPage() {
                     <Badge variant="success" className="text-xs">Matrix matched</Badge>
                   )}
                 </div>
-                <p className="text-zinc-400 text-xs">
+                <p className="text-[color:var(--brand-text-muted)] text-xs">
                   Ranked matches after matrix / runout analysis. The top result has been used to update your listing.
                 </p>
 
@@ -894,7 +894,7 @@ export default function StudioItemPage() {
                   )}
                   {clarifyResult.alternate_matches && clarifyResult.alternate_matches.length > 0 && (
                     <details className="group">
-                      <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1 mt-1">
+                      <summary className="text-xs text-[color:var(--brand-text-muted)] cursor-pointer select-none hover:text-[color:var(--brand-text-muted)] transition-colors list-none flex items-center gap-1 mt-1">
                         <svg
                           className="h-3 w-3 transition-transform group-open:rotate-90"
                           viewBox="0 0 6 10"
@@ -924,7 +924,7 @@ export default function StudioItemPage() {
                 )}
 
                 {clarifyResult.disclaimer && (
-                  <p className="text-xs text-zinc-600 italic">{clarifyResult.disclaimer}</p>
+                  <p className="text-xs text-[color:var(--brand-text-muted)] italic">{clarifyResult.disclaimer}</p>
                 )}
               </div>
             )}
@@ -946,7 +946,7 @@ export default function StudioItemPage() {
                       {Math.round(pressingConfidence * 100)}% confidence
                     </Badge>
                   </div>
-                  <p className="text-zinc-400 text-xs">
+                  <p className="text-[color:var(--brand-text-muted)] text-xs">
                     Ranked release matches based on label photo and Discogs search. Add your matrix/runout text below to improve accuracy.
                   </p>
                   <div className="space-y-3">
@@ -955,7 +955,7 @@ export default function StudioItemPage() {
                     )}
                     {altMatches.length > 0 && (
                       <details className="group">
-                        <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1 mt-1">
+                        <summary className="text-xs text-[color:var(--brand-text-muted)] cursor-pointer select-none hover:text-[color:var(--brand-text-muted)] transition-colors list-none flex items-center gap-1 mt-1">
                           <svg
                             className="h-3 w-3 transition-transform group-open:rotate-90"
                             viewBox="0 0 6 10"
@@ -984,7 +984,7 @@ export default function StudioItemPage() {
                   <p className="text-xs font-mono-hud tracking-[0.2em] uppercase text-amber-300 mb-1">
                     RecordLens · Confirm pressing
                   </p>
-                  <h2 className="text-base font-semibold text-white">
+                  <h2 className="text-base font-semibold text-[color:var(--brand-text-strong)]">
                     Add matrix / runout to improve accuracy
                   </h2>
                 </div>
@@ -999,42 +999,42 @@ export default function StudioItemPage() {
                   </div>
                 )}
 
-                <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 space-y-2">
-                  <p className="text-sm text-zinc-300 font-medium">What is the matrix / runout?</p>
-                  <p className="text-xs text-zinc-400 leading-relaxed">
+                <div className="rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)]/60 p-4 space-y-2">
+                  <p className="text-sm text-[color:var(--brand-text)] font-medium">What is the matrix / runout?</p>
+                  <p className="text-xs text-[color:var(--brand-text-muted)] leading-relaxed">
                     The matrix (or runout) is a string of characters etched into the vinyl in the
                     blank groove area — the shiny ring between the last track and the label. It
                     identifies the specific pressing, cutting engineer, and generation. Look for text
-                    like <span className="text-zinc-300 font-mono">A-1 // Porky</span> or{" "}
-                    <span className="text-zinc-300 font-mono">YEX 123-1</span> on each side.
+                    like <span className="text-[color:var(--brand-text)] font-mono">A-1 // Porky</span> or{" "}
+                    <span className="text-[color:var(--brand-text)] font-mono">YEX 123-1</span> on each side.
                   </p>
                 </div>
 
                 <div className="space-y-3">
                   <div>
-                    <label className="text-xs text-zinc-400 font-medium block mb-1.5">
+                    <label className="text-xs text-[color:var(--brand-text-muted)] font-medium block mb-1.5">
                       Side A matrix / runout <span className="text-amber-400">*</span>
                     </label>
                     <input
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 font-mono"
+                      className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600 font-mono"
                       placeholder="e.g. A-1 // PORKY or YEX 123-1"
                       value={matrixSideA}
                       onChange={(e) => setMatrixSideA(e.target.value)}
                     />
                   </div>
                   <div>
-                    <label className="text-xs text-zinc-400 font-medium block mb-1.5">
-                      Side B matrix / runout <span className="text-zinc-600">(recommended)</span>
+                    <label className="text-xs text-[color:var(--brand-text-muted)] font-medium block mb-1.5">
+                      Side B matrix / runout <span className="text-[color:var(--brand-text-muted)]">(recommended)</span>
                     </label>
                     <input
-                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 font-mono"
+                      className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600 font-mono"
                       placeholder="e.g. B-1 // PORKY or YEX 124-1"
                       value={matrixSideB}
                       onChange={(e) => setMatrixSideB(e.target.value)}
                     />
                   </div>
                   <details className="group">
-                    <summary className="text-xs text-zinc-500 cursor-pointer select-none hover:text-zinc-400 transition-colors list-none flex items-center gap-1">
+                    <summary className="text-xs text-[color:var(--brand-text-muted)] cursor-pointer select-none hover:text-[color:var(--brand-text-muted)] transition-colors list-none flex items-center gap-1">
                       <svg
                         className="h-3 w-3 transition-transform group-open:rotate-90"
                         viewBox="0 0 6 10"
@@ -1046,7 +1046,7 @@ export default function StudioItemPage() {
                     </summary>
                     <div className="mt-2">
                       <input
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-50 placeholder:text-zinc-500 focus:outline-none focus:border-cyan-600 font-mono"
+                        className="w-full rounded-lg border border-[color:var(--brand-outline)] bg-[color:var(--brand-nav-bg)] px-3 py-2 text-sm text-[color:var(--brand-text-strong)] placeholder:text-[color:var(--brand-text-muted)] focus:outline-none focus:border-cyan-600 font-mono"
                         placeholder="e.g. C-1 / D-1 matrix strings"
                         value={matrixSideCD}
                         onChange={(e) => setMatrixSideCD(e.target.value)}
@@ -1076,7 +1076,7 @@ export default function StudioItemPage() {
                 {pressingConfidence >= 0.6 && (
                   <button
                     onClick={() => setClarifyDone(true)}
-                    className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors w-full text-center"
+                    className="text-xs text-[color:var(--brand-text-muted)] hover:text-[color:var(--brand-text-muted)] transition-colors w-full text-center"
                   >
                     Skip — I'm happy with the current result
                   </button>
@@ -1102,7 +1102,7 @@ export default function StudioItemPage() {
             {/* Status action bar */}
             <div className="brand-card p-5 space-y-4">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="text-xs font-mono-hud tracking-[0.18em] uppercase text-zinc-400">
+                <p className="text-xs font-mono-hud tracking-[0.18em] uppercase text-[color:var(--brand-text-muted)]">
                   Listing status
                 </p>
                 <Badge

@@ -7,12 +7,12 @@ const badgeVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-zinc-700 text-zinc-50",
-        secondary: "bg-zinc-800 text-zinc-400",
-        outline: "border border-zinc-700 text-zinc-300 bg-transparent",
-        success: "bg-emerald-900 text-emerald-400",
-        warning: "bg-amber-900 text-amber-400",
-        destructive: "bg-red-900 text-red-400",
+        default: "bg-[color:var(--brand-accent-soft)] text-[color:var(--brand-text-strong)] border border-[color:var(--brand-outline)]",
+        secondary: "bg-[color:var(--brand-nav-bg)] text-[color:var(--brand-text-muted)] border border-[color:var(--brand-outline)]",
+        outline: "border border-[color:var(--brand-outline)] text-[color:var(--brand-text)] bg-transparent",
+        success: "bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300",
+        warning: "bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-300",
+        destructive: "bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300",
       },
     },
     defaultVariants: { variant: "default" },

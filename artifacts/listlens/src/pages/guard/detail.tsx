@@ -72,7 +72,7 @@ export default function GuardCheckPage() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-zinc-950">
+    <div className="min-h-screen bg-[var(--background)]">
       <Navbar />
 
       {showReveal && (
@@ -81,12 +81,12 @@ export default function GuardCheckPage() {
 
       <main className="max-w-3xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <h1 className="text-2xl font-bold text-white">Guard Report</h1>
+          <h1 className="text-2xl font-bold text-[color:var(--brand-text-strong)]">Guard Report</h1>
           <Badge variant="secondary">Check {id.slice(-8)}</Badge>
         </div>
 
         {initialLoading && (
-          <div className="flex items-center gap-2 text-zinc-400 text-sm py-4">
+          <div className="flex items-center gap-2 text-[color:var(--brand-text-muted)] text-sm py-4">
             <Spinner className="text-base text-violet-400" />
             Loading report…
           </div>
@@ -98,7 +98,7 @@ export default function GuardCheckPage() {
               <CardTitle className="text-base">Ready to analyse</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-zinc-400 text-sm">
+              <p className="text-[color:var(--brand-text-muted)] text-sm">
                 Click the button below to run the AI risk analysis on this listing.
               </p>
               {error && (
